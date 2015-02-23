@@ -17,7 +17,7 @@ from Bio.SeqFeature import SeqFeature, FeatureLocation
 
 from MCT.Parsers.Abstract import Record, Collection, Metadata, Header
 
-#TODO: refactor whole file
+
 ref_alt_variants = {"desaminases": [("C", ["T"]), ("G", ["A"])]
                     }
 
@@ -241,7 +241,7 @@ class CollectionVCF(Collection):
         filtered_records, filtered_out_records = self.filter_records(expression)
         return CollectionVCF(metadata=self.metadata, records_dict=filtered_records,
                              header=self.header, samples=self.samples, from_file=False),\
-               CollectionVCF(metadata=self.metadata, record_dict=filtered_out_records,
+               CollectionVCF(metadata=self.metadata, records_dict=filtered_out_records,
                              header=self.header, samples=self.samples, from_file=False)
 
 """
@@ -1190,12 +1190,10 @@ if __name__ == "__main__":
     #workdir = "/media/mahajrod/d9e6e5ee-1bf7-4dba-934e-3f898d9611c8/Data/LAN2xx/all"
     vcf_file = "/home/mahajrod/Genetics/MCTool/examples/PmCDA1_3d_annotated.vcf"
     collection = CollectionVCF(from_file=True, in_file=vcf_file)
-    print(collection.record_index)
-    #for record in collection:
-    #    print(record)
-    print(collection[0])
-    print(collection[-9991])
     print(len(collection))
+    collection.write("tmp.vcf")
+    filtered, filtered_out = collection.filter(lambda record: record.ref == "T")
+
     """
     reference = ReferenceGenome("/home/mahajrod/genetics/desaminases/data/LAN210_v0.9m/LAN210_v0.9m.fasta",
                                 index_file="/home/mahajrod/genetics/desaminases/data/LAN210_v0.9m/LAN210_v0.9m.idx")

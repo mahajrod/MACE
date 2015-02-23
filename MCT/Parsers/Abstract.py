@@ -90,7 +90,9 @@ class Collection():
         if self.header:
             collection_string += "\n" + str(self.header)
         if self.records:
-            collection_string += "\n" + "\n".join([str(record) for record in self.records])
+            for scaffold in self.scaffold_list:
+                for record in self.records[scaffold]:
+                    collection_string += "\n" + scaffold + "\t" + str(record)
         return collection_string
 
     def rec_index(self):
@@ -147,8 +149,11 @@ class Collection():
                 out_fd.write(str(self.metadata) + "\n")
             if self.header:
                 out_fd.write(str(self.header) + "\n")
-            for record in self.records:
-                out_fd.write(str(record) + "\n")
+            for scaffold in self.scaffold_list:
+                for record in self.records[scaffold]:
+                    out_fd.write(scaffold + "\t" + str(record) + "\n")
+
+
 
 """
 class Record():
