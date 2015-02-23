@@ -17,8 +17,7 @@ built_in_flags = {"DA": "desaminase-like",
 
 
 class Record():
-    def __init__(self, chrom, pos, description=None, flags=None):
-        self.chrom = chrom
+    def __init__(self, pos, description=None, flags=None):
         self.pos = pos
         self.description = description
         self.flags = flags
@@ -46,17 +45,21 @@ class Header():
         pass
 
 
-class Collection(OrderedDict):
-    def __init__(self, metadata=None, record_list=None, header=None, input_file=None, from_file=False):
+class Collection():
+    def __init__(self, metadata=None, records_dict=None, header=None, input_file=None, from_file=False):
         # metadata should be Metadata class
         # header should be Header class
         # record_list should be list of Record class
         if from_file:
             self.read(input_file)
         else:
+            self.records = {} if records_dict is None else records_dict
             self.metadata = metadata
-            self.records = record_list
             self.header = header
+        self.scaffold_list = self.scaffolds()
+        self.scaffold_length = self.scaffold_len()
+        self.number_of_scaffolds = len(self.scaffold_list)
+        self.record_index = self.rec_index()
 
     def read(self, input_file):
         # collectiontype-dependent function
@@ -74,6 +77,12 @@ class Collection(OrderedDict):
         # collectiontype-dependent function
         pass
 
+    def scaffold_len(self):
+        scaffold_length_dict = OrderedDict({})
+        for scaffold in self.scaffold_list:
+            scaffold_length_dict[scaffold] = len(self.records[scaffold])
+        return scaffold_length_dict
+
     def __str__(self):
         collection_string = ""
         if self.metadata:
@@ -82,13 +91,64 @@ class Collection(OrderedDict):
             collection_string += "\n" + str(self.header)
         if self.records:
             collection_string += "\n" + "\n".join([str(record) for record in self.records])
-
         return collection_string
 
+    def rec_index(self):
+        index_dict = OrderedDict({})
+        index_dict[self.scaffold_list[0]] = [0, self.scaffold_length[self.scaffold_list[0]] - 1]
+        for index in range(1, self.number_of_scaffolds):
+            index_dict[self.scaffold_list[index]] = [index_dict[self.scaffold_list[index-1]][1] + 1,
+                                            index_dict[self.scaffold_list[index-1]][1] + self.scaffold_length[self.scaffold_list[index]]]
+        return index_dict
+
     def __iter__(self):
-        for scaffold_id in self.keys():
-            for record in self[scaffold_id]:
+        for scaffold_id in self.records.keys():
+            for record in self.records[scaffold_id]:
                 yield record
+
+    def scaffolds(self):
+        return self.records.keys()
+
+    def __getitem__(self, item):
+        tmp_item = self.record_index[self.scaffold_list[-1]][1] + item + 1 if item < 0 else item
+        if tmp_item < 0:
+            raise IndexError("Index %i is out of range" % tmp_item)
+        # list-like access
+        for scaffold in self.scaffold_list:
+            start, end = self.record_index[scaffold]
+            if start <= tmp_item <= end:
+                item_scaffold = scaffold
+                break
+        else:
+            raise IndexError("Index %i is out of range" % tmp_item)
+        shift = tmp_item - start
+        return self.records[item_scaffold][shift]
+
+    def __len__(self):
+        return self.record_index[self.scaffold_list[-1]][1] + 1
+
+    def filter_records(self, expression):
+        # expression should be a function with one argument - record entry
+        filtered_records = OrderedDict({})
+        filtered_out_records = OrderedDict({})
+        for scaffold in self.scaffold_list:
+            filtered_records[scaffold] = []
+            filtered_out_records[scaffold] = []
+            for record in self.records[scaffold]:
+                if expression(record):
+                    filtered_records[scaffold].append(record)
+                else:
+                    filtered_out_records[scaffold].append(record)
+        return filtered_records, filtered_out_records
+
+    def write(self, output_file):
+        with open(output_file, "w") as out_fd:
+            if self.metadata:
+                out_fd.write(str(self.metadata) + "\n")
+            if self.header:
+                out_fd.write(str(self.header) + "\n")
+            for record in self.records:
+                out_fd.write(str(record) + "\n")
 
 """
 class Record():
@@ -157,77 +217,12 @@ class Record():
             if eval(expression):
                 self.flags.add("BR")
 
-
-class Metadata():
-    def __init__(self, metadata=[]):
-        self.metadata = metadata
-
-    def add_metadata(self):
-        pass
-
-    def __str__(self):
-        pass
-
-
-class Header():
-    def __init__(self):
-        pass
-
-    def __str__(self):
-        pass
 """
 
 """
 class Collection(Iterable):
     # TODO: develop this class to minimize new code in various collections
-    def __init__(self, metadata=None, record_list=None, header=None, input_file=None, from_file=False):
-        # metadata should be Metadata class
-        # header should be Header class
-        # record_list should be list of Record class
-        if from_file:
-            self.read(input_file)
-        else:
-            self.metadata = metadata
-            self.records = record_list
-            self.header = header
 
-    def read(self, input_file):
-        # collectiontype-dependent function
-        pass
-
-    def add_metadata(self):
-        # collectiontype-dependent function
-        pass
-
-    def add_header(self):
-        # collectiontype-dependent function
-        pass
-
-    def add_record(self):
-        # collectiontype-dependent function
-        pass
-
-    def __str__(self):
-        collection_string = ""
-        if self.metadata:
-            collection_string += str(self.metadata)
-        if self.header:
-            collection_string += "\n" + str(self.header)
-        if self.records:
-            collection_string += "\n" + "\n".join([str(record) for record in self.records])
-
-        return collection_string
-
-    def __iter__(self):
-        for record in self.records:
-            yield record
-
-    def __getitem__(self, item):
-        #string-like access
-        return self.records[item]
-
-    def __len__(self):
-        return len(self.records)
 
     def pop(self, index=None):
         # i am a fairy idiot - forgot that 0 is equal to False in python.
@@ -249,19 +244,6 @@ class Collection(Iterable):
 
         for record in self.records:
             if comparison(getattr(record, parameter), minimum, maximum):
-                filtered_records.append(record)
-            else:
-                filtered_out_records.append(record)
-
-        return filtered_records, filtered_out_records
-
-    def filter_records_by_expression(self, expression):
-        filtered_records = []
-        filtered_out_records = []
-        for record in self.records:
-            #print("a\na\na\na\na\na\na\na")
-            #print(record.description["Power"])
-            if eval(expression):
                 filtered_records.append(record)
             else:
                 filtered_out_records.append(record)
@@ -293,15 +275,6 @@ class Collection(Iterable):
                     without_flags_records.append(record)
 
         return with_flags_records, without_flags_records
-
-    def write(self, output_file):
-        with open(output_file, "w") as out_fd:
-            if self.metadata:
-                out_fd.write(str(self.metadata) + "\n")
-            if self.header:
-                out_fd.write(str(self.header) + "\n")
-            for record in self.records:
-                out_fd.write(str(record) + "\n")
 
     def get_location(self, record_dict, key="Loc", use_synonym=False, synonym_dict=None):
         for record in self.records:
@@ -493,5 +466,3 @@ class Collection(Iterable):
         plt.savefig("%s/%s" % (plot_dir, full_genome_pie_filename), bbox_inches='tight')
         plt.close()
 """
-if __name__ == "__main__":
-    fg = Collection()

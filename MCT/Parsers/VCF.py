@@ -23,6 +23,229 @@ ref_alt_variants = {"desaminases": [("C", ["T"]), ("G", ["A"])]
 
 
 class RecordVCF(Record):
+    def __init__(self, pos, id, ref, alt_list, qual, filter_list, info_dict, samples_list,
+                 description={}, flags=None):
+
+        self.pos = pos                                  #int
+        self.id = id                                    #str
+        self.ref = ref                                  #str
+        self.alt_list = alt_list                        #list, entries are strings
+        self.qual = qual                                #real or "."
+        self.filter_list = sorted(filter_list)          #list, entries are strings
+        self.info_dict = info_dict                      #dict
+        self.samples_list = samples_list                #list entries are dicts with keys from format_list and
+                                                        #values are lists
+        self.description = description
+        self.flags = flags
+
+    def __str__(self):
+        alt_string = ",".join(self.alt_list)
+        filter_string = ";".join(self.filter_list)
+        key_string_list = []
+        for key in sorted(list(self.info_dict.keys())):
+            if self.info_dict[key]:
+                key_string_list.append(key + "=" + ",". join(map(lambda x: str(x), self.info_dict[key])))
+            else:
+                key_string_list.append(key)
+
+        info_string = ";".join(key_string_list)
+        for sample in self.samples_list:
+            if len(sample.keys()) > 1:
+                format_string = ":".join(sample.keys())
+                break
+
+        samples_string = "\t".join([":".join([",".join(map(lambda x: str(x), sample[key])) for key in sample.keys()]) for sample in self.samples_list])
+        return '\t'.join(map(lambda x: str(x), [self.pos, self.id, self.ref, alt_string,
+                                                self.qual, filter_string, info_string, format_string, samples_string]))
+
+
+class MetadataVCF(OrderedDict, Metadata):
+
+    @staticmethod
+    def _split_by_equal_sign(string):
+        try:
+            index = string.index("=")
+        except ValueError:
+            #if "=" is not present in string (case of flag type in INFO field)
+            return string, None
+        return string[:index], string[index+1:]
+
+    @staticmethod
+    def _split_by_comma_sign(string):
+        index_list = [-1]
+        i = 1
+        while (i < len(string)):
+            if string[i] == "\"":
+                i += 1
+                while string[i] != "\"":
+                    i += 1
+            if string[i] == ",":
+                index_list.append(i)
+            i += 1
+        index_list.append(len(string))
+        return [string[index_list[j] + 1: index_list[j + 1]] for j in range(0, len(index_list) - 1)]
+
+    def add_metadata(self, line):
+        key, value = self._split_by_equal_sign(line[2:].strip())
+        if value[0] == "<" and value[-1] == ">":
+            value = self._split_by_comma_sign(value[1:-1])
+            value_id = self._split_by_equal_sign(value[0])[1]
+            value = OrderedDict(self._split_by_equal_sign(entry) for entry in value[1:])
+            if key not in self:
+                self[key] = OrderedDict({})
+            self[key][value_id] = value
+        else:
+            self[key] = value
+
+    def __str__(self):
+        metadata_string = ""
+        for key in self:
+            if not isinstance(self[key], dict):
+                metadata_string += "##%s=%s\n" % (key, self[key])
+            else:
+                prefix = "##%s=<" % key
+                suffix = ">\n"
+                for att_id in self[key]:
+                    middle = "ID=%s," % att_id + ",".join(["%s=%s" % (param, self[key][att_id][param])
+                                                           for param in self[key][att_id]])
+                    metadata_string += prefix + middle + suffix
+        return metadata_string[:-1]
+
+
+class HeaderVCF(list, Header):
+
+    def __str__(self):
+        return "#" + "\t".join(self)
+
+
+class CollectionVCF(Collection):
+
+    def __init__(self, metadata=None, records_dict=None, header=None, in_file=None, samples=None,
+                 from_file=True, external_metadata=None):
+        self.linkage_dict = None
+        if from_file:
+            self.read(in_file, external_metadata=external_metadata)
+        else:
+            self.metadata = metadata
+            self.records = {} if records_dict is None else records_dict
+            self.header = header
+            self.samples = samples
+        self.scaffold_list = self.scaffolds()
+        self.scaffold_length = self.scaffold_len()
+        self.number_of_scaffolds = len(self.scaffold_list)
+        self.record_index = self.rec_index()
+
+    def read(self, in_file, external_metadata=None):
+        self.metadata = MetadataVCF()
+        self.records = OrderedDict({})
+        with open(in_file, "r") as fd:
+            for line in fd:
+                if line[:2] != "##":
+                    self.header = HeaderVCF(line[1:].strip().split("\t"))   # line[1:].strip().split("\t")
+                    self.samples = self.header[9:]
+                    break
+                self.metadata.add_metadata(line)
+            for line in fd:
+                scaffold, record = self.add_record(line, external_metadata=external_metadata)
+                if scaffold not in self.records:
+                    self.records[scaffold] = []
+                self.records[scaffold].append(record)
+
+    def add_record(self, line, external_metadata=None):
+        line_list = line.strip().split("\t")
+        #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	Sample_1
+        position = int(line_list[1])
+        quality = "."
+        if quality != line_list[5]:
+            quality = float(line_list[5])
+        alt_list = line_list[4].split(",")
+        filter_list = line_list[6].split(",")          # list, entries are strings
+
+        info_tuple_list = [self._split_by_equal_sign(entry) for entry in line_list[7].split(";")]
+        info_dict = {}
+        for entry in info_tuple_list:
+            if self.metadata:
+                if self.metadata["INFO"][entry[0]]["Type"] == "Flag":
+                    info_dict[entry[0]] = []
+                elif self.metadata["INFO"][entry[0]]["Type"] == "Integer":
+                    info_dict[entry[0]] = list(map(lambda x: int(x), entry[1].split(",")))
+                elif self.metadata["INFO"][entry[0]]["Type"] == "Float":
+                    info_dict[entry[0]] = list(map(lambda x: float(x), entry[1].split(",")))
+                else:
+                    info_dict[entry[0]] = entry[1].split(",")
+            else:
+                if external_metadata["INFO"][entry[0]]["Type"] == "Flag":
+                    info_dict[entry[0]] = []
+                elif external_metadata["INFO"][entry[0]]["Type"] == "Integer":
+                    info_dict[entry[0]] = list(map(lambda x: int(x), entry[1].split(",")))
+                elif external_metadata["INFO"][entry[0]]["Type"] == "Float":
+                    info_dict[entry[0]] = list(map(lambda x: float(x), entry[1].split(",")))
+                else:
+                    info_dict[entry[0]] = entry[1].split(",")
+        samples_list = []
+
+        for sample_string in line_list[9:]:
+            sample_dict = OrderedDict({})
+            if sample_string == "./.":
+                sample_dict["GT"] = ["./."]
+            else:
+                for key, value_list in zip(line_list[8].split(":"), sample_string.split(":")):
+                    if self.metadata:
+                        if self.metadata["FORMAT"][key]["Type"] == "Integer":
+                            sample_dict[key] = list(map(lambda x: int(x), value_list.split(",")))
+                        elif self.metadata["FORMAT"][key]["Type"] == "Float":
+                            sample_dict[key] = list(map(lambda x: float(x), value_list.split(",")))
+                        else:
+                            sample_dict[key] = value_list.split(",")
+                    else:
+                        if external_metadata["FORMAT"][key]["Type"] == "Integer":
+                            sample_dict[key] = list(map(lambda x: int(x), value_list.split(",")))
+                        elif external_metadata["FORMAT"][key]["Type"] == "Float":
+                            sample_dict[key] = list(map(lambda x: float(x), value_list.split(",")))
+                        else:
+                            sample_dict[key] = value_list.split(",")
+            samples_list.append(sample_dict)
+        return line_list[0], RecordVCF(position, line_list[2], line_list[3],
+                                      alt_list, quality, filter_list,
+                                      info_dict, samples_list)
+
+    @staticmethod
+    def _split_by_equal_sign(string):
+        try:
+            index = string.index("=")
+        except ValueError:
+            return string, None
+        return string[:index], string[index+1:]
+
+    def _split_by_comma_sign(self, string):
+        return self._split_by_comma_sign(string, sign=",")
+
+    @staticmethod
+    def _split_by_sign(string, sign=","):
+        # ignores sign in "
+        index_list = [-1]
+        i = 1
+        while (i < len(string)):
+            if string[i] == "\"":
+                i += 1
+                while string[i] != "\"":
+                    i += 1
+            if string[i] == sign:
+                index_list.append(i)
+            i += 1
+        index_list.append(len(string))
+        return [string[index_list[j] + 1: index_list[j + 1]] for j in range(0, len(index_list) - 1)]
+
+    def filter(self, expression):
+        # expression should be a function with one argument - record entry
+        filtered_records, filtered_out_records = self.filter_records(expression)
+        return CollectionVCF(metadata=self.metadata, records_dict=filtered_records,
+                             header=self.header, samples=self.samples, from_file=False),\
+               CollectionVCF(metadata=self.metadata, record_dict=filtered_out_records,
+                             header=self.header, samples=self.samples, from_file=False)
+
+"""
+class RecordVCF(Record):
     def __init__(self, chrom, pos, id, ref, alt_list, qual, filter_list, info_dict, samples_list,
                  description={}, flags=None):
         self.chrom = chrom                              #str
@@ -634,7 +857,7 @@ class CollectionVCF(Collection):
                      return_collection=True,
                      write_inconsistent=True,
                      write_correlation=True):
-        from CCF import RecordCCF, CollectionCCF, MetadataCCF, HeaderCCF
+        from MCT.Parsers.CCF import RecordCCF, CollectionCCF, MetadataCCF, HeaderCCF
         if self.linkage_dict:
             linkage_dict = self.linkage_dict
         else:
@@ -922,7 +1145,7 @@ class CollectionVCF(Collection):
 
 class ReferenceGenome(object):
     # TODO: rewrite
-    """docstring for ReferenceGenome"""
+
     chr_dict = {"chrI": "1",
                 "chrII": "2",
                 "chrIII": "3",
@@ -946,18 +1169,7 @@ class ReferenceGenome(object):
     def __init__(self, ref_gen_file, index_file="refgen.idx", filetype="fasta"):
         self.ref_gen_file = ref_gen_file
         self.reference_genome = SeqIO.index_db(index_file, [ref_gen_file], filetype)
-        """
-        for entry in self.reference_genome:
-            entry_name = self.chr_dict[self.reference_genome[entry].description.split(" ")[1]]
-            self.feature_dict[entry_name] = []
-            for feature in self.reference_genome[entry].features:
-                if not (feature.type == "CDS" or feature.type == "source" or feature.type == "gene" or
-                        feature.type == "rep_origin" or feature.type == "misc_feature"):
-                    self.feature_dict[entry_name].append([feature.type,
-                                                         [feature.location.start, feature.location.end,
-                                                          feature.location.strand], feature.strand])
-                #print feature.type,feature.location.start,feature.location.end, feature.location.strand
-        """
+
     def find_gaps(self):
         gap_reg_exp = re.compile("N+", re.IGNORECASE)
         for region in self.reference_genome:
@@ -970,9 +1182,21 @@ class ReferenceGenome(object):
                                                          type="gap", strand=None))
         #print(self.gaps_dict)
 
-if __name__ == "__main__":
-    workdir = "/media/mahajrod/d9e6e5ee-1bf7-4dba-934e-3f898d9611c8/Data/LAN2xx/all"
 
+"""
+
+
+if __name__ == "__main__":
+    #workdir = "/media/mahajrod/d9e6e5ee-1bf7-4dba-934e-3f898d9611c8/Data/LAN2xx/all"
+    vcf_file = "/home/mahajrod/Genetics/MCTool/examples/PmCDA1_3d_annotated.vcf"
+    collection = CollectionVCF(from_file=True, in_file=vcf_file)
+    print(collection.record_index)
+    #for record in collection:
+    #    print(record)
+    print(collection[0])
+    print(collection[-9991])
+    print(len(collection))
+    """
     reference = ReferenceGenome("/home/mahajrod/genetics/desaminases/data/LAN210_v0.9m/LAN210_v0.9m.fasta",
                                 index_file="/home/mahajrod/genetics/desaminases/data/LAN210_v0.9m/LAN210_v0.9m.idx")
     #print(reference.reference_genome)
@@ -999,3 +1223,4 @@ if __name__ == "__main__":
         #mutations.test_thresholds(extracting_method='distance', threshold=(50, 5000, 100),
         #                          testing_dir="testing_threshold")
         #mutations.rainfall_plot(sample + suffix, ref_genome=reference, draw_gaps=True)
+    """
