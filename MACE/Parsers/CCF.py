@@ -5,8 +5,8 @@ from collections import Iterable, OrderedDict
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import colors
-from MCT.Parsers.Abstract import Record, Collection, Metadata, Header
-from MCT.Parsers.VCF import CollectionVCF, MetadataVCF, HeaderVCF
+from MACE.Parsers.Abstract import Record, Collection, Metadata, Header
+from MACE.Parsers.VCF import CollectionVCF, MetadataVCF, HeaderVCF
 
 
 class RecordCCF(Record, Iterable):

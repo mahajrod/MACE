@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 __author__ = 'Sergei F. Kliver'
 
-from MCT.Parsers.VCF import CollectionVCF
+from MACE.Parsers.VCF import CollectionVCF
 from BCBio import GFF
 from Bio import SeqIO
 

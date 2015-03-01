@@ -30,7 +30,7 @@ import os
 # ones.
 #help("modules")
 sys.path.append("/home/mahajrod/Genetics/MCTool/")
-import MCT.Parsers.VCF
+import MACE.Parsers.VCF
 print (sys.path)
 extensions = [
     'sphinx.ext.autodoc',

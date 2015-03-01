@@ -8,7 +8,7 @@ from math import sqrt
 import matplotlib.pyplot as plt
 import numpy as np
 
-from MCT.General.GeneralCollections import TwoLvlDict
+from MACE.General.GeneralCollections import TwoLvlDict
 
 built_in_flags = {"DA": "desaminase-like",
                   "BR": "location in bad region (masked and so on)",

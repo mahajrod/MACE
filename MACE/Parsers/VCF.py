@@ -17,7 +17,7 @@ import matplotlib.pyplot as plt
 from Bio import SeqIO
 from Bio.SeqFeature import SeqFeature, FeatureLocation
 
-from MCT.Parsers.Abstract import Record, Collection, Metadata, Header
+from MACE.Parsers.Abstract import Record, Collection, Metadata, Header
 
 
 ref_alt_variants = {"desaminases": [("C", ["T"]), ("G", ["A"])]
@@ -562,7 +562,7 @@ class CollectionVCF(Collection):
                      return_collection=True,
                      write_inconsistent=True,
                      write_correlation=True):
-        from MCT.Parsers.CCF import RecordCCF, CollectionCCF, MetadataCCF, HeaderCCF
+        from MACE.Parsers.CCF import RecordCCF, CollectionCCF, MetadataCCF, HeaderCCF
         if self.linkage_dict:
             linkage_dict = self.linkage_dict
         else:
