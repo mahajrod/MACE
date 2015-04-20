@@ -288,7 +288,7 @@ class HeaderCCF(list, Header):
 
 
 class CollectionCCF(Collection):
-
+    """
     def read(self, input_file):
         # TODO: write read from ccf file
         with open(input_file, "r") as in_fd:
@@ -368,7 +368,7 @@ class CollectionCCF(Collection):
                                               info_dict=info_dict, flags=flags,
                                               collection_vcf=collection_vcf, bad_vcf_records=bad_records,
                                               from_records=False, subclusters=subclusters))
-
+    """
     def filter(self, expression):
         # expression should be a function with one argument - record entry
         filtered_records, filtered_out_records = self.filter_records(expression)
@@ -382,7 +382,6 @@ class CollectionCCF(Collection):
     def filter_by_size(self, min_size=3):
         return self.filter(lambda record: record.size >= min_size)
 
-
     def count(self):
         sizes = []
         for record in self:
@@ -390,7 +389,7 @@ class CollectionCCF(Collection):
         return sizes
 
     def statistics(self, filename="cluster_size_distribution.svg", title="Distribution of sizes of clusters",
-                   dpi=150, figsize=(10, 10), facecolor="green"):
+                   dpi=150, figsize=(8, 8), facecolor="green"):
         plt.figure(1, dpi=dpi, figsize=figsize)
         plt.subplot(1, 1, 1)
         plt.suptitle(title)
@@ -402,41 +401,19 @@ class CollectionCCF(Collection):
         plt.savefig(filename)
         plt.close()
 
-"""
-
-
     def filter_by_flags(self, white_flag_list=[], black_flag_list=[]):
-        filtered_records = []
-        filtered_out_records = []
         white_list = set(white_flag_list)
         black_list = set(black_flag_list)
-        for record in self.records:
-            if white_list:
-                if (white_list & record.flags) and not (black_list & record.flags):
-                    filtered_records.append(record)
-                else:
-                    filtered_out_records.append(record)
-            else:
-                if black_list & record.flags:
-                    filtered_out_records.append(record)
-                else:
-                    filtered_records.append(record)
-        return CollectionCCF(metadata=self.metadata, record_list=filtered_records,
-                             header=self.header), \
-               CollectionCCF(metadata=self.metadata, record_list=filtered_out_records,
-                             header=self.header)
 
-    def check_record_location(self, bad_region_collection_gff):
-        for record in self:
-            record.check_location(bad_region_collection_gff)
-
-    def adjust(self, border_limit=None, min_size_to_adjust=2, remove_border_subclusters=False, remove_size_limit=1):
-        new_records = []
-        for record in self:
-            new_records += record.adjust(border_limit=border_limit, min_size_to_adjust=min_size_to_adjust,
-                                         remove_border_subclusters=remove_border_subclusters,
-                                         remove_size_limit=remove_size_limit)
-        self.records = new_records
+        if white_list and not black_list:
+            expression = lambda record: white_list & record.flags
+        elif black_list and not white_list:
+            expression = lambda record: not (black_list & record.flags)
+        elif black_list and not white_list:
+            expression = lambda record: (white_list & record.flags) and not (black_list & record.flags)
+        elif not black_list and (not white_list):
+            raise ValueError("Both white and black lists were not set")
+        return self.filter(expression)
 
     def subclustering(self,
                       method="inconsistent",
@@ -445,10 +422,13 @@ class CollectionCCF(Collection):
         for record in self:
             if len(record) < 3:
                 continue
-            #print(record)
             record.subclustering(method=method,
                                  threshold=threshold,
                                  cluster_distance=cluster_distance)
+
+    def check_record_location(self, bad_region_collection_gff):
+        for record in self:
+            record.check_location(bad_region_collection_gff)
 
     def check_flags(self, flag_list, mismatch_list=[], expression_list=[], remove_mismatch_list=[],
                     flags_to_reset=None, mode="all", min_cluster_size=[]):
@@ -456,13 +436,6 @@ class CollectionCCF(Collection):
             record.check_flags(flag_list, mismatch_list=mismatch_list, expression_list=expression_list,
                                remove_mismatch_list=remove_mismatch_list, flags_to_reset=flags_to_reset, mode=mode,
                                min_cluster_size=min_cluster_size)
-
-    def extract_vcf(self):
-        vcf = CollectionVCF(metadata=self.metadata.vcf_metadata, record_list=[], header=self.metadata.vcf_header,
-                            samples=self.metadata.samples, from_file=False)
-        for record in self:
-            vcf = vcf + record.records
-        return vcf
 
     def check_strandness(self):
         for record in self:
@@ -617,5 +590,23 @@ class CollectionCCF(Collection):
         plt.savefig(filename)
         plt.close()
 
+    def adjust(self, border_limit=None, min_size_to_adjust=2, remove_border_subclusters=False, remove_size_limit=1):
+        new_records_dict = OrderedDict()
+        for scaffold in self.scaffold_list:
+            new_records_dict[scaffold] = []
+        for scaffold in self.scaffold_list:
+            for record in self.records[scaffold]:
+                new_records_dict[scaffold] += record.adjust(border_limit=border_limit,
+                                                            min_size_to_adjust=min_size_to_adjust,
+                                                            remove_border_subclusters=remove_border_subclusters,
+                                                            remove_size_limit=remove_size_limit)
+        self.records = new_records_dict
 
-"""
+    def extract_vcf(self):
+        vcf = CollectionVCF(metadata=self.metadata.vcf_metadata,
+                            records_dict=OrderedDict(),
+                            header=self.metadata.vcf_header,
+                            samples=self.metadata.samples, from_file=False)
+        for record in self:
+            vcf = vcf + record.records
+        return vcf

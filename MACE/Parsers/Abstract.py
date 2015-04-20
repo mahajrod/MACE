@@ -127,6 +127,46 @@ class Collection():
         self.number_of_scaffolds = len(self.scaffold_list)
         self.record_index = self.rec_index()
 
+    def __iter__(self):
+        for scaffold_id in self.records.keys():
+            for record in self.records[scaffold_id]:
+                yield record
+
+    def __getitem__(self, item):
+        item_scaffold, shift = self.get_record_index(item)
+        return self.records[item_scaffold][shift]
+
+    def pop(self, index=None):
+        if index is not None:
+            item_scaffold, shift = self.get_record_index(index)
+            record = self.records[item_scaffold].pop(shift)
+        else:
+            item_scaffold = self.scaffold_list[-1]
+            record = self.records[item_scaffold].pop()
+
+        if not self.records[item_scaffold]:
+            del(self.records[item_scaffold])
+        self.scaffold_list = self.scaffolds()
+        self.scaffold_length = self.scaffold_len()
+        self.number_of_scaffolds = len(self.scaffold_list)
+        self.record_index = self.rec_index()
+        return record
+
+    def __str__(self):
+        collection_string = ""
+        if self.metadata:
+            collection_string += str(self.metadata)
+        if self.header:
+            collection_string += "\n" + str(self.header)
+        if self.records:
+            for scaffold in self.scaffold_list:
+                for record in self.records[scaffold]:
+                    collection_string += "\n" + scaffold + "\t" + str(record)
+        return collection_string
+
+    def __len__(self):
+        return self.record_index[self.scaffold_list[-1]][1] + 1
+
     def read(self, input_file):
         # collectiontype-dependent function
         pass
@@ -149,18 +189,6 @@ class Collection():
             scaffold_length_dict[scaffold] = len(self.records[scaffold])
         return scaffold_length_dict
 
-    def __str__(self):
-        collection_string = ""
-        if self.metadata:
-            collection_string += str(self.metadata)
-        if self.header:
-            collection_string += "\n" + str(self.header)
-        if self.records:
-            for scaffold in self.scaffold_list:
-                for record in self.records[scaffold]:
-                    collection_string += "\n" + scaffold + "\t" + str(record)
-        return collection_string
-
     def rec_index(self):
         index_dict = OrderedDict({})
         index_dict[self.scaffold_list[0]] = [0, self.scaffold_length[self.scaffold_list[0]] - 1]
@@ -168,11 +196,6 @@ class Collection():
             index_dict[self.scaffold_list[index]] = [index_dict[self.scaffold_list[index-1]][1] + 1,
                                             index_dict[self.scaffold_list[index-1]][1] + self.scaffold_length[self.scaffold_list[index]]]
         return index_dict
-
-    def __iter__(self):
-        for scaffold_id in self.records.keys():
-            for record in self.records[scaffold_id]:
-                yield record
 
     def scaffolds(self):
         return self.records.keys()
@@ -191,29 +214,6 @@ class Collection():
             raise IndexError("Index %i is out of range" % tmp_item)
         shift = tmp_item - start
         return item_scaffold, shift
-
-    def __getitem__(self, item):
-        item_scaffold, shift = self.get_record_index(item)
-        return self.records[item_scaffold][shift]
-
-    def pop(self, index=None):
-        if index is not None:
-            item_scaffold, shift = self.get_record_index(index)
-            record = self.records[item_scaffold].pop(shift)
-        else:
-            item_scaffold = self.scaffold_list[-1]
-            record = self.records[item_scaffold].pop()
-
-        if not self.records[item_scaffold]:
-            del(self.records[item_scaffold])
-        self.scaffold_list = self.scaffolds()
-        self.scaffold_length = self.scaffold_len()
-        self.number_of_scaffolds = len(self.scaffold_list)
-        self.record_index = self.rec_index()
-        return record
-
-    def __len__(self):
-        return self.record_index[self.scaffold_list[-1]][1] + 1
 
     def filter_records(self, expression):
         # expression should be a function with one argument - record entry

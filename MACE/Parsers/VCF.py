@@ -5,8 +5,10 @@ VCF Parser Module
 """
 import os
 import re
-from collections import OrderedDict
 from math import sqrt
+from copy import deepcopy
+from collections import OrderedDict
+from multiprocessing import Pool
 
 import numpy as np
 from scipy.spatial.distance import pdist
@@ -610,20 +612,19 @@ class CollectionVCF(Collection):
         else:
             return clusters
 
-"""
-
-class CollectionVCF(Collection):
-
-    @staticmethod
-    def _split_ref(records):
-        splited_dict = OrderedDict({"A": [], "C": [], "G": [], "T": [], "INDEL": []})
-        nucleotides = ["A", "C", "G", "T"]
-        for record in records:
-            if record.ref in nucleotides:
-                splited_dict[record.ref].append(record)
+    # methods for sum of two CollectionsVCF: no check for intersections(!!!!!!!!)
+    def __add__(self, other):
+        new_records_dict = deepcopy(self.records)
+        for scaffold in other.scaffold_list:
+            if scaffold in self.scaffold_list:
+                new_records_dict[scaffold] += other.records[scaffold]
             else:
-                splited_dict["INDEL"].append(record)
-        return splited_dict
+                new_records_dict[scaffold] = other.records[scaffold]
+        return CollectionVCF(metadata=self.metadata, records_dict=new_records_dict,
+                             header=self.header, samples=self.samples, from_file=False)
+
+    def __radd__(self, other):
+        return self.__add__(other)
 
     def test_thresholds(self,
                         extracting_method="inconsistent",
@@ -716,31 +717,15 @@ class CollectionVCF(Collection):
         plt.savefig("%s/clusters_%s.svg" % (testing_dir, extracting_method))
         plt.close()
 
-    def filter_by_expression(self, expression):
-        filtered_records, filtered_out_records = self.filter_records_by_expression(expression)
-        return CollectionVCF(metadata=self.metadata, record_list=filtered_records,
-                               header=self.header, samples=self.samples, from_file=False), \
-               CollectionVCF(metadata=self.metadata, record_list=filtered_out_records,
-                               header=self.header, samples=self.samples, from_file=False)
-
     def add_info(self, metadata_line, expression, info_name, info_value=None):
         self.metadata.add_metadata(metadata_line)
         for record in self:
-            if eval(expression):
+            if expression(record):
                 value = info_value if isinstance(info_value, list) else [] if info_value is None else [info_value]
                 if info_name in record.info_dict:
                     record.info_dict[info_name] += value
                 else:
                     record.info_dict[info_name] = value
-
-    # methods for sum of two CollectionsVCF: no check for intersections(!!!!!!!!)
-    def __add__(self, other):
-        return CollectionVCF(metadata=self.metadata, record_list=self.records + other.records,
-                             header=self.header, samples=self.samples, from_file=False)
-
-    def __radd__(self, other):
-        return CollectionVCF(metadata=self.metadata, record_list=self.records + other.records,
-                             header=self.header, samples=self.samples, from_file=False)
 
     def parse_snpeff_info_record(self, string):
         effect, parameters = string.split("(")
@@ -760,42 +745,30 @@ class CollectionVCF(Collection):
         with open(output_file, "w") as out_fd:
             header_string = "#" + "\t".join(record_header_list + snpeff_header_list) + "\n"
             out_fd.write(header_string)
-            for record in self:
-                common_part = "%s\t%i\t%s\t%s" % (record.chrom, record.pos, record.ref, ",".join(record.alt_list))
-                for effect in record.info_dict["EFF"]:
-                    effect_parameters = self.parse_snpeff_info_record(effect)
-                    num_parameters = len(effect_parameters)
-                    for i in range(0, num_parameters):
-                        if effect_parameters[i] == "":
-                            effect_parameters[i] = "."
-                    if num_parameters < 14:
-                        effect_parameters += ["." for i in range(num_parameters, 14)]
-                    out_fd.write(common_part + "\t" + "\t".join(effect_parameters) + "\n")
-
-    def find_location(self, record_dict, key="Ftype", strand_key="Fstrand", genes_key="Genes", genes_strand_key="Gstrand",
-                      feature_type_black_list=[],
-                      use_synonym=False, synonym_dict=None, add_intergenic_label=True):
-
-        self.metadata.add_metadata("##INFO=<ID=%s,Number=.,Type=String,Description=\"Types of features\">" % key)
-        self.metadata.add_metadata("##INFO=<ID=%s,Number=1,Type=String,Description=\"Strand of features\">" % strand_key)
-        self.metadata.add_metadata("##INFO=<ID=%s,Number=.,Type=String,Description=\"Names of genes\">" % genes_key)
-        self.metadata.add_metadata("##INFO=<ID=%s,Number=.,Type=String,Description=\"Strands of genes\">" % genes_strand_key)
-        for record in self:
-            record.find_location(record_dict, key=key, strand_key=strand_key,
-                                 genes_key=genes_key, genes_strand_key=genes_strand_key,
-                                 feature_type_black_list=feature_type_black_list,
-                                 use_synonym=use_synonym, synonym_dict=synonym_dict,
-                                 add_intergenic_label=add_intergenic_label)
+            for scaffold in self.records:
+                for record in self.records[scaffold]:
+                    common_part = "%s\t%i\t%s\t%s" % (scaffold, record.pos, record.ref, ",".join(record.alt_list))
+                    for effect in record.info_dict["EFF"]:
+                        effect_parameters = self.parse_snpeff_info_record(effect)
+                        num_parameters = len(effect_parameters)
+                        for i in range(0, num_parameters):
+                            if effect_parameters[i] == "":
+                                effect_parameters[i] = "."
+                        if num_parameters < 14:
+                            effect_parameters += ["." for i in range(num_parameters, 14)]
+                        out_fd.write(common_part + "\t" + "\t".join(effect_parameters) + "\n")
 
     def count_strandness(self, prefix):
         count_dict = OrderedDict({})
 
+        for scaffold in self.records:
+            count_dict[scaffold] = np.zeros((2, 4), dtype=int)
         hor_coord_dict = {"C": 0, "G": 1}
         ver_coord_dict = {"N": 0, "P": 1, "M": 2, "B": 3}
-        for record in self:
-            if record.chrom not in count_dict:
-                count_dict[record.chrom] = np.zeros((2, 4), dtype=int)
-            count_dict[record.chrom][hor_coord_dict[record.ref]][ver_coord_dict[record.info_dict["Fstrand"][0]]] += 1
+
+        for scaffold in self.records:
+            for record in self.records[scaffold]:
+                count_dict[scaffold][hor_coord_dict[record.ref]][ver_coord_dict[record.info_dict["Fstrand"][0]]] += 1
 
         count_dict["all"] = sum(count_dict.values())
 
@@ -846,9 +819,7 @@ class CollectionVCF(Collection):
                     #print("aaa")
                     start_coordinates = []
                     end_coordinates = []
-                    for variant in self:
-                        if record_id != variant.chrom:
-                            continue
+                    for variant in self.records[record_id]:
                         if region_start_start <= variant.pos <= region_start_end:
                             start_coordinates.append((variant.pos - CDS_start) * strand)
                         if region_end_start <= variant.pos <= region_end_end:
@@ -861,6 +832,21 @@ class CollectionVCF(Collection):
                                                     region_end_start, region_end_end,
                                                     end_coordinates])
         return all_variant_start_positions, all_variant_end_positions, gene_variants_positions
+
+    def find_location(self, record_dict, key="Ftype", strand_key="Fstrand", genes_key="Genes", genes_strand_key="Gstrand",
+                      feature_type_black_list=[],
+                      use_synonym=False, synonym_dict=None, add_intergenic_label=True):
+
+        self.metadata.add_metadata("##INFO=<ID=%s,Number=.,Type=String,Description=\"Types of features\">" % key)
+        self.metadata.add_metadata("##INFO=<ID=%s,Number=1,Type=String,Description=\"Strand of features\">" % strand_key)
+        self.metadata.add_metadata("##INFO=<ID=%s,Number=.,Type=String,Description=\"Names of genes\">" % genes_key)
+        self.metadata.add_metadata("##INFO=<ID=%s,Number=.,Type=String,Description=\"Strands of genes\">" % genes_strand_key)
+        for record in self:
+            record.find_location(record_dict, key=key, strand_key=strand_key,
+                                 genes_key=genes_key, genes_strand_key=genes_strand_key,
+                                 feature_type_black_list=feature_type_black_list,
+                                 use_synonym=use_synonym, synonym_dict=synonym_dict,
+                                 add_intergenic_label=add_intergenic_label)
 
 
 class ReferenceGenome(object):
@@ -902,10 +888,6 @@ class ReferenceGenome(object):
                                                          type="gap", strand=None))
         #print(self.gaps_dict)
 
-
-"""
-
-
 if __name__ == "__main__":
     #workdir = "/media/mahajrod/d9e6e5ee-1bf7-4dba-934e-3f898d9611c8/Data/LAN2xx/all"
     vcf_file = "/home/mahajrod/Genetics/MCTool/example_data/PmCDA1_3d_annotated.vcf"
@@ -924,7 +906,6 @@ if __name__ == "__main__":
     for key in collection.metadata:
         print key
         print collection.metadata[key]
-
 
     """
     reference = ReferenceGenome("/home/mahajrod/genetics/desaminases/data/LAN210_v0.9m/LAN210_v0.9m.fasta",
