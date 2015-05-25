@@ -1,14 +1,14 @@
 #!/usr/bin/env python
-__author__ = 'Sergei F. Kliver'
 """
 VCF Parser Module
 """
+__author__ = 'Sergei F. Kliver'
+
 import os
 import re
 from math import sqrt
 from copy import deepcopy
 from collections import OrderedDict
-from multiprocessing import Pool
 
 import numpy as np
 from scipy.spatial.distance import pdist
@@ -27,6 +27,9 @@ ref_alt_variants = {"desaminases": [("C", ["T"]), ("G", ["A"])]
 
 
 class RecordVCF(Record):
+    """
+    RecordVCF class
+    """
     def __init__(self, pos, id, ref, alt_list, qual, filter_list, info_dict, samples_list,
                  description=None, flags=None):
 
@@ -76,6 +79,12 @@ class RecordVCF(Record):
         return number
 
     def set_filter(self, expression, filter_name):
+        """
+
+        :param expression:
+        :param filter_name:
+        :return:
+        """
         if expression(self):
             self.filter_list.append(filter_name)
             self.filter_list.sort()
@@ -88,7 +97,9 @@ class RecordVCF(Record):
             self.info_dict[info_name] = value
 
     def check_indel(self):
-        #checks if record is indel
+        """
+        checks if record is indel
+        """
         if len(self.ref) > 1 or len("".join(self.alt_list)) > len(self.alt_list):
             return True
         return False
@@ -155,7 +166,9 @@ class RecordVCF(Record):
 
 
 class MetadataVCF(OrderedDict, Metadata):
-
+    """
+    MetadataVCF class
+    """
     @staticmethod
     def _split_by_equal_sign(string):
         try:
@@ -214,15 +227,21 @@ class MetadataVCF(OrderedDict, Metadata):
 
 
 class HeaderVCF(list, Header):
-
+    """
+    HeaderVCF class
+    """
     def __str__(self):
         return "#" + "\t".join(self)
 
 
 class CollectionVCF(Collection):
+    """
+    CollectionVCF class
+
+    """
 
     def __init__(self, metadata=None, records_dict=None, header=None, in_file=None, samples=None,
-                 from_file=True, external_metadata=None):
+                 from_file=True, external_metadata=None, threads=1):
         self.linkage_dict = None
         if from_file:
             self.read(in_file, external_metadata=external_metadata)
@@ -235,6 +254,7 @@ class CollectionVCF(Collection):
         self.scaffold_length = self.scaffold_len()
         self.number_of_scaffolds = len(self.scaffold_list)
         self.record_index = self.rec_index()
+        self.threads = threads
 
     def read(self, in_file, external_metadata=None):
         self.metadata = MetadataVCF()
@@ -359,6 +379,10 @@ class CollectionVCF(Collection):
         return coord_dict
 
     def get_positions(self):
+        """
+        Extracts position coordinates of records in collection
+        dict of coordinates, keys are scaffolds
+        """
         positions_dict = OrderedDict({})
         for scaffold in self.records:
             positions_dict[scaffold] = np.array([record.pos for record in self.records[scaffold]])
@@ -396,7 +420,29 @@ class CollectionVCF(Collection):
         return "INDEL"
 
     def rainfall_plot(self, plot_name, base_colors=[], single_fig=True, dpi=300, figsize=(40, 40), facecolor="#D6D6D6",
-                      ref_genome=None, masked_regions=None, min_gap_length=10, draw_gaps=False, suptitle=None):
+                      ref_genome=None, masked_regions=None, min_gap_length=10, draw_gaps=False, suptitle=None,
+                      gaps_color="#777777", masked_regions_color="#aaaaaa", logbase=2,
+                      extension_list=["svg", "eps", "pdf", "png", "jpg"]):
+        """
+
+        :param plot_name:
+        :param base_colors:
+        :param single_fig:
+        :param dpi:
+        :param figsize:
+        :param facecolor:
+        :param ref_genome:
+        :param masked_regions:
+        :param min_gap_length:
+        :param draw_gaps:
+        :param suptitle:
+        :param gaps_color:
+        :param masked_regions_color:
+        :param logbase:
+        :param extension_list:
+        :return:
+        """
+        # TODO: add multithreading drawing if possible and multipicture drawing
         print("Drawing rainfall plot...")
         plot_dir = "rainfall_plot"
         reference_colors = {"A": "#FBFD2B",    # yellow
@@ -446,13 +492,13 @@ class CollectionVCF(Collection):
                         for gap in ref_genome.gaps_dict[region]:
                             plt.gca().add_patch(plt.Rectangle((gap.location.start, 1),
                                                               gap.location.end - gap.location.start,
-                                                              1024*32, facecolor="#777777", edgecolor='none'))
-                    # masked regions should be SeqRecord dict
-                    if masked_regions:
-                        for feature in masked_regions[region].features:
-                            plt.gca().add_patch(plt.Rectangle((int(feature.location.start)+1, 1),
-                                                              feature.location.end - feature.location.start,
-                                                              1024*32, facecolor="#aaaaaa", edgecolor='none'))
+                                                              1024*32, facecolor=gaps_color, edgecolor='none'))
+                # masked regions should be SeqRecord dict
+                if masked_regions:
+                    for feature in masked_regions[region].features:
+                        plt.gca().add_patch(plt.Rectangle((int(feature.location.start)+1, 1),
+                                                           feature.location.end - feature.location.start,
+                                                           1024*32, facecolor=masked_regions_color, edgecolor='none'))
 
                 for reference in region_reference_dict[region]:
                     plt.plot(region_reference_dict[region][reference][0],
@@ -460,26 +506,21 @@ class CollectionVCF(Collection):
                              color=reference_colors[reference],
                              marker='.', linestyle='None', label=reference)
 
-                #plt.title("Region %s" % region)
-                #xlabel("Position")
-                plt.text(-0.08, 0.5, region, rotation=0, fontweight="bold", transform=sub_plot_dict[region].transAxes, fontsize=30,
+                plt.text(-0.08, 0.5, region, rotation=0, fontweight="bold", transform=sub_plot_dict[region].transAxes,
+                         fontsize=30,
                          horizontalalignment='center',
                          verticalalignment='center')
                 plt.ylabel("Distanse")
-                #plt.ylim(ymin=0)
                 plt.axhline(y=100, color="#000000")
                 plt.axhline(y=1000, color="#000000")
                 plt.axhline(y=500, color="purple")
                 plt.axhline(y=10, color="#000000")
-                #if ref_genome:
-                #    plt.xlim(xmax=len(ref_genome.reference_genome[region]))
 
         if single_fig:
             for region in sub_plot_dict:
-                sub_plot_dict[region].set_yscale('log', basey=2)
-            plt.savefig("%s/%s_log_scale.svg" % (plot_dir, plot_name))
-            plt.savefig("%s/%s_log_scale.pdf" % (plot_dir, plot_name))
-            plt.savefig("%s/%s_log_scale.eps" % (plot_dir, plot_name))
+                sub_plot_dict[region].set_yscale('log', basey=logbase)
+            for extension in extension_list:
+                plt.savefig("%s/%s_log_scale.%s" % (plot_dir, plot_name, extension))
             plt.close()
 
     def hierarchical_clustering(self, method='average', dendrogramm_max_y=2000,
@@ -488,8 +529,19 @@ class CollectionVCF(Collection):
                                 draw_dendrogramm=True,
                                 write_inconsistent=True,
                                 write_correlation=True):
-        # IMPORTANT! Use only for one-sample vcf
-        # http://docs.scipy.org/doc/scipy/reference/generated/scipy.cluster.hierarchy.linkage.html#scipy.cluster.hierarchy.linkage
+        """
+        IMPORTANT! Use only for one-sample vcf
+        http://docs.scipy.org/doc/scipy/reference/generated/scipy.cluster.hierarchy.linkage.html#scipy.cluster.hierarchy.linkage
+        allowed methods(used to calculate distance between clusters):
+        'complete'    -   Farthest Point Algorithm
+        'single'      -   Nearest Point Algorithm
+        'average'     -   UPGMA algorithm, distance between clusters is calculated as average from pairwise
+                           distances between elements of clusters
+        'weighted     -   WPGMA algorithm
+        'centroid'    -   UPGMC algorithm
+        'median'      -   WPGMC algorithm
+        'ward'        -   incremental algorithm
+        """
         positions_dict = self.get_positions()
         correlation_dict = OrderedDict({})
         linkage_dict = OrderedDict({})
@@ -498,18 +550,7 @@ class CollectionVCF(Collection):
         if draw_dendrogramm or write_correlation or write_inconsistent:
             os.system("mkdir -p %s" % clustering_dir)
         for region in positions_dict:
-            # allowed methods(used to calculate distance between clusters):
-            # 'complete'    -   Farthest Point Algorithm
-            # 'single'      -   Nearest Point Algorithm
-            # 'average'     -   UPGMA algorithm, distance between clusters is calculated as average from pairwise
-            #                   distances between elements of clusters
-            # 'weighted     -   WPGMA algorithm
-            # 'centroid'    -   UPGMC algorithm
-            # 'median'      -   WPGMC algorithm
-            # 'ward'        -   incremental algorithm
-
             distance_matrix = pdist(positions_dict[region])
-            #print(distance_matrix)
             linkage_dict[region] = linkage(distance_matrix, method=method)
             if draw_dendrogramm:
                 plt.figure(1, dpi=150, figsize=(50, 20))
@@ -850,25 +891,9 @@ class CollectionVCF(Collection):
 
 
 class ReferenceGenome(object):
-    # TODO: rewrite
-
-    chr_dict = {"chrI": "1",
-                "chrII": "2",
-                "chrIII": "3",
-                "chrIV": "4",
-                "chrV": "5",
-                "chrVI": "6",
-                "chrVII": "7",
-                "chrVIII": "8",
-                "chrIX": "9",
-                "chrX": "10",
-                "chrXI": "11",
-                "chrXII": "12",
-                "chrXIII": "13",
-                "chrXIV": "14",
-                "chrXV": "15",
-                "chrXVI": "16",
-                }
+    """
+    ReferenceGenome class
+    """
     feature_dict = {}
     gaps_dict = {}
 
@@ -877,23 +902,26 @@ class ReferenceGenome(object):
         self.reference_genome = SeqIO.index_db(index_file, [ref_gen_file], filetype)
 
     def find_gaps(self):
+        """
+        Finds gaps (N) in reference genome and writes them as SeqFeatures to self.gaps_dict.
+        Keys of dict are region names.
+        """
         gap_reg_exp = re.compile("N+", re.IGNORECASE)
         for region in self.reference_genome:
             self.gaps_dict[region] = []
-            #print self.reference_genome[entry].seq
             gaps = gap_reg_exp.finditer(str(self.reference_genome[region].seq))  # iterator with
             for match in gaps:
-                #print(match)
                 self.gaps_dict[region].append(SeqFeature(FeatureLocation(match.start(), match.end()),
                                                          type="gap", strand=None))
-        #print(self.gaps_dict)
 
 if __name__ == "__main__":
     #workdir = "/media/mahajrod/d9e6e5ee-1bf7-4dba-934e-3f898d9611c8/Data/LAN2xx/all"
     vcf_file = "/home/mahajrod/Genetics/MCTool/example_data/PmCDA1_3d_annotated.vcf"
     masking_file = "/home/mahajrod/Genetics/MCTool/example_data/LAN210_v0.10m_masked_all_not_in_good_genes.gff"
     collection = CollectionVCF(from_file=True, in_file=vcf_file)
+    print(collection.get_positions())
 
+    """
     from BCBio import GFF
 
     masked_regions = SeqIO.to_dict(GFF.parse(masking_file))
@@ -907,7 +935,7 @@ if __name__ == "__main__":
         print key
         print collection.metadata[key]
 
-    """
+
     reference = ReferenceGenome("/home/mahajrod/genetics/desaminases/data/LAN210_v0.9m/LAN210_v0.9m.fasta",
                                 index_file="/home/mahajrod/genetics/desaminases/data/LAN210_v0.9m/LAN210_v0.9m.idx")
     #print(reference.reference_genome)

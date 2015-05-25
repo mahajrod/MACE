@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+for MUTATOR in AID\* EMS sA3G\*;
+	do 
+	~/Genetics/MAVR/scripts/file/split_file_by_column.py -i ${MUTATOR}.t -c 3 -e -o ${MUTATOR}_clone;
+	done

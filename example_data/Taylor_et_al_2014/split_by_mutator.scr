@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+for MUTATOR in AID\* EMS sA3G\*; 
+	do 
+	head -n 1 all_mutations.txt > ${MUTATOR}.t; 
+	grep "${MUTATOR}" all_mutations.txt >> ${MUTATOR}.t; 
+	done

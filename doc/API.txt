@@ -1,0 +1,31 @@
+API Documentation
+=================
+
+This page contains some basic documentation for the SimpleSite project. To
+understand the project completely please refer to the documentation on the
+Pylons Book website at http://pylonsbook.com or read the source code directly.
+
+The :mod:`simplesite` Module
+----------------------------
+
+.. module:: simplesite
+
+Contains all the controllers, model and templates as sub-modules.
+
+The :mod:`controllers` Module
+-----------------------------
+
+.. module:: simplesite.controllers
+
+Contains all the controllers. The most important of which is
+:class:`PageController`.
+
+.. class:: PageController
+
+The :class:`PageController` is responsible for displaying pages as well as
+allowing users to add, edit, delete and list pages.
+
+.. method:: PageController.view(self[, id=None])
+
+When a user visits a URL such as ``/view/page/1`` the :class:`PageController`
+class's :meth:`view` action is called to render the page.

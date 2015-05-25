@@ -1,0 +1,10 @@
+DATA PUBLISHED IN ARTICLE
+Artem G. Lada, Sergei F. Kliver, Alok Dhar3, Dmitrii E. Polev, Alexey E. Masharsky, Igor B. Rogozin, Youri I. Pavlov Disruption of Transcriptional Coactivator Sub1 Leads to Genome-Wide Re-distribution of Clustered Mutations Induced by APOBEC in Active Yeast Genes // PLoS Genetics, 2015.
+
+FILES
+	Lada_et_al_2015.pdf 											- article
+	LAN210_v0.10m.fasta												- reference genome (Saccharomyces cerevisicae, strain LAN210)
+	refgen.idx														- Biopython index of reference genome
+	LAN210_v0.10m_masked_all_not_in_good_genes.gff					- .gff  with regions masked in reference
+	merged_annotations_Nagalakshmi_tranf_to_LAN210_v0.10m.gff3		- .gff with annotations of reference genome
+	PmCDA1_3d_annotated.vcf											- .vcf with one set(mutator PmCDA1, exposition 3 days) of mutations from article 

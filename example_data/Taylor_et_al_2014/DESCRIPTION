@@ -1,0 +1,10 @@
+DATA PUBLISHED IN ARTICLE
+Taylor B. J. M., Wu Y. L., Rada C. Active RNAP pre-initiation sites are highly mutated by cytidine deaminases in yeast, with AID targeting small RNA genes //eLife. – 2014. – Т. 3. – С. e03553.
+
+FILES IN DIRECTORY
+	Taylor_et_al_2014.pdf  - article
+	all_mutations.txt 	   - mutations from article
+
+SUBDIRECTORIES
+	split_by_clones        - contains mutations from all_mutations.txt splited by mutator and clone
+	split_by_mutators      - contains mutations from all_mutations.txt splited by mutator
