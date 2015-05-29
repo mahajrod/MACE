@@ -32,6 +32,20 @@ class RecordVCF(Record):
     """
     def __init__(self, pos, id, ref, alt_list, qual, filter_list, info_dict, samples_list,
                  description=None, flags=None):
+        """
+
+        :param pos:
+        :param id:
+        :param ref:
+        :param alt_list:
+        :param qual:
+        :param filter_list:
+        :param info_dict:
+        :param samples_list:
+        :param description:
+        :param flags:
+        :return:
+        """
 
         self.pos = pos                                  #int
         self.id = id                                    #str
@@ -46,6 +60,10 @@ class RecordVCF(Record):
         self.flags = set(flags) if flags is not None else set([])
 
     def __str__(self):
+        """
+
+        :return:
+        """
         alt_string = ",".join(self.alt_list)
         filter_string = ";".join(self.filter_list)
         key_string_list = []
@@ -67,10 +85,20 @@ class RecordVCF(Record):
                                                 self.qual, filter_string, info_string, format_string, samples_string]))
 
     def check_ref_alt_list(self, ref_alt_list, flag):
+        """
+
+        :param ref_alt_list:
+        :param flag:
+        :return:
+        """
         # structure of ref_alt_list:  [[ref1,[alt1.1, alt1.M1]], ..., [refN,[altN.1, ..., altN.MN]]]
         self.set_flag(lambda record: (record.ref, record.alt_list) in ref_alt_list, flag)
 
     def count_samples(self):
+        """
+
+        :return:
+        """
         #counts samples with variants
         number = 0
         for sample in self.samples_list:
@@ -80,7 +108,6 @@ class RecordVCF(Record):
 
     def set_filter(self, expression, filter_name):
         """
-
         :param expression:
         :param filter_name:
         :return:
@@ -90,6 +117,12 @@ class RecordVCF(Record):
             self.filter_list.sort()
 
     def add_info(self, info_name, info_value=None):
+        """
+
+        :param info_name:
+        :param info_value:
+        :return:
+        """
         value = info_value if isinstance(info_value, list) else [] if info_value is None else [info_value]
         if info_name in self.info_dict:
             self.info_dict[info_name] += value
@@ -98,7 +131,7 @@ class RecordVCF(Record):
 
     def check_indel(self):
         """
-        checks if record is indel
+        Checks if record is indel
         """
         if len(self.ref) > 1 or len("".join(self.alt_list)) > len(self.alt_list):
             return True
@@ -107,6 +140,20 @@ class RecordVCF(Record):
     def find_location(self, scaffold, annotation_dict, key="Ftype", strand_key="Fstrand", genes_key="Genes",
                       genes_strand_key="Gstrand", feature_type_black_list=[],
                       use_synonym=False, synonym_dict=None, add_intergenic_label=True):
+        """
+
+        :param scaffold:
+        :param annotation_dict:
+        :param key:
+        :param strand_key:
+        :param genes_key:
+        :param genes_strand_key:
+        :param feature_type_black_list:
+        :param use_synonym:
+        :param synonym_dict:
+        :param add_intergenic_label:
+        :return:
+        """
         """
         This method is written for old variant (with sub_feature)s rather then new (with CompoundLocation)
         id of one SeqRecord in record_dict must be equal to record.pos
@@ -242,6 +289,18 @@ class CollectionVCF(Collection):
 
     def __init__(self, metadata=None, records_dict=None, header=None, in_file=None, samples=None,
                  from_file=True, external_metadata=None, threads=1):
+        """
+
+        :param metadata:
+        :param records_dict:
+        :param header:
+        :param in_file:
+        :param samples:
+        :param from_file:
+        :param external_metadata:
+        :param threads:
+        :return:
+        """
         self.linkage_dict = None
         if from_file:
             self.read(in_file, external_metadata=external_metadata)
@@ -257,6 +316,12 @@ class CollectionVCF(Collection):
         self.threads = threads
 
     def read(self, in_file, external_metadata=None):
+        """
+
+        :param in_file:
+        :param external_metadata:
+        :return:
+        """
         self.metadata = MetadataVCF()
         self.records = OrderedDict({})
         with open(in_file, "r") as fd:
@@ -273,6 +338,12 @@ class CollectionVCF(Collection):
                 self.records[scaffold].append(record)
 
     def add_record(self, line, external_metadata=None):
+        """
+
+        :param line:
+        :param external_metadata:
+        :return:
+        """
         line_list = line.strip().split("\t")
         #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	Sample_1
         position = int(line_list[1])
@@ -344,6 +415,11 @@ class CollectionVCF(Collection):
         return [string[index_list[j] + 1: index_list[j + 1]] for j in range(0, len(index_list) - 1)]
 
     def filter(self, expression):
+        """
+
+        :param expression: filtering expression
+        :return:
+        """
         # expression should be a function with one argument - record entry
         filtered_records, filtered_out_records = self.filter_records(expression)
         return CollectionVCF(metadata=self.metadata, records_dict=filtered_records,
@@ -352,6 +428,10 @@ class CollectionVCF(Collection):
                              header=self.header, samples=self.samples, from_file=False)
 
     def filter_by_zygoty(self):
+        """
+
+        :return:
+        """
         # splits sites by zygoty, site counts as heterozygote if even in one sample it it hetorozygote
         def filter_expression(record):
             for sample_dict in record.samples_list:
@@ -363,6 +443,12 @@ class CollectionVCF(Collection):
         return self.filter(filter_expression)
 
     def record_coordinates(self, black_list=[], white_list=[]):
+        """
+
+        :param black_list:
+        :param white_list:
+        :return:
+        """
         coord_dict = {}
         for scaffold in self.records:
             for record in self.records[scaffold]:
@@ -380,25 +466,43 @@ class CollectionVCF(Collection):
 
     def get_positions(self):
         """
+
+        :return:
+        """
+        """
         Extracts position coordinates of records in collection
         dict of coordinates, keys are scaffolds
         """
         positions_dict = OrderedDict({})
         for scaffold in self.records:
-            positions_dict[scaffold] = np.array([record.pos for record in self.records[scaffold]])
+            positions_dict[scaffold] = np.array([[record.pos] for record in self.records[scaffold]])
         return positions_dict
 
     def check_by_ref_and_alt(self, ref_alt_list, flag):
+        """
+
+        :param ref_alt_list:
+        :param flag:
+        :return:
+        """
         for record in self:
             record.check_ref_alt_list(ref_alt_list, flag)
 
     def filter_by_ref_and_alt(self, ref_alt_list):
+        """
+
+        :param ref_alt_list:
+        :return:
+        """
         # structure of ref_alt_list:  [[ref1,[alt1.1, alt1.M1]], ..., [refN,[altN.1, ..., altN.MN]]]
         return self.filter(lambda record: (record.ref, record.alt_list) in ref_alt_list)
 
     def set_filter(self, expression, filter_name):
         """
-        sets filter_name in FILTER field if expression returns True
+        Sets filter_name in FILTER field if expression returns True
+        :param expression:
+        :param filter_name:
+        :return:
         """
         for record in self:
             if expression:
@@ -408,6 +512,10 @@ class CollectionVCF(Collection):
                     record.filter_list.append(filter_name)
 
     def split_by_scaffolds(self):
+        """
+
+        :return:
+        """
         return [CollectionVCF(metadata=self.metadata, records_dict={scaffold: self.records[scaffold]},
                               header=self.header, samples=self.samples, from_file=False)
                 for scaffold in self.records]
@@ -530,7 +638,6 @@ class CollectionVCF(Collection):
                                 write_inconsistent=True,
                                 write_correlation=True):
         """
-        IMPORTANT! Use only for one-sample vcf
         http://docs.scipy.org/doc/scipy/reference/generated/scipy.cluster.hierarchy.linkage.html#scipy.cluster.hierarchy.linkage
         allowed methods(used to calculate distance between clusters):
         'complete'    -   Farthest Point Algorithm
@@ -541,6 +648,16 @@ class CollectionVCF(Collection):
         'centroid'    -   UPGMC algorithm
         'median'      -   WPGMC algorithm
         'ward'        -   incremental algorithm
+        :param method:
+        :param dendrogramm_max_y:
+        :param sample_name:
+        :param save:
+        :param clustering_dir:
+        :param dendrogramm_color_threshold:
+        :param draw_dendrogramm:
+        :param write_inconsistent:
+        :param write_correlation:
+        :return:
         """
         positions_dict = self.get_positions()
         correlation_dict = OrderedDict({})
@@ -550,7 +667,9 @@ class CollectionVCF(Collection):
         if draw_dendrogramm or write_correlation or write_inconsistent:
             os.system("mkdir -p %s" % clustering_dir)
         for region in positions_dict:
+            #print positions_dict[region]
             distance_matrix = pdist(positions_dict[region])
+            #print(distance_matrix)
             linkage_dict[region] = linkage(distance_matrix, method=method)
             if draw_dendrogramm:
                 plt.figure(1, dpi=150, figsize=(50, 20))
@@ -575,8 +694,8 @@ class CollectionVCF(Collection):
             if write_inconsistent:
                 np.savetxt("%s/inconsistent_coefficient_%s.t" % (clustering_dir, region), inconsistent_dict[region])
 
-            #clusters_dict[region] = fcluster(linkage_dict[region], 1)
-            #np.savetxt("clustering/clusters_%s.t" % region, clusters_dict[region], fmt="%i")
+            # clusters_dict[region] = fcluster(linkage_dict[region], 1)
+            # np.savetxt("clustering/clusters_%s.t" % region, clusters_dict[region], fmt="%i")
         if write_correlation:
             sample = sample_name
             if not sample:
@@ -599,12 +718,12 @@ class CollectionVCF(Collection):
                      sample_name=None,
                      save_clustering=False,
                      clustering_dir="clustering",
-                     split_by_regions=False,
                      dendrogramm_color_threshold=1000,
                      draw_dendrogramm=True,
                      return_collection=True,
                      write_inconsistent=True,
                      write_correlation=True):
+
         from MACE.Parsers.CCF import RecordCCF, CollectionCCF, MetadataCCF, HeaderCCF
         if self.linkage_dict:
             linkage_dict = self.linkage_dict
@@ -618,16 +737,13 @@ class CollectionVCF(Collection):
                                                         draw_dendrogramm=draw_dendrogramm,
                                                         write_correlation=write_correlation,
                                                         write_inconsistent=write_inconsistent)
-        if split_by_regions:
-            mut_clusters_dict = OrderedDict({})
-        else:
-            mut_clusters_list = []
-
+        mut_clusters_dict = OrderedDict({})
         clusters = OrderedDict()
         for region in linkage_dict:
             clusters[region] = fcluster(linkage_dict[region], threshold, criterion=extracting_method)
 
         if return_collection:
+            record_ccf_dict = OrderedDict()
             for region in self.records:
                 # http://docs.scipy.org/doc/scipy/reference/generated/scipy.cluster.hierarchy.fcluster.html#scipy.cluster.hierarchy.fcluster
                 clusters_dict = OrderedDict({})
@@ -637,18 +753,15 @@ class CollectionVCF(Collection):
                         clusters_dict[clusters[region][i]] = [self.records[region][i]]
                     else:
                         clusters_dict[clusters[region][i]].append(self.records[region][i])
-                if split_by_regions:
-                    mut_clusters_dict[region] = \
-                        CollectionCCF(record_list=[RecordCCF(collection_vcf=CollectionVCF(record_list=clusters_dict[cluster], from_file=False),
-                                                             from_records=True) for cluster in clusters_dict],
-                                      metadata=MetadataCCF(self.samples, vcf_metadata=self.metadata, vcf_header=self.header),
-                                      header=HeaderCCF("CLUSTER_ID\tCHROM\tSTART\tEND\tDESCRIPTION".split("\t")))
-                else:
-                    mut_clusters_list += [RecordCCF(collection_vcf=CollectionVCF(record_list=clusters_dict[cluster], from_file=False), from_records=True)
-                                          for cluster in clusters_dict]
-            if split_by_regions:
-                return mut_clusters_dict
-            return CollectionCCF(record_list=mut_clusters_list, metadata=MetadataCCF(self.samples, vcf_metadata=self.metadata, vcf_header=self.header),
+
+
+
+                record_ccf_dict[region] = [RecordCCF(collection_vcf=CollectionVCF(records_dict=dict([(region, clusters_dict[cluster])]), from_file=False),
+                                                     from_records=True) for cluster in clusters_dict]
+
+            return CollectionCCF(records_dict=record_ccf_dict, metadata=MetadataCCF(self.samples,
+                                                                                    vcf_metadata=self.metadata,
+                                                                                    vcf_header=self.header),
                                  header=HeaderCCF("CLUSTER_ID\tCHROM\tSTART\tEND\tDESCRIPTION".split("\t")))
         else:
             return clusters
@@ -675,7 +788,7 @@ class CollectionVCF(Collection):
                         sample_name=None,
                         save_clustering=False,
                         testing_dir="threshold_test"):
-
+        # TODO: adjust parameters of figure
         # threshold is tuple(list) of three variables: min, max, number
 
         # extracting_method possible values
@@ -688,11 +801,11 @@ class CollectionVCF(Collection):
         if self.linkage_dict:
             linkage_dict = self.linkage_dict
         else:
-            region_dict, linkage_dict = self.hierarchical_clustering(method=cluster_distance,
-                                                                     dendrogramm_max_y=dendrogramm_max_y,
-                                                                     sample_name=sample_name,
-                                                                     save=save_clustering,
-                                                                     clustering_dir=testing_dir)
+            linkage_dict = self.hierarchical_clustering(method=cluster_distance,
+                                                        dendrogramm_max_y=dendrogramm_max_y,
+                                                        sample_name=sample_name,
+                                                        save=save_clustering,
+                                                        clustering_dir=testing_dir)
 
         num_of_regions = len(list(linkage_dict.keys()))
 
@@ -775,6 +888,7 @@ class CollectionVCF(Collection):
         return [effect] + parameters
 
     def extract_snpeff_info(self, output_file):
+
         snpeff_info_dict_keys = "EFF", "LOS", "NMD"
         record_header_list = ["Chrom", "Pos", "Ref", "Alt"]
         snpeff_header_list = ["Effect", "Effect_Impact", "Functional_Class", "Codon_Change", "Amino_Acid_Change",
@@ -894,17 +1008,24 @@ class ReferenceGenome(object):
     """
     ReferenceGenome class
     """
-    feature_dict = {}
-    gaps_dict = {}
-
     def __init__(self, ref_gen_file, index_file="refgen.idx", filetype="fasta"):
+        """
+
+        :param ref_gen_file:
+        :param index_file:
+        :param filetype:
+        :return: None
+        """
         self.ref_gen_file = ref_gen_file
         self.reference_genome = SeqIO.index_db(index_file, [ref_gen_file], filetype)
+        self.feature_dict = {}
+        self.gaps_dict = {}
 
     def find_gaps(self):
         """
         Finds gaps (N) in reference genome and writes them as SeqFeatures to self.gaps_dict.
         Keys of dict are region names.
+        :return: None
         """
         gap_reg_exp = re.compile("N+", re.IGNORECASE)
         for region in self.reference_genome:
@@ -916,11 +1037,18 @@ class ReferenceGenome(object):
 
 if __name__ == "__main__":
     #workdir = "/media/mahajrod/d9e6e5ee-1bf7-4dba-934e-3f898d9611c8/Data/LAN2xx/all"
-    vcf_file = "/home/mahajrod/Genetics/MCTool/example_data/PmCDA1_3d_annotated.vcf"
+    vcf_file = "/home/mahajrod/Genetics/MACE/example_data/Lada_et_al_2015/PmCDA1_3d_SNP.vcf"
     masking_file = "/home/mahajrod/Genetics/MCTool/example_data/LAN210_v0.10m_masked_all_not_in_good_genes.gff"
     collection = CollectionVCF(from_file=True, in_file=vcf_file)
-    print(collection.get_positions())
-
+    clusters = collection.get_clusters(sample_name="EEEEEE", save_clustering=True,
+                                          extracting_method="distance",
+                                          threshold=1000, cluster_distance='average',
+                                          dendrogramm_max_y=2000, dendrogramm_color_threshold=1000,
+                                          clustering_dir="temp")
+    clusters.write("tra.ccf")
+    clusters.write_gff("tra.gff")
+    extracted_vcf = clusters.extract_vcf()
+    extracted_vcf.write("extracted.vcf")
     """
     from BCBio import GFF
 

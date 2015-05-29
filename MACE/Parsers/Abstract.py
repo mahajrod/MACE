@@ -119,7 +119,7 @@ class Collection():
         if from_file:
             self.read(input_file)
         else:
-            self.records = {} if records_dict is None else records_dict
+            self.records = OrderedDict() if records_dict is None else records_dict
             self.metadata = metadata
             self.header = header
         self.scaffold_list = self.scaffolds()
@@ -134,6 +134,7 @@ class Collection():
 
     def __getitem__(self, item):
         item_scaffold, shift = self.get_record_index(item)
+
         return self.records[item_scaffold][shift]
 
     def pop(self, index=None):
@@ -191,6 +192,8 @@ class Collection():
 
     def rec_index(self):
         index_dict = OrderedDict({})
+        if len(self.scaffold_list) == 0:
+            return index_dict
         index_dict[self.scaffold_list[0]] = [0, self.scaffold_length[self.scaffold_list[0]] - 1]
         for index in range(1, self.number_of_scaffolds):
             index_dict[self.scaffold_list[index]] = [index_dict[self.scaffold_list[index-1]][1] + 1,

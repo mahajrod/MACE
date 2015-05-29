@@ -24,14 +24,14 @@ class RecordCCF(Record, Iterable):
             self.start = collection_vcf[0].pos
             self.end = collection_vcf[-1].pos - 1 + \
                        max(map(lambda x: len(x), collection_vcf[-1].alt_list + [collection_vcf[-1].ref]))
-
+            self.flags = set(flags) if flags else set()
             for record in self.records:
                 if record.check_indel():
                     self.flags.add("IP")
                     break
             self.info_dict = info_dict if info_dict else OrderedDict({})
             self.features = features
-            self.flags = set(flags) if flags else set()
+
             self.bad_records = 0
             for record in self.records:
                 if "BR" in record.flags:
@@ -74,12 +74,12 @@ class RecordCCF(Record, Iterable):
         if self.info_dict:
             attributes_string += ";" + ";".join(["%s=%s" % (key, ",".join(map(lambda x: str(x), self.info_dict[key])) if isinstance(self.info_dict[key], list) or isinstance(self.info_dict[key], set)  else str(self.info_dict[key]))
                                                  for key in self.info_dict])
-        if self.subclusters != None:
+        if self.subclusters is not None:
             #print(self.subclusters)
             attributes_string += ";Subclusters=" + ",".join(map(lambda x: str(x), self.subclusters))
 
-        cluster_string = ">%i\t%i\t%s" % (self.start, self.end, attributes_string)
-        return cluster_string + "\nVariants\n\t" + "\n\t".join([str(record) for record in self.records])
+        cluster_string = "%i\t%i\t%s" % (self.start, self.end, attributes_string)
+        return cluster_string + "\n\t" + "\n\t".join([str(record) for record in self.records])
 
     def distances(self):
         #returns distances between variants in cluster
@@ -152,17 +152,21 @@ class RecordCCF(Record, Iterable):
                     records_to_remove |= record_to_remove_dict[flag]
             records_to_remove = sorted(records_to_remove, reverse=True)
             #print(records_to_remove)
+            record_scaffold = self.records.scaffold_list[0]
             if records_to_remove:
                 #print(self)
                 for index in records_to_remove:
-                    self.records.records.pop(index)
+                    self.records.records[record_scaffold].pop(index)
                     self.subclusters = np.delete(self.subclusters, index)
-
-                self.__init__(collection_vcf=self.records, info_dict=self.info_dict,
+                self.__init__(collection_vcf=CollectionVCF(metadata=self.records.metadata,
+                                                           records_dict=self.records.records,
+                                                           header=self.records.header,
+                                                           samples=self.records.samples, from_file=False),
+                              info_dict=self.info_dict,
                               flags=self.flags, subclusters=self.subclusters,
                               from_records=True)
 
-    def check_location(self, bad_region_collection_gff, expression="bad_region.start <= self.pos <= bad_region.end"):
+    def check_location(self):
         self.bad_records = 0
         for variant in self:
             if "BR" in variant.flags:
@@ -170,7 +174,8 @@ class RecordCCF(Record, Iterable):
         if self.bad_records > 0:
             self.flags.add("BR")
 
-    def get_location(self, record_dict, key="Loc", use_synonym=False, synonym_dict=None):
+    def get_location(self, record_scaffold, record_dict, key="Loc", use_synonym=False, synonym_dict=None,
+                     feature_type_black_list=[], strand_key=None):
         # function is written for old variant (with sub_feature)s rather then new (with CompoundLocation)
         # id of one SeqRecord in record_dict must be equal to record.pos
         if not self.info_dict:
@@ -182,7 +187,7 @@ class RecordCCF(Record, Iterable):
         for variant in self:
             if key in variant.info_dict:
                 self.info_dict[key] |= set(variant.info_dict[key])
-            for feature in record_dict[self.chrom].features:
+            for feature in record_dict[record_scaffold].features:
                 if (variant.pos - 1) in feature:
                     self.features.append(feature)
                     self.info_dict[key].add(self.get_synonym(feature.type, use_synonym=use_synonym,
@@ -199,7 +204,6 @@ class RecordCCF(Record, Iterable):
         tmp = self.records.get_clusters(extracting_method=method,
                                         threshold=threshold,
                                         cluster_distance=cluster_distance,
-                                        split_by_regions=False,
                                         draw_dendrogramm=False,
                                         return_collection=False,
                                         write_inconsistent=False,
@@ -234,16 +238,20 @@ class RecordCCF(Record, Iterable):
             end = right_subcluster_start if right_subcluster_start >= -remove_size_limit else len(self.subclusters)
 
             new_left_cluster, new_right_cluster = None, None
+            record_scaffold = self.records.scaffold_list[0]
 
             if start > 0:
-                new_left_cluster = RecordCCF(collection_vcf=CollectionVCF(records_dict=self.records.records[:start], from_file=False),
+                new_left_cluster = RecordCCF(collection_vcf=CollectionVCF(records_dict=dict([(record_scaffold, self.records.records[record_scaffold][:start])]),
+                                                                          from_file=False),
                                              subclusters=self.subclusters[:start], from_records=True)
 
             if end < len(self.subclusters):
-                new_right_cluster = RecordCCF(collection_vcf=CollectionVCF(records_dict=self.records.records[end:], from_file=False),
+                new_right_cluster = RecordCCF(collection_vcf=CollectionVCF(records_dict=dict([(record_scaffold, self.records.records[record_scaffold][end:])]),
+                                                                           from_file=False),
                                               subclusters=self.subclusters[end:], from_records=True)
 
-            new_middle_cluster = RecordCCF(collection_vcf=CollectionVCF(records_dict=self.records.records[start:end], from_file=False),
+            new_middle_cluster = RecordCCF(collection_vcf=CollectionVCF(records_dict=dict([(record_scaffold, self.records.records[record_scaffold][start:end])]),
+                                                                        from_file=False),
                                            subclusters=self.subclusters[start:end], from_records=True)
 
             cluster_list = [new_left_cluster] if new_left_cluster else []
@@ -260,6 +268,15 @@ class RecordCCF(Record, Iterable):
         homogeneity = count_C / self.size
         self.info_dict["Homogeneity"] = homogeneity if homogeneity >= 0.5 else 1.0 - homogeneity
         self.info_dict["Strand"] = "P" if homogeneity >= 0.5 else "N"
+
+    def gff_string(self):
+        attributes_string = "Size=%i;Bad_records=%i" % (self.size, self.bad_records)
+        if self.flags:
+            attributes_string += ";" + ";".join(self.flags)
+        if self.subclusters != None:
+            #print(self.subclusters)
+            attributes_string += ";Subclusters=" + ",".join(map(lambda x: str(x), self.subclusters))
+        return "%s\t%s\t%i\t%i\t.\t.\t.\t%s" % ("custom", "cluster", self.start, self.end, attributes_string)
 
 
 class MetadataCCF(Metadata):
@@ -426,9 +443,9 @@ class CollectionCCF(Collection):
                                  threshold=threshold,
                                  cluster_distance=cluster_distance)
 
-    def check_record_location(self, bad_region_collection_gff):
+    def check_location(self):
         for record in self:
-            record.check_location(bad_region_collection_gff)
+            record.check_location()
 
     def check_flags(self, flag_list, mismatch_list=[], expression_list=[], remove_mismatch_list=[],
                     flags_to_reset=None, mode="all", min_cluster_size=[]):
@@ -603,10 +620,18 @@ class CollectionCCF(Collection):
         self.records = new_records_dict
 
     def extract_vcf(self):
-        vcf = CollectionVCF(metadata=self.metadata.vcf_metadata,
-                            records_dict=OrderedDict(),
-                            header=self.metadata.vcf_header,
-                            samples=self.metadata.samples, from_file=False)
-        for record in self:
-            vcf = vcf + record.records
-        return vcf
+        vcf_records_dict = OrderedDict()
+        for scaffold in self.records:
+            vcf_records_dict[scaffold] = []
+            for record_ccf in self.records[scaffold]:
+                vcf_records_dict[scaffold] += record_ccf.records.records[scaffold]
+        return CollectionVCF(metadata=self.metadata.vcf_metadata,
+                             records_dict=vcf_records_dict,
+                             header=self.metadata.vcf_header,
+                             samples=self.metadata.samples, from_file=False)
+
+    def write_gff(self, outfile):
+        with open(outfile, "w") as out_fd:
+            for scaffold in self.scaffold_list:
+                for record in self.records[scaffold]:
+                    out_fd.write("%s\t%s\n" % (scaffold, record.gff_string()))

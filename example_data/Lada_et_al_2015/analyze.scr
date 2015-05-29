@@ -1,3 +1,5 @@
 #!/usr/bin/env bash
 
-../../scripts/draw_rainfall_plot.py -i PmCDA1_3d_annotated.vcf -o PmCDA1_3d_rainfall -d 250 -f 40,40 -e pdf,svg,png -r LAN210_v0.10m.fasta -m LAN210_v0.10m_masked_all_not_in_good_genes.gff -b 2
+#../../scripts/draw_rainfall_plot.py -i PmCDA1_3d_SNP.vcf -o PmCDA1_3d_rainfall -d 250 -f 40,40 -e pdf,svg,png -r LAN210_v0.10m.fasta -m LAN210_v0.10m_masked_all_not_in_good_genes.gff -b 2
+#../../scripts/extract_clusters.py -i PmCDA1_3d_SNP.vcf -o PmCDA1_3d_raw_clusters -s PmCDA1_3d -r 1000 -e distance -d average
+../../scripts/test_clustering_thresholds.py -i PmCDA1_3d_SNP.vcf -s PmCDA1_3d -e distance -d average -n 50 -x 5000 -u 100
