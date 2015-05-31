@@ -354,11 +354,11 @@ class CollectionVCF(Collection):
         filter_list = line_list[6].split(",")          # list, entries are strings
 
         info_dict = OrderedDict()
+        metadata = self.metadata if self.metadata else external_metadata
+        flag_set = set([])
         if line_list[7] != ".":
             info_tuple_list = [self._split_by_equal_sign(entry) for entry in line_list[7].split(";")]
 
-            flag_set = set([])
-            metadata = self.metadata if self.metadata else external_metadata
             for entry in info_tuple_list:
                 # if self.metadata:
                 if metadata["INFO"][entry[0]]["Type"] == "Flag":
@@ -1152,6 +1152,7 @@ class ReferenceGenome(object):
                         report_count += 1
                 unique_set = np.array(tmp_list)
             index += 1
+        print("    Generated %i" % mutation_count)
         nucleotides = {"A", "C", "G", "T"}
         alt_dict = {}
         if not substitution_dict:
@@ -1200,22 +1201,27 @@ class ReferenceGenome(object):
                     #mutation_count += 1
                     #if mutation_count == size:
                     #    break
-            print ("Totaly %i mutations were generated" % check)
+            print ("Totaly %i mutations were written" % check)
 
 if __name__ == "__main__":
     #workdir = "/media/mahajrod/d9e6e5ee-1bf7-4dba-934e-3f898d9611c8/Data/LAN2xx/all"
     vcf_file = "/home/mahajrod/Genetics/MACE/example_data/Lada_et_al_2015/PmCDA1_3d_SNP.vcf"
     masking_file = "/home/mahajrod/Genetics/MCTool/example_data/LAN210_v0.10m_masked_all_not_in_good_genes.gff"
     from BCBio import GFF
-
+    """
     masked_regions = SeqIO.to_dict(GFF.parse(masking_file))
 
     reference = ReferenceGenome("/home/mahajrod/Genetics/MACE/example_data/Lada_et_al_2015/LAN210_v0.10m.fasta",
                                 masked_regions=masked_regions, mode="to_dict", black_list=["mt"])
     #print(reference.reference_genome["chrXVI"][18075])
+
     reference.generate_snp_set(8416, {"C": ["T"], "G": ["A"]}, out_vcf="synthetic.vcf")
     """
+
+
     collection = CollectionVCF(from_file=True, in_file=vcf_file)
+    collection = CollectionVCF(from_file=True, in_file="/home/mahajrod/Genetics/MACE/example_data/Synthetic_data/deaminase_8416/synthetic_deaminase_snp_8416.vcf")
+    """
     clusters = collection.get_clusters(sample_name="EEEEEE", save_clustering=True,
                                           extracting_method="distance",
                                           threshold=1000, cluster_distance='average',
