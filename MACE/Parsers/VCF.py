@@ -353,24 +353,26 @@ class CollectionVCF(Collection):
         alt_list = line_list[4].split(",")
         filter_list = line_list[6].split(",")          # list, entries are strings
 
-        info_tuple_list = [self._split_by_equal_sign(entry) for entry in line_list[7].split(";")]
-        info_dict = {}
-        flag_set = set([])
-        metadata = self.metadata if self.metadata else external_metadata
-        for entry in info_tuple_list:
-            # if self.metadata:
-            if metadata["INFO"][entry[0]]["Type"] == "Flag":
-                flag_set.add(entry[0]) #info_dict[entry[0]] = []
-            elif metadata["INFO"][entry[0]]["Type"] == "Integer":
-                info_dict[entry[0]] = list(map(lambda x: int(x), entry[1].split(",")))
-            elif metadata["INFO"][entry[0]]["Type"] == "Float":
-                info_dict[entry[0]] = list(map(lambda x: float(x), entry[1].split(",")))
-            else:
-                info_dict[entry[0]] = entry[1].split(",")
+        info_dict = OrderedDict()
+        if line_list[7] != ".":
+            info_tuple_list = [self._split_by_equal_sign(entry) for entry in line_list[7].split(";")]
+
+            flag_set = set([])
+            metadata = self.metadata if self.metadata else external_metadata
+            for entry in info_tuple_list:
+                # if self.metadata:
+                if metadata["INFO"][entry[0]]["Type"] == "Flag":
+                    flag_set.add(entry[0]) #info_dict[entry[0]] = []
+                elif metadata["INFO"][entry[0]]["Type"] == "Integer":
+                    info_dict[entry[0]] = list(map(lambda x: int(x), entry[1].split(",")))
+                elif metadata["INFO"][entry[0]]["Type"] == "Float":
+                    info_dict[entry[0]] = list(map(lambda x: float(x), entry[1].split(",")))
+                else:
+                    info_dict[entry[0]] = entry[1].split(",")
         samples_list = []
 
         for sample_string in line_list[9:]:
-            sample_dict = OrderedDict({})
+            sample_dict = OrderedDict()
             if sample_string == "./.":
                 sample_dict["GT"] = ["./."]
             else:
@@ -787,7 +789,9 @@ class CollectionVCF(Collection):
                         dendrogramm_max_y=2000,
                         sample_name=None,
                         save_clustering=False,
-                        testing_dir="threshold_test"):
+                        testing_dir="threshold_test",
+                        count_singletons=True,
+                        scaffold_prefix="Region"):
         # TODO: adjust parameters of figure
         # threshold is tuple(list) of three variables: min, max, number
 
@@ -855,11 +859,12 @@ class CollectionVCF(Collection):
             #ax.set_xticks(np.arange(0.5, 2.2, 0.1))
 
             plt.grid()
-            plt.plot(coef_threshold_list, n_clusters_list, label="all")
+            if count_singletons:
+                plt.plot(coef_threshold_list, n_clusters_list, label="all")
             plt.plot(coef_threshold_list, n_nonsingleton_clusters, "green", label="2+")
             plt.plot(coef_threshold_list, n_multiclusters, "red", label="3+")
             plt.plot(coef_threshold_list, n_five_plus_clusters, "black", label="5+")
-            plt.title("Region %s" % region)
+            plt.title("%s %s" % (scaffold_prefix, region))
             plt.legend(loc='upper right')
             plt.ylabel("Number of clusters")
             plt.xlabel("Threshold")
@@ -1008,18 +1013,65 @@ class ReferenceGenome(object):
     """
     ReferenceGenome class
     """
-    def __init__(self, ref_gen_file, index_file="refgen.idx", filetype="fasta"):
+    def __init__(self, ref_gen_file, masked_regions=None, index_file="refgen.idx", filetype="fasta", mode="index_db"):
         """
 
         :param ref_gen_file:
+        :param masked_regions:
         :param index_file:
         :param filetype:
-        :return: None
+        :param mode: mode of parsing reference genome. Allowed variants - to_dict, index, index_db
+        :return:
         """
         self.ref_gen_file = ref_gen_file
-        self.reference_genome = SeqIO.index_db(index_file, [ref_gen_file], filetype)
-        self.feature_dict = {}
-        self.gaps_dict = {}
+        if mode == "index_db":
+            self.reference_genome = SeqIO.index_db(index_file, [ref_gen_file], filetype)
+        elif mode == "index":
+            self.reference_genome = SeqIO.index(ref_gen_file, filetype)
+        else:
+            self.reference_genome = SeqIO.to_dict(SeqIO.parse(ref_gen_file, filetype))
+
+        self.region_list = list(self.reference_genome.keys())
+        self.length = 0
+        self.feature_dict = OrderedDict()
+        self.region_length = OrderedDict()
+        for region in self.reference_genome:
+            length = len(self.reference_genome[region])
+            self.length += length
+            self.region_length[region] = length
+
+        self.region_index = self.rec_index()
+        self.gaps_dict = OrderedDict()
+        self.masked_regions = masked_regions if masked_regions else OrderedDict()
+
+    def __len__(self):
+        return self.length
+
+    def rec_index(self):
+        index_dict = OrderedDict({})
+        index_dict[self.region_list[0]] = [0, self.region_length[self.region_list[0]] - 1]
+        for index in range(1, self.number_of_regions()):
+            index_dict[self.region_list[index]] = [index_dict[self.region_list[index-1]][1] + 1,
+                                            index_dict[self.region_list[index-1]][1] + self.region_length[self.region_list[index]]]
+        return index_dict
+
+    def get_position(self, coordinate):
+        # coordinate should be 0-based
+        tmp_coordinate = self.region_index[self.region_list[-1]][1] + coordinate + 1 if coordinate < 0 else coordinate
+        if tmp_coordinate < 0:
+            raise ValueError("Coordinate %i is too small for this genome" % tmp_coordinate)
+        for region in self.region_list:
+            start, end = self.region_index[region]
+            if start <= tmp_coordinate <= end:
+                coordinate_region = region
+                break
+        else:
+            raise ValueError("Coordinate %i is too large for this genome" % tmp_coordinate)
+        shift = tmp_coordinate - start
+        return coordinate_region, shift
+
+    def number_of_regions(self):
+        return len(self.region_length)
 
     def find_gaps(self):
         """
@@ -1035,10 +1087,97 @@ class ReferenceGenome(object):
                 self.gaps_dict[region].append(SeqFeature(FeatureLocation(match.start(), match.end()),
                                                          type="gap", strand=None))
 
+    def generate_snp_set(self, size, substitution_dict=None, zygoty="homo", out_vcf="synthetic.vcf"):
+        multiplier = (5 - len(substitution_dict)) if substitution_dict else 1
+        unique_set = np.array([], dtype=np.int64)
+        print("Generating...")
+
+        index = 1
+        while len(unique_set) < size:
+            print("Iteration %i..." % index)
+            print("    Generating raw set %i..." % index)
+            raw_set = np.random.random_integers(0, high=self.length-1, size=size*multiplier)
+            print("    Generated %i..." % len(raw_set))
+            print("    Removing duplicates from raw set %i..." % index)
+            raw_set = np.hstack((unique_set, raw_set))
+            #print(raw_set)
+            unique_set = np.unique(raw_set)
+            print("    After removing  duplicates left %i.." % len(unique_set))
+            #print(unique_set)
+            print("    Checking filtered set %i..." % index)
+            mutation_count = 0
+            report_count = 1
+            if substitution_dict is not None:
+                tmp_list = []
+                references = list(substitution_dict.keys())
+                for coordinate in unique_set:
+                    region, interregion_pos = self.get_position(coordinate)
+                    if self.reference_genome[region][interregion_pos] in references:
+                        if self.masked_regions and (region in self.masked_regions):
+                            for masked_region in self.masked_regions[region].features:
+                                #print(self.masked_regions[region].features)
+                                #print(masked_region)
+                                if interregion_pos in masked_region:
+                                    break
+                            else:
+                                tmp_list.append(coordinate)
+                                mutation_count += 1
+                        else:
+                            tmp_list.append(coordinate)
+                            mutation_count += 1
+                    if mutation_count/report_count == 500:
+                        print("Generated %i" % mutation_count)
+                        report_count += 1
+                unique_set = np.array(tmp_list)
+            index += 1
+        nucleotides = {"A", "C", "G", "T"}
+        alt_dict = {}
+        if not substitution_dict:
+            for nuc in nucleotides:
+                alt_dict[nuc] = list(nucleotides - {nuc})
+        else:
+            for ref in substitution_dict:
+                if substitution_dict[ref]:
+                    alt_dict[ref] = list(set(substitution_dict[ref]) - {ref})
+                else:
+                    alt_dict[ref] = list(nucleotides - {ref})
+        print("Writing vcf...")
+
+        with open(out_vcf, "w") as out_fd:
+            out_fd.write("##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">\n")
+            out_fd.write("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tSynthetic_uniform_sample\n")
+            mutation_count = 0
+            for coordinate in unique_set:
+                region, interregion_pos = self.get_position(coordinate)
+                ref = self.reference_genome[region][interregion_pos]
+
+                if len(substitution_dict[ref]) != 1:
+                    alt = alt_dict[ref][np.random.randint(0, len(alt_dict[ref]))]
+                else:
+                    alt = alt_dict[ref][0]
+                if zygoty == "homo":
+                    zyg = "1/1"
+                elif zygoty == "hetero":
+                    zyg = "0/1"
+                out_fd.write("%s\t%i\t.\t%s\t%s\t.\t.\t.\tGT\t%s\n" %
+                             (region, interregion_pos + 1, ref, alt, zyg))
+                mutation_count += 1
+                if mutation_count == size:
+                    break
+
 if __name__ == "__main__":
     #workdir = "/media/mahajrod/d9e6e5ee-1bf7-4dba-934e-3f898d9611c8/Data/LAN2xx/all"
     vcf_file = "/home/mahajrod/Genetics/MACE/example_data/Lada_et_al_2015/PmCDA1_3d_SNP.vcf"
     masking_file = "/home/mahajrod/Genetics/MCTool/example_data/LAN210_v0.10m_masked_all_not_in_good_genes.gff"
+    from BCBio import GFF
+
+    masked_regions = SeqIO.to_dict(GFF.parse(masking_file))
+
+    reference = ReferenceGenome("/home/mahajrod/Genetics/MACE/example_data/Lada_et_al_2015/LAN210_v0.10m.fasta",
+                                masked_regions=masked_regions)
+    print(reference.reference_genome["chrXVI"][18075])
+    #reference.generate_snp_set(10000, {"C": ["T"], "G": ["A"]}, out_vcf="synthetic.vcf")
+    """
     collection = CollectionVCF(from_file=True, in_file=vcf_file)
     clusters = collection.get_clusters(sample_name="EEEEEE", save_clustering=True,
                                           extracting_method="distance",
@@ -1050,9 +1189,9 @@ if __name__ == "__main__":
     extracted_vcf = clusters.extract_vcf()
     extracted_vcf.write("extracted.vcf")
     """
-    from BCBio import GFF
 
-    masked_regions = SeqIO.to_dict(GFF.parse(masking_file))
+    """
+
 
     def check_location(feature, pos):
         return True if pos in feature else False
