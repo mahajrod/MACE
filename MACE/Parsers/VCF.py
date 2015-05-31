@@ -1013,15 +1013,17 @@ class ReferenceGenome(object):
     """
     ReferenceGenome class
     """
-    def __init__(self, ref_gen_file, masked_regions=None, index_file="refgen.idx", filetype="fasta", mode="index_db"):
+    def __init__(self, ref_gen_file, masked_regions=None, index_file="refgen.idx", filetype="fasta", mode="index_db",
+                 black_list=()):
         """
 
-        :param ref_gen_file:
-        :param masked_regions:
-        :param index_file:
-        :param filetype:
-        :param mode: mode of parsing reference genome. Allowed variants - to_dict, index, index_db
-        :return:
+        :param ref_gen_file: file with sequences of genome.
+        :param masked_regions: dictionary with SeqRecords of masked regions.
+        :param index_file: index file (created if absent) of genome used for parsing in index_db mode. Ignored  in other modes.
+        :param filetype: format of file with sequences. Allowed formats - fasta, genbank.
+        :param mode: mode of parsing reference genome. Allowed variants - to_dict, index, index_db.
+        :param black_list: list of records to be not parsed.
+        :return: None
         """
         self.ref_gen_file = ref_gen_file
         if mode == "index_db":
@@ -1030,6 +1032,10 @@ class ReferenceGenome(object):
             self.reference_genome = SeqIO.index(ref_gen_file, filetype)
         else:
             self.reference_genome = SeqIO.to_dict(SeqIO.parse(ref_gen_file, filetype))
+
+        for record_id in self.reference_genome.keys():
+            if record_id in black_list:
+                self.reference_genome.pop(record_id, None)
 
         self.region_list = list(self.reference_genome.keys())
         self.length = 0
@@ -1045,6 +1051,10 @@ class ReferenceGenome(object):
         self.masked_regions = masked_regions if masked_regions else OrderedDict()
 
     def __len__(self):
+        """
+
+        :return: length of genome.
+        """
         return self.length
 
     def rec_index(self):
@@ -1071,6 +1081,10 @@ class ReferenceGenome(object):
         return coordinate_region, shift
 
     def number_of_regions(self):
+        """
+
+        :return: number of regions/scaffolds/chromosomes in genome
+        """
         return len(self.region_length)
 
     def find_gaps(self):
@@ -1088,6 +1102,14 @@ class ReferenceGenome(object):
                                                          type="gap", strand=None))
 
     def generate_snp_set(self, size, substitution_dict=None, zygoty="homo", out_vcf="synthetic.vcf"):
+        """
+
+        :param size: size of snp set to be generated.
+        :param substitution_dict: dictionary of substitutions.
+        :param zygoty: zygoty of mutations in set.
+        :param out_vcf: output .,vcf file with mutations
+        """
+
         multiplier = (5 - len(substitution_dict)) if substitution_dict else 1
         unique_set = np.array([], dtype=np.int64)
         print("Generating...")
@@ -1100,10 +1122,10 @@ class ReferenceGenome(object):
             print("    Generated %i..." % len(raw_set))
             print("    Removing duplicates from raw set %i..." % index)
             raw_set = np.hstack((unique_set, raw_set))
-            #print(raw_set)
             unique_set = np.unique(raw_set)
+            np.random.shuffle(unique_set)
+            np.random.shuffle(unique_set)
             print("    After removing  duplicates left %i.." % len(unique_set))
-            #print(unique_set)
             print("    Checking filtered set %i..." % index)
             mutation_count = 0
             report_count = 1
@@ -1126,7 +1148,7 @@ class ReferenceGenome(object):
                             tmp_list.append(coordinate)
                             mutation_count += 1
                     if mutation_count/report_count == 500:
-                        print("Generated %i" % mutation_count)
+                        print("    Generated %i" % mutation_count)
                         report_count += 1
                 unique_set = np.array(tmp_list)
             index += 1
@@ -1143,27 +1165,42 @@ class ReferenceGenome(object):
                     alt_dict[ref] = list(nucleotides - {ref})
         print("Writing vcf...")
 
+        coordinates_dict = dict((record_id, []) for record_id in self.region_list)
+        check = 0
+        for coordinate in unique_set[:size]:
+            region, interregion_pos = self.get_position(coordinate)
+            coordinates_dict[region].append(interregion_pos)
+
         with open(out_vcf, "w") as out_fd:
             out_fd.write("##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">\n")
             out_fd.write("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tSynthetic_uniform_sample\n")
-            mutation_count = 0
-            for coordinate in unique_set:
-                region, interregion_pos = self.get_position(coordinate)
-                ref = self.reference_genome[region][interregion_pos]
+            #mutation_count = 0
+            for region in coordinates_dict:
+                if not coordinates_dict[region]:
+                    continue
+                num_of_snps = len(coordinates_dict[region])
+                check += num_of_snps
 
-                if len(substitution_dict[ref]) != 1:
-                    alt = alt_dict[ref][np.random.randint(0, len(alt_dict[ref]))]
-                else:
-                    alt = alt_dict[ref][0]
-                if zygoty == "homo":
-                    zyg = "1/1"
-                elif zygoty == "hetero":
-                    zyg = "0/1"
-                out_fd.write("%s\t%i\t.\t%s\t%s\t.\t.\t.\tGT\t%s\n" %
-                             (region, interregion_pos + 1, ref, alt, zyg))
-                mutation_count += 1
-                if mutation_count == size:
-                    break
+                coordinates_dict[region].sort()
+                #region, interregion_pos = self.get_position(coordinate)
+                for interregion_pos in coordinates_dict[region]:
+                    ref = self.reference_genome[region][interregion_pos]
+
+                    if len(substitution_dict[ref]) != 1:
+                        alt = alt_dict[ref][np.random.randint(0, len(alt_dict[ref]))]
+                    else:
+                        alt = alt_dict[ref][0]
+                    if zygoty == "homo":
+                        zyg = "1/1"
+                    elif zygoty == "hetero":
+                        zyg = "0/1"
+                    out_fd.write("%s\t%i\t.\t%s\t%s\t.\t.\t.\tGT\t%s\n" %
+                                 (region, interregion_pos + 1, ref, alt, zyg))
+                print("    %s : %i SNPs" % (region, num_of_snps))
+                    #mutation_count += 1
+                    #if mutation_count == size:
+                    #    break
+            print ("Totaly %i mutations were generated" % check)
 
 if __name__ == "__main__":
     #workdir = "/media/mahajrod/d9e6e5ee-1bf7-4dba-934e-3f898d9611c8/Data/LAN2xx/all"
@@ -1174,9 +1211,9 @@ if __name__ == "__main__":
     masked_regions = SeqIO.to_dict(GFF.parse(masking_file))
 
     reference = ReferenceGenome("/home/mahajrod/Genetics/MACE/example_data/Lada_et_al_2015/LAN210_v0.10m.fasta",
-                                masked_regions=masked_regions)
-    print(reference.reference_genome["chrXVI"][18075])
-    #reference.generate_snp_set(10000, {"C": ["T"], "G": ["A"]}, out_vcf="synthetic.vcf")
+                                masked_regions=masked_regions, mode="to_dict", black_list=["mt"])
+    #print(reference.reference_genome["chrXVI"][18075])
+    reference.generate_snp_set(8416, {"C": ["T"], "G": ["A"]}, out_vcf="synthetic.vcf")
     """
     collection = CollectionVCF(from_file=True, in_file=vcf_file)
     clusters = collection.get_clusters(sample_name="EEEEEE", save_clustering=True,

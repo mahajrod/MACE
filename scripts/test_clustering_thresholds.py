@@ -16,8 +16,14 @@ parser.add_argument("-y", "--testing_directory", action="store", dest="test_dir"
                     help="Directory where to output results of threshold test")
 parser.add_argument("-e", "--extracting_method", action="store", dest="extracting_method", required=True,
                     help="Method used to extract clusters")
+parser.add_argument("-p", "--scaffold_prefix", action="store", dest="scaffold_prefix", default="",
+                    help="Prefix to write in picture before names of region/scaffold/chromosome. "
+                         "Default: no prefix")
 parser.add_argument("-d", "--distance_type", action="store", dest="distance_type", default="average",
                     help="Method used to calculate distance between clusters. Default: average")
+parser.add_argument("-c", "--count_singletons", action="store_true", dest="count_singletons",
+                    help="Draw plot of number of all clusters including singletons. Don't use it for samples "
+                         "with low density of mutations")
 parser.add_argument("-n", "--min_threshold", action="store", dest="min_threshold", required=True, type=int,
                     help="Minimun threshold for extracting of clusters.")
 parser.add_argument("-x", "--max_threshold", action="store", dest="max_threshold", required=True, type=int,
@@ -36,4 +42,6 @@ mutations.test_thresholds(extracting_method=args.extracting_method,
                           dendrogramm_max_y=2000,
                           sample_name=args.sample_name,
                           save_clustering=False,
-                          testing_dir=args.test_dir)
+                          testing_dir=args.test_dir,
+                          count_singletons=args.count_singletons,
+                          scaffold_prefix=args.scaffold_prefix)
