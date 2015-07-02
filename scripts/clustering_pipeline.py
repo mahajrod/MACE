@@ -43,7 +43,7 @@ args = parser.parse_args()
 index_file = args.reference_index if args.reference_index else "%s.idx" % (".".join(args.reference.split(".")[:-1]))
 reference = ReferenceGenome(args.reference, index_file=index_file)
 
-sample = args.sample
+sample = args.sample_name
 
 clustering_dir = args.clust_dir
 distance_threshold = args.threshold
