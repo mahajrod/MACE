@@ -28,6 +28,8 @@ parser.add_argument("-i", "--reference_genome_index", action="store", dest="refe
                     help="Index of reference genome. Created if absent")
 parser.add_argument("-s", "--sample_name", action="store", dest="sample_name", default="unknown_sample",
                     help="Name of sample")
+parser.add_argument("-f", "--vcf_file", action="store", dest="vcf_file",
+                    help="Vcf file with SNVs")
 parser.add_argument("-a", "--annotations", action="store", dest="annotations", required=True,
                     help="Gff file with annotations of reference genome")
 parser.add_argument("-m", "--masking", action="store", dest="masking", required=True,
@@ -75,7 +77,7 @@ statistics_dict[sample] = OrderedDict({})
 
 os.system("mkdir -p %s" % clustering_dir)
 
-mutations = CollectionVCF(in_file="../../%s_SNP.vcf" % sample,
+mutations = CollectionVCF(in_file=args.vcf_file if args.vcf_file else "%s.vcf" % args.sample_name,
                           from_file=True)
 
 mutations.get_location(annotations_dict, use_synonym=True, synonym_dict=annotation_synonym_dict)
