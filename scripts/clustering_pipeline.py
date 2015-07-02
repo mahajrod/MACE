@@ -188,4 +188,4 @@ else:
     #filtered_out.heatmap_statistics(filename="%s/%s_3+_power_0.05+_less_0.1_heatmap_statistics.svg" % (clustering_dir, sample_adjusted),
     #                                         additional_data=("Median", "Mean", "Power"))
 
-#statistics_dict.write(out_filename=workdir + "mutation_count_statistics.t")
+statistics_dict.write(out_filename="mutation_count_statistics.t")
