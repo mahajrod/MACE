@@ -142,7 +142,7 @@ filtered_clusters, filtered_out_clusters = filtered_clusters.filter_by_size(min_
 filtered_clusters.write("%s/%s_size_3+.ccf" % (clustering_dir, sample_adjusted))
 
 filtered_out_clusters.write("%s/%s_size_less_3.ccf" % (clustering_dir, sample_adjusted))
-
+"""
 if "HAP" not in sample:
     filtered_clusters.heatmap_statistics(filename="%s/%s_3+_not_in_br_no_id_da_heatmap_statistics.svg" % (clustering_dir,sample_adjusted),
                                          additional_data=("Median", "Mean", "Power", "Homogeneity"))
@@ -153,7 +153,7 @@ else:
                                          additional_data=("Median", "Mean", "Power"))
     #filtered_out_clusters.heatmap_statistics(filename="%s/%s_less_3_not_in_br_no_id_heatmap_statistics.svg" % (clustering_dir, sample_adjusted),
     #                                         additional_data=("Median", "Mean", "Power"))
-
+"""
 cluster_mutations = filtered_clusters.extract_vcf()
 cluster_mutations.write("%s/%s_3+_cluster_mutations.vcf" % (clustering_dir, sample_adjusted))
 statistics_dict[sample]["cluster_3+_mutations"] = len(cluster_mutations)
@@ -161,7 +161,7 @@ statistics_dict[sample]["cluster_3+_mutations"] = len(cluster_mutations)
 filtered, filtered_out = filtered_clusters.filter(filter_by_power_05)
 filtered.write("%s/%s_adjusted_size_3+_power_0.05+.ccf" % (clustering_dir, sample))
 filtered_out.write("%s/%s_adjusted_size_3+_power_less_0.05.ccf" % (clustering_dir, sample))
-
+"""
 if "HAP" not in sample:
     filtered.heatmap_statistics(filename="%s/%s_3+_power_0.05+_heatmap_statistics.svg" % (clustering_dir,sample_adjusted),
                                          additional_data=("Median", "Mean", "Power", "Homogeneity"))
@@ -172,11 +172,11 @@ else:
                                          additional_data=("Median", "Mean", "Power"))
     #filtered_out.heatmap_statistics(filename="%s/%s_3+_power_less_0.05_heatmap_statistics.svg" % (clustering_dir, sample_adjusted),
     #                                         additional_data=("Median", "Mean", "Power"))
-
+"""
 filtered, filtered_out = filtered.filter(filter_by_power_10)
 filtered.write("%s/%s_adjusted_size_3+_power_0.1+.ccf" % (clustering_dir, sample))
 filtered_out.write("%s/%s_adjusted_size_3+_power_0.05+_less_0.1.ccf" % (clustering_dir, sample))
-
+"""
 if "HAP" not in sample:
     filtered.heatmap_statistics(filename="%s/%s_3+_power_0.10+_heatmap_statistics.svg" % (clustering_dir,sample_adjusted),
                                          additional_data=("Median", "Mean", "Power", "Homogeneity"))
@@ -187,5 +187,5 @@ else:
                                          additional_data=("Median", "Mean", "Power"))
     #filtered_out.heatmap_statistics(filename="%s/%s_3+_power_0.05+_less_0.1_heatmap_statistics.svg" % (clustering_dir, sample_adjusted),
     #                                         additional_data=("Median", "Mean", "Power"))
-
+"""
 statistics_dict.write(out_filename="%s_mutation_count_statistics.t" % sample)
