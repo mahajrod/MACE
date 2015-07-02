@@ -146,13 +146,13 @@ filtered_out_clusters.write("%s/%s_size_less_3.ccf" % (clustering_dir, sample_ad
 if "HAP" not in sample:
     filtered_clusters.heatmap_statistics(filename="%s/%s_3+_not_in_br_no_id_da_heatmap_statistics.svg" % (clustering_dir,sample_adjusted),
                                          additional_data=("Median", "Mean", "Power", "Homogeneity"))
-    filtered_out_clusters.heatmap_statistics(filename="%s/%s_less_3_not_in_br_no_id_non_da_heatmap_statistics.svg" % (clustering_dir, sample_adjusted),
-                                             additional_data=("Median", "Mean", "Power", "Homogeneity"))
+    #filtered_out_clusters.heatmap_statistics(filename="%s/%s_less_3_not_in_br_no_id_non_da_heatmap_statistics.svg" % (clustering_dir, sample_adjusted),
+    #                                         additional_data=("Median", "Mean", "Power", "Homogeneity"))
 else:
     filtered_clusters.heatmap_statistics(filename="%s/%s_3+_not_in_br_no_id_heatmap_statistics.svg" % (clustering_dir,sample_adjusted),
                                          additional_data=("Median", "Mean", "Power"))
-    filtered_out_clusters.heatmap_statistics(filename="%s/%s_less_3_not_in_br_no_id_heatmap_statistics.svg" % (clustering_dir, sample_adjusted),
-                                             additional_data=("Median", "Mean", "Power"))
+    #filtered_out_clusters.heatmap_statistics(filename="%s/%s_less_3_not_in_br_no_id_heatmap_statistics.svg" % (clustering_dir, sample_adjusted),
+    #                                         additional_data=("Median", "Mean", "Power"))
 
 cluster_mutations = filtered_clusters.extract_vcf()
 cluster_mutations.write("%s/%s_3+_cluster_mutations.vcf" % (clustering_dir, sample_adjusted))
