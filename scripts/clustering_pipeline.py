@@ -94,6 +94,7 @@ clusters = mutations.get_clusters(sample_name=sample, save_clustering=True,
                                   threshold=distance_threshold, cluster_distance='average',
                                   dendrogramm_max_y=2000, dendrogramm_color_threshold=1000,
                                   clustering_dir=clustering_dir)
+print("Clustering...")
 clusters.subclustering()
 clusters.statistics(filename="%s/%s_cluster_size_distribution.svg" % (clustering_dir, sample))
 clusters.write("%s/%s_raw.ccf" % (clustering_dir, sample))
@@ -101,6 +102,7 @@ clusters.write("%s/%s_raw.ccf" % (clustering_dir, sample))
 clusters.adjust(border_limit=None, min_size_to_adjust=1, remove_border_subclusters=True, remove_size_limit=1)
 clusters.statistics(filename="%s/%s_cluster_size_distribution.svg" % (clustering_dir, sample_adjusted))
 
+print("Filtering...")
 clusters.check_location()
 if "HAP" not in sample:
     clusters.check_flags(["DA"], mismatch_list=[1], expression_list=["record.count_samples() <= 1"],
