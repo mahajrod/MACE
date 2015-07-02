@@ -32,7 +32,7 @@ parser.add_argument("-a", "--annotations", action="store", dest="annotations", r
                     help="Gff file with annotations of reference genome")
 parser.add_argument("-m", "--masking", action="store", dest="masking", required=True,
                     help="Gff file with masked regions")
-parser.add_argument("-r", "--threshold", action="store", dest="threshold", default=1000, type=int,
+parser.add_argument("-d", "--threshold", action="store", dest="threshold", default=1000, type=int,
                     help="Threshold for extractig clusters. Depends on extraction method.")
 parser.add_argument("-y", "--clustering_directory", action="store", dest="clust_dir", default="clustering",
                     help="Directory where to output additional data about clustering")
