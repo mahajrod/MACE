@@ -22,7 +22,7 @@ from Bio.SeqFeature import SeqFeature, FeatureLocation
 from MACE.Parsers.Abstract import Record, Collection, Metadata, Header
 
 
-ref_alt_variants = {"desaminases": [("C", ["T"]), ("G", ["A"])]
+ref_alt_variants = {"deaminases": [("C", ["T"]), ("G", ["A"])]
                     }
 
 
@@ -31,20 +31,19 @@ class RecordVCF(Record):
     RecordVCF class
     """
     def __init__(self, pos, id, ref, alt_list, qual, filter_list, info_dict, samples_list,
-                 description=None, flags=None):
+                 flags=None):
         """
-
-        :param pos:
-        :param id:
-        :param ref:
-        :param alt_list:
-        :param qual:
-        :param filter_list:
-        :param info_dict:
-        :param samples_list:
-        :param description:
-        :param flags:
-        :return:
+        Initializes record
+        :param pos: coordinate of mutation in chromosome
+        :param id: id of mutation
+        :param ref: reference variant
+        :param alt_list: list of alternative variants
+        :param qual: quality of mutation
+        :param filter_list: list of filters
+        :param info_dict: dictionary containing non flag data from vcf file
+        :param samples_list: list of samples
+        :param flags: flags from INFO field of vcf file
+        :return: None
         """
 
         self.pos = pos                                  #int
@@ -62,23 +61,27 @@ class RecordVCF(Record):
     def __str__(self):
         """
 
-        :return:
+        :return: string representation of record (vcf string without chromosome name)
         """
         alt_string = ",".join(self.alt_list)
         filter_string = ";".join(self.filter_list)
-        key_string_list = []
-        for key in sorted(list(self.info_dict.keys())):
-            if self.info_dict[key]:
-                key_string_list.append(key + "=" + ",". join(map(lambda x: str(x), self.info_dict[key])))
-            else:
-                key_string_list.append(key)
-
-        info_string = ";".join(key_string_list)
-        info_string = "%s;%s" % (info_string, ";".join(self.flags)) if self.flags else info_string
+        if self.info_dict:
+            key_string_list = []
+            for key in sorted(list(self.info_dict.keys())):
+                if self.info_dict[key]:
+                    key_string_list.append(key + "=" + ",". join(map(lambda x: str(x), self.info_dict[key])))
+                else:
+                    key_string_list.append(key)
+            info_string = ";".join(key_string_list)
+            info_string = "%s;%s" % (info_string, ";".join(self.flags)) if self.flags else info_string
+        else:
+            info_string = "."
         for sample in self.samples_list:
             if len(sample.keys()) > 1:
                 format_string = ":".join(sample.keys())
                 break
+        else:
+            format_string = list(self.samples_list[0].keys())[0]
 
         samples_string = "\t".join([":".join([",".join(map(lambda x: str(x), sample[key])) for key in sample.keys()]) for sample in self.samples_list])
         return '\t'.join(map(lambda x: str(x), [self.pos, self.id, self.ref, alt_string,
@@ -86,20 +89,20 @@ class RecordVCF(Record):
 
     def check_ref_alt_list(self, ref_alt_list, flag):
         """
-
-        :param ref_alt_list:
-        :param flag:
-        :return:
+        Sets flag in record if mutations is in list
+        :param ref_alt_list: list of references and corresponding to them alternatives
+        :param flag: flag to set if mutation is in ref_alt_list
+        :return: None
         """
         # structure of ref_alt_list:  [[ref1,[alt1.1, alt1.M1]], ..., [refN,[altN.1, ..., altN.MN]]]
         self.set_flag(lambda record: (record.ref, record.alt_list) in ref_alt_list, flag)
 
     def count_samples(self):
         """
-
-        :return:
+        Counts samples with mutations
+        :return: number of samples with mutation
         """
-        #counts samples with variants
+        #
         number = 0
         for sample in self.samples_list:
             if sample["GT"][0] != "./." and sample["GT"][0] != "0/0":
@@ -108,9 +111,10 @@ class RecordVCF(Record):
 
     def set_filter(self, expression, filter_name):
         """
-        :param expression:
-        :param filter_name:
-        :return:
+        Adds filter in RecordVCF.filter_list if expression is True
+        :param expression: expression to check
+        :param filter_name: filter to set
+        :return: None
         """
         if expression(self):
             self.filter_list.append(filter_name)
@@ -118,10 +122,10 @@ class RecordVCF(Record):
 
     def add_info(self, info_name, info_value=None):
         """
-
-        :param info_name:
-        :param info_value:
-        :return:
+        Adds parameter to RecordVCF.info_dict
+        :param info_name: name of parameter
+        :param info_value: value of parameter
+        :return: None
         """
         value = info_value if isinstance(info_value, list) else [] if info_value is None else [info_value]
         if info_name in self.info_dict:
@@ -132,6 +136,7 @@ class RecordVCF(Record):
     def check_indel(self):
         """
         Checks if record is indel
+        :return: True if at least one variant of alternatives is indel
         """
         if len(self.ref) > 1 or len("".join(self.alt_list)) > len(self.alt_list):
             return True
@@ -141,17 +146,21 @@ class RecordVCF(Record):
                       genes_strand_key="Gstrand", feature_type_black_list=[],
                       use_synonym=False, synonym_dict=None, add_intergenic_label=True):
         """
-
-        :param scaffold:
-        :param annotation_dict:
-        :param key:
-        :param strand_key:
-        :param genes_key:
-        :param genes_strand_key:
-        :param feature_type_black_list:
-        :param use_synonym:
-        :param synonym_dict:
-        :param add_intergenic_label:
+        Finds location of mutations in annotations. Adds four parameters to RecordVCF.info_dict. By default their names are "Ftype", "Fstrand", "Genes", "Gstrand"
+        "Ftype" contains list types of annotation within mutation is located,
+        "Fstrand" - summary of strands(N for no annotation, P or M if annotation is located in plus or minus strand respectively and B if annotations from both strands are overlapped)
+        "Genes" - list of gene names within mutation is located,
+        "Gstrand" - list of gene strands
+        :param scaffold: scaffold of variant
+        :param annotation_dict: dictionary of Biopython SeqRecord objects (keys are record ids, i.e. names of chromosomes)
+        :param key: key to use for annotation type
+        :param strand_key: key to use for summary strand of annotations
+        :param genes_key: key to use for genes list
+        :param genes_strand_key: key to use for list of gene strands
+        :param feature_type_black_list: list of annotation types to skip
+        :param use_synonym: use or not synonyms for annotations
+        :param synonym_dict: dictionary of synonyms
+        :param add_intergenic_label: label to use if mutation is located not in any gene
         :return:
         """
         """
@@ -241,6 +250,12 @@ class MetadataVCF(OrderedDict, Metadata):
         return [string[index_list[j] + 1: index_list[j + 1]] for j in range(0, len(index_list) - 1)]
 
     def add_metadata(self, line):
+        """
+        Adds vcf-like metadata from line
+        :param line: string containing metadata info
+        :return: None
+        """
+
         key, value = self._split_by_equal_sign(line[2:].strip())
         if value[0] == "<" and value[-1] == ">":
             value = self._split_by_comma_sign(value[1:-1])
@@ -253,12 +268,23 @@ class MetadataVCF(OrderedDict, Metadata):
             self[key] = value
 
     def add_metadata_from_values(self, name, number, ntype, description):
+        """
+        Adds vcf-like metadata from values
+        :param name: name of parameter
+        :param number: number of values in parameter
+        :param ntype: type of values in parameter
+        :param description: description of parameter
+        :return: None
+        """
         self[name] = OrderedDict({})
         self[name]["Number"] = number
         self[name]["Type"] = ntype
         self[name]["Description"] = description
 
     def __str__(self):
+        """
+        :return: vcf-like string representation of metadata
+        """
         metadata_string = ""
         for key in self:
             if not isinstance(self[key], dict):
@@ -278,6 +304,9 @@ class HeaderVCF(list, Header):
     HeaderVCF class
     """
     def __str__(self):
+        """
+        :return: vcf-like string representation of header
+        """
         return "#" + "\t".join(self)
 
 
@@ -290,7 +319,8 @@ class CollectionVCF(Collection):
     def __init__(self, metadata=None, records_dict=None, header=None, in_file=None, samples=None,
                  from_file=True, external_metadata=None, threads=1):
         """
-
+        Initializes collection. If from_file is True collection will be read from file (arguments other then in_file, external_metadata and threads are ignored)
+        Otherwise collection will be initialize from meta, records_dict, header, samples
         :param metadata:
         :param records_dict:
         :param header:
@@ -317,10 +347,10 @@ class CollectionVCF(Collection):
 
     def read(self, in_file, external_metadata=None):
         """
-
-        :param in_file:
-        :param external_metadata:
-        :return:
+        Reads collection from vcf file
+        :param in_file: path to file
+        :param external_metadata: external(not from input file) metadata that could be used to parse records
+        :return: None
         """
         self.metadata = MetadataVCF()
         self.records = OrderedDict({})
@@ -339,10 +369,10 @@ class CollectionVCF(Collection):
 
     def add_record(self, line, external_metadata=None):
         """
-
-        :param line:
-        :param external_metadata:
-        :return:
+        Adds record to collection from line
+        :param line: record line from vcf file
+        :param external_metadata: external(not from input file) metadata that could be used to parse records
+        :return: None
         """
         line_list = line.strip().split("\t")
         #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	Sample_1
@@ -370,7 +400,6 @@ class CollectionVCF(Collection):
                 else:
                     info_dict[entry[0]] = entry[1].split(",")
         samples_list = []
-
         for sample_string in line_list[9:]:
             sample_dict = OrderedDict()
             if sample_string == "./.":
@@ -418,11 +447,11 @@ class CollectionVCF(Collection):
 
     def filter(self, expression):
         """
-
+        Splits collection based on expression. Expression should be a function with one argument - record entry
         :param expression: filtering expression
-        :return:
+        :return: tuple of two CollectionVCF. First contains records for which expression is True, second - False.
         """
-        # expression should be a function with one argument - record entry
+        #
         filtered_records, filtered_out_records = self.filter_records(expression)
         return CollectionVCF(metadata=self.metadata, records_dict=filtered_records,
                              header=self.header, samples=self.samples, from_file=False),\
@@ -431,10 +460,9 @@ class CollectionVCF(Collection):
 
     def filter_by_zygoty(self):
         """
-
-        :return:
+        Splits collection based on zygoty of mutation. Mutation is counted as heterozygous even if in one sample it is hetorozygous
+        :return: tuple of two CollectionVCF. First contains homozygous records, second - heterozygous
         """
-        # splits sites by zygoty, site counts as heterozygote if even in one sample it it hetorozygote
         def filter_expression(record):
             for sample_dict in record.samples_list:
                 zyg = sample_dict["GT"][0].split("/")
@@ -446,10 +474,10 @@ class CollectionVCF(Collection):
 
     def record_coordinates(self, black_list=[], white_list=[]):
         """
-
-        :param black_list:
-        :param white_list:
-        :return:
+        Extracts coordinates of records in collection
+        :param black_list: list of scaffolds to skip
+        :param white_list: list of scaffolds to consider, other are ignored
+        :return: dictionary of coordinates, keys are scaffold names, values - Numpy arrays of coordinates
         """
         coord_dict = {}
         for scaffold in self.records:
@@ -468,25 +496,22 @@ class CollectionVCF(Collection):
 
     def get_positions(self):
         """
-
-        :return:
-        """
-        """
-        Extracts position coordinates of records in collection
-        dict of coordinates, keys are scaffolds
+        Extracts coordinates of records in collection
+        :return: dictionary of coordinates, keys are scaffold names, values - Numpy arrays of coordinates
         """
         positions_dict = OrderedDict({})
         for scaffold in self.records:
             positions_dict[scaffold] = np.array([[record.pos] for record in self.records[scaffold]])
         return positions_dict
 
-    def check_by_ref_and_alt(self, ref_alt_list, flag):
+    def check_by_ref_and_alt(self, ref_alt_list, flag, description="No description"):
         """
 
         :param ref_alt_list:
         :param flag:
-        :return:
+        :return: None
         """
+        self.metadata.add_metadata("##INFO=<ID=%s,Number=0,Type=Flag,Description=\"%s\">" % (flag, description))
         for record in self:
             record.check_ref_alt_list(ref_alt_list, flag)
 
@@ -494,7 +519,7 @@ class CollectionVCF(Collection):
         """
 
         :param ref_alt_list:
-        :return:
+        :return: None
         """
         # structure of ref_alt_list:  [[ref1,[alt1.1, alt1.M1]], ..., [refN,[altN.1, ..., altN.MN]]]
         return self.filter(lambda record: (record.ref, record.alt_list) in ref_alt_list)
@@ -504,7 +529,7 @@ class CollectionVCF(Collection):
         Sets filter_name in FILTER field if expression returns True
         :param expression:
         :param filter_name:
-        :return:
+        :return: None
         """
         for record in self:
             if expression:
@@ -521,6 +546,16 @@ class CollectionVCF(Collection):
         return [CollectionVCF(metadata=self.metadata, records_dict={scaffold: self.records[scaffold]},
                               header=self.header, samples=self.samples, from_file=False)
                 for scaffold in self.records]
+
+    def get_location(self, annotation_dict, key="Loc", use_synonym=False, strand_key="strand",
+                     synonym_dict=None, feature_type_black_list=[]):
+        self.metadata.add_metadata("##INFO=<ID=%s,Number=.,Type=String,Description=\"Locations of variant\">" % key)
+        self.metadata.add_metadata("##INFO=<ID=%s,Number=.,Type=String,Description=\"Strand\">" % strand_key)
+        for scaffold in self.records:
+            for record in self.records[scaffold]:
+                record.get_location(scaffold, annotation_dict, key=key, use_synonym=use_synonym,
+                                    synonym_dict=synonym_dict, feature_type_black_list=feature_type_black_list,
+                                    strand_key=strand_key)
 
     @staticmethod
     def _reference(record):
@@ -1103,7 +1138,7 @@ class ReferenceGenome(object):
 
     def generate_snp_set(self, size, substitution_dict=None, zygoty="homo", out_vcf="synthetic.vcf"):
         """
-
+        Generates set of mutations
         :param size: size of snp set to be generated.
         :param substitution_dict: dictionary of substitutions.
         :param zygoty: zygoty of mutations in set.
@@ -1220,7 +1255,8 @@ if __name__ == "__main__":
 
 
     collection = CollectionVCF(from_file=True, in_file=vcf_file)
-    collection = CollectionVCF(from_file=True, in_file="/home/mahajrod/Genetics/MACE/example_data/Synthetic_data/deaminase_8416/synthetic_deaminase_snp_8416.vcf")
+    #collection = CollectionVCF(from_file=True, in_file="/home/mahajrod/Genetics/MACE/example_data/Synthetic_data/deaminase_8416/synthetic_deaminase_snp_8416.vcf")
+    collection.write("ghjuh.vcf")
     """
     clusters = collection.get_clusters(sample_name="EEEEEE", save_clustering=True,
                                           extracting_method="distance",

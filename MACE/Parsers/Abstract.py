@@ -44,12 +44,12 @@ class Record():
             self.info_dict[key] = set([])
 
         if strand_key not in self.info_dict:
-            self.info_dict[strand_key] = []
+            self.info_dict[strand_key] = ["."]
         for feature in annotation_dict[record_scaffold].features:
             if (self.pos - 1) in feature:
                 self.info_dict[key].add(self.get_synonym(feature.type, use_synonym=use_synonym,
                                                          synonym_dict=synonym_dict))
-                if not self.info_dict[strand_key]:
+                if self.info_dict[strand_key] == ["."]:
                     self.info_dict[strand_key] = [feature.strand]
                 elif feature.strand != self.info_dict[strand_key][0]:
                     self.info_dict[strand_key] = [0]
@@ -232,13 +232,14 @@ class Collection():
                     filtered_out_records[scaffold].append(record)
         return filtered_records, filtered_out_records
 
-    def write(self, output_file):
+    def write(self, output_file, desired_scaffolds=None):
         with open(output_file, "w") as out_fd:
             if self.metadata:
                 out_fd.write(str(self.metadata) + "\n")
             if self.header:
                 out_fd.write(str(self.header) + "\n")
-            for scaffold in self.scaffold_list:
+            scaffolds = desired_scaffolds if desired_scaffolds else self.scaffold_list
+            for scaffold in scaffolds:
                 for record in self.records[scaffold]:
                     out_fd.write(scaffold + "\t" + str(record) + "\n")
 
@@ -323,17 +324,18 @@ class Collection():
         return region_counts_dict
 
     def location_pie(self, pie_name="Location of variants", annotation_colors=[],
-                     dpi=150, figsize=(30, 30), facecolor="#D6D6D6",
-                     ref_genome=None, explode=True, annotation_black_list=[],
+                     dpi=150, figsize=(30, 30),
+                     explode=True, annotation_black_list=[],
                      allow_several_counts_of_record=False,
-                     pie_filename="variant_location_pie.svg",
-                     full_genome_pie_filename="variant_location_pie_full_genome.svg",
+                     pie_prefix="variant_location_pie1",
+                     full_genome_pie_prefix="variant_location_pie_full_genome",
                      counts_filename="location_counts.t",
                      plot_dir="variant_location_pie",
                      counts_dir="location_counts",
                      radius = 1,
                      draw_percents_on_single_pie=False,
-                     combine_mixed=False):
+                     combine_mixed=False,
+                     extension_list=["svg", "eps", "pdf", "png", "jpg"]):
         print("Drawing location pie...")
 
         os.system("mkdir -p %s" % plot_dir)
@@ -412,10 +414,11 @@ class Collection():
                     label_index = all_labels.index(labels[i])
                     all_counts[label_index] += counts[i]
 
-        plt.savefig("%s/%s" % (plot_dir, pie_filename))
+        for extension in extension_list:
+            plt.savefig("%s/%s.%s" % (plot_dir, pie_prefix, extension))
         plt.close()
 
-        fig = plt.figure(3, dpi=dpi, figsize=(6, 6))
+        fig = plt.figure(3, dpi=dpi, figsize=(4, 4))
         fig.suptitle(pie_name, fontsize=20)
         plt.subplot(1, 1, 1, axisbg="#D6D6D6")
         all_explodes = np.zeros(len(all_counts))
@@ -446,7 +449,8 @@ class Collection():
                                                      reverse=True))
 
         plt.legend(patches, labels, loc='center left',  fontsize=13, bbox_to_anchor=(-1.0, 0.5))
-        plt.title("Full genome")
+        # plt.title("Full genome")
         plt.axis('equal')
-        plt.savefig("%s/%s" % (plot_dir, full_genome_pie_filename), bbox_inches='tight')
+        for extension in extension_list:
+            plt.savefig("%s/%s.%s" % (plot_dir, full_genome_pie_prefix, extension), bbox_inches='tight')
         plt.close()

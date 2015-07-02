@@ -78,7 +78,7 @@ if __name__ == "__main__":
 
         mutations.get_location(annotations_dict, use_synonym=True, synonym_dict=annotation_synonym_dict)
         mutations.set_location_flag(bad_region_dict, check_location, "BR")
-        mutations.check_by_ref_and_alt(ref_alt_variants["desaminases"], "DA")
+        mutations.check_by_ref_and_alt(ref_alt_variants["deaminases"], "DA", description="Deaminase-like variant")
 
         raw_mutations_counts = len(mutations)
         print("Totaly %i mutations" % raw_mutations_counts)
