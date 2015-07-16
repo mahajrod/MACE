@@ -23,12 +23,13 @@ parser.add_argument("-e", "--write_ext", action="store_true", dest="write_ext",
                     help="write extensions of vcf files in output file. Default: false")
 args = parser.parse_args()
 
-files_list = make_list_of_path_to_files(args.input_vcf, vcf_filter)
+files_list = sorted(make_list_of_path_to_files(args.input_vcf, vcf_filter))
 
 with open(args.output, "w") as out_fd:
     if args.write_header:
         out_fd.write("#file/sample\tnumber_of_variants\n")
     for filename in files_list:
+        print("Counting variants in %s..." % filename)
         directory, prefix, extension = split_filename(filename)
         variants = CollectionVCF(from_file=True, in_file=filename)
         number_of_variants = len(variants)
