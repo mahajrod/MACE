@@ -16,7 +16,7 @@ def make_list_of_path_to_files(list_of_dirs_and_files, expression):
         if os.path.isdir(entry):
             files_in_dir = sorted(filter(expression, os.listdir(entry)))
             for filename in files_in_dir:
-                pathes_list.append("%s/%s" % (entry, filename))
+                pathes_list.append("%s%s" % (entry, filename))
         elif os.path.exists(entry):
             pathes_list.append(entry)
         else:
