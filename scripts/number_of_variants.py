@@ -30,12 +30,13 @@ files_list = sorted(make_list_of_path_to_files(args.input_vcf, vcf_filter))
 out_fd = sys.stdout if args.output == "stdout" else open(args.output, "w")
 
 if args.write_header:
-    out_fd.write("#file/sample\tnumber_of_variants\n")
+    out_fd.write("#file/sample\tnumber_of_variants\thomozygous\theterozygous\n")
 for filename in files_list:
     if args.output != "stdout":
         print("Counting variants in %s ..." % filename)
     directory, prefix, extension = split_filename(filename)
     variants = CollectionVCF(from_file=True, in_file=filename)
+    homo, hetero = variants.count_zygoty()
     number_of_variants = len(variants)
     if args.write_dir_path and args.write_ext:
         name = filename
@@ -46,7 +47,7 @@ for filename in files_list:
     else:
         name = prefix
 
-    out_fd.write("%s\t%i\n" % (name, number_of_variants))
+    out_fd.write("%s\t%i\t%i\t%i\n" % (name, number_of_variants, homo, hetero))
 
 if args.output != "output":
     out_fd.close()
