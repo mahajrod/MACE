@@ -227,6 +227,16 @@ class MetadataVCF(OrderedDict, Metadata):
     """
     MetadataVCF class
     """
+    def read(self, in_file):
+        with open(in_file, "r") as fd:
+            for line in fd:
+                if line[:2] != "##":
+                    # self.header = HeaderVCF(line[1:].strip().split("\t"))   # line[1:].strip().split("\t")
+                    # self.samples = self.header[9:]
+                    break
+                self.metadata.add_metadata(line)
+
+
     @staticmethod
     def _split_by_equal_sign(string):
         try:
@@ -305,6 +315,7 @@ class HeaderVCF(list, Header):
     """
     HeaderVCF class
     """
+
     def __str__(self):
         """
         :return: vcf-like string representation of header
@@ -460,10 +471,42 @@ class CollectionVCF(Collection):
                CollectionVCF(metadata=self.metadata, records_dict=filtered_out_records,
                              header=self.header, samples=self.samples, from_file=False)
 
+    def count_records(self, expression):
+        """
+        Counts records in collection based on expression. Expression should be a function with one argument - record entry
+        :param expression: filtering expression
+        :return: tuple of two numbers. First is number of records for which expression is True, second - False.
+        """
+
+        true_records = 0
+        false_records = 0
+        for scaffold in self.scaffold_list:
+            for record in self.records[scaffold]:
+                if expression(record):
+                    true_records += 1
+                else:
+                    false_records += 1
+        return true_records, false_records
+
+    def count_zygoty(self):
+        """
+        :return: tuple - (N of homozygotes, N of heterozygotes)
+        """
+        return self.count_records(self.filter_zygoty_expression)
+
+    @staticmethod
+    def filter_zygoty_expression(record):
+            for sample_dict in record.samples_list:
+                zyg = sample_dict["GT"][0].split("/")
+                if zyg[0] != zyg[1]:
+                    return False
+            return True
+
     def filter_by_zygoty(self):
         """
         Splits collection based on zygoty of mutation. Mutation is counted as heterozygous even if in one sample it is hetorozygous
         :return: tuple of two CollectionVCF. First contains homozygous records, second - heterozygous
+        """
         """
         def filter_expression(record):
             for sample_dict in record.samples_list:
@@ -471,8 +514,8 @@ class CollectionVCF(Collection):
                 if zyg[0] != zyg[1]:
                     return False
             return True
-
-        return self.filter(filter_expression)
+        """
+        return self.filter(self.filter_zygoty_expression)
 
     def record_coordinates(self, black_list=[], white_list=[]):
         """
@@ -539,6 +582,26 @@ class CollectionVCF(Collection):
                     record.filter_list = [filter_name]
                 else:
                     record.filter_list.append(filter_name)
+
+    def check_presence(self, chrom, position, alt_list=None):
+        """
+        Checks presence of variant in collection
+        :param chrom:
+        :param position:
+        :param alt_list: optional
+        :return: True if variant is present in collection(same chrom, position and optionally alts) otherwise False
+        """
+
+        if chrom not in self.scaffold_list:
+            return False
+        for record in self.records[chrom]:
+            if record.pos > position:
+                return False
+            if record.pos == position:
+                if alt_list:
+                    if alt_list != record.alt_list:
+                        return False
+                return True
 
     def split_by_scaffolds(self):
         """
