@@ -95,10 +95,18 @@ class Record():
 
 
 class Metadata():
-    def __init__(self, metadata=[]):
-        self.metadata = metadata
+    def __init__(self, metadata=[], from_file=False, in_file=None):
+        if from_file:
+            self.metadata = []
+            self.read(in_file)
+        else:
+            self.metadata = metadata
 
     def add_metadata(self):
+        pass
+
+    def read(self, in_file):
+        # metadata-type-dependent function
         pass
 
     def __str__(self):
@@ -168,6 +176,8 @@ class Collection():
         return collection_string
 
     def __len__(self):
+        print self.record_index
+        print self.scaffold_list
         return self.record_index[self.scaffold_list[-1]][1] + 1
 
     def read(self, input_file):

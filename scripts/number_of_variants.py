@@ -49,5 +49,5 @@ for filename in files_list:
 
     out_fd.write("%s\t%i\t%i\t%i\n" % (name, number_of_variants, homo, hetero))
 
-if args.output != "output":
+if args.output != "stdout":
     out_fd.close()
