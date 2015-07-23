@@ -413,6 +413,8 @@ class CollectionCCF(Collection):
         plt.subplot(1, 1, 1)
         plt.suptitle(title)
         counts = self.count()
+        if not counts:
+            return -1
         maximum = max(counts)
         bins = np.linspace(0, maximum, maximum)
         plt.hist(counts, bins, facecolor=facecolor)
