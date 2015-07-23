@@ -770,11 +770,13 @@ class CollectionVCF(Collection):
             os.system("mkdir -p %s" % clustering_dir)
         for region in positions_dict:
             #print positions_dict[region]
-            distance_matrix = pdist(positions_dict[region])
-            #print(distance_matrix)
-            if not distance_matrix:
+            if len(positions_dict[region]) <= 1:
                 linkage_dict[region] = None
                 continue
+            else:
+                distance_matrix = pdist(positions_dict[region])
+            #print(distance_matrix)
+
             linkage_dict[region] = linkage(distance_matrix, method=method)
             if draw_dendrogramm:
                 plt.figure(1, dpi=150, figsize=(50, 20))
