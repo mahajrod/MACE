@@ -772,6 +772,7 @@ class CollectionVCF(Collection):
             #print positions_dict[region]
             if len(positions_dict[region]) <= 1:
                 linkage_dict[region] = None
+                correlation_dict[region] = None
                 continue
             else:
                 distance_matrix = pdist(positions_dict[region])
