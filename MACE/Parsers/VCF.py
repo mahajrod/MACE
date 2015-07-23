@@ -772,6 +772,9 @@ class CollectionVCF(Collection):
             #print positions_dict[region]
             distance_matrix = pdist(positions_dict[region])
             #print(distance_matrix)
+            if not distance_matrix:
+                linkage_dict[region] = None
+                continue
             linkage_dict[region] = linkage(distance_matrix, method=method)
             if draw_dendrogramm:
                 plt.figure(1, dpi=150, figsize=(50, 20))
@@ -842,14 +845,18 @@ class CollectionVCF(Collection):
         mut_clusters_dict = OrderedDict({})
         clusters = OrderedDict()
         for region in linkage_dict:
-            clusters[region] = fcluster(linkage_dict[region], threshold, criterion=extracting_method)
+            if linkage_dict[region] is None:
+                clusters[region] = None
+            else:
+                clusters[region] = fcluster(linkage_dict[region], threshold, criterion=extracting_method)
 
         if return_collection:
             record_ccf_dict = OrderedDict()
             for region in self.records:
                 # http://docs.scipy.org/doc/scipy/reference/generated/scipy.cluster.hierarchy.fcluster.html#scipy.cluster.hierarchy.fcluster
                 clusters_dict = OrderedDict({})
-
+                if clusters[region] is None:
+                    continue
                 for i in range(0, len(clusters[region])):
                     if clusters[region][i] not in clusters_dict:
                         clusters_dict[clusters[region][i]] = [self.records[region][i]]
@@ -927,6 +934,8 @@ class CollectionVCF(Collection):
 
         index = 1
         for region in linkage_dict:
+            if linkage_dict[region] is None:
+                continue
             # http://docs.scipy.org/doc/scipy/reference/generated/scipy.cluster.hierarchy.fcluster.html#scipy.cluster.hierarchy.fcluster
             n_clusters_list = []
             n_nonsingleton_clusters = []
