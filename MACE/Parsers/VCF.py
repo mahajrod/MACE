@@ -222,6 +222,17 @@ class RecordVCF(Record):
             # igc == intergenic
             self.info_dict[key].add("igc")
 
+    def is_homozygous(self):
+        """
+        Checks if variant in all samples is homozygous
+        :return: True if variant in all samples is homozygous, otherwise False
+        """
+        for sample_dict in self.samples_list:
+            zyg = sample_dict["GT"][0].split("/")
+            if zyg[0] != zyg[1]:
+                return False
+        return True
+
 
 class MetadataVCF(OrderedDict, Metadata):
     """
