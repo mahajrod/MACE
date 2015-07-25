@@ -10,6 +10,7 @@ from matplotlib import colors
 from MACE.Parsers.Abstract import Record, Collection, Metadata, Header
 from MACE.Parsers.VCF import CollectionVCF, MetadataVCF, HeaderVCF
 
+from MACE.General.GeneralCollections import WDict
 
 class RecordCCF(Record, Iterable):
 
@@ -408,7 +409,7 @@ class CollectionCCF(Collection):
         return sizes
 
     def statistics(self, filename="cluster_size_distribution.svg", title="Distribution of sizes of clusters",
-                   dpi=150, figsize=(8, 8), facecolor="green"):
+                   dpi=150, figsize=(8, 8), facecolor="green", draw_hist=True):
         plt.figure(1, dpi=dpi, figsize=figsize)
         plt.subplot(1, 1, 1)
         plt.suptitle(title)
@@ -416,11 +417,18 @@ class CollectionCCF(Collection):
         if not counts:
             return -1
         maximum = max(counts)
-        bins = np.linspace(0, maximum, maximum)
-        plt.hist(counts, bins, facecolor=facecolor)
-        plt.xticks(np.arange(0, maximum, 1.0))
-        plt.savefig(filename)
+        #print(maximum)
+        bins = np.linspace(1, maximum+1, maximum+1)
+        #print(bins)
+        n, bins, patches = plt.hist(counts, bins, facecolor=facecolor, align='left')
+        if draw_hist:
+            plt.xticks(np.arange(1, maximum+1, 1))
+            plt.xlim(xmin=0.5, xmax=maximum+0.5)
+            plt.xlabel("Size")
+            plt.ylabel("Number")
+            plt.savefig(filename)
         plt.close()
+        return WDict([map(int, pair) for pair in zip(bins, n)])
 
     def filter_by_flags(self, white_flag_list=[], black_flag_list=[]):
         white_list = set(white_flag_list)

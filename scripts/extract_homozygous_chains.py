@@ -7,6 +7,8 @@ from collections import OrderedDict
 from MACE.Parsers.VCF import CollectionVCF
 from MACE.Parsers.CCF import RecordCCF, MetadataCCF, HeaderCCF, CollectionCCF
 
+from MACE.General.GeneralCollections import WDict
+
 parser = argparse.ArgumentParser()
 
 parser.add_argument("-i", "--input_vcf", action="store", dest="input", required=True,
@@ -35,6 +37,15 @@ for chromosome in mutations.scaffold_list:
                 homo_list = []
             else:
                 continue
+    else:
+        if homo_list:
+            if chromosome not in chains_dict:
+                chains_dict[chromosome] = [RecordCCF(collection_vcf=CollectionVCF(records_dict=dict([(chromosome, homo_list)]), from_file=False),
+                                                     from_records=True)]
+            else:
+                chains_dict[chromosome].append(RecordCCF(collection_vcf=CollectionVCF(records_dict=dict([(chromosome, homo_list)]), from_file=False),
+                                                     from_records=True))
+            homo_list = []
 
 chains = CollectionCCF(records_dict=chains_dict, metadata=MetadataCCF(mutations.samples,
                                                                       vcf_metadata=mutations.metadata,
@@ -42,6 +53,7 @@ chains = CollectionCCF(records_dict=chains_dict, metadata=MetadataCCF(mutations.
                        header=HeaderCCF("CHAIN_ID\tCHROM\tSTART\tEND\tDESCRIPTION".split("\t")))
 chains.write("%s.ccf" % args.output_prefix)
 chains.write_gff("%s.gff" % args.output_prefix)
-chains.statistics("%s_chains_size_distribution.svg" % args.output_prefix)
+stat_dict = chains.statistics("%s_chains_size_distribution.svg" % args.output_prefix)
+stat_dict.write("%s.hist" % args.output_prefix, header="#chain_length\tnumber_of_chains")
 homo_mutations = chains.extract_vcf()
 homo_mutations.write("%s.vcf" % args.output_prefix)
