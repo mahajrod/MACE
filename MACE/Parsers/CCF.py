@@ -274,6 +274,9 @@ class RecordCCF(Record, Iterable):
 
     def gff_string(self):
         attributes_string = "Size=%i;Bad_records=%i" % (self.size, self.bad_records)
+        if self.info_dict:
+            for key in self.info_dict:
+                attributes_string += ";%s=%s" % (key, self.info_dict[key])
         if self.flags:
             attributes_string += ";" + ";".join(self.flags)
         if self.subclusters != None:

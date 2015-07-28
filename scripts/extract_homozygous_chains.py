@@ -21,8 +21,10 @@ args = parser.parse_args()
 mutations = CollectionVCF(from_file=True, in_file=args.input)
 
 homo_list = []
+
 chains_dict = OrderedDict()
 for chromosome in mutations.scaffold_list:
+    prev_hetero_count = 0
     for record in mutations.records[chromosome]:
         if record.is_homozygous():
             homo_list.append(record)
@@ -34,8 +36,11 @@ for chromosome in mutations.scaffold_list:
                 else:
                     chains_dict[chromosome].append(RecordCCF(collection_vcf=CollectionVCF(records_dict=dict([(chromosome, homo_list)]), from_file=False),
                                                      from_records=True))
+                chains_dict[chromosome][-1].info_dict["Prev_hetero_num"] = prev_hetero_count
                 homo_list = []
+                prev_hetero_count = 1
             else:
+                prev_hetero_count += 1
                 continue
     else:
         if homo_list:
@@ -45,6 +50,7 @@ for chromosome in mutations.scaffold_list:
             else:
                 chains_dict[chromosome].append(RecordCCF(collection_vcf=CollectionVCF(records_dict=dict([(chromosome, homo_list)]), from_file=False),
                                                      from_records=True))
+            chains_dict[chromosome][-1].info_dict["Prev_hetero_num"] = prev_hetero_count
             homo_list = []
 
 chains = CollectionCCF(records_dict=chains_dict, metadata=MetadataCCF(mutations.samples,
