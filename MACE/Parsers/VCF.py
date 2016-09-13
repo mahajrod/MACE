@@ -8,7 +8,7 @@ import os
 import re
 from math import sqrt
 from copy import deepcopy
-from collections import OrderedDict
+from collections import OrderedDict, Iterable
 
 import numpy as np
 from scipy.spatial.distance import pdist
@@ -587,12 +587,38 @@ class CollectionVCF(Collection):
         :param filter_name:
         :return: None
         """
-        for record in self:
-            if expression:
-                if "PASS" in record.filter_list or "." in record.filter_list:
-                    record.filter_list = [filter_name]
-                else:
-                    record.filter_list.append(filter_name)
+        for scaffold in self.records:
+            for record in self.records[scaffold]:
+                if expression(scaffold, record):
+                    if "PASS" in record.filter_list or "." in record.filter_list:
+                        record.filter_list = [filter_name]
+                    else:
+                        record.filter_list.append(filter_name)
+
+    def set_filter_by_intersection_with_feature(self, annotation_dict, filter_name, mode="cross",
+                                                feature_type_black_list=[]):
+        """
+
+        :param annotation_dict:
+        :param filter_name:
+        :param mode:
+        :return:
+        """
+        if mode == "cross":
+            def expression(scaffold, record):
+                if scaffold not in annotation_dict:
+                    return False
+                return record.check_intersection_with_features(scaffold, annotation_dict,
+                                                               feature_type_black_list=feature_type_black_list)
+
+        elif mode == "no_cross":
+            def expression(scaffold, record):
+                if scaffold not in annotation_dict:
+                    return True
+                return not record.check_intersection_with_features(scaffold, annotation_dict,
+                                                                   feature_type_black_list=feature_type_black_list)
+
+        self.set_filter(expression, filter_name)
 
     def check_presence(self, chrom, position, alt_list=None):
         """
@@ -1031,6 +1057,8 @@ class CollectionVCF(Collection):
             for scaffold in self.records:
                 for record in self.records[scaffold]:
                     common_part = "%s\t%i\t%s\t%s" % (scaffold, record.pos, record.ref, ",".join(record.alt_list))
+                    if "EFF" not in record.info_dict:
+                        continue
                     for effect in record.info_dict["EFF"]:
                         effect_parameters = self.parse_snpeff_info_record(effect)
                         num_parameters = len(effect_parameters)
@@ -1130,6 +1158,58 @@ class CollectionVCF(Collection):
                                  feature_type_black_list=feature_type_black_list,
                                  use_synonym=use_synonym, synonym_dict=synonym_dict,
                                  add_intergenic_label=add_intergenic_label)
+
+    def draw_info_distribution(self, info_dict_key, expression, outfile_prefix,
+                               extension_list=(".svg", ".png"), bins=None,):
+        scaffold_distribution = OrderedDict()
+        for scaffold in self.scaffold_list:
+            scaffold_distribution[scaffold] = [[], []]
+            for record in self.records[scaffold]:
+                #print(scaffold)
+                if expression(record):
+                    scaffold_distribution[scaffold][0] += record.info_dict[info_dict_key]
+                else:
+                    scaffold_distribution[scaffold][1] += record.info_dict[info_dict_key]
+
+        #print(scaffold_distribution[scaffold][0])
+        side = int(sqrt(self.number_of_scaffolds))
+        if side*side != self.number_of_scaffolds:
+            side += 1
+        sub_plot_dict = OrderedDict({})
+        fig = plt.figure(2, dpi=150, figsize=(15, 15))
+        fig.suptitle("Distribution of %s" % info_dict_key, fontsize=20, fontweight='bold')
+
+        index = 1
+        for scaffold in self.scaffold_list:
+            #print(scaffold)
+            #print(scaffold_distribution[scaffold][0])
+            #print(scaffold_distribution[scaffold][1])
+            sub_plot_dict[scaffold] = plt.subplot(side, side, index, axisbg="#D6D6D6")
+            #ax = plt.gca()
+            #ax.set_xticks(np.arange(0.5, 2.2, 0.1))
+
+            plt.grid()
+            num_of_bins = bins if bins is not None else 20
+            maximum = max(max(scaffold_distribution[scaffold][0]) if scaffold_distribution[scaffold][0] else 0,
+                          max(scaffold_distribution[scaffold][1]) if scaffold_distribution[scaffold][1] else 0)
+            if isinstance(bins, Iterable):
+                if maximum > num_of_bins[-1]:
+                    num_of_bins[-1] = maximum + 1
+            plt.hist([scaffold_distribution[scaffold][0], scaffold_distribution[scaffold][1]], bins=num_of_bins)
+            plt.xlim(xmin=0)
+            plt.title("%s" % scaffold, fontweight='bold')
+            #plt.legend(loc='upper right')
+            plt.ylabel("Number of variants")
+            plt.xlabel("%s" % info_dict_key)
+            #plt.axvline(x=0.8, color="purple")
+            #plt.axvline(x=1.1, color="purple")
+
+            plt.ylim(ymin=0)
+            index += 1
+        plt.subplots_adjust(hspace=0.27, wspace=0.27, top=0.92, left=0.05, right=0.99, bottom=0.04)
+        for extension in extension_list:
+            plt.savefig("%s%s" % (outfile_prefix, extension if extension[0] == "." else ".%s" % extension))
+        plt.close()
 
 
 class ReferenceGenome(object):

@@ -36,6 +36,22 @@ class Record():
             return name
         return synonym_dict[name]
 
+    def check_intersection_with_features(self, record_scaffold, annotation_dict, feature_type_black_list=[]):
+        """
+
+        :param record_scaffold:
+        :param annotation_dict:
+        :param feature_type_black_list:
+        :return:
+        """
+        for feature in annotation_dict[record_scaffold].features:
+            if feature.type in feature_type_black_list:
+                continue
+            if (self.pos - 1) in feature:
+                return True
+
+            return False
+
     def get_location(self, record_scaffold, annotation_dict,  key="Loc", strand_key="strand",
                      feature_type_black_list=[], use_synonym=False, synonym_dict=None):
         # function is written for old variant (with sub_feature)s rather then new (with CompoundLocation)
