@@ -1,12 +1,10 @@
 #!/usr/bin/env python
 __author__ = 'Sergei F. Kliver'
-import os, sys
 import argparse
 
 from Bio import SeqIO
 from BCBio import GFF
 
-from MACE.General.File import split_filename, make_list_of_path_to_files
 from MACE.Parsers.VCF import CollectionVCF
 
 
@@ -24,7 +22,9 @@ args = parser.parse_args()
 
 annotation_dict = SeqIO.to_dict(GFF.parse(args.repeat_gff))
 
-vcf_file = CollectionVCF(from_file=True, in_file=args.input_vcf)
-vcf_file.set_filter_by_intersection_with_feature(annotation_dict, args.filter_name, mode="cross",
-                                                 feature_type_black_list=[])
+vcf_collection = CollectionVCF(from_file=True, in_file=args.input_vcf)
+vcf_collection.set_filter_by_intersection_with_feature(annotation_dict, args.filter_name, mode="cross",
+                                                       feature_type_black_list=[])
+vcf_collection.write(args.output_vcf)
+
 
