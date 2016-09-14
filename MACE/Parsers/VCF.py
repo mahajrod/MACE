@@ -415,7 +415,9 @@ class CollectionVCF(Collection):
 
             for entry in info_tuple_list:
                 # if self.metadata:
+                print "---------------"
                 print entry
+                print "............"
                 print metadata["INFO"]
                 if metadata["INFO"][entry[0]]["Type"] == "Flag":
                     flag_set.add(entry[0]) #info_dict[entry[0]] = []
