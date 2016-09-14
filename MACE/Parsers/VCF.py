@@ -414,13 +414,9 @@ class CollectionVCF(Collection):
             info_tuple_list = [self._split_by_equal_sign(entry) for entry in line_list[7].split(";")]
 
             for entry in info_tuple_list:
-                # if self.metadata:
-                print "---------------"
-                print entry
-                print "............"
-                print metadata["INFO"]
-                print "+++++"
-                print line
+                if entry[0] not in metadata["INFO"]:
+                    # do not parse data from INFO field that are not described in metadata
+                    continue
                 if metadata["INFO"][entry[0]]["Type"] == "Flag":
                     flag_set.add(entry[0]) #info_dict[entry[0]] = []
                 elif metadata["INFO"][entry[0]]["Type"] == "Integer":
