@@ -419,6 +419,8 @@ class CollectionVCF(Collection):
                 print entry
                 print "............"
                 print metadata["INFO"]
+                print "+++++"
+                print line
                 if metadata["INFO"][entry[0]]["Type"] == "Flag":
                     flag_set.add(entry[0]) #info_dict[entry[0]] = []
                 elif metadata["INFO"][entry[0]]["Type"] == "Integer":
