@@ -1046,7 +1046,7 @@ class CollectionVCF(Collection):
     def extract_snpeff_info(self, output_file):
 
         snpeff_info_dict_keys = "EFF", "LOS", "NMD"
-        record_header_list = ["Chrom", "Pos", "Ref", "Alt"]
+        record_header_list = ["Chrom", "Pos", "Ref", "Alt", "Filter"]
         snpeff_header_list = ["Effect", "Effect_Impact", "Functional_Class", "Codon_Change", "Amino_Acid_Change",
                   "Amino_Acid_Length", "Gene_Name", "Transcript_BioType", "Gene_Coding", "Transcript_ID",
                   "Exon_Rank", "Genotype_Number", "ERRORS", "WARNINGS"
@@ -1058,7 +1058,8 @@ class CollectionVCF(Collection):
             out_fd.write(header_string)
             for scaffold in self.records:
                 for record in self.records[scaffold]:
-                    common_part = "%s\t%i\t%s\t%s" % (scaffold, record.pos, record.ref, ",".join(record.alt_list))
+                    common_part = "%s\t%i\t%s\t%s\t%s" % (scaffold, record.pos, record.ref, ",".join(record.alt_list),
+                                                          ",".join(record.filter_list))
                     if "EFF" not in record.info_dict:
                         continue
                     for effect in record.info_dict["EFF"]:
@@ -1213,6 +1214,54 @@ class CollectionVCF(Collection):
             plt.savefig("%s%s" % (outfile_prefix, extension if extension[0] == "." else ".%s" % extension))
         plt.close()
 
+    def set_filter_for_indels_in_homopolymers(self, reference_dict, min_homopolymer_len=4,
+                                              filter_name="indel_in_homopolymer"):
+
+        def expression(scaffold, record):
+            if not record.check_indel():
+                False
+            if scaffold not in reference_dict:
+                raise ValueError("Scaffold %s is absent in reference" % scaffold)
+
+            scaffold_length = len(reference_dict[scaffold])
+
+            reference_pos = record.pos - 1
+            left_flank = None if record.pos == 1 else reference_dict[scaffold].seq[max(0, record.pos-20):record.pos]
+            right_flank = None if (record.pos + 1) == scaffold_length else reference_dict[scaffold].seq[record.pos+1: max(scaffold_length - 1,
+                                                                                                                          record.pos++20)]
+            ref_var_len = len(record.ref)
+            indel_type_list = [None for variant in record.alt_list]
+
+            for i in range(0, len(record.alt_list)):
+                alt_variant = record.alt_list[i]
+                alt_var_len = len(alt_variant)
+                if len(alt_variant) < ref_var_len:
+                    if record.ref[0:alt_var_len] == alt_variant:
+                        indel_type_list[i] = "right"
+                    elif record.ref[-alt_var_len:] == alt_variant:
+                        indel_type_list[i] = "left"
+                elif len(alt_variant) > ref_var_len:
+                    if alt_variant[0:ref_var_len] == record.ref:
+                        indel_type_list[i] = "right"
+                    elif alt_variant[-ref_var_len:] == record.ref:
+                        indel_type_list[i] = "left"
+                else:
+                    continue
+                homo_len = 1
+                if indel_type_list[i] == "right":
+                    for letter in range(1, len(right_flank)):
+                        if letter != right_flank[0]:
+                            break
+                        homo_len += 1
+                elif indel_type_list[i] == "left":
+                    for letter in range(-2, -len(right_flank)-1, -1):
+                        if letter != right_flank[0]:
+                            break
+                        homo_len += 1
+                if homo_len >= min_homopolymer_len:
+                    return True
+            return False
+        self.set_filter(expression, filter_name)
 
 class ReferenceGenome(object):
     """
