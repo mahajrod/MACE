@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 __author__ = 'Sergei F. Kliver'
+import os
 import argparse
 
 from Bio import SeqIO
-from BCBio import GFF
 
 from MACE.Parsers.VCF import CollectionVCF
 
@@ -28,5 +28,6 @@ vcf_collection = CollectionVCF(from_file=True, in_file=args.input_vcf)
 vcf_collection.set_filter_for_indels_in_homopolymers(reference_dict, min_homopolymer_len=args.min_homopolymer_len,
                                                      filter_name=args.filter_name)
 vcf_collection.write(args.output_vcf)
+os.remove("tmp.idx")
 
 
