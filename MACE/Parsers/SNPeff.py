@@ -23,7 +23,7 @@ class RecordSNPeff(Record):
     def __init__(self, pos, ref, alt_list, filter_list, effect, effect_impact, functional_class, codon_change,
                  amino_acid_change, amino_acid_len, gene_name, transcript_biotype, gene_coding, transcript_id, exon_rank,
                  genotype_number, errors, warnings, gene_name_alias_list=[], gene_function_list=[], gene_description=None,
-                 info_dict=None, flags=None, biochemical_pathway=None):
+                 info_dict=None, flags=None, biochemical_pathway=[]):
 
         Record.__init__(self, pos=pos, info_dict=info_dict, flags=flags)
 
@@ -69,7 +69,7 @@ class RecordSNPeff(Record):
                                                      ",".join(self.gene_name_alias_list) if self.gene_name_alias_list else ".",
                                                      ",".join(self.gene_function_list) if self.gene_function_list else ".",
                                                      ",".join(self.gene_description) if self.gene_description else ".",
-                                                     self.biochemical_pathway if self.biochemical_pathway else ".")
+                                                     ";".join(self.biochemical_pathway) if self.biochemical_pathway else ".")
 
         return vcf_part + snpeff_part
 
