@@ -204,7 +204,7 @@ class CollectionSNPeff(Collection):
             for record in self.records[scaffold]:
                 for gene_name in [record.gene_name] + record.gene_name_alias_list:
                     if gene_name in function_dict:
-                        new_functions = [function_dict[record.gene_name]] if isinstance(function_dict[record.gene_name], str) else function_dict[record.gene_name]
+                        new_functions = [function_dict[gene_name]] if isinstance(function_dict[gene_name], str) else function_dict[gene_name]
                         record.gene_function_list = (record.gene_function_list + new_functions) if record.gene_function_list else new_functions
                         break
 
@@ -213,7 +213,7 @@ class CollectionSNPeff(Collection):
             for record in self.records[scaffold]:
                 for gene_name in [record.gene_name] + record.gene_name_alias_list:
                     if gene_name in description_dict:
-                        new_descriptions = [description_dict[record.gene_name]] if isinstance(description_dict[record.gene_name], str) else description_dict[record.gene_name]
+                        new_descriptions = [description_dict[gene_name]] if isinstance(description_dict[gene_name], str) else description_dict[gene_name]
                         record.gene_description = (record.gene_description + new_descriptions) if record.gene_description else new_descriptions
                         break
 
@@ -222,6 +222,6 @@ class CollectionSNPeff(Collection):
             for record in self.records[scaffold]:
                 for gene_name in [record.gene_name] + record.gene_name_alias_list:
                     if gene_name in biochemical_pathway_dict:
-                        new_pathway = [biochemical_pathway_dict[record.gene_name]] if isinstance(biochemical_pathway_dict[record.gene_name], str) else biochemical_pathway_dict[record.gene_name]
+                        new_pathway = [biochemical_pathway_dict[gene_name]] if isinstance(biochemical_pathway_dict[gene_name], str) else biochemical_pathway_dict[gene_name]
                         record.biochemical_pathway = (record.biochemical_pathway + new_pathway) if record.biochemical_pathway else new_pathway
                         break
