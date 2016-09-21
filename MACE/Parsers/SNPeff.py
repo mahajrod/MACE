@@ -52,22 +52,22 @@ class RecordSNPeff(Record):
         vcf_part = "%i\t%s\t%s\t%s" % (self.pos, self.ref, ",".join(self.alt_list) if self.alt_list else ".",
                                        ",".join(self.filter_list) if self.filter_list else ".")
         snpeff_part = ("\t%s\t" * 5 + "%i\t" + "%s\t" * 10 + "%s") % (self.effect,
-                                                                    self.effect_impact,
-                                                                    self.functional_class,
-                                                                    self.codon_change,
-                                                                    self.amino_acid_change,
-                                                                    self.amino_acid_len,
-                                                                    self.gene_name,
-                                                                    self.transcript_biotype,
-                                                                    self.gene_coding,
-                                                                    self.transcript_id,
-                                                                    self.exon_rank,
-                                                                    self.genotype_number,
-                                                                    self.errors,
-                                                                    self.warnings,
-                                                                    ",".join(self.gene_name_alias_list) if self.gene_name_alias_list else ".",
-                                                                    ",".join(self.gene_function_list) if self.gene_function_list else ".",
-                                                                    ",".join(self.gene_description) if self.gene_description else ".",)
+                                                                      self.effect_impact,
+                                                                      self.functional_class,
+                                                                      self.codon_change,
+                                                                      self.amino_acid_change,
+                                                                      self.amino_acid_len if self.amino_acid_len else ".",
+                                                                      self.gene_name,
+                                                                      self.transcript_biotype,
+                                                                      self.gene_coding,
+                                                                      self.transcript_id,
+                                                                      self.exon_rank,
+                                                                      self.genotype_number,
+                                                                      self.errors,
+                                                                      self.warnings,
+                                                                      ",".join(self.gene_name_alias_list) if self.gene_name_alias_list else ".",
+                                                                      ",".join(self.gene_function_list) if self.gene_function_list else ".",
+                                                                      ",".join(self.gene_description) if self.gene_description else ".",)
 
         return vcf_part + snpeff_part
 
@@ -169,7 +169,7 @@ class CollectionSNPeff(Collection):
         functional_class = line_list[7]
         codon_change = line_list[8]
         amino_acid_change = line_list[9]
-        amino_acid_len = int(line_list[10])
+        amino_acid_len = int(line_list[10]) if line_list[10] != "." else None
         gene_name = line_list[11]
         transcript_biotype = line_list[12]
         gene_coding = line_list[13]
