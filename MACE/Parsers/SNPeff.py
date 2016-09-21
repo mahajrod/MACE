@@ -192,7 +192,11 @@ class CollectionSNPeff(Collection):
         for scaffold in self.records:
             for record in self.records[scaffold]:
                 if record.gene_name in alias_dict:
-                    new_aliases = [alias_dict[record.gene_name]] if isinstance(alias_dict[record.gene_name], str) else alias_dict[record.gene_name]
+                    tmp_aliases = [alias_dict[record.gene_name]] if isinstance(alias_dict[record.gene_name], str) else alias_dict[record.gene_name]
+                    new_aliases = []
+                    for alias in tmp_aliases:
+                        if alias != ".":
+                            new_aliases.append()
                     record.gene_name_alias_list = (record.gene_name_alias_list + new_aliases) if record.gene_name_alias_list else new_aliases
 
     def add_gene_functions(self, function_dict):
