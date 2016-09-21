@@ -196,7 +196,7 @@ class CollectionSNPeff(Collection):
                     new_aliases = []
                     for alias in tmp_aliases:
                         if alias != ".":
-                            new_aliases.append()
+                            new_aliases.append(alias)
                     record.gene_name_alias_list = (record.gene_name_alias_list + new_aliases) if record.gene_name_alias_list else new_aliases
 
     def add_gene_functions(self, function_dict):
