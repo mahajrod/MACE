@@ -288,7 +288,7 @@ class SynDict(OrderedDict):
                     continue
             #key, value = line.strip().split(separator)
             #print line
-            tmp = line.strip(["\n"]).split(separator, ) if separator else line.strip().split()
+            tmp = line.strip("\n").split(separator, ) if separator else line.strip().split()
             print tmp
 
             key, value = tmp[key_index], tmp[value_index]
