@@ -60,7 +60,7 @@ if args.description_file:
     description_dict = SynDict()
     description_dict.read(args.description_file, split_values=True, key_index=args.description_key,
                           value_index=args.description_value)
-    snpeff_collection.add_gene_name_aliases(description_dict)
+    snpeff_collection.add_gene_description(description_dict)
 
 if args.biochemical_file:
     biochemical_dict = SynDict()
