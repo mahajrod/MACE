@@ -65,7 +65,7 @@ if args.description_file:
 if args.biochemical_file:
     biochemical_dict = SynDict()
     biochemical_dict.read(args.biochemical_file, split_values=True, key_index=args.biochemical_key,
-                          value_index=args.biochemical_value)
+                          value_index=args.biochemical_value, allow_repeats_of_key=True)
     snpeff_collection.add_biochemical_pathway(biochemical_dict)
 
 snpeff_collection.write(args.output_snpeff)
