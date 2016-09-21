@@ -34,6 +34,13 @@ parser.add_argument("--description_key", action="store", dest="description_key",
 parser.add_argument("--description_value", action="store", dest="description_value", type=int, default=1,
                     help="Column with description in description file (0-based). Default - 1")
 
+parser.add_argument("-b", "--biochemical_file", action="store", dest="biochemical_file",
+                    help="File with biochemical pathways")
+parser.add_argument("--biochemical_key", action="store", dest="biochemical_key", type=int, default=0,
+                    help="Column with gene names in biochemical pathway file (0-based). Default - 0")
+parser.add_argument("--biochemical_value", action="store", dest="biochemical_value", type=int, default=1,
+                    help="Column with biochemical pathway in biochemical pathway file (0-based). Default - 1")
+
 args = parser.parse_args()
 
 snpeff_collection = CollectionSNPeff(input_file=args.input_snpeff, from_file=True, filetype='tab')
@@ -54,6 +61,12 @@ if args.description_file:
     description_dict.read(args.description_file, split_values=True, key_index=args.description_key,
                           value_index=args.description_value)
     snpeff_collection.add_gene_name_aliases(description_dict)
+
+if args.biochemical_file:
+    biochemical_dict = SynDict()
+    biochemical_dict.read(args.biochemical_file, split_values=True, key_index=args.biochemical_key,
+                          value_index=args.biochemical_value)
+    snpeff_collection.add_biochemical_pathway(biochemical_dict)
 
 snpeff_collection.write(args.output_snpeff)
 

@@ -23,7 +23,7 @@ class RecordSNPeff(Record):
     def __init__(self, pos, ref, alt_list, filter_list, effect, effect_impact, functional_class, codon_change,
                  amino_acid_change, amino_acid_len, gene_name, transcript_biotype, gene_coding, transcript_id, exon_rank,
                  genotype_number, errors, warnings, gene_name_alias_list=[], gene_function_list=[], gene_description=None,
-                 info_dict=None, flags=None):
+                 info_dict=None, flags=None, biochemical_pathway=None):
 
         Record.__init__(self, pos=pos, info_dict=info_dict, flags=flags)
 
@@ -47,11 +47,12 @@ class RecordSNPeff(Record):
         self.genotype_number = genotype_number
         self.errors = errors
         self.warnings = warnings
+        self.biochemical_pathway = biochemical_pathway
 
     def __str__(self):
         vcf_part = "%i\t%s\t%s\t%s" % (self.pos, self.ref, ",".join(self.alt_list) if self.alt_list else ".",
                                        ",".join(self.filter_list) if self.filter_list else ".")
-        snpeff_part = ("\t" + "%s\t" * 16 + "%s") % (self.effect,
+        snpeff_part = ("\t" + "%s\t" * 17 + "%s") % (self.effect,
                                                      self.effect_impact,
                                                      self.functional_class,
                                                      self.codon_change,
@@ -67,22 +68,10 @@ class RecordSNPeff(Record):
                                                      self.warnings,
                                                      ",".join(self.gene_name_alias_list) if self.gene_name_alias_list else ".",
                                                      ",".join(self.gene_function_list) if self.gene_function_list else ".",
-                                                     ",".join(self.gene_description) if self.gene_description else ".",)
+                                                     ",".join(self.gene_description) if self.gene_description else ".",
+                                                     self.biochemical_pathway if self.biochemical_pathway else ".")
 
         return vcf_part + snpeff_part
-
-
-    def extract_snpeff_info(self, output_file):
-
-        snpeff_info_dict_keys = "EFF", "LOS", "NMD"
-        record_header_list = ["Chrom", "Pos", "Ref", "Alt", "Filter"]
-        snpeff_header_list = ["Effect", "Effect_Impact", "Functional_Class", "Codon_Change", "Amino_Acid_Change",
-                  "Amino_Acid_Length", "Gene_Name", "Gene_Name_Aliases", "Gene_Functions", "Gene_Description", "Transcript_BioType", "Gene_Coding", "Transcript_ID",
-                  "Exon_Rank", "Genotype_Number", "ERRORS", "WARNINGS"
-                  ]
-
-
-
 
 class HeaderSNPeff(list, Header):
     """
@@ -128,11 +117,13 @@ class CollectionSNPeff(Collection):
                 gene_alias_presence = "Gene_Name_Aliases" in self.header
                 gene_function_presence = "Gene_Functions" in self.header
                 gene_description_presence = "Gene_Description" in self.header
+                biochemical_pathway_presence = "Biochemical_Pathway" in self.header
                 for line in fd:
                     scaffold, record = self.add_record_from_tab_line(line,
                                                                      gene_alias_presence=gene_alias_presence,
                                                                      gene_function_presence=gene_function_presence,
-                                                                     gene_description_presence=gene_description_presence)
+                                                                     gene_description_presence=gene_description_presence,
+                                                                     biochemical_pathway_presence=biochemical_pathway_presence)
                     if scaffold not in self.records:
                         self.records[scaffold] = []
                     self.records[scaffold].append(record)
@@ -149,11 +140,14 @@ class CollectionSNPeff(Collection):
             self.header.append("Gene_Functions")
         if not gene_description_presence:
             self.header.append("Gene_Description")
+        if not biochemical_pathway_presence:
+            self.header.append("Biochemical_Pathway")
 
     def add_record_from_tab_line(self, line,
                                  gene_alias_presence,
                                  gene_function_presence,
-                                 gene_description_presence):
+                                 gene_description_presence,
+                                 biochemical_pathway_presence):
         """
         Adds record to collection from line
         :param line: record line from tab file
@@ -181,6 +175,7 @@ class CollectionSNPeff(Collection):
         gene_name_alias_list = line_list[self.header.index("Gene_Name_Aliases")].split(",") if gene_alias_presence else []
         gene_function_list = line_list[self.header.index("Gene_Functions")].split(",") if gene_function_presence else []
         gene_description = line_list[self.header.index("Gene_Description")].split(",") if gene_description_presence else []
+        biochemical_pathway = line_list[self.header.index("Biochemical_Pathway")].split(",") if biochemical_pathway_presence else []
 
         return line_list[0], RecordSNPeff(pos, ref, alt_list, filter_list, effect, effect_impact,
                                           functional_class, codon_change,
@@ -190,7 +185,8 @@ class CollectionSNPeff(Collection):
                                           gene_name_alias_list=gene_name_alias_list,
                                           gene_function_list=gene_function_list,
                                           gene_description=gene_description,
-                                          info_dict=None, flags=None)
+                                          info_dict=None, flags=None,
+                                          biochemical_pathway=biochemical_pathway)
 
     def add_gene_name_aliases(self, alias_dict):
         for scaffold in self.records:
@@ -202,13 +198,26 @@ class CollectionSNPeff(Collection):
     def add_gene_functions(self, function_dict):
         for scaffold in self.records:
             for record in self.records[scaffold]:
-                if record.gene_name in function_dict:
-                    new_functions = [function_dict[record.gene_name]] if isinstance(function_dict[record.gene_name], str) else function_dict[record.gene_name]
-                    record.gene_function_list = (record.gene_function_list + new_functions) if record.gene_function_list else new_functions
+                for gene_name in [record.gene_name] + record.gene_name_alias_list:
+                    if gene_name in function_dict:
+                        new_functions = [function_dict[record.gene_name]] if isinstance(function_dict[record.gene_name], str) else function_dict[record.gene_name]
+                        record.gene_function_list = (record.gene_function_list + new_functions) if record.gene_function_list else new_functions
+                        break
 
     def add_gene_description(self, description_dict):
         for scaffold in self.records:
             for record in self.records[scaffold]:
-                if record.gene_name in description_dict:
-                    new_descriptions = [description_dict[record.gene_name]] if isinstance(description_dict[record.gene_name], str) else description_dict[record.gene_name]
-                    record.gene_description = (record.gene_description + new_descriptions) if record.gene_description else new_descriptions
+                for gene_name in [record.gene_name] + record.gene_name_alias_list:
+                    if gene_name in description_dict:
+                        new_descriptions = [description_dict[record.gene_name]] if isinstance(description_dict[record.gene_name], str) else description_dict[record.gene_name]
+                        record.gene_description = (record.gene_description + new_descriptions) if record.gene_description else new_descriptions
+                        break
+
+    def add_biochemical_pathway(self, biochemical_pathway_dict):
+        for scaffold in self.records:
+            for record in self.records[scaffold]:
+                for gene_name in [record.gene_name] + record.gene_name_alias_list:
+                    if gene_name in biochemical_pathway_dict:
+                        new_pathway = [biochemical_pathway_dict[record.gene_name]] if isinstance(biochemical_pathway_dict[record.gene_name], str) else biochemical_pathway_dict[record.gene_name]
+                        record.biochemical_pathway = (record.biochemical_pathway + new_pathway) if record.biochemical_pathway else new_pathway
+                        break
