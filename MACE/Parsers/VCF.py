@@ -940,7 +940,8 @@ class CollectionVCF(Collection):
                         save_clustering=False,
                         testing_dir="threshold_test",
                         count_singletons=True,
-                        scaffold_prefix="Region"):
+                        scaffold_prefix="Region",
+                        extensions=("svg", "png")):
         # TODO: adjust parameters of figure
         # threshold is tuple(list) of three variables: min, max, number
 
@@ -1024,7 +1025,8 @@ class CollectionVCF(Collection):
 
             plt.ylim(ymin=0)
             index += 1
-        plt.savefig("%s/clusters_%s.svg" % (testing_dir, extracting_method))
+        for ext in extensions:
+            plt.savefig("%s/clusters_%s.%s" % (testing_dir, extracting_method, ext))
         plt.close()
 
     def add_info(self, metadata_line, expression, info_name, info_value=None):
