@@ -1,20 +1,54 @@
 #!/usr/bin/env python
-import numpy as np
-#import igraph as ig
+
 from collections import OrderedDict, MutableSet, Iterable
-#from Routines.File import check_path
-"""
-class Graph(ig.Graph):
-    def read(self, in_file, format="ncol"):
-        self.Read(in_file, format=format)
-"""
 
 
 class TwoLvlDict(OrderedDict):
 
+    def __init__(self, dictionary=None, input_file=None, column_sep="\t", value_sep=",",
+                 split_values=False, absent_symbol=None, value_expression=None, ignore_value_repeats=False):
+        OrderedDict.__init__(self)
+        if dictionary:
+            for fl_key in dictionary:
+                self[fl_key] = OrderedDict()
+                for sl_key in dictionary[fl_key]:
+                    self[fl_key][sl_key] = dictionary[fl_key][sl_key]
+        if input_file:
+            input_file_list = [input_file] if isinstance(input_file, str) else input_file
+            for filename in input_file_list:
+                with open(filename, "r") as in_fd:
+                    header_list = in_fd.readline().strip().split(column_sep)
+                    for fl_key in header_list[1:]:
+                        if fl_key not in self:
+                            self[fl_key] = OrderedDict()
+                    for line in in_fd:
+                        tmp_list = line.strip().split("\t")
+                        if len(tmp_list) != len(header_list):
+                            raise ValueError("Error!!! Several values are absent! Malformed input file %s" % filename)
+                        for i in range(1, len(header_list)): #in tmp_list[1:]:
+                            #if tmp_list[0] not in self[header_list[i]]:
+                            #    self[header_list[i]][tmp_list[0]] =
+                            if not ignore_value_repeats:
+                                if tmp_list[0] in self[header_list[i]]:
+                                    if self[header_list[i]][tmp_list[0]] is not None:
+                                        raise ValueError("Value is already present in TwoLvlDict. Filename: %s. Fl_key: %s. Sl_key: %s" % (filename, header_list[i], tmp_list[0]))
+
+                            value = tmp_list[i]
+                            if absent_symbol:
+                                if value == absent_symbol:
+                                    continue
+                            if split_values:
+                                value = value.split(value_sep)
+                                if value_expression:
+                                    value = map(value_expression, value)
+                            else:
+                                if value_expression:
+                                    value = value_expression(value)
+                            self[header_list[i]][tmp_list[0]] = value
+
     def table_form(self, absent_symbol="0", sort=True, column_sep="\t", list_sep=","):
         first_level_keys = list(self.keys())
-        second_level_keys = set([])
+        second_level_keys = OrderedSet()
         for fl_key in first_level_keys:
             for sl_key in self[fl_key]:
                 second_level_keys.add(sl_key)
@@ -37,7 +71,7 @@ class TwoLvlDict(OrderedDict):
         return string
 
     def sl_keys(self):
-        sl_key_set = set()
+        sl_key_set = OrderedSet()
         for fl_key in self:
             for sl_key in self[fl_key]:
                 sl_key_set.add(sl_key)
@@ -73,14 +107,14 @@ class TwoLvlDict(OrderedDict):
                     filtered_out[fl_key][sl_key] = self[fl_key].pop(sl_key, None)
         return filtered_out
 
-    def write(self, out_filename, absent_symbol="0", close_after_if_file_object=False):
+    def write(self, out_filename, absent_symbol="0", close_after_if_file_object=False, sort=True):
         if isinstance(out_filename, file):
-            out_filename.write(self.table_form(absent_symbol=absent_symbol))
+            out_filename.write(self.table_form(absent_symbol=absent_symbol, sort=sort))
             if close_after_if_file_object:
                 out_filename.close()
         else:
             with open(out_filename, "w") as out_fd:
-                out_fd.write(self.table_form(absent_symbol=absent_symbol))
+                out_fd.write(self.table_form(absent_symbol=absent_symbol, sort=sort))
 
     def write_splited(self, out_dir="./", extension="t", value_separator=","):
         from Routines.File import check_path
@@ -174,6 +208,18 @@ class OrderedSet(MutableSet):
 
 class IdList(list):
 
+    def __init__(self, idlist=None, filename=None, header=False, close_after_if_file_object=False, column_number=None,
+                 column_separator="\t", comments_prefix=None, id_in_column_separator=None):
+        list.__init__(self)
+
+        if filename:
+            self.read(filename, header=header, close_after_if_file_object=close_after_if_file_object,
+                      column_number=column_number, column_separator=column_separator,
+                      comments_prefix=comments_prefix, id_in_column_separator=id_in_column_separator)
+        elif idlist:
+            for element in idlist:
+                self.append(element)
+
     def read(self, filename, header=False, close_after_if_file_object=False, column_number=None, column_separator="\t",
              comments_prefix=None, id_in_column_separator=None):
         #reads ids from file with one id per line
@@ -212,7 +258,20 @@ class IdList(list):
 
 class IdSet(OrderedSet):
 
-    def read(self, filename, header=False, close_after_if_file_object=False, comments_prefix=None):
+    def __init__(self, idset=None, filename=None, header=False, close_after_if_file_object=False, column_number=None,
+                 column_separator="\t", comments_prefix=None, id_in_column_separator=None):
+        OrderedSet.__init__(self)
+
+        if filename:
+            self.read(filename, header=header, close_after_if_file_object=close_after_if_file_object,
+                      column_number=column_number, column_separator=column_separator,
+                      comments_prefix=comments_prefix, id_in_column_separator=id_in_column_separator)
+        if idset:
+            for element in idset:
+                self.add(element)
+
+    def read(self, filename, header=False, close_after_if_file_object=False, column_number=None, column_separator="\t",
+             comments_prefix=None, id_in_column_separator=None):
         #reads ids from file with one id per line
         
         in_fd = filename if isinstance(filename, file) else open(filename, "r")
@@ -224,7 +283,14 @@ class IdSet(OrderedSet):
             if comments_prefix:
                 if line[: com_pref_len] == comments_prefix:
                     continue
-            self.add(line.strip())
+            ids = line.strip().split(column_separator)[column_number] if column_number is not None else line.strip()
+            if id_in_column_separator:
+                ids = set(ids.split(id_in_column_separator))
+                for entry in ids:
+                    self.add(entry)
+            else:
+                self.add(ids)
+
         if (not isinstance(filename, file)) or close_after_if_file_object:
             in_fd.close()
         return self
@@ -258,6 +324,19 @@ class WDict(OrderedDict):
 
 class SynDict(OrderedDict):
 
+    def __init__(self, input_dict=None, filename=None, header=False, separator="\t", allow_repeats_of_key=False,
+                 split_values=False, values_separator=",", key_index=0, value_index=1,
+                 close_after_if_file_object=False, expression=None, comments_prefix=None):
+        OrderedDict.__init__(self)
+
+        if filename:
+            self.read(filename, header=header, separator=separator,
+                      allow_repeats_of_key=allow_repeats_of_key,
+                      split_values=split_values, values_separator=values_separator,
+                      key_index=key_index, value_index=value_index,
+                      close_after_if_file_object=close_after_if_file_object, expression=expression,
+                      comments_prefix=comments_prefix)
+
     def count_synonyms(self):
         count_dict = OrderedDict()
         for key in self:
@@ -281,19 +360,31 @@ class SynDict(OrderedDict):
         in_fd = filename if isinstance(filename, file) else open(filename, "r")
         if comments_prefix:
             com_pref_len = len(comments_prefix)
-        self.header = in_fd.readline().strip() if header else None
+
+        if header:
+            for line in in_fd:
+                if comments_prefix:
+                    if line[: com_pref_len] == comments_prefix:
+                        continue
+
+                    else:
+                        self.header = line.strip()
+                        break
+        else:
+            self.header = None
+
         for line in in_fd:
             if comments_prefix:
                 if line[: com_pref_len] == comments_prefix:
                     continue
             #key, value = line.strip().split(separator)
             #print line
-            tmp = line.strip("\n").split(separator, ) if separator else line.strip().split()
+            tmp = line.strip().split(separator) if separator else line.strip().split()
             #print tmp
-
             key, value = tmp[key_index], tmp[value_index]
             if split_values or allow_repeats_of_key:
                 value = value.split(values_separator)
+            #print key, value
             if expression:
                 if split_values or allow_repeats_of_key:
                     value = map(expression, value)
@@ -305,6 +396,8 @@ class SynDict(OrderedDict):
                 if allow_repeats_of_key:
                     self[key] += value
                 else:
+                    print "Repeated key: %s" % key
+                    print self[key]
                     raise ValueError("Error while reading to SynDit: key is repeated")
 
         if (not isinstance(filename, file)) or close_after_if_file_object:
