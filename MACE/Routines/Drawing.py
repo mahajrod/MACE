@@ -131,7 +131,7 @@ class DrawingRoutines():
             # draw_chromosome
 
             fragment = Rectangle((0, start_y), scaffold_length_dict[scaffold], scaffold_height, fill=False,
-                                 edgecolor="black", facecolor=None, linewidth=0.001)
+                                 edgecolor="black", facecolor=None, linewidth=0.1)
             subplot.add_patch(fragment)
 
 
