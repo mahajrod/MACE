@@ -41,9 +41,9 @@ class DrawingRoutines():
         subplot.spines['left'].set_color('none')
         subplot.spines['top'].set_color('none')
 
-        scaffold_height = 20
+        scaffold_height = 10
 
-        dist_between_scaffolds = 10
+        dist_between_scaffolds = 5
         start_x = 0
         start_y = - dist_between_scaffolds
 
@@ -122,7 +122,7 @@ class DrawingRoutines():
                 #print i, variant_density, window_color
 
                 window = Rectangle((window_start, start_y), window_size, scaffold_height, fill=True,
-                                   edgecolor=None, facecolor=window_color)
+                                   edgecolor=None, facecolor=window_color, linewidth=1)
                 #print prev_x
                 #print gap_coords[0] - prev_x
 
