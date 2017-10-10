@@ -342,7 +342,7 @@ class CollectionVCF(Collection):
     """
 
     def __init__(self, metadata=None, records_dict=None, header=None, in_file=None, samples=None,
-                 from_file=True, external_metadata=None, threads=1):
+                 from_file=True, external_metadata=None, threads=1, dont_parse_info_and_data=False, parse_only_coordinates=False):
         """
         Initializes collection. If from_file is True collection will be read from file (arguments other then in_file, external_metadata and threads are ignored)
         Otherwise collection will be initialize from meta, records_dict, header, samples
@@ -358,7 +358,9 @@ class CollectionVCF(Collection):
         """
         self.linkage_dict = None
         if from_file:
-            self.read(in_file, external_metadata=external_metadata)
+            self.read(in_file, external_metadata=external_metadata,
+                      dont_parse_info_and_data=dont_parse_info_and_data,
+                      parse_only_coordinates=parse_only_coordinates)
         else:
             self.metadata = metadata
             self.records = {} if records_dict is None else records_dict
@@ -370,7 +372,7 @@ class CollectionVCF(Collection):
         self.record_index = self.rec_index()
         self.threads = threads
 
-    def read(self, in_file, external_metadata=None):
+    def read(self, in_file, external_metadata=None, dont_parse_info_and_data=False, parse_only_coordinates=False):
         """
         Reads collection from vcf file
         :param in_file: path to file
@@ -387,12 +389,14 @@ class CollectionVCF(Collection):
                     break
                 self.metadata.add_metadata(line)
             for line in fd:
-                scaffold, record = self.add_record(line, external_metadata=external_metadata)
+                scaffold, record = self.add_record(line, external_metadata=external_metadata,
+                                                   dont_parse_info_and_data=dont_parse_info_and_data,
+                                                   parse_only_coordinates=parse_only_coordinates)
                 if scaffold not in self.records:
                     self.records[scaffold] = []
                 self.records[scaffold].append(record)
 
-    def add_record(self, line, external_metadata=None):
+    def add_record(self, line, external_metadata=None, dont_parse_info_and_data=False, parse_only_coordinates=False):
         """
         Adds record to collection from line
         :param line: record line from vcf file
@@ -402,15 +406,23 @@ class CollectionVCF(Collection):
         line_list = line.strip().split("\t")
         #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	Sample_1
         position = int(line_list[1])
+        if parse_only_coordinates:
+            return line_list[0], RecordVCF(position, ".", ".",[], ".", [], {}, [], flags=set())
         quality = "."
+
         if quality != line_list[5]:
             quality = float(line_list[5])
         alt_list = line_list[4].split(",")
         filter_list = line_list[6].split(",")          # list, entries are strings
 
+        if dont_parse_info_and_data:
+            return line_list[0], RecordVCF(position, line_list[2], line_list[3],
+                                           alt_list, quality, filter_list,
+                                           {}, [], flags=set())
         info_dict = OrderedDict()
         metadata = self.metadata if self.metadata else external_metadata
         flag_set = set([])
+
         if line_list[7] != ".":
             info_tuple_list = [self._split_by_equal_sign(entry) for entry in line_list[7].split(";")]
 
@@ -831,10 +843,10 @@ class CollectionVCF(Collection):
                 step_size_number = ((variant.pos - 1)/window_step)
 
                 if step_size_number - steps_in_window + 1 >= number_of_windows:
-                    print scaffold_id
-                    print self.scaffold_length[scaffold_id]
-                    print variant_index
-                    print("\n")
+                    #print scaffold_id
+                    #print self.scaffold_length[scaffold_id]
+                    #print variant_index
+                    #print("\n")
                     uncounted_tail_variants_number_dict[scaffold_id] = self.scaffold_length[scaffold_id] - variant_index
                     break
 

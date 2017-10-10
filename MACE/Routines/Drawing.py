@@ -118,8 +118,8 @@ class DrawingRoutines():
                         prev_color = color
                     window_color = prev_color
 
-                print scaffold
-                print i, variant_density, window_color
+                #print scaffold
+                #print i, variant_density, window_color
 
                 window = Rectangle((window_start, start_y), window_size, scaffold_height, fill=True,
                                    edgecolor=None, facecolor=window_color)

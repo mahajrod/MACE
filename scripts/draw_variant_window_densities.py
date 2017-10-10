@@ -46,7 +46,7 @@ parser.add_argument("-p", "--parsing_mode", action="store", dest="parsing_mode",
                          "Possible variants: 'index_db'(default), 'index', 'parse'")
 args = parser.parse_args()
 
-variants = CollectionVCF(from_file=True, in_file=args.input)
+variants = CollectionVCF(from_file=True, in_file=args.input, parse_only_coordinates=True)
 """
 if args.ref_genome:
     reference_genome = ReferenceGenome(args.reference)
