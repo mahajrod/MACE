@@ -892,7 +892,7 @@ class CollectionVCF(Collection):
                                                       output_prefix,
                                                       colormap_tuple_list=colormap_tuple_list,
                                                       record_style=None, ext_list=figure_extensions,
-                                                      label_fontsize=13, left_offset=0.2, figure_width=16,
+                                                      label_fontsize=13, left_offset=0.2, figure_width=8,
                                                       scaffold_synonym_dict=None,
                                                       id_replacement_mode="partial",
                                                       suptitle=suptitle,
