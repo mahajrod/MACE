@@ -122,18 +122,18 @@ class DrawingRoutines():
                 #print i, variant_density, window_color
 
                 window = Rectangle((window_start, start_y), window_size, scaffold_height, fill=True,
-                                   edgecolor=None, facecolor=window_color, linewidth=1)
+                                   edgecolor=None, facecolor=window_color, linewidth=0.0000000000001)
                 #print prev_x
                 #print gap_coords[0] - prev_x
 
                 subplot.add_patch(window)
 
             # draw_chromosome
-            """
+
             fragment = Rectangle((0, start_y), scaffold_length_dict[scaffold], scaffold_height, fill=False,
-                                 edgecolor="black", facecolor=None, linewidth=1)
+                                 edgecolor="black", facecolor=None, linewidth=0.0000000000001)
             subplot.add_patch(fragment)
-            """
+
 
         plt.xlim(xmin=0, xmax=int(1.05 * max_scaffold_length))
         plt.ylim(ymin=0, ymax=start_y + 2 * scaffold_height)
