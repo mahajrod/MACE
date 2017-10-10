@@ -22,7 +22,8 @@ from Bio import SeqIO
 from Bio.SeqFeature import SeqFeature, FeatureLocation
 
 from MACE.Parsers.Abstract import Record, Collection, Metadata, Header
-
+from MACE.General.GeneralCollections import IdList, IdSet, SynDict
+from MACE.Routines import DrawingRoutines
 
 ref_alt_variants = {"deaminases": [("C", ["T"]), ("G", ["A"])]
                     }
@@ -671,7 +672,7 @@ class CollectionVCF(Collection):
     def rainfall_plot(self, plot_name, base_colors=[], single_fig=True, dpi=300, figsize=(40, 40), facecolor="#D6D6D6",
                       ref_genome=None, masked_regions=None, min_gap_length=10, draw_gaps=False, suptitle=None,
                       gaps_color="#777777", masked_regions_color="#aaaaaa", logbase=2,
-                      extension_list=["svg", "eps", "pdf", "png", "jpg"]):
+                      extension_list=("svg", "eps", "pdf", "png", "jpg")):
         """
 
         :param plot_name:
@@ -771,6 +772,119 @@ class CollectionVCF(Collection):
             for extension in extension_list:
                 plt.savefig("%s/%s_log_scale.%s" % (plot_dir, plot_name, extension))
             plt.close()
+
+    @staticmethod
+    def count_number_of_windows(scaffold_length, window_size, window_step):
+        if scaffold_length < window_size:
+            return 0
+        return int((scaffold_length - window_size)/window_step) + 1
+
+    def count_variants_in_windows(self, window_size, window_step, reference_scaffold_length_dict,
+                                  ignore_scaffolds_shorter_than_window=True, output_prefix=None,
+                                  skip_empty_windows=False):
+        if window_step > window_size:
+            raise ValueError("ERROR!!! Window step can't be larger then window size")
+        elif (window_size % window_step) != 0:
+            raise ValueError("ERROR!!! Window size is not a multiple of window step...")
+
+        steps_in_window = window_size / window_step
+
+        short_scaffolds_ids = IdList()
+
+        vcf_scaffolds = set(self.scaffold_list)
+        reference_scaffolds = set(reference_scaffold_length_dict.keys())
+
+        scaffolds_absent_in_reference = IdSet(vcf_scaffolds - reference_scaffolds)
+        scaffolds_absent_in_vcf = IdSet(reference_scaffolds - vcf_scaffolds)
+
+        count_dict = SynDict()
+        uncounted_tail_variants_number_dict = SynDict()
+
+        if scaffolds_absent_in_reference:
+            raise ValueError("ERROR!!! Some scaffolds from vcf file are absent in reference...")
+
+        for scaffold_id in self.scaffold_list + list(scaffolds_absent_in_vcf):
+            number_of_windows = self.count_number_of_windows(reference_scaffold_length_dict[scaffold_id],
+                                                             window_size,
+                                                             window_step)
+            if number_of_windows == 0:
+                short_scaffolds_ids.append(scaffold_id)
+                if ignore_scaffolds_shorter_than_window:
+                    continue
+
+            scaffold_windows_list = []
+
+            for i in range(0, number_of_windows):
+                scaffold_windows_list.append(0)
+
+            if scaffold_id in scaffolds_absent_in_vcf:
+                if skip_empty_windows:
+                    continue
+                count_dict[scaffold_id] = scaffold_windows_list
+                continue
+
+            uncounted_tail_variants_number_dict[scaffold_id] = 0
+
+            variant_index = 0
+
+            for variant in self.records[scaffold_id]:
+                step_size_number = ((variant.pos - 1)/window_step)
+
+                if step_size_number - steps_in_window + 1 >= number_of_windows:
+                    print scaffold_id
+                    print self.scaffold_length[scaffold_id]
+                    print variant_index
+                    print("\n")
+                    uncounted_tail_variants_number_dict[scaffold_id] = self.scaffold_length[scaffold_id] - variant_index
+                    break
+
+                for i in range(step_size_number - steps_in_window + 1,
+                               step_size_number + 1 if step_size_number < number_of_windows else number_of_windows):
+                    scaffold_windows_list[i] += 1
+                variant_index += 1
+
+            count_dict[scaffold_id] = scaffold_windows_list
+
+        if output_prefix:
+            scaffolds_absent_in_reference.write("%s.scaffolds_absent_in_reference.ids" % output_prefix)
+            scaffolds_absent_in_vcf.write("%s.scaffolds_absent_in_vcf.ids" % output_prefix)
+            uncounted_tail_variants_number_dict.write("%s.uncounted_tail_variant_number.tsv" % output_prefix)
+            count_dict.write("%s.variant_number.tsv" % output_prefix, splited_values=True)
+
+        return count_dict
+
+    def draw_variant_window_densities(self, reference_fasta, output_prefix, window_size, window_step,
+                                      masking=None, parsing_mode="index_db", min_gap_length=10,
+                                      masked_region_color="grey", gap_color="white",
+                                      ignore_scaffolds_shorter_than_window=True,
+                                      skip_empty_windows=False, scaffold_black_list=(),
+                                      figure_extensions=("png", "svg"),
+                                      suptitle="Variant density",
+                                      density_multiplicator=1000,
+                                      colormap_tuple_list=((0.0, "#333a97"), (0.1, "#3d3795"), (0.5, "#5d3393"),
+                                                           (0.75, "#813193"), (1.0, "#9d2d7f"), (1.25, "#b82861"),
+                                                           (1.5, "#d33845"), (2.0, "#ea2e2e"), (2.5, "#f5ae27"))):
+        if window_step > window_size:
+            raise ValueError("ERROR!!! Window step can't be larger then window size")
+        reference = ReferenceGenome(reference_fasta, masked_regions=None, index_file="refgen.idx", filetype="fasta",
+                                    mode=parsing_mode,
+                                    black_list=scaffold_black_list)
+        reference.find_gaps(min_gap_length=min_gap_length)
+
+        count_dict = self.count_variants_in_windows(window_size, window_step, reference.region_length,
+                                                    ignore_scaffolds_shorter_than_window=ignore_scaffolds_shorter_than_window,
+                                                    output_prefix=output_prefix,
+                                                    skip_empty_windows=skip_empty_windows)
+
+        DrawingRoutines.draw_variant_window_densities(count_dict, reference.region_length, window_size, window_step,
+                                                      output_prefix,
+                                                      colormap_tuple_list=colormap_tuple_list,
+                                                      record_style=None, ext_list=figure_extensions,
+                                                      label_fontsize=13, left_offset=0.2, figure_width=8,
+                                                      scaffold_synonym_dict=None,
+                                                      id_replacement_mode="partial",
+                                                      suptitle=suptitle,
+                                                      density_multiplicator=density_multiplicator)
 
     def hierarchical_clustering(self, method='average', dendrogramm_max_y=2000,
                                 sample_name=None, save=False, clustering_dir="clustering",
@@ -1343,7 +1457,7 @@ class ReferenceGenome(object):
         """
         return len(self.region_length)
 
-    def find_gaps(self):
+    def find_gaps(self, min_gap_length=1):
         """
         Finds gaps (N) in reference genome and writes them as SeqFeatures to self.gaps_dict.
         Keys of dict are region names.
@@ -1354,8 +1468,9 @@ class ReferenceGenome(object):
             self.gaps_dict[region] = []
             gaps = gap_reg_exp.finditer(str(self.reference_genome[region].seq))  # iterator with
             for match in gaps:
-                self.gaps_dict[region].append(SeqFeature(FeatureLocation(match.start(), match.end()),
-                                                         type="gap", strand=None))
+                if (match.end() - match.start()) >= min_gap_length:
+                    self.gaps_dict[region].append(SeqFeature(FeatureLocation(match.start(), match.end()),
+                                                             type="gap", strand=None))
 
     def generate_snp_set(self, size, substitution_dict=None, zygoty="homo", out_vcf="synthetic.vcf"):
         """
