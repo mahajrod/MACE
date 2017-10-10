@@ -41,9 +41,9 @@ class DrawingRoutines():
         subplot.spines['left'].set_color('none')
         subplot.spines['top'].set_color('none')
 
-        scaffold_height = 10
+        scaffold_height = 20
 
-        dist_between_scaffolds = 5
+        dist_between_scaffolds = 10
         start_x = 0
         start_y = - dist_between_scaffolds
 
@@ -130,7 +130,7 @@ class DrawingRoutines():
 
             # draw_chromosome
             fragment = Rectangle((0, start_y), scaffold_length_dict[scaffold], scaffold_height, fill=False,
-                                     edgecolor="black", facecolor=None)
+                                 edgecolor="black", facecolor=None)
             subplot.add_patch(fragment)
 
         plt.xlim(xmin=0, xmax=int(1.05 * max_scaffold_length))
