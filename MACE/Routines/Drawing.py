@@ -129,9 +129,11 @@ class DrawingRoutines():
                 subplot.add_patch(window)
 
             # draw_chromosome
+            """
             fragment = Rectangle((0, start_y), scaffold_length_dict[scaffold], scaffold_height, fill=False,
                                  edgecolor="black", facecolor=None, linewidth=1)
             subplot.add_patch(fragment)
+            """
 
         plt.xlim(xmin=0, xmax=int(1.05 * max_scaffold_length))
         plt.ylim(ymin=0, ymax=start_y + 2 * scaffold_height)
