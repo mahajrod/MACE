@@ -44,7 +44,7 @@ parser.add_argument("-b", "--logbase", action="store", dest="logbase", default=2
                     help="Logbase of y axis")
 args = parser.parse_args()
 
-mutations = CollectionVCF(from_file=True, in_file=args.input)
+mutations = CollectionVCF(from_file=True, in_file=args.input, dont_parse_info_and_data=True)
 
 if args.ref_genome:
     reference_genome = ReferenceGenome(args.ref_genome)
