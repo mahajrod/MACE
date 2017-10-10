@@ -20,7 +20,7 @@ class DrawingRoutines():
     @staticmethod
     def draw_variant_window_densities(count_dict, scaffold_length_dict, window_size, window_step, output_prefix,
                                       record_style=None, ext_list=("svg", "png"),
-                                      label_fontsize=13, left_offset=0.2, figure_width=16, scaffold_synonym_dict=None,
+                                      label_fontsize=13, left_offset=0.2, figure_width=8, scaffold_synonym_dict=None,
                                       id_replacement_mode="partial", suptitle=None, density_multiplicator=1000,
                                       colormap_tuple_list=((0.0, "#333a97"), (0.1, "#3d3795"), (0.5, "#5d3393"),
                                                            (0.75, "#813193"), (1.0, "#9d2d7f"), (1.25, "#b82861"),
@@ -130,7 +130,7 @@ class DrawingRoutines():
 
             # draw_chromosome
             fragment = Rectangle((0, start_y), scaffold_length_dict[scaffold], scaffold_height, fill=False,
-                                 edgecolor="black", facecolor=None)
+                                 edgecolor="black", facecolor=None, linewidth=1)
             subplot.add_patch(fragment)
 
         plt.xlim(xmin=0, xmax=int(1.05 * max_scaffold_length))
