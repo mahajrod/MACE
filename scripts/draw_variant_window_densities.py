@@ -44,6 +44,11 @@ parser.add_argument("-s", "--window_step", action="store", dest="window_step", d
 parser.add_argument("-p", "--parsing_mode", action="store", dest="parsing_mode", default="index_db",
                     help="Parsing mode for input sequence file. "
                          "Possible variants: 'index_db'(default), 'index', 'parse'")
+parser.add_argument("-b", "--scaffold_black_list", action="store", dest="scaffold_black_list", default=[],
+                    type=lambda s: s.split(","),
+                    help="Comma-separated list of scaffolds to skip at drawing. Default: not set")
+
+
 args = parser.parse_args()
 
 variants = CollectionVCF(from_file=True, in_file=args.input, parse_only_coordinates=True)

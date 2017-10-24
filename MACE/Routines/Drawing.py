@@ -22,6 +22,7 @@ class DrawingRoutines():
                                       record_style=None, ext_list=("svg", "png"),
                                       label_fontsize=13, left_offset=0.2, figure_width=8, scaffold_synonym_dict=None,
                                       id_replacement_mode="partial", suptitle=None, density_multiplicator=1000,
+                                      scaffold_black_list=[],
                                       colormap_tuple_list=((0.0, "#333a97"), (0.1, "#3d3795"), (0.5, "#5d3393"),
                                                            (0.75, "#813193"), (1.0, "#9d2d7f"), (1.25, "#b82861"),
                                                            (1.5, "#d33845"), (2.0, "#ea2e2e"), (2.5, "#f5ae27"))):
@@ -56,6 +57,8 @@ class DrawingRoutines():
         #normalize_colors = colors.BoundaryNorm(boundaries_for_colormap, len(boundaries_for_colormap) - 1) * int(256/(len(boundaries_for_colormap) - 1))
         #normalize_colors = colors.Normalize(vmin=boundaries_for_colormap[0], vmax=boundaries_for_colormap[-1])
         for scaffold in count_dict:
+            if scaffold in scaffold_black_list:
+                continue
             #print gap_coords_list, gap_len_list
 
             start_y += scaffold_height + dist_between_scaffolds
