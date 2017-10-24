@@ -142,7 +142,7 @@ class DrawingRoutines():
 
         for i in range(0, len(colormap_tuple_list)):
             square_y_pos = square_y_pos + legend_element_side
-            fragment = Rectangle((legend_x_position, square_y_pos), legend_element_side, legend_element_side, fill=False,
+            fragment = Rectangle((legend_x_position, square_y_pos), max_scaffold_length/64, legend_element_side, fill=False,
                                  edgecolor="black", facecolor=colormap_tuple_list[i][1], linewidth=0.5)
 
             subplot.add_patch(fragment)
