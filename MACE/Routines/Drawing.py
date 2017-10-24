@@ -135,7 +135,7 @@ class DrawingRoutines():
             subplot.add_patch(fragment)
 
         legend_y_position = int(start_y/2)
-        legend_x_position = int(max_scaffold_length * 1.1)
+        legend_x_position = int(max_scaffold_length * 1.05)
         legend_element_side = int(scaffold_height/2)
 
         square_y_pos = legend_y_position - legend_element_side
@@ -156,11 +156,10 @@ class DrawingRoutines():
                              xytext=(legend_x_position + 2 * legend_element_side, square_y_pos), textcoords='offset points',
                              ha='right', va='top')
 
-        plt.xlim(xmin=0, xmax=int(1.05 * max_scaffold_length))
+        plt.xlim(xmin=0, xmax=int(1.1 * max_scaffold_length))
         plt.ylim(ymin=0, ymax=start_y + 2 * scaffold_height)
         #plt.colorbar(subplot)
         #plt.tight_layout()
-
 
         plt.subplots_adjust(left=left_offset, right=0.95)#bottom=0.1, right=0.8, top=0.9)
         if suptitle:
