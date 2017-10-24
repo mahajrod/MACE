@@ -134,11 +134,34 @@ class DrawingRoutines():
                                  edgecolor="black", facecolor=None, linewidth=0.5)
             subplot.add_patch(fragment)
 
+        legend_y_position = int(start_y/2)
+        legend_x_position = int(max_scaffold_length * 1.1)
+        legend_element_side = int(scaffold_height/2)
+
+        square_y_pos = legend_y_position - legend_element_side
+
+        for i in range(0, len(colormap_tuple_list)):
+            square_y_pos = square_y_pos + legend_element_side
+            fragment = Rectangle((legend_x_position, square_y_pos), legend_element_side, legend_element_side, fill=False,
+                                 edgecolor="black", facecolor=colormap_tuple_list[i][1], linewidth=0.5)
+
+            subplot.add_patch(fragment)
+            if i == (len(colormap_tuple_list) - 1):
+                legend_element_label = "> %.2f" % colormap_tuple_list[i][0]
+            else:
+                legend_element_label = "%.2f - %.2f" % (colormap_tuple_list[i][0], colormap_tuple_list[i + 1][0])
+
+            subplot.annotate(legend_element_label,
+                             xy=(legend_x_position + 2 * legend_element_side, square_y_pos), xycoords='data', fontsize=16,
+                             xytext=(legend_x_position + 2 * legend_element_side, square_y_pos), textcoords='offset points',
+                             ha='right', va='top')
 
         plt.xlim(xmin=0, xmax=int(1.05 * max_scaffold_length))
         plt.ylim(ymin=0, ymax=start_y + 2 * scaffold_height)
         #plt.colorbar(subplot)
         #plt.tight_layout()
+
+
         plt.subplots_adjust(left=left_offset, right=0.95)#bottom=0.1, right=0.8, top=0.9)
         if suptitle:
             plt.suptitle(suptitle)
