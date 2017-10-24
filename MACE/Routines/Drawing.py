@@ -153,7 +153,7 @@ class DrawingRoutines():
                 legend_element_label = "%.2f - %.2f" % (colormap_tuple_list[i][0], colormap_tuple_list[i + 1][0])
 
             subplot.annotate(legend_element_label,
-                             xy=(legend_x_position + 2 * lmax_scaffold_length/64, square_y_pos), xycoords='data', fontsize=16,
+                             xy=(legend_x_position + 2 * max_scaffold_length/64, square_y_pos), xycoords='data', fontsize=16,
                              xytext=(legend_x_position + 2 * max_scaffold_length/64, square_y_pos), textcoords='offset points',
                              ha='right', va='top')
 
