@@ -143,7 +143,7 @@ class DrawingRoutines():
         for i in range(0, len(colormap_tuple_list)):
             square_y_pos = square_y_pos + legend_element_side
             print (colormap_tuple_list[i][1])
-            fragment = Rectangle((legend_x_position, square_y_pos), max_scaffold_length/64, legend_element_side, fill=False,
+            fragment = Rectangle((legend_x_position, square_y_pos), max_scaffold_length/64, legend_element_side, fill=True,
                                  edgecolor="black", facecolor=colormap_tuple_list[i][1], linewidth=0.5)
 
             subplot.add_patch(fragment)
@@ -154,8 +154,7 @@ class DrawingRoutines():
 
             subplot.annotate(legend_element_label,
                              xy=(legend_x_position + 2 * max_scaffold_length/64, square_y_pos), xycoords='data', fontsize=16,
-                             xytext=(legend_x_position + 2 * max_scaffold_length/64, square_y_pos), textcoords='offset points',
-                             ha='right', va='top')
+                             xytext=(legend_x_position + 2 * max_scaffold_length/64, square_y_pos),)
 
         plt.xlim(xmin=0, xmax=int(1.1 * max_scaffold_length))
         plt.ylim(ymin=0, ymax=start_y + 2 * scaffold_height)
