@@ -869,10 +869,13 @@ class CollectionVCF(Collection):
                                       masking=None, parsing_mode="index_db", min_gap_length=10,
                                       masked_region_color="grey", gap_color="white",
                                       ignore_scaffolds_shorter_than_window=True,
-                                      skip_empty_windows=False, scaffold_black_list=(),
+                                      skip_empty_windows=False, reference_scaffold_black_list=(),
                                       figure_extensions=("png", "svg"),
                                       suptitle="Variant density",
                                       density_multiplicator=1000,
+                                      scaffold_black_list=(),
+                                      sort_scaffolds=False, scaffold_ordered_list=None,
+                                      scaffold_white_list=[],
                                       colormap_tuple_list=((0.0, "#333a97"), (0.1, "#3d3795"), (0.5, "#5d3393"),
                                                            (0.75, "#813193"), (1.0, "#9d2d7f"), (1.25, "#b82861"),
                                                            (1.5, "#d33845"), (2.0, "#ea2e2e"), (2.5, "#f5ae27"))):
@@ -880,7 +883,7 @@ class CollectionVCF(Collection):
             raise ValueError("ERROR!!! Window step can't be larger then window size")
         reference = ReferenceGenome(reference_fasta, masked_regions=None, index_file="refgen.idx", filetype="fasta",
                                     mode=parsing_mode,
-                                    black_list=scaffold_black_list)
+                                    black_list=reference_scaffold_black_list)
         reference.find_gaps(min_gap_length=min_gap_length)
 
         count_dict = self.count_variants_in_windows(window_size, window_step, reference.region_length,
@@ -896,7 +899,12 @@ class CollectionVCF(Collection):
                                                       scaffold_synonym_dict=None,
                                                       id_replacement_mode="partial",
                                                       suptitle=suptitle,
-                                                      density_multiplicator=density_multiplicator)
+                                                      density_multiplicator=density_multiplicator,
+                                                      scaffold_black_list=scaffold_black_list,
+                                                      sort_scaffolds=sort_scaffolds,
+                                                      scaffold_ordered_list=scaffold_ordered_list,
+                                                      scaffold_white_list=scaffold_white_list,
+                                                      )
 
     def hierarchical_clustering(self, method='average', dendrogramm_max_y=2000,
                                 sample_name=None, save=False, clustering_dir="clustering",

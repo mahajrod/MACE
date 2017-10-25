@@ -44,10 +44,19 @@ parser.add_argument("-s", "--window_step", action="store", dest="window_step", d
 parser.add_argument("-p", "--parsing_mode", action="store", dest="parsing_mode", default="index_db",
                     help="Parsing mode for input sequence file. "
                          "Possible variants: 'index_db'(default), 'index', 'parse'")
+parser.add_argument("-a", "--scaffold_white_list", action="store", dest="scaffold_white_list", default=[],
+                    type=lambda s: s.split(","),
+                    help="Comma-separated list of the only scaffolds to draw. Default: all")
 parser.add_argument("-b", "--scaffold_black_list", action="store", dest="scaffold_black_list", default=[],
                     type=lambda s: s.split(","),
                     help="Comma-separated list of scaffolds to skip at drawing. Default: not set")
-
+parser.add_argument("-y", "--sort_scaffolds", action="store_true", dest="sort_scaffolds", default=False,
+                    help="Order  scaffolds according to their names. Default: False")
+parser.add_argument("-z", "--scaffold_ordered_list", action="store", dest="scaffold_ordered_list", default=[],
+                    type=lambda s: s.split(","),
+                    help="Comma-separated list of scaffolds to draw first and exactly in same order. "
+                         "Scaffolds absent in this list are drawn last and in order according to vcf file . "
+                         "Default: not set")
 
 args = parser.parse_args()
 
@@ -73,5 +82,8 @@ variants.draw_variant_window_densities(args.reference, args.output_prefix, args.
                                        masking=None, parsing_mode=args.parsing_mode, min_gap_length=10,
                                        masked_region_color="grey", gap_color="white",
                                        ignore_scaffolds_shorter_than_window=True,
-                                       skip_empty_windows=False, scaffold_black_list=(),
+                                       skip_empty_windows=False, scaffold_black_list=args.scaffold_black_list,
+                                       sort_scaffolds=args.sort_scaffolds,
+                                       scaffold_ordered_list=args.scaffold_ordered_list,
+                                       scaffold_white_list=args.scaffold_white_list,
                                        figure_extensions=args.output_formats)

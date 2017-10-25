@@ -22,13 +22,39 @@ class DrawingRoutines():
                                       record_style=None, ext_list=("svg", "png"),
                                       label_fontsize=13, left_offset=0.2, figure_width=8, scaffold_synonym_dict=None,
                                       id_replacement_mode="partial", suptitle=None, density_multiplicator=1000,
-                                      scaffold_black_list=[],
+                                      scaffold_black_list=[], sort_scaffolds=False, scaffold_ordered_list=None,
+                                      scaffold_white_list=[],
                                       colormap_tuple_list=((0.0, "#333a97"), (0.1, "#3d3795"), (0.5, "#5d3393"),
                                                            (0.75, "#813193"), (1.0, "#9d2d7f"), (1.25, "#b82861"),
                                                            (1.5, "#d33845"), (2.0, "#ea2e2e"), (2.5, "#f5ae27"))):
 
-        scaffold_number = len(count_dict)
-        max_scaffold_length = max(scaffold_length_dict.values())
+        white_set = set(scaffold_white_list)
+        black_set = set(scaffold_black_list)
+        scaffold_set = set(count_dict)
+
+        if white_set:
+            scaffold_set = scaffold_set & white_set
+
+        if black_set:
+            scaffold_set = scaffold_set - black_set
+
+        scaffold_list = list(scaffold_set)
+
+        if sort_scaffolds:
+            scaffold_list.sort()
+
+        final_scaffold_list = []
+        if scaffold_ordered_list:
+            for entry in scaffold_ordered_list:
+                final_scaffold_list.append(entry)
+                scaffold_list.remove(entry)
+            final_scaffold_list = final_scaffold_list + scaffold_list
+        else:
+            final_scaffold_list = scaffold_list
+
+        scaffold_number = len(final_scaffold_list)
+        max_scaffold_length = max([scaffold_length_dict[scaf] for scaf in final_scaffold_list])
+        #max_scaffold_length = max(scaffold_length_dict.values())
 
         figure = plt.figure(figsize=(scaffold_number, figure_width))
         subplot = plt.subplot(1, 1, 1)
@@ -56,9 +82,10 @@ class DrawingRoutines():
         #colormap = cm.get_cmap(name="plasma", lut=None)
         #normalize_colors = colors.BoundaryNorm(boundaries_for_colormap, len(boundaries_for_colormap) - 1) * int(256/(len(boundaries_for_colormap) - 1))
         #normalize_colors = colors.Normalize(vmin=boundaries_for_colormap[0], vmax=boundaries_for_colormap[-1])
-        for scaffold in count_dict:
-            if scaffold in scaffold_black_list:
-                continue
+
+        for scaffold in final_scaffold_list:
+            #if scaffold in scaffold_black_list:
+            #    continue
             #print gap_coords_list, gap_len_list
 
             start_y += scaffold_height + dist_between_scaffolds
