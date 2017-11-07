@@ -63,9 +63,9 @@ parser.add_argument("-z", "--scaffold_ordered_list", action="store", dest="scaff
                     help="Comma-separated list of scaffolds to draw first and exactly in same order. "
                          "Scaffolds absent in this list are drawn last and in order according to vcf file . "
                          "Default: not set")
-parser.add_argument("-w", "--figure_width", action="store", dest="figure_width", default=12, type=int,
+parser.add_argument("-r", "--figure_width", action="store", dest="figure_width", default=12, type=int,
                     help="Width of figure in inches. Default: 12")
-parser.add_argument("-z", "--figure_height_scale_factor", action="store", dest="figure_height_scale_factor",
+parser.add_argument("-u", "--figure_height_scale_factor", action="store", dest="figure_height_scale_factor",
                     default=0.5, type=float,
                     help="Figure height scale factor. Figure height is calculated in inches as "
                          "int(figure_scale_factor * scaffold_number * sample_number). Default: 0.5")

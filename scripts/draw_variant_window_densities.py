@@ -57,6 +57,13 @@ parser.add_argument("-z", "--scaffold_ordered_list", action="store", dest="scaff
                     help="Comma-separated list of scaffolds to draw first and exactly in same order. "
                          "Scaffolds absent in this list are drawn last and in order according to vcf file . "
                          "Default: not set")
+parser.add_argument("-r", "--figure_width", action="store", dest="figure_width", default=12, type=int,
+                    help="Width of figure in inches. Default: 12")
+parser.add_argument("-u", "--figure_height_scale_factor", action="store", dest="figure_height_scale_factor",
+                    default=0.5, type=float,
+                    help="Figure height scale factor. Figure height is calculated in inches as "
+                         "int(figure_scale_factor * scaffold_number * sample_number). Default: 0.5")
+
 
 args = parser.parse_args()
 
@@ -80,6 +87,8 @@ else:
 variants.draw_variant_window_densities(args.reference, args.output_prefix, args.window_size,
                                        args.window_size if args.window_step is None else args.window_step,
                                        masking=None, parsing_mode=args.parsing_mode, min_gap_length=10,
+                                       figure_width=args.figure_width,
+                                       figure_height_scale_factor=args.figure_height_scale_factor,
                                        masked_region_color="grey", gap_color="white",
                                        ignore_scaffolds_shorter_than_window=True,
                                        skip_empty_windows=False, scaffold_black_list=args.scaffold_black_list,
