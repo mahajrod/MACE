@@ -20,7 +20,8 @@ class DrawingRoutines():
     @staticmethod
     def draw_variant_window_densities(count_dict, scaffold_length_dict, window_size, window_step, output_prefix,
                                       record_style=None, ext_list=("svg", "png"),
-                                      label_fontsize=13, left_offset=0.2, figure_width=8, scaffold_synonym_dict=None,
+                                      label_fontsize=13, left_offset=0.2, figure_width=12,
+                                      figure_height_scale_factor=0.5, scaffold_synonym_dict=None,
                                       id_replacement_mode="partial", suptitle=None, density_multiplicator=1000,
                                       scaffold_black_list=[], sort_scaffolds=False, scaffold_ordered_list=None,
                                       scaffold_white_list=[], add_sample_name_to_labels=False,
@@ -61,7 +62,8 @@ class DrawingRoutines():
         max_scaffold_length = max([scaffold_length_dict[scaf] for scaf in final_scaffold_list])
         #max_scaffold_length = max(scaffold_length_dict.values())
 
-        figure = plt.figure(figsize=(figure_width, scaffold_number*len(count_dict)))
+        figure = plt.figure(figsize=(figure_width,
+                                     int(figure_height_scale_factor * scaffold_number * len(count_dict))))
         subplot = plt.subplot(1, 1, 1)
 
         subplot.get_yaxis().set_visible(False)

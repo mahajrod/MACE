@@ -63,6 +63,12 @@ parser.add_argument("-z", "--scaffold_ordered_list", action="store", dest="scaff
                     help="Comma-separated list of scaffolds to draw first and exactly in same order. "
                          "Scaffolds absent in this list are drawn last and in order according to vcf file . "
                          "Default: not set")
+parser.add_argument("-w", "--figure_width", action="store", dest="figure_width", default=12, type=int,
+                    help="Width of figure in inches. Default: 12")
+parser.add_argument("-z", "--figure_height_scale_factor", action="store", dest="figure_height_scale_factor",
+                    default=0.5, type=float,
+                    help="Figure height scale factor. Figure height is calculated in inches as "
+                         "int(figure_scale_factor * scaffold_number * sample_number). Default: 0.5")
 
 args = parser.parse_args()
 
@@ -90,7 +96,8 @@ DrawingRoutines.draw_variant_window_densities(count_dict, reference.region_lengt
                                               args.window_size if args.window_step is None else args.window_step,
                                               args.output_prefix,
                                               record_style=None, ext_list=args.output_formats,
-                                              label_fontsize=13, left_offset=0.2, figure_width=8,
+                                              label_fontsize=13, left_offset=0.2, figure_width=args.figure_width,
+                                              figure_height_scale_factor=args.figure_height_scale_factor,
                                               scaffold_synonym_dict=None,
                                               id_replacement_mode="partial", suptitle=None, density_multiplicator=1000,
                                               scaffold_black_list=args.scaffold_black_list,
