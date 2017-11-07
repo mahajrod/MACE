@@ -195,7 +195,7 @@ class DrawingRoutines():
                              xy=(legend_x_position + 2 * max_scaffold_length/64, square_y_pos), xycoords='data', fontsize=13,
                              xytext=(legend_x_position + 2 * max_scaffold_length/64, square_y_pos),)
 
-        plt.xlim(xmin=0, xmax=int(1.1 * max_scaffold_length))
+        plt.xlim(xmin=0, xmax=int(1.2 * max_scaffold_length))
         plt.ylim(ymin=0, ymax=start_y + 2 * scaffold_height)
         #plt.colorbar(subplot)
         #plt.tight_layout()
