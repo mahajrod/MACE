@@ -3,13 +3,19 @@ __author__ = 'Sergei F. Kliver'
 import sys
 import argparse
 
+from collections import OrderedDict
 from BCBio import GFF
 from MACE.Parsers.VCF import CollectionVCF, ReferenceGenome
+from MACE.Routines import DrawingRoutines
 
 parser = argparse.ArgumentParser()
 
-parser.add_argument("-i", "--input_file", action="store", dest="input", required=True,
-                    help="Input vcf file with variants.")
+parser.add_argument("-i", "--input", action="store", dest="input", required=True,
+                    type=lambda s: s.split(","),
+                    help="Comma-separated list of vcf file with variants.")
+parser.add_argument("-n", "--sample_names", action="store", dest="sample_names", required=True,
+                    type=lambda s: s.split(","),
+                    help="Comma-separated list of sample names with variants. They must be in same order as vcf files.")
 parser.add_argument("-o", "--output_file_prefix", action="store", dest="output_prefix", required=True,
                     help="Prefix of output files")
 """
@@ -60,7 +66,48 @@ parser.add_argument("-z", "--scaffold_ordered_list", action="store", dest="scaff
 
 args = parser.parse_args()
 
-variants = CollectionVCF(from_file=True, in_file=args.input, parse_only_coordinates=True)
+count_dict = OrderedDict()
+
+reference = ReferenceGenome(args.reference,
+                            masked_regions=None,
+                            index_file="refgen.idx",
+                            filetype="fasta",
+                            mode=args.parsing_mode,
+                            black_list=[])
+
+reference.find_gaps(min_gap_length=10)
+
+for sample_name, vcf_file in zip(args.sample_names, args.input):
+    count_dict[sample_name] = CollectionVCF(from_file=True, in_file=vcf_file, parse_only_coordinates=True).count_variants_in_windows(args.window_size,
+                                                                                                                                     args.window_size if args.window_step is None else args.window_step,
+                                                                                                                                     reference.region_length,
+                                                                                                                                     ignore_scaffolds_shorter_than_window=True,
+                                                                                                                                     output_prefix="%s.%s" % (args.output_prefix, sample_name),
+                                                                                                                                     skip_empty_windows=False)
+
+
+DrawingRoutines.draw_variant_window_densities(count_dict, reference.region_length, args.window_size,
+                                              args.window_size if args.window_step is None else args.window_step,
+                                              args.output_prefix,
+                                              record_style=None, ext_list=args.output_formats,
+                                              label_fontsize=13, left_offset=0.2, figure_width=8,
+                                              scaffold_synonym_dict=None,
+                                              id_replacement_mode="partial", suptitle=None, density_multiplicator=1000,
+                                              scaffold_black_list=args.scaffold_black_list,
+                                              sort_scaffolds=args.sort_scaffolds,
+                                              scaffold_ordered_list=args.scaffold_ordered_list,
+                                              scaffold_white_list=args.scaffold_white_list,
+                                              add_sample_name_to_labels=True,
+                                              gap_color="grey",
+                                              colormap_tuple_list=((0.0, "#333a97"), (0.1, "#3d3795"),
+                                                                   (0.5, "#5d3393"), (0.75, "#813193"),
+                                                                   (1.0, "#9d2d7f"), (1.25, "#b82861"),
+                                                                   (1.5, "#d33845"), (2.0, "#ea2e2e"),
+                                                                   (2.5, "#f5ae27")))
+
+
+
+
 """
 if args.ref_genome:
     reference_genome = ReferenceGenome(args.reference)
@@ -77,6 +124,7 @@ else:
     masked_regions = None
 """
 
+"""
 variants.draw_variant_window_densities(args.reference, args.output_prefix, args.window_size,
                                        args.window_size if args.window_step is None else args.window_step,
                                        masking=None, parsing_mode=args.parsing_mode, min_gap_length=10,
@@ -89,3 +137,4 @@ variants.draw_variant_window_densities(args.reference, args.output_prefix, args.
                                        figure_extensions=args.output_formats,
                                        add_sample_name_to_labels=False,
                                        sample_label="SampleZZZ",)
+"""

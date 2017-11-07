@@ -875,7 +875,8 @@ class CollectionVCF(Collection):
                                       density_multiplicator=1000,
                                       scaffold_black_list=(),
                                       sort_scaffolds=False, scaffold_ordered_list=None,
-                                      scaffold_white_list=[],
+                                      scaffold_white_list=[], add_sample_name_to_labels=False,
+                                      sample_label="SampleZZZ",
                                       colormap_tuple_list=((0.0, "#333a97"), (0.1, "#3d3795"), (0.5, "#5d3393"),
                                                            (0.75, "#813193"), (1.0, "#9d2d7f"), (1.25, "#b82861"),
                                                            (1.5, "#d33845"), (2.0, "#ea2e2e"), (2.5, "#f5ae27"))):
@@ -886,10 +887,10 @@ class CollectionVCF(Collection):
                                     black_list=reference_scaffold_black_list)
         reference.find_gaps(min_gap_length=min_gap_length)
 
-        count_dict = self.count_variants_in_windows(window_size, window_step, reference.region_length,
-                                                    ignore_scaffolds_shorter_than_window=ignore_scaffolds_shorter_than_window,
-                                                    output_prefix=output_prefix,
-                                                    skip_empty_windows=skip_empty_windows)
+        count_dict = {sample_label: self.count_variants_in_windows(window_size, window_step, reference.region_length,
+                                                                   ignore_scaffolds_shorter_than_window=ignore_scaffolds_shorter_than_window,
+                                                                   output_prefix=output_prefix,
+                                                                   skip_empty_windows=skip_empty_windows)}
 
         DrawingRoutines.draw_variant_window_densities(count_dict, reference.region_length, window_size, window_step,
                                                       output_prefix,
@@ -904,7 +905,8 @@ class CollectionVCF(Collection):
                                                       sort_scaffolds=sort_scaffolds,
                                                       scaffold_ordered_list=scaffold_ordered_list,
                                                       scaffold_white_list=scaffold_white_list,
-                                                      )
+                                                      gap_color=gap_color,
+                                                      add_sample_name_to_labels=add_sample_name_to_labels)
 
     def hierarchical_clustering(self, method='average', dendrogramm_max_y=2000,
                                 sample_name=None, save=False, clustering_dir="clustering",
