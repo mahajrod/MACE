@@ -61,7 +61,7 @@ class DrawingRoutines():
         max_scaffold_length = max([scaffold_length_dict[scaf] for scaf in final_scaffold_list])
         #max_scaffold_length = max(scaffold_length_dict.values())
 
-        figure = plt.figure(figsize=(scaffold_number, figure_width))
+        figure = plt.figure(figsize=(scaffold_number*len(count_dict), figure_width))
         subplot = plt.subplot(1, 1, 1)
 
         subplot.get_yaxis().set_visible(False)
