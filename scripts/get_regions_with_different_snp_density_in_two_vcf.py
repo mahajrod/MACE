@@ -111,7 +111,7 @@ vcf_b_absent_scaffolds_id_file = "%s.b_absent_scaffolds.ids" % args.output_prefi
 vcf_density_ratio_file = "%s.a_to_b_density_ratio.tab" % args.output_prefix
 
 vcf_a_more_variants_file_fd = open(vcf_a_more_variants_file, "w")
-vcf_b_more_variants_file_fd = open(vcf_a_more_variants_file, "w")
+vcf_b_more_variants_file_fd = open(vcf_b_more_variants_file, "w")
 vcf_a_no_variants_file_fd = open(vcf_a_no_variants_file, "w")
 vcf_b_no_variants_file_fd = open(vcf_b_no_variants_file, "w")
 
