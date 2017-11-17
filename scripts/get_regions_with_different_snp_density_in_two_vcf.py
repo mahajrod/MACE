@@ -141,12 +141,12 @@ for scaffold in final_scaffold_list:
                                                                    count_dict[args.name_b][scaffold][i],
                                                                    ratio))
                 if ratio > args.minimal_ratio:
-                    vcf_a_more_variants_file.write("%s\t%i\t%i\t%i\t%i\t%i\t%.3f\n" % (scaffold, start, stop, i,
+                    vcf_a_more_variants_file_fd.write("%s\t%i\t%i\t%i\t%i\t%i\t%.3f\n" % (scaffold, start, stop, i,
                                                                                        count_dict[args.name_a][scaffold][i],
                                                                                        count_dict[args.name_b][scaffold][i],
                                                                                        ratio))
                 elif ratio < (1.0/float(args.minimal_ratio)):
-                    vcf_b_more_variants_file.write("%s\t%i\t%i\t%i\t%i\t%i\t%.3f\n" % (scaffold, start, stop, i,
+                    vcf_b_more_variants_file_fd.write("%s\t%i\t%i\t%i\t%i\t%i\t%.3f\n" % (scaffold, start, stop, i,
                                                                                        count_dict[args.name_a][scaffold][i],
                                                                                        count_dict[args.name_b][scaffold][i],
                                                                                        ratio))
