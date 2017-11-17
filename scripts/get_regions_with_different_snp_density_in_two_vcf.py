@@ -134,21 +134,21 @@ for scaffold in final_scaffold_list:
             start = i*args.window_step + 1
             stop = start + args.window_size - 1
 
-            if (count_dict[args.name_a][scaffold] > 0) and (count_dict[args.name_b][scaffold] > 0):
-                ratio = float(count_dict[args.name_a][scaffold])/float(count_dict[args.name_b][scaffold])
+            if (count_dict[args.name_a][scaffold][i] > 0) and (count_dict[args.name_b][scaffold][i] > 0):
+                ratio = float(count_dict[args.name_a][scaffold][i])/float(count_dict[args.name_b][scaffold][i])
                 vcf_density_ratio_fd.write("%s\t%i\t%i\t%.3f\n" % (scaffold,
-                                                                   count_dict[args.name_a][scaffold],
-                                                                   count_dict[args.name_b][scaffold],
+                                                                   count_dict[args.name_a][scaffold][i],
+                                                                   count_dict[args.name_b][scaffold][i],
                                                                    ratio))
                 if ratio > args.minimal_ratio:
                     vcf_a_more_variants_file.write("%s\t%i\t%i\t%i\t%i\t%i\t%.3f\n" % (scaffold, start, stop, i,
-                                                                                       count_dict[args.name_a][scaffold],
-                                                                                       count_dict[args.name_b][scaffold],
+                                                                                       count_dict[args.name_a][scaffold][i],
+                                                                                       count_dict[args.name_b][scaffold][i],
                                                                                        ratio))
                 elif ratio < (1.0/float(args.minimal_ratio)):
                     vcf_b_more_variants_file.write("%s\t%i\t%i\t%i\t%i\t%i\t%.3f\n" % (scaffold, start, stop, i,
-                                                                                       count_dict[args.name_a][scaffold],
-                                                                                       count_dict[args.name_b][scaffold],
+                                                                                       count_dict[args.name_a][scaffold][i],
+                                                                                       count_dict[args.name_b][scaffold][i],
                                                                                        ratio))
                     
             elif count_dict[args.name_a][scaffold] == 0:
@@ -161,9 +161,6 @@ for scaffold in final_scaffold_list:
             vcf_a_absent_scaffolds_id_list.append(scaffold)
         if scaffold not in count_dict[args.name_b]:
             vcf_b_absent_scaffolds_id_list.append(scaffold)
-
-
-
 
 vcf_a_more_variants_file_fd.close()
 vcf_b_more_variants_file_fd.close()
