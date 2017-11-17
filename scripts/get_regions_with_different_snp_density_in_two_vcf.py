@@ -35,7 +35,7 @@ parser.add_argument("-p", "--parsing_mode", action="store", dest="parsing_mode",
 parser.add_argument("-x", "--scaffold_white_list", action="store", dest="scaffold_white_list", default=[],
                     type=lambda s: s.split(","),
                     help="Comma-separated list of the only scaffolds to draw. Default: all")
-parser.add_argument("-b", "--scaffold_black_list", action="store", dest="scaffold_black_list", default=[],
+parser.add_argument("-u", "--scaffold_black_list", action="store", dest="scaffold_black_list", default=[],
                     type=lambda s: s.split(","),
                     help="Comma-separated list of scaffolds to skip at drawing. Default: not set")
 parser.add_argument("-y", "--sort_scaffolds", action="store_true", dest="sort_scaffolds", default=False,
