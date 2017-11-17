@@ -1405,6 +1405,7 @@ class CollectionVCF(Collection):
             return False
         self.set_filter(expression, filter_name)
 
+
 class ReferenceGenome(object):
     """
     ReferenceGenome class
@@ -1600,6 +1601,75 @@ class ReferenceGenome(object):
                     #    break
             print ("Totaly %i mutations were written" % check)
 
+    @staticmethod
+    def count_number_of_windows(scaffold_length, window_size, window_step):
+        if scaffold_length < window_size:
+            return 0
+        return int((scaffold_length - window_size)/window_step) + 1
+
+    def count_gaped_and_masked_positions_in_windows(self, window_size, window_step,
+                                                    ignore_scaffolds_shorter_than_window=True, output_prefix=None,
+                                                    skip_empty_windows=False):
+        if window_step > window_size:
+            raise ValueError("ERROR!!! Window step can't be larger then window size")
+        elif (window_size % window_step) != 0:
+            raise ValueError("ERROR!!! Window size is not a multiple of window step...")
+
+        steps_in_window = window_size / window_step
+
+        short_scaffolds_ids = IdList()
+
+        reference_scaffolds = set(self.region_list)
+
+        count_dict = SynDict()
+
+        for scaffold_id in self.region_list:
+            number_of_windows = self.count_number_of_windows(self.region_length[scaffold_id],
+                                                             window_size,
+                                                             window_step)
+            if number_of_windows == 0:
+                short_scaffolds_ids.append(scaffold_id)
+                if ignore_scaffolds_shorter_than_window:
+                    continue
+
+            scaffold_windows_list = []
+
+            for i in range(0, number_of_windows):
+                scaffold_windows_list.append(0)
+
+            for region in self.gaps_dict[scaffold_id]:
+                # gap coordinates are in python notation
+                start_step_size_number = ((region.location.start)/window_step)
+
+                end_step_size_number = ((region.location.end)/window_step)
+
+                if step_size_number - steps_in_window + 1 >= number_of_windows:
+                    #print scaffold_id
+                    #print self.scaffold_length[scaffold_id]
+                    #print variant_index
+                    #print("\n")
+                    uncounted_tail_variants_number_dict[scaffold_id] = self.scaffold_length[scaffold_id] - variant_index
+                    break
+
+                for i in range(step_size_number - steps_in_window + 1,
+                               step_size_number + 1 if step_size_number < number_of_windows else number_of_windows):
+                    scaffold_windows_list[i] += 1
+                variant_index += 1
+
+            count_dict[scaffold_id] = scaffold_windows_list
+
+        if output_prefix:
+            scaffolds_absent_in_reference.write("%s.scaffolds_absent_in_reference.ids" % output_prefix)
+            scaffolds_absent_in_vcf.write("%s.scaffolds_absent_in_vcf.ids" % output_prefix)
+            uncounted_tail_variants_number_dict.write("%s.uncounted_tail_variant_number.tsv" % output_prefix)
+            count_dict.write("%s.variant_number.tsv" % output_prefix, splited_values=True)
+
+        return count_dict
+
+
+
+
+        pass
 if __name__ == "__main__":
     #workdir = "/media/mahajrod/d9e6e5ee-1bf7-4dba-934e-3f898d9611c8/Data/LAN2xx/all"
     vcf_file = "/home/mahajrod/Genetics/MACE/example_data/Lada_et_al_2015/PmCDA1_3d_SNP.vcf"
