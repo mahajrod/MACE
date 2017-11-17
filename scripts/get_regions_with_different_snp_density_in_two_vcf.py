@@ -92,7 +92,7 @@ if args.sort_scaffolds:
 final_scaffold_list = []
 
 if args.scaffold_ordered_list:
-    for entry in scaffold_ordered_list:
+    for entry in args.scaffold_ordered_list:
         final_scaffold_list.append(entry)
         scaffold_list.remove(entry)
     final_scaffold_list = final_scaffold_list + scaffold_list
