@@ -126,7 +126,7 @@ vcf_b_more_variants_file_fd.write("#scaffold\tstart\tend\twindow_id(0-based)\t%s
 vcf_a_no_variants_file_fd.write("#scaffold\tstart\tend\twindow_id(0-based)\n")
 vcf_b_no_variants_file_fd.write("#scaffold\tstart\tend\twindow_id(0-based)\n")
 
-vcf_density_ratio_fd.write("#scaffold\t%s\t%s\tratio,a/b\n" % (args.name_a, args.name_b))
+vcf_density_ratio_fd.write("#scaffold\tstart\tstop\twindow_id(0-based)\t%s\t%s\tratio,a/b\n" % (args.name_a, args.name_b))
 
 for scaffold in final_scaffold_list:
     if (scaffold in count_dict[args.name_a]) and (scaffold in count_dict[args.name_b]):
@@ -136,10 +136,10 @@ for scaffold in final_scaffold_list:
 
             if (count_dict[args.name_a][scaffold][i] > 0) and (count_dict[args.name_b][scaffold][i] > 0):
                 ratio = float(count_dict[args.name_a][scaffold][i])/float(count_dict[args.name_b][scaffold][i])
-                vcf_density_ratio_fd.write("%s\t%i\t%i\t%i\t%i\t%.3f\n" % (scaffold, start, stop,
-                                                                           count_dict[args.name_a][scaffold][i],
-                                                                           count_dict[args.name_b][scaffold][i],
-                                                                           ratio))
+                vcf_density_ratio_fd.write("%s\t%i\t%i\t%i\t%i\t%i\t%.3f\n" % (scaffold, start, stop, i,
+                                                                               count_dict[args.name_a][scaffold][i],
+                                                                               count_dict[args.name_b][scaffold][i],
+                                                                               ratio))
                 if ratio > args.minimal_ratio:
                     vcf_a_more_variants_file_fd.write("%s\t%i\t%i\t%i\t%i\t%i\t%.3f\n" % (scaffold, start, stop, i,
                                                                                        count_dict[args.name_a][scaffold][i],
