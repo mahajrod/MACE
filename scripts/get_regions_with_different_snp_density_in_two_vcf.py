@@ -136,10 +136,10 @@ for scaffold in final_scaffold_list:
 
             if (count_dict[args.name_a][scaffold][i] > 0) and (count_dict[args.name_b][scaffold][i] > 0):
                 ratio = float(count_dict[args.name_a][scaffold][i])/float(count_dict[args.name_b][scaffold][i])
-                vcf_density_ratio_fd.write("%s\t%i\t%i\t%.3f\n" % (scaffold,
-                                                                   count_dict[args.name_a][scaffold][i],
-                                                                   count_dict[args.name_b][scaffold][i],
-                                                                   ratio))
+                vcf_density_ratio_fd.write("%s\t%i\t%i\t%i\t%i\t%.3f\n" % (scaffold, start, stop,
+                                                                           count_dict[args.name_a][scaffold][i],
+                                                                           count_dict[args.name_b][scaffold][i],
+                                                                           ratio))
                 if ratio > args.minimal_ratio:
                     vcf_a_more_variants_file_fd.write("%s\t%i\t%i\t%i\t%i\t%i\t%.3f\n" % (scaffold, start, stop, i,
                                                                                        count_dict[args.name_a][scaffold][i],
