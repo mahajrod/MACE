@@ -785,12 +785,6 @@ class CollectionVCF(Collection):
                 plt.savefig("%s/%s_log_scale.%s" % (plot_dir, plot_name, extension))
             plt.close()
 
-    @staticmethod
-    def count_number_of_windows(scaffold_length, window_size, window_step):
-        if scaffold_length < window_size:
-            return 0
-        return int((scaffold_length - window_size)/window_step) + 1
-
     def count_variants_in_windows(self, window_size, window_step, reference_scaffold_length_dict,
                                   ignore_scaffolds_shorter_than_window=True, output_prefix=None,
                                   skip_empty_windows=False):

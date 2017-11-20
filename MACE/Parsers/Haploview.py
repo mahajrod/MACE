@@ -10,134 +10,21 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import numpy as np
 
+from MACE.Parsers.Abstract import Header, Collection
 from MACE.General.GeneralCollections import TwoLvlDict
 
-built_in_flags = {"DA": "desaminase-like",
-                  "BR": "location in bad region (masked and so on)",
-                  "IP": "indel presence"
-                  }
 
-
-class Record():
-    def __init__(self, pos, info_dict=None, flags=None):
-        self.pos = pos
-        self.info_dict = info_dict if info_dict else OrderedDict({})
-        self.flags = flags
+class HaploviewHeader(list, Header):
 
     def __str__(self):
-        pass
-
-    @staticmethod
-    def get_synonym(name, use_synonym=False, synonym_dict=None):
-        if (not use_synonym) or (not synonym_dict):
-            return name
-
-        if name not in synonym_dict:
-            return name
-        return synonym_dict[name]
-
-    def check_intersection_with_features(self, record_scaffold, annotation_dict, feature_type_black_list=[]):
         """
-
-        :param record_scaffold:
-        :param annotation_dict:
-        :param feature_type_black_list:
-        :return:
+        :return: vcf-like string representation of header
         """
-        for feature in annotation_dict[record_scaffold].features:
-            if feature.type in feature_type_black_list:
-                continue
-            if (self.pos - 1) in feature:
-                return True
-
-            return False
-
-    def get_location(self, record_scaffold, annotation_dict,  key="Loc", strand_key="strand",
-                     feature_type_black_list=[], use_synonym=False, synonym_dict=None):
-        # function is written for old variant (with sub_feature)s rather then new (with CompoundLocation)
-        # id of one SeqRecord in record_dict must be equal to record.pos
-        # locations will be written to description dictionary of record using "key" as key
-
-        if key not in self.info_dict:
-            self.info_dict[key] = set([])
-
-        if strand_key not in self.info_dict:
-            self.info_dict[strand_key] = ["."]
-        for feature in annotation_dict[record_scaffold].features:
-            if (self.pos - 1) in feature:
-                self.info_dict[key].add(self.get_synonym(feature.type, use_synonym=use_synonym,
-                                                         synonym_dict=synonym_dict))
-                if self.info_dict[strand_key] == ["."]:
-                    self.info_dict[strand_key] = [feature.strand]
-                elif feature.strand != self.info_dict[strand_key][0]:
-                    self.info_dict[strand_key] = [0]
-            for sub_feature in feature.sub_features:
-                if (self.pos - 1) in sub_feature:
-                    self.info_dict[key].add(self.get_synonym(sub_feature.type, use_synonym=use_synonym,
-                                                             synonym_dict=synonym_dict))
-                    if not self.info_dict[strand_key]:
-                        self.info_dict[strand_key] = [sub_feature.strand]
-                    elif sub_feature.strand != self.info_dict[strand_key][0]:
-                        self.info_dict[strand_key] = [0]
-
-        if not self.info_dict[key]:
-            # igc == intergenic
-            self.info_dict[key].add("igc")
-
-    def set_flag(self, expression, flag):
-        if expression(self):
-            self.flags.add(flag)
-
-    def set_location_flag(self, record_scaffold, annotation_dict, expression, flag):
-        """
-        This methods sets flag based on expression.
-
-        Arguments:
-            record_scaffold         scaffold of record
-
-            annotation_dict         Biopython dict of SeqRecords
-
-            expression              two argument boolean function applied to features and record.pos
-
-            flag                    flag to set if expression return True
-        """
-        if not self.flags:
-            self.flags = set()
-        if record_scaffold not in annotation_dict:
-            return -1
-        for feature in annotation_dict[record_scaffold].features:
-            if expression(feature, self.pos - 1):
-                self.flags.add(flag)
+        return "#" + "\t".join(self)
 
 
-class Metadata():
-    def __init__(self, metadata=[], from_file=False, in_file=None):
-        if from_file:
-            self.metadata = []
-            self.read(in_file)
-        else:
-            self.metadata = metadata
+class HaploviewCollection(Collection):
 
-    def add_metadata(self):
-        pass
-
-    def read(self, in_file):
-        # metadata-type-dependent function
-        pass
-
-    def __str__(self):
-        pass
-
-
-class Header():
-    def __init__(self):
-        pass
-
-    def __str__(self):
-        pass
-
-
-class Collection():
     def __init__(self, metadata=None, records_dict=None, header=None, input_file=None, from_file=False):
         # metadata should be Metadata class
         # header should be Header class
@@ -153,97 +40,37 @@ class Collection():
         self.number_of_scaffolds = len(self.scaffold_list)
         self.record_index = self.rec_index()
 
-    def __iter__(self):
-        for scaffold_id in self.records.keys():
-            for record in self.records[scaffold_id]:
-                yield record
-
-    def __getitem__(self, item):
-        item_scaffold, shift = self.get_record_index(item)
-
-        return self.records[item_scaffold][shift]
-
-    def pop(self, index=None):
-        if index is not None:
-            item_scaffold, shift = self.get_record_index(index)
-            record = self.records[item_scaffold].pop(shift)
-        else:
-            item_scaffold = self.scaffold_list[-1]
-            record = self.records[item_scaffold].pop()
-
-        if not self.records[item_scaffold]:
-            del(self.records[item_scaffold])
-        self.scaffold_list = self.scaffolds()
-        self.scaffold_length = self.scaffold_len()
-        self.number_of_scaffolds = len(self.scaffold_list)
-        self.record_index = self.rec_index()
-        return record
-
     def __str__(self):
-        collection_string = ""
-        if self.metadata:
-            collection_string += str(self.metadata)
-        if self.header:
-            collection_string += "\n" + str(self.header)
-        if self.records:
-            for scaffold in self.scaffold_list:
-                for record in self.records[scaffold]:
-                    collection_string += "\n" + scaffold + "\t" + str(record)
-        return collection_string
+        pass
 
     def __len__(self):
         return self.record_index[self.scaffold_list[-1]][1] + 1
 
-    def read(self, input_file):
-        # collectiontype-dependent function
-        pass
+    def read(self, input_file, parsing_mode="full"):
+        """
+        :param input_file:
+        :param parsing_mode: full - parse all fields, short - parse coordinates, D' and r2
+        :return:
+        """
+        with open(input_file, "r") as in_fd:
+            self.header = HaploviewHeader(in_fd.readline().strip().split("\t"))
+            current_chr = None
+            for line in in_fd:
+                tmp = line.strip().split()
+                chr, first_snp = tmp[0].split(":")
+                if (current_chr is None) or (chr != current_chr):
+                    self.records[chr] = []
+                    if current_chr is not None:
+                        self.records[current_chr] = np.array(self.records[current_chr])
+                    current_chr = chr
+                second_snp = tmp[1].split(":")[1]
+                if parsing_mode == "full":
+                    tmp = [int(first_snp), int(second_snp)] + map(float, tmp[2:])
+                elif parsing_mode == "short":
+                    tmp = [int(first_snp), int(second_snp), float(tmp[2]), float(tmp[4])]
+                self.records[chr].append(tmp)
 
-    def add_metadata(self):
-        # collectiontype-dependent function
-        pass
-
-    def add_header(self):
-        # collectiontype-dependent function
-        pass
-
-    def add_record(self):
-        # collectiontype-dependent function
-        pass
-
-    def scaffold_len(self):
-        scaffold_length_dict = OrderedDict({})
-        for scaffold in self.scaffold_list:
-            scaffold_length_dict[scaffold] = len(self.records[scaffold])
-        return scaffold_length_dict
-
-    def rec_index(self):
-        index_dict = OrderedDict({})
-        if len(self.scaffold_list) == 0:
-            return index_dict
-        index_dict[self.scaffold_list[0]] = [0, self.scaffold_length[self.scaffold_list[0]] - 1]
-        for index in range(1, self.number_of_scaffolds):
-            index_dict[self.scaffold_list[index]] = [index_dict[self.scaffold_list[index-1]][1] + 1,
-                                            index_dict[self.scaffold_list[index-1]][1] + self.scaffold_length[self.scaffold_list[index]]]
-        return index_dict
-
-    def scaffolds(self):
-        return self.records.keys()
-
-    def get_record_index(self, item):
-        tmp_item = self.record_index[self.scaffold_list[-1]][1] + item + 1 if item < 0 else item
-        if tmp_item < 0:
-            raise IndexError("Index %i is out of range" % tmp_item)
-        # list-like access
-        for scaffold in self.scaffold_list:
-            start, end = self.record_index[scaffold]
-            if start <= tmp_item <= end:
-                item_scaffold = scaffold
-                break
-        else:
-            raise IndexError("Index %i is out of range" % tmp_item)
-        shift = tmp_item - start
-        return item_scaffold, shift
-
+"""
     def filter_records(self, expression):
         # expression should be a function with one argument - record entry
         filtered_records = OrderedDict({})
@@ -257,12 +84,6 @@ class Collection():
                 else:
                     filtered_out_records[scaffold].append(record)
         return filtered_records, filtered_out_records
-
-    @staticmethod
-    def count_number_of_windows(scaffold_length, window_size, window_step):
-        if scaffold_length < window_size:
-            return 0
-        return int((scaffold_length - window_size)/window_step) + 1
 
     def write(self, output_file, desired_scaffolds=None):
         with open(output_file, "w") as out_fd:
@@ -486,3 +307,4 @@ class Collection():
         for extension in extension_list:
             plt.savefig("%s/%s.%s" % (plot_dir, full_genome_pie_prefix, extension), bbox_inches='tight')
         plt.close()
+"""
