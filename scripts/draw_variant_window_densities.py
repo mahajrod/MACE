@@ -84,6 +84,7 @@ else:
     masked_regions = None
 """
 
+
 variants.draw_variant_window_densities(args.reference, args.output_prefix, args.window_size,
                                        args.window_size if args.window_step is None else args.window_step,
                                        masking=None, parsing_mode=args.parsing_mode, min_gap_length=10,
