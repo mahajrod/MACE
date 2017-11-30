@@ -71,7 +71,7 @@ parser.add_argument("-u", "--figure_height_scale_factor", action="store", dest="
                          "int(figure_scale_factor * scaffold_number * sample_number). Default: 0.5")
 parser.add_argument("-c", "--dist_between_scaffolds_scaling_factor", action="store", dest="dist_between_scaffolds_scaling_factor", default=1,
                     type=float,
-                    help="Scaling factor for distance between different scaffolds. Have to be >= 1.  Default: 1 ")
+                    help="Scaling factor for distance between different scaffolds. Have to be >= 1.0 . Default: 1 ")
 
 args = parser.parse_args()
 

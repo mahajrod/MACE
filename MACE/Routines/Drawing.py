@@ -32,6 +32,9 @@ class DrawingRoutines():
                                                            (1.5, "#d33845"), (2.0, "#ea2e2e"), (2.5, "#f5ae27"))):
         """ cont_dict = {sample: {scaffold: }}"""
 
+        if dist_between_scaffolds_scaling_factor < 1:
+            raise ValueError("Scaling factor for distance between scaffolds have to be >=1.0")
+
         white_set = set(scaffold_white_list)
         black_set = set(scaffold_black_list)
 
