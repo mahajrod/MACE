@@ -69,6 +69,9 @@ parser.add_argument("-u", "--figure_height_scale_factor", action="store", dest="
                     default=0.5, type=float,
                     help="Figure height scale factor. Figure height is calculated in inches as "
                          "int(figure_scale_factor * scaffold_number * sample_number). Default: 0.5")
+parser.add_argument("-c", "--dist_between_scaffolds_scaling_factor", action="store", dest="dist_between_scaffolds_scaling_factor", default=1,
+                    type=float,
+                    help="Scaling factor for distance between different scaffolds. Have to be >= 1.  Default: 1 ")
 
 args = parser.parse_args()
 
@@ -106,6 +109,7 @@ DrawingRoutines.draw_variant_window_densities(count_dict, reference.region_lengt
                                               scaffold_white_list=args.scaffold_white_list,
                                               add_sample_name_to_labels=True,
                                               gap_color="grey",
+                                              dist_between_scaffolds_scaling_factor=args.dist_between_scaffolds_scaling_factor,
                                               colormap_tuple_list=((0.0, "#333a97"), (0.1, "#3d3795"),
                                                                    (0.5, "#5d3393"), (0.75, "#813193"),
                                                                    (1.0, "#9d2d7f"), (1.25, "#b82861"),

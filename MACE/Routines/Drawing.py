@@ -25,6 +25,7 @@ class DrawingRoutines():
                                       id_replacement_mode="partial", suptitle=None, density_multiplicator=1000,
                                       scaffold_black_list=[], sort_scaffolds=False, scaffold_ordered_list=None,
                                       scaffold_white_list=[], add_sample_name_to_labels=False,
+                                      dist_between_scaffolds_scaling_factor=1,
                                       gap_color="grey",
                                       colormap_tuple_list=((0.0, "#333a97"), (0.1, "#3d3795"), (0.5, "#5d3393"),
                                                            (0.75, "#813193"), (1.0, "#9d2d7f"), (1.25, "#b82861"),
@@ -91,12 +92,13 @@ class DrawingRoutines():
         #normalize_colors = colors.Normalize(vmin=boundaries_for_colormap[0], vmax=boundaries_for_colormap[-1])
 
         for scaffold in final_scaffold_list:
+            sample_index = 0
             for sample in count_dict:
                 #if scaffold in scaffold_black_list:
                 #    continue
                 #print gap_coords_list, gap_len_list
 
-                start_y += scaffold_height + dist_between_scaffolds
+                start_y += scaffold_height + dist_between_scaffolds * (dist_between_scaffolds_scaling_factor if sample_index == 0 else 1)
                 label_y_start = label_line_y_shift + start_y
                 gap_y_jump = label_y_start + label_line_y_jump
                 prev_x = 0
@@ -172,6 +174,7 @@ class DrawingRoutines():
                 fragment = Rectangle((0, start_y), scaffold_length_dict[scaffold], scaffold_height, fill=False,
                                      edgecolor="black", facecolor=None, linewidth=0.5)
                 subplot.add_patch(fragment)
+                sample_index += 1
 
         legend_y_position = int(start_y/2)
         legend_x_position = int(max_scaffold_length * 1.05)

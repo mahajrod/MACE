@@ -53,7 +53,10 @@ class HaploviewCollection(Collection):
         :return:
         """
         with open(input_file, "r") as in_fd:
-            self.header = HaploviewHeader(in_fd.readline().strip().split("\t"))
+            if parsing_mode == "full":
+                self.header = HaploviewHeader(in_fd.readline().strip().split("\t"))
+            else:
+                self.header = HaploviewHeader(["L1", "L2", "D'", "r^2"])
             current_chr = None
             for line in in_fd:
                 tmp = line.strip().split()
@@ -66,9 +69,57 @@ class HaploviewCollection(Collection):
                 second_snp = tmp[1].split(":")[1]
                 if parsing_mode == "full":
                     tmp = [int(first_snp), int(second_snp)] + map(float, tmp[2:])
+                    self.parsing_mode = "full"
                 elif parsing_mode == "short":
                     tmp = [int(first_snp), int(second_snp), float(tmp[2]), float(tmp[4])]
+                    self.parsing_mode = "short"
                 self.records[chr].append(tmp)
+
+    def filter(self, expression):
+        filtered_dict = OrderedDict()
+        filtered_out_dict = OrderedDict()
+
+        for scaffold in self.records:
+            filtered_dict[scaffold] = []
+            for record in self.records[scaffold]:
+                if expression(record):
+                    filtered_dict[scaffold].append(record)
+                else:
+                    filtered_out_dict[scaffold].append(record)
+
+            if filtered_dict[scaffold]:
+                filtered_dict[scaffold] = np.array(filtered_dict[scaffold])
+            else:
+                filtered_dict.pop(scaffold, None)
+
+            if filtered_out_dict[scaffold]:
+                filtered_out_dict[scaffold] = np.array(filtered_out_dict[scaffold])
+            else:
+                filtered_out_dict.pop(scaffold, None)
+
+        return HaploviewCollection(records_dict=filtered_dict), HaploviewCollection(records_dict=filtered_out_dict)
+
+    @staticmethod
+    def filter_record_by_snp_distance(record, max_dist):
+        if (record[1] - record[0]) <= max_dist:
+            return True
+        return False
+
+    def filter_by_snp_distance(self, max_dist):
+
+        def expression(record):
+            self.filter_record_by_snp_distance(record, max_dist)
+
+        return self.filter(expression)
+
+    def write_as_tsv(self, out_file):
+        with open(out_file, "w") as out_fd:
+            out_fd.write("#Scaffold\t" + "\t".join(self.header) + "\n")
+            for scaffold in self.records:
+                for record in self.records[scaffold]:
+                    out_fd.write("%s\t%s\n" % (scaffold, "\t".join(map(str, record))))
+
+    def
 
 """
     def filter_records(self, expression):

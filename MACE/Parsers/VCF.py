@@ -873,6 +873,7 @@ class CollectionVCF(Collection):
                                       figure_width=8,
                                       figure_height_scale_factor=0.5,
                                       sample_label="SampleZZZ",
+                                      dist_between_scaffolds_scaling_factor=1,
                                       colormap_tuple_list=((0.0, "#333a97"), (0.1, "#3d3795"), (0.5, "#5d3393"),
                                                            (0.75, "#813193"), (1.0, "#9d2d7f"), (1.25, "#b82861"),
                                                            (1.5, "#d33845"), (2.0, "#ea2e2e"), (2.5, "#f5ae27"))):
@@ -904,7 +905,8 @@ class CollectionVCF(Collection):
                                                       scaffold_ordered_list=scaffold_ordered_list,
                                                       scaffold_white_list=scaffold_white_list,
                                                       gap_color=gap_color,
-                                                      add_sample_name_to_labels=add_sample_name_to_labels)
+                                                      add_sample_name_to_labels=add_sample_name_to_labels,
+                                                      dist_between_scaffolds_scaling_factor=dist_between_scaffolds_scaling_factor)
 
     def hierarchical_clustering(self, method='average', dendrogramm_max_y=2000,
                                 sample_name=None, save=False, clustering_dir="clustering",
