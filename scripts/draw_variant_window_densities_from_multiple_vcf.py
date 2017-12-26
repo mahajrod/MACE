@@ -76,7 +76,7 @@ parser.add_argument("-c", "--dist_between_scaffolds_scaling_factor", action="sto
 parser.add_argument("-k", "--number_of_bins", action="store", dest="number_of_bins", default=20,
                     type=int,
                     help="Number of bins for histogram of distribution of window density. Defaul: 20")
-parser.add_argument("-r", "--max_threshold", action="store", dest="max_threshold", default=None,
+parser.add_argument("-j", "--max_threshold", action="store", dest="max_threshold", default=None,
                     type=float,
                     help="Maximal value of density to use. Defaul: maximal value")
 parser.add_argument("-g", "--min_thresholds", action="store", dest="min_threshold", default=None,
