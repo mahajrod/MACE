@@ -104,7 +104,7 @@ DrawingRoutines.draw_window_density_distribution(count_dict, output_prefix=args.
                                                  denominator=1000,
                                                  number_of_bins=args.number_of_bins, width_of_bins=None,
                                                  max_threshold=args.max_threshold,
-                                                 min_threshold=arga.min_threshold,
+                                                 min_threshold=args.min_threshold,
                                                  scaffold_black_list=args.scaffold_white_list,
                                                  scaffold_white_list=args.scaffold_white_list,
                                                  sort_scaffolds=args.sort_scaffolds,
