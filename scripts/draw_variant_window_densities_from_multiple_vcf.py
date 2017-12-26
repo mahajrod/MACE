@@ -73,6 +73,19 @@ parser.add_argument("-c", "--dist_between_scaffolds_scaling_factor", action="sto
                     type=float,
                     help="Scaling factor for distance between different scaffolds. Have to be >= 1.0 . Default: 1 ")
 
+parser.add_argument("-k", "--number_of_bins", action="store", dest="number_of_bins", default=20,
+                    type=int,
+                    help="Number of bins for histogram of distribution of window density. Defaul: 20")
+parser.add_argument("-r", "--max_threshold", action="store", dest="max_threshold", default=None,
+                    type=float,
+                    help="Maximal value of density to use. Defaul: maximal value")
+parser.add_argument("-g", "--min_thresholds", action="store", dest="min_threshold", default=None,
+                    type=float,
+                    help="Minimal value of density to use. Defaul: minimal value")
+parser.add_argument("-e", "--subplot_size", action="store", dest="subplot_size", default=4,
+                    type=int,
+                    help="Size of subplot(inches) on distribution histogram with all scaffolds. Default: 4")
+
 args = parser.parse_args()
 
 count_dict = OrderedDict()
@@ -103,7 +116,7 @@ DrawingRoutines.draw_variant_window_densities(count_dict, reference.region_lengt
                                               figure_height_scale_factor=args.figure_height_scale_factor,
                                               scaffold_synonym_dict=None,
                                               id_replacement_mode="partial", suptitle=None, density_multiplicator=1000,
-                                              scaffold_black_list=args.scaffold_black_list,
+                                              scaffold_black_list=args.scaffold_white_list,
                                               sort_scaffolds=args.sort_scaffolds,
                                               scaffold_ordered_list=args.scaffold_ordered_list,
                                               scaffold_white_list=args.scaffold_white_list,
@@ -115,6 +128,21 @@ DrawingRoutines.draw_variant_window_densities(count_dict, reference.region_lengt
                                                                    (1.0, "#9d2d7f"), (1.25, "#b82861"),
                                                                    (1.5, "#d33845"), (2.0, "#ea2e2e"),
                                                                    (2.5, "#f5ae27")))
+
+DrawingRoutines.draw_window_density_distribution(count_dict, output_prefix=args.output_prefix,
+                                                 suptitle="SNP density distribution",
+                                                 denominator=1000,
+                                                 number_of_bins=args.number_of_bins, width_of_bins=None,
+                                                 max_threshold=args.max_threshold,
+                                                 min_threshold=arga.min_threshold,
+                                                 scaffold_black_list=args.scaffold_white_list,
+                                                 scaffold_white_list=args.scaffold_white_list,
+                                                 sort_scaffolds=args.sort_scaffolds,
+                                                 scaffold_ordered_list=args.scaffold_ordered_list,
+                                                 subplot_size=args.subplot_size,
+                                                 per_scaffold_histo_dir="per_scaffold_histo_dir/",
+                                                 subplot_tuple=None, share_x_axis=True, share_y_axis=True,
+                                                 extensions=("png",), show_mean_and_median=True)
 
 
 

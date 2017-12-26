@@ -888,7 +888,7 @@ class CollectionVCF(Collection):
                                                                    ignore_scaffolds_shorter_than_window=ignore_scaffolds_shorter_than_window,
                                                                    output_prefix=output_prefix,
                                                                    skip_empty_windows=skip_empty_windows)}
-        """
+
         DrawingRoutines.draw_variant_window_densities(count_dict, reference.region_length, window_size, window_step,
                                                       output_prefix,
                                                       colormap_tuple_list=colormap_tuple_list,
@@ -907,7 +907,7 @@ class CollectionVCF(Collection):
                                                       gap_color=gap_color,
                                                       add_sample_name_to_labels=add_sample_name_to_labels,
                                                       dist_between_scaffolds_scaling_factor=dist_between_scaffolds_scaling_factor)
-        """
+
         DrawingRoutines.draw_window_density_distribution(count_dict, output_prefix=output_prefix,
                                                          suptitle="SNP density distribution",
                                                          denominator=1000,
