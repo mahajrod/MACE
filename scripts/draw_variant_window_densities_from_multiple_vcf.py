@@ -129,9 +129,9 @@ DrawingRoutines.draw_variant_window_densities(count_dict, reference.region_lengt
                                                                    (1.5, "#d33845"), (2.0, "#ea2e2e"),
                                                                    (2.5, "#f5ae27")))
 
-DrawingRoutines.draw_window_density_distribution(count_dict, output_prefix=args.output_prefix,
+DrawingRoutines.draw_window_density_distribution(count_dict, args.window_size, output_prefix=args.output_prefix,
                                                  suptitle="SNP density distribution",
-                                                 denominator=1000,
+                                                 density_multiplicator=1000,
                                                  number_of_bins=args.number_of_bins, width_of_bins=None,
                                                  max_threshold=args.max_threshold,
                                                  min_threshold=args.min_threshold,

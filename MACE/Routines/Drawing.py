@@ -261,8 +261,8 @@ class DrawingRoutines():
             plt.savefig("%s.%s" % (output_prefix, extension))
         plt.close()
 
-    def draw_window_density_distribution(self, count_dict, output_prefix=None, suptitle="SNP density distribution",
-                                         denominator=1000,
+    def draw_window_density_distribution(self, count_dict, window_size, output_prefix=None, suptitle="SNP density distribution",
+                                         density_multiplicator=1000,
                                          number_of_bins=None, width_of_bins=None,
                                          max_threshold=None, min_threshold=None,
                                          scaffold_black_list=[], scaffold_white_list=[],
@@ -293,7 +293,7 @@ class DrawingRoutines():
             for scaffold in final_scaffold_list:
                 if scaffold not in count_dict[sample]:
                     continue
-                scaled_count_dict[sample][scaffold] = np.array(map(float,count_dict[sample][scaffold])) / denominator
+                scaled_count_dict[sample][scaffold] = np.array(map(float, count_dict[sample][scaffold])) * density_multiplicator / window_size
         print("Drawing separated histograms for each scaffold...")
         extended_label_dict = OrderedDict()
         for scaffold in final_scaffold_list:
@@ -320,9 +320,12 @@ class DrawingRoutines():
         #print scaled_count_dict
         print("Drawing histograms for all scaffolds on same figure...")
         data = list(recursive_generator(scaled_count_dict))
+        min_value = min(data)
+        max_value = max(data)
         #print len(scaled_count_dict)
         #print data
-        bin_array = self.generate_bin_array(data, y_list=None, bin_number=number_of_bins, bin_width=width_of_bins, bin_array=None,
+        bin_array = self.generate_bin_array(data, y_list=None, bin_number=number_of_bins,
+                                            bin_width=width_of_bins, bin_array=None,
                                             min_x_value=min_threshold, max_x_value=max_threshold, min_y_value=None,
                                             max_y_value=None, add_max_value=True)
 
@@ -380,11 +383,6 @@ class DrawingRoutines():
             #print subplot_tupleee[0] * (subplot_tupleee[1] - 1)
             #print ((dataset_index + 1) > (subplot_tupleee[0] * (subplot_tupleee[1] - 1)))
 
-            label_list = []
-
-
-
-
             histo = self.draw_histogram([scaled_count_dict[sample][scaffold] for sample in samples_list],
                                         number_of_bins=None,
                                         width_of_bins=None, max_threshold=None,
@@ -396,6 +394,8 @@ class DrawingRoutines():
                                         suptitle=None,
                                         data_label_list=extended_label_dict[scaffold] if show_mean_and_median else samples_list,
                                         bin_array=bin_array)
+            plt.xlim(xmin=min_threshold if min_threshold and (min_threshold >= min_value) else min_value,
+                     xmax=max_threshold if max_threshold and (max_threshold <= max_value) else max_value)
             #print histo
             """
             if output_prefix:
@@ -419,7 +419,7 @@ class DrawingRoutines():
             for scaffold in count_dict[sample]:
                 combined_count_dict[sample] = combined_count_dict[sample] + count_dict[sample][scaffold]
 
-            combined_count_dict[sample] = np.array(map(float, combined_count_dict[sample])) / denominator
+            combined_count_dict[sample] = np.array(map(float, combined_count_dict[sample]))* density_multiplicator / window_size
 
             median = np.median(combined_count_dict[sample])
             mean = np.mean(combined_count_dict[sample])

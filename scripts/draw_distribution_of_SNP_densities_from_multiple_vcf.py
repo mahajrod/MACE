@@ -99,9 +99,9 @@ for sample_name, vcf_file in zip(args.sample_names, args.input):
                                                                                                                                      output_prefix="%s.%s" % (args.output_prefix, sample_name),
                                                                                                                                      skip_empty_windows=False)
 
-DrawingRoutines.draw_window_density_distribution(count_dict, output_prefix=args.output_prefix,
+DrawingRoutines.draw_window_density_distribution(count_dict, args.window_size, output_prefix=args.output_prefix,
                                                  suptitle="SNP density distribution",
-                                                 denominator=1000,
+                                                 density_multiplicator=1000,
                                                  number_of_bins=args.number_of_bins, width_of_bins=None,
                                                  max_threshold=args.max_threshold,
                                                  min_threshold=args.min_threshold,
