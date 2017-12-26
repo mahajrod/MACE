@@ -82,7 +82,7 @@ parser.add_argument("-j", "--max_threshold", action="store", dest="max_threshold
 parser.add_argument("-g", "--min_thresholds", action="store", dest="min_threshold", default=None,
                     type=float,
                     help="Minimal value of density to use. Defaul: minimal value")
-parser.add_argument("-e", "--subplot_size", action="store", dest="subplot_size", default=4,
+parser.add_argument("--subplot_size", action="store", dest="subplot_size", default=4,
                     type=int,
                     help="Size of subplot(inches) on distribution histogram with all scaffolds. Default: 4")
 
