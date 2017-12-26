@@ -888,7 +888,7 @@ class CollectionVCF(Collection):
                                                                    ignore_scaffolds_shorter_than_window=ignore_scaffolds_shorter_than_window,
                                                                    output_prefix=output_prefix,
                                                                    skip_empty_windows=skip_empty_windows)}
-
+        """
         DrawingRoutines.draw_variant_window_densities(count_dict, reference.region_length, window_size, window_step,
                                                       output_prefix,
                                                       colormap_tuple_list=colormap_tuple_list,
@@ -907,6 +907,17 @@ class CollectionVCF(Collection):
                                                       gap_color=gap_color,
                                                       add_sample_name_to_labels=add_sample_name_to_labels,
                                                       dist_between_scaffolds_scaling_factor=dist_between_scaffolds_scaling_factor)
+        """
+        DrawingRoutines.draw_window_density_distribution(count_dict, output_prefix=output_prefix,
+                                                         suptitle="SNP density distribution",
+                                                         denominator=1000,
+                                                         number_of_bins=None, width_of_bins=None,
+                                                         max_threshold=None, min_threshold=None,
+                                                         scaffold_black_list=[], scaffold_white_list=[],
+                                                         sort_scaffolds=False, scaffold_ordered_list=None, subplot_size=2,
+                                                         per_scaffold_histo_dir="per_scaffold_histo_dir/",
+                                                         subplot_tuple=None, share_x_axis=True, share_y_axis=True,
+                                                         extensions=("png",))
 
     def hierarchical_clustering(self, method='average', dendrogramm_max_y=2000,
                                 sample_name=None, save=False, clustering_dir="clustering",
