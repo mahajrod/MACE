@@ -446,7 +446,7 @@ class CollectionVCF(Collection):
             else:
                 for key, value_list in zip(line_list[8].split(":"), sample_string.split(":")):
                     if metadata["FORMAT"][key]["Type"] == "Integer":
-                        print sample_dict[key]
+                        print key, value_list
                         sample_dict[key] = list(map(lambda x: int(x), value_list.split(",")))
                     elif metadata["FORMAT"][key]["Type"] == "Float":
                         sample_dict[key] = list(map(lambda x: float(x), value_list.split(",")))
