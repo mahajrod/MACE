@@ -425,7 +425,7 @@ class CollectionVCF(Collection):
 
         if line_list[7] != ".":
             info_tuple_list = [self._split_by_equal_sign(entry) for entry in line_list[7].split(";")]
-            print line_list
+            #print line_list
             for entry in info_tuple_list:
                 if entry[0] not in metadata["INFO"]:
                     # do not parse data from INFO field that are not described in metadata
@@ -446,7 +446,7 @@ class CollectionVCF(Collection):
             else:
                 for key, value_list in zip(line_list[8].split(":"), sample_string.split(":")):
                     if metadata["FORMAT"][key]["Type"] == "Integer":
-                        print key, value_list
+                        #print key, value_list
                         sample_dict[key] = list(map(lambda x: x if x == "." else int(x), value_list.split(",")))
                     elif metadata["FORMAT"][key]["Type"] == "Float":
                         sample_dict[key] = list(map(lambda x: x if x == "." else float(x), value_list.split(",")))
