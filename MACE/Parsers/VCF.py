@@ -425,7 +425,7 @@ class CollectionVCF(Collection):
 
         if line_list[7] != ".":
             info_tuple_list = [self._split_by_equal_sign(entry) for entry in line_list[7].split(";")]
-
+            print line_list
             for entry in info_tuple_list:
                 if entry[0] not in metadata["INFO"]:
                     # do not parse data from INFO field that are not described in metadata
