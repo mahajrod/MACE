@@ -788,7 +788,7 @@ class CollectionVCF(Collection):
 
     def count_variants_in_windows(self, window_size, window_step, reference_scaffold_length_dict,
                                   ignore_scaffolds_shorter_than_window=True, output_prefix=None,
-                                  skip_empty_windows=False):
+                                  skip_empty_windows=False, expression=None):
         if window_step > window_size:
             raise ValueError("ERROR!!! Window step can't be larger then window size")
         elif (window_size % window_step) != 0:
@@ -847,7 +847,10 @@ class CollectionVCF(Collection):
 
                 for i in range(step_size_number - steps_in_window + 1,
                                step_size_number + 1 if step_size_number < number_of_windows else number_of_windows):
-                    scaffold_windows_list[i] += 1
+                    if expression:
+                        scaffold_windows_list[i] += 1 if expression(variant) else 0
+                    else:
+                        scaffold_windows_list[i] += 1
                 variant_index += 1
 
             count_dict[scaffold_id] = scaffold_windows_list
