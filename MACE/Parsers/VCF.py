@@ -22,7 +22,7 @@ from Bio import SeqIO
 from Bio.SeqFeature import SeqFeature, FeatureLocation
 
 from MACE.Parsers.Abstract import Record, Collection, Metadata, Header
-from MACE.General.GeneralCollections import IdList, IdSet, SynDict
+from MACE.General.GeneralCollections import IdList, IdSet, SynDict, TwoLvlDict
 from MACE.Routines import DrawingRoutines
 
 ref_alt_variants = {"deaminases": [("C", ["T"]), ("G", ["A"])]
@@ -788,7 +788,7 @@ class CollectionVCF(Collection):
 
     def count_variants_in_windows(self, window_size, window_step, reference_scaffold_length_dict,
                                   ignore_scaffolds_shorter_than_window=True, output_prefix=None,
-                                  skip_empty_windows=False, expression=None):
+                                  skip_empty_windows=False, expression=None, per_sample_output=False):
         if window_step > window_size:
             raise ValueError("ERROR!!! Window step can't be larger then window size")
         elif (window_size % window_step) != 0:
@@ -803,8 +803,13 @@ class CollectionVCF(Collection):
 
         scaffolds_absent_in_reference = IdSet(vcf_scaffolds - reference_scaffolds)
         scaffolds_absent_in_vcf = IdSet(reference_scaffolds - vcf_scaffolds)
+        if per_sample_output:
+            count_dict = TwoLvlDict()
+            for sample in self.samples:
+                count_dict[sample] = SynDict()
+        else:
+            count_dict = SynDict()
 
-        count_dict = SynDict()
         uncounted_tail_variants_number_dict = SynDict()
 
         if scaffolds_absent_in_reference:
@@ -819,16 +824,29 @@ class CollectionVCF(Collection):
                 if ignore_scaffolds_shorter_than_window:
                     continue
 
-            scaffold_windows_list = []
+            if per_sample_output:
+                scaffold_windows_list = SynDict()
+                for sample in self.samples:
+                    scaffold_windows_list[sample] = []
+            else:
+                scaffold_windows_list = []
 
             for i in range(0, number_of_windows):
-                scaffold_windows_list.append(0)
+                if per_sample_output:
+                    for sample in self.samples:
+                        scaffold_windows_list[sample].append(0)
+                else:
+                    scaffold_windows_list.append(0)
 
             if scaffold_id in scaffolds_absent_in_vcf:
                 if skip_empty_windows:
                     continue
-                count_dict[scaffold_id] = scaffold_windows_list
-                continue
+                if per_sample_output:
+                    for sample in self.samples:
+                        count_dict[sample][scaffold_id] = scaffold_windows_list[sample]
+                else:
+                    count_dict[scaffold_id] = scaffold_windows_list
+                    continue
 
             uncounted_tail_variants_number_dict[scaffold_id] = 0
 
@@ -844,13 +862,31 @@ class CollectionVCF(Collection):
                     #print("\n")
                     uncounted_tail_variants_number_dict[scaffold_id] = self.scaffold_length[scaffold_id] - variant_index
                     break
+                if per_sample_output:
 
-                for i in range(step_size_number - steps_in_window + 1,
-                               step_size_number + 1 if step_size_number < number_of_windows else number_of_windows):
-                    if expression:
-                        scaffold_windows_list[i] += 1 if expression(variant) else 0
-                    else:
-                        scaffold_windows_list[i] += 1
+                    for i in range(step_size_number - steps_in_window + 1,
+                                    step_size_number + 1 if step_size_number < number_of_windows else number_of_windows):
+                        for sample_index in range(0, len(self.samples)):
+                            sample_id = self.samples[sample_index]
+                            if "GT" not in variant.samples_list[sample_index]:
+                                print("WARNING: no genotype for sample %s for variant %s!!! Skipping..." % (sample_id, str(variant)))
+                                continue
+                            else:
+                                if (variant.samples_list[sample_index]["GT"][0] == "0/0") or (variant.samples_list[sample_index]["GT"][0] == "./."):
+                                    continue
+                            if expression:
+                                scaffold_windows_list[i] += 1 if expression(variant) else 0
+                            else:
+                                scaffold_windows_list[i] += 1
+
+                else:
+
+                    for i in range(step_size_number - steps_in_window + 1,
+                                   step_size_number + 1 if step_size_number < number_of_windows else number_of_windows):
+                        if expression:
+                            scaffold_windows_list[i] += 1 if expression(variant) else 0
+                        else:
+                            scaffold_windows_list[i] += 1
                 variant_index += 1
 
             count_dict[scaffold_id] = scaffold_windows_list
