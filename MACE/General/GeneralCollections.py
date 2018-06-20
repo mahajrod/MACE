@@ -46,7 +46,7 @@ class TwoLvlDict(OrderedDict):
                                     value = value_expression(value)
                             self[header_list[i]][tmp_list[0]] = value
 
-    def table_form(self, absent_symbol="0", sort=True, column_sep="\t", list_sep=","):
+    def table_form(self, absent_symbol="0", sort=True, column_sep="\t", list_sep=",", splited_values=False):
         first_level_keys = list(self.keys())
         second_level_keys = OrderedSet()
         for fl_key in first_level_keys:
