@@ -899,6 +899,19 @@ class CollectionVCF(Collection):
 
         return count_dict
 
+    def count_heterozygous_snps(self, window_size, window_step, reference_scaffold_length_dict,
+                                ignore_scaffolds_shorter_than_window=True, output_prefix=None,
+                                skip_empty_windows=False, per_sample_output=False):
+
+        def heterozygous_variant(record):
+            return not record.is_homozygous()
+
+        return self.count_variants_in_windows(window_size, window_step, reference_scaffold_length_dict,
+                                              ignore_scaffolds_shorter_than_window=ignore_scaffolds_shorter_than_window,
+                                              output_prefix=output_prefix,
+                                              skip_empty_windows=skip_empty_windows,
+                                              expression=heterozygous_variant, per_sample_output=per_sample_output)
+
     def draw_variant_window_densities(self, reference_fasta, output_prefix, window_size, window_step,
                                       masking=None, parsing_mode="index_db", min_gap_length=10,
                                       masked_region_color="grey", gap_color="white",
