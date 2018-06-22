@@ -1545,7 +1545,8 @@ class ReferenceGenome(object):
                     unified_dict[region].append([feature.location.start, feature.location.end])
 
         for region in unified_dict:
-            unified_dict[region] = unified_dict[region].sort()
+            if unified_dict[region]:
+                unified_dict[region] = unified_dict[region].sort()
 
         for region in unified_dict:
             number_of_records = len(unified_dict[region])
