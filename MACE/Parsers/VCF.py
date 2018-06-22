@@ -876,13 +876,13 @@ class CollectionVCF(Collection):
                                 if (variant.samples_list[sample_index]["GT"][0] == "0/0") or (variant.samples_list[sample_index]["GT"][0] == "./."):
                                     continue
                             if expression:
-                                scaffold_windows_list[i] += 1 if expression(variant) else 0
+                                    scaffold_windows_list[sample_id][i] += 1 if expression(variant) else 0
                             else:
-                                scaffold_windows_list[i] += 1
+                                scaffold_windows_list[sample_id][i] += 1
 
                 else:
 
-                    for i in range(step_size_number - steps_in_window + 1,
+                    for i in range(max(step_size_number - steps_in_window + 1, 0),
                                    step_size_number + 1 if step_size_number < number_of_windows else number_of_windows):
                         if expression:
                             scaffold_windows_list[i] += 1 if expression(variant) else 0
@@ -1472,7 +1472,7 @@ class ReferenceGenome(object):
     ReferenceGenome class
     """
     def __init__(self, ref_gen_file, masked_regions=None, index_file="refgen.idx", filetype="fasta", mode="index_db",
-                 black_list=()):
+                 black_list=(), masking_gff_list=None, feature_mask_list=None):
         """
 
         :param ref_gen_file: file with sequences of genome.
@@ -1507,6 +1507,103 @@ class ReferenceGenome(object):
         self.region_index = self.rec_index()
         self.gaps_dict = OrderedDict()
         self.masked_regions = masked_regions if masked_regions else OrderedDict()
+
+        if masking_gff_list:
+            masking_gffs = [masking_gff_list] if isinstance(masking_gff_list, str) else masking_gff_list
+            for gff in masking_gff_list:
+                with open(gff, "r") as gff_fd:
+                    for line in gff_fd:
+                        if line[0] == "#":
+                            continue
+                        line_list = line.split("\t")
+                        if feature_mask_list:
+                            if line_list[2] not in feature_mask_list:
+                                continue
+                        if line_list[0] not in self.masked_regions:
+                            self.masked_regions[line_list[0]].append(SeqFeature(FeatureLocation(int(line_list[3]) - 1,
+                                                                                                int(line_list[4])),
+                                                                                type="masked_region", strand=None))
+
+    def merge_features_by_coordinate(self, feature_dict_list, return_seq_fetures_dict=True, feature_type='masked_region'):
+
+        unified_dict = OrderedDict()
+        merged_dict = OrderedDict()
+
+        region_set = set()
+        for feature_dict in feature_dict_list:
+            region_set |= set(feature_dict.keys())
+
+        for region in region_set:
+            unified_dict[region] = []
+            merged_dict[region] = []
+
+        for feature_dict in feature_dict_list:
+            for region in feature_dict:
+                for feature in feature_dict[region]:
+                    unified_dict[region].append([feature.location.start, feature.location.end])
+
+        for region in unified_dict:
+            unified_dict[region] = unified_dict[region].sort()
+
+        for region in unified_dict:
+            number_of_records = len(unified_dict[region])
+            if number_of_records == 0:
+                continue
+
+            # [a, b) [c, d), a < b, c < d
+            # after sorting c >= a
+            i = 1
+
+            prev_coordinates = unified_dict[region][0]
+
+            while i < number_of_records:
+                if unified_dict[region][i][0] > prev_coordinates[1]: # c > b
+                    merged_dict[region].append(prev_coordinates)
+                    prev_coordinates = unified_dict[region][i]
+                elif unified_dict[region][i][1] > prev_coordinates[1]: # d > b; c<=b
+                    prev_coordinates[1] = unified_dict[region][i][1]
+                else: # d <= b
+                    pass
+                i += 1
+
+        if return_seq_fetures_dict:
+            feature_dict = OrderedDict()
+            for region in merged_dict:
+                feature_dict[region] = []
+                for (start, stop) in merged_dict[region]:
+                    feature_dict[region].append(SeqFeature(FeatureLocation(start, stop),
+                                                           type=feature_type,
+                                                           strand=None))
+
+            return feature_dict
+        else:
+            return merged_dict
+
+    def write_feature_dict_as_gff(self, feature_dict, output_gff):
+        feature_id = 1
+        with open(output_gff, "w") as out_gff:
+            for region in feature_dict:
+                for feature in feature_dict[region]:
+                    out_gff.write("%s\tsource\t%s\t%i\t%i\t.\t%s\t.\t%s\n" % (region,
+                                                                              feature.type,
+                                                                              feature.location.start + 1,
+                                                                              feature.location.end,
+                                                                              "." if feature.location.strand == None else feature.location.strand,
+                                                                              "ID=%i" % feature_id))
+                    feature_id += 1
+
+    def write_coords_dict_as_gff(self, coords_dict, output_gff, feature_type="masked_region"):
+        feature_id = 1
+        with open(output_gff, "w") as out_gff:
+            for region in coords_dict:
+                for coords in coords_dict[region]:
+                    out_gff.write("%s\tsource\t%s\t%i\t%i\t.\t%s\t.\t%s\n" % (region,
+                                                                              feature_type,
+                                                                              coords[0] + 1,
+                                                                              coords[1],
+                                                                              ".",
+                                                                              "ID=%i" % feature_id))
+                    feature_id += 1
 
     def __len__(self):
         """
@@ -1669,22 +1766,33 @@ class ReferenceGenome(object):
         return int((scaffold_length - window_size)/window_step) + 1
 
     def count_gaped_and_masked_positions_in_windows(self, window_size, window_step,
-                                                    ignore_scaffolds_shorter_than_window=True, output_prefix=None,
-                                                    skip_empty_windows=False):
+                                                    ignore_scaffolds_shorter_than_window=True,
+                                                    output_prefix=None,
+                                                    min_gap_len=1):
         if window_step > window_size:
             raise ValueError("ERROR!!! Window step can't be larger then window size")
         elif (window_size % window_step) != 0:
             raise ValueError("ERROR!!! Window size is not a multiple of window step...")
 
+        if not self.gaps_dict:
+            self.find_gaps(min_gap_len)
+
         steps_in_window = window_size / window_step
 
         short_scaffolds_ids = IdList()
 
-        reference_scaffolds = set(self.region_list)
-
         count_dict = SynDict()
 
-        for scaffold_id in self.region_list:
+        uncounted_tail_variants_number_dict = SynDict()
+
+        masked_region_dict = self.merge_features_by_coordinate([self.masked_regions,
+                                                                self.gaps_dict],
+                                                               return_seq_fetures_dict=False)
+
+        self.write_coords_dict_as_gff(masked_region_dict, "%s.merged_masked_regions.gff" % output_prefix,
+                                      feature_type="masked_region")
+
+        for scaffold_id in self.region_length:
             number_of_windows = self.count_number_of_windows(self.region_length[scaffold_id],
                                                              window_size,
                                                              window_step)
@@ -1693,44 +1801,41 @@ class ReferenceGenome(object):
                 if ignore_scaffolds_shorter_than_window:
                     continue
 
-            scaffold_windows_list = []
+            scaffold_windows_list = [0 for i in range(0, number_of_windows)]
 
-            for i in range(0, number_of_windows):
-                scaffold_windows_list.append(0)
+            uncounted_tail_variants_number_dict[scaffold_id] = 0
 
-            for region in self.gaps_dict[scaffold_id]:
-                # gap coordinates are in python notation
-                start_step_size_number = ((region.location.start)/window_step)
+            #variant_index = 0
 
-                end_step_size_number = ((region.location.end)/window_step)
+            for masked_region_location in masked_region_dict[scaffold_id]:
+                max_start_step = masked_region_location[0] / window_step
+                min_start_step = max(max_start_step - steps_in_window + 1, 0)
+                max_end_step = (masked_region_location[1] - 1) / window_step
+                min_end_step = max(max_end_step - steps_in_window + 1, 0)
 
-                if step_size_number - steps_in_window + 1 >= number_of_windows:
-                    #print scaffold_id
-                    #print self.scaffold_length[scaffold_id]
-                    #print variant_index
-                    #print("\n")
-                    uncounted_tail_variants_number_dict[scaffold_id] = self.scaffold_length[scaffold_id] - variant_index
+                if min_start_step >= number_of_windows:
                     break
 
-                for i in range(step_size_number - steps_in_window + 1,
-                               step_size_number + 1 if step_size_number < number_of_windows else number_of_windows):
-                    scaffold_windows_list[i] += 1
-                variant_index += 1
+                for i in range(min_start_step, min(max_start_step + 1, min_end_step, number_of_windows)):
+                    scaffold_windows_list[i] += (i * window_step) + window_size - masked_region_location[0]
+
+                for i in range(min_end_step, min(max_start_step + 1, number_of_windows)):
+                    scaffold_windows_list[i] += masked_region_location[1] - masked_region_location[0]
+
+                for i in range(max_start_step + 1, min(min_end_step, number_of_windows)):
+                    scaffold_windows_list[i] += window_size
+
+                for i in range(max(max_start_step + 1, min_end_step), min(max_end_step + 1, number_of_windows)):
+                    scaffold_windows_list[i] += masked_region_location[1] - (i * window_step)
 
             count_dict[scaffold_id] = scaffold_windows_list
 
         if output_prefix:
-            scaffolds_absent_in_reference.write("%s.scaffolds_absent_in_reference.ids" % output_prefix)
-            scaffolds_absent_in_vcf.write("%s.scaffolds_absent_in_vcf.ids" % output_prefix)
-            uncounted_tail_variants_number_dict.write("%s.uncounted_tail_variant_number.tsv" % output_prefix)
-            count_dict.write("%s.variant_number.tsv" % output_prefix, splited_values=True)
+            count_dict.write("%s.gapped_and_masked_site_counts.tsv" % output_prefix, splited_values=True)
 
         return count_dict
 
 
-
-
-        pass
 if __name__ == "__main__":
     #workdir = "/media/mahajrod/d9e6e5ee-1bf7-4dba-934e-3f898d9611c8/Data/LAN2xx/all"
     vcf_file = "/home/mahajrod/Genetics/MACE/example_data/Lada_et_al_2015/PmCDA1_3d_SNP.vcf"
