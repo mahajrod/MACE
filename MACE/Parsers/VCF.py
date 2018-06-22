@@ -1547,6 +1547,8 @@ class ReferenceGenome(object):
         for region in unified_dict:
             if unified_dict[region]:
                 unified_dict[region] = unified_dict[region].sort()
+            if unified_dict[region] is None:
+                print region
 
         for region in unified_dict:
             number_of_records = len(unified_dict[region])
@@ -1794,6 +1796,7 @@ class ReferenceGenome(object):
 
         self.write_coords_dict_as_gff(masked_region_dict, "%s.merged_masked_regions.gff" % output_prefix,
                                       feature_type="masked_region")
+        self.write_feature_dict_as_gff(self.gaps_dict, "%s.gaps.gff" % output_prefix)
 
         for scaffold_id in self.region_length:
             number_of_windows = self.count_number_of_windows(self.region_length[scaffold_id],
@@ -1807,8 +1810,6 @@ class ReferenceGenome(object):
             scaffold_windows_list = [0 for i in range(0, number_of_windows)]
 
             uncounted_tail_variants_number_dict[scaffold_id] = 0
-
-            #variant_index = 0
 
             for masked_region_location in masked_region_dict[scaffold_id]:
                 max_start_step = masked_region_location[0] / window_step
@@ -1840,73 +1841,4 @@ class ReferenceGenome(object):
 
 
 if __name__ == "__main__":
-    #workdir = "/media/mahajrod/d9e6e5ee-1bf7-4dba-934e-3f898d9611c8/Data/LAN2xx/all"
-    vcf_file = "/home/mahajrod/Genetics/MACE/example_data/Lada_et_al_2015/PmCDA1_3d_SNP.vcf"
-    masking_file = "/home/mahajrod/Genetics/MCTool/example_data/LAN210_v0.10m_masked_all_not_in_good_genes.gff"
-    from BCBio import GFF
-    """
-    masked_regions = SeqIO.to_dict(GFF.parse(masking_file))
-
-    reference = ReferenceGenome("/home/mahajrod/Genetics/MACE/example_data/Lada_et_al_2015/LAN210_v0.10m.fasta",
-                                masked_regions=masked_regions, mode="to_dict", black_list=["mt"])
-    #print(reference.reference_genome["chrXVI"][18075])
-
-    reference.generate_snp_set(8416, {"C": ["T"], "G": ["A"]}, out_vcf="synthetic.vcf")
-    """
-
-
-    collection = CollectionVCF(from_file=True, in_file=vcf_file)
-    #collection = CollectionVCF(from_file=True, in_file="/home/mahajrod/Genetics/MACE/example_data/Synthetic_data/deaminase_8416/synthetic_deaminase_snp_8416.vcf")
-    collection.write("ghjuh.vcf")
-    """
-    clusters = collection.get_clusters(sample_name="EEEEEE", save_clustering=True,
-                                          extracting_method="distance",
-                                          threshold=1000, cluster_distance='average',
-                                          dendrogramm_max_y=2000, dendrogramm_color_threshold=1000,
-                                          clustering_dir="temp")
-    clusters.write("tra.ccf")
-    clusters.write_gff("tra.gff")
-    extracted_vcf = clusters.extract_vcf()
-    extracted_vcf.write("extracted.vcf")
-    """
-
-    """
-
-
-    def check_location(feature, pos):
-        return True if pos in feature else False
-
-    collection.set_location_flag(masked_regions, check_location, "BR")
-
-    for key in collection.metadata:
-        print key
-        print collection.metadata[key]
-
-
-    reference = ReferenceGenome("/home/mahajrod/genetics/desaminases/data/LAN210_v0.9m/LAN210_v0.9m.fasta",
-                                index_file="/home/mahajrod/genetics/desaminases/data/LAN210_v0.9m/LAN210_v0.9m.idx")
-    #print(reference.reference_genome)
-    reference.find_gaps()
-    os.chdir(workdir)
-    samples_list = sorted(os.listdir("."))
-
-    suffix = "_GATK_best_merged.vcf"
-
-    for sample in samples_list:
-        print("Handling %s" % sample)
-
-        os.chdir(workdir)
-        os.chdir(sample)
-        if "alignment_LAN210_v0.9m" not in os.listdir("."):
-            continue
-        os.chdir("alignment_LAN210_v0.9m")
-
-        mutations = CollectionVCF(vcf_file=sample + suffix,
-                                  from_file=True)
-        print("Totaly %s mutations" % len(mutations))
-
-        mutations.test_thresholds(save_clustering=True, testing_dir="testing_theshold_inconsistent")
-        #mutations.test_thresholds(extracting_method='distance', threshold=(50, 5000, 100),
-        #                          testing_dir="testing_threshold")
-        #mutations.rainfall_plot(sample + suffix, ref_genome=reference, draw_gaps=True)
-    """
+    pass
