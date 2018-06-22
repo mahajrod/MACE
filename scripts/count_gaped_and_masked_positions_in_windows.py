@@ -27,8 +27,6 @@ parser.add_argument("-p", "--parsing_mode", action="store", dest="parsing_mode",
 
 args = parser.parse_args()
 
-variants = CollectionVCF(from_file=True, in_file=args.input, parse_only_coordinates=False)
-
 reference = ReferenceGenome(args.reference,
                             masked_regions=None,
                             index_file="refgen.idx",
