@@ -8,7 +8,7 @@ from MACE.Parsers.VCF import CollectionVCF, ReferenceGenome
 
 parser = argparse.ArgumentParser()
 
-parser.add_argument("-i", "--input_file", action="store", dest="input", required=True,
+parser.add_argument("-i", "--input", action="store", dest="input", required=True,
                     help="Input fasta file with reference.")
 parser.add_argument("-o", "--output_file_prefix", action="store", dest="output_prefix", required=True,
                     help="Prefix of output files")
@@ -27,13 +27,13 @@ parser.add_argument("-p", "--parsing_mode", action="store", dest="parsing_mode",
 
 args = parser.parse_args()
 
-reference = ReferenceGenome(args.reference,
+reference = ReferenceGenome(args.input,
                             masked_regions=None,
                             index_file="refgen.idx",
                             filetype="fasta",
                             mode=args.parsing_mode,
                             black_list=[],
-                            masking_gff_list = args.masked_regions)
+                            masking_gff_list=args.masked_regions)
 
 reference.count_gaped_and_masked_positions_in_windows(args.window_size, args.window_step,
                                                       ignore_scaffolds_shorter_than_window=True,
