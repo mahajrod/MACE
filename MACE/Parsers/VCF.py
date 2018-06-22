@@ -866,6 +866,7 @@ class CollectionVCF(Collection):
 
                     for i in range(step_size_number - steps_in_window + 1,
                                     step_size_number + 1 if step_size_number < number_of_windows else number_of_windows):
+                        print step_size_number, steps_in_window
                         for sample_index in range(0, len(self.samples)):
                             sample_id = self.samples[sample_index]
                             if "GT" not in variant.samples_list[sample_index]:
