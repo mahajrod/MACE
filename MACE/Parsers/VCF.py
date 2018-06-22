@@ -1520,9 +1520,11 @@ class ReferenceGenome(object):
                             if line_list[2] not in feature_mask_list:
                                 continue
                         if line_list[0] not in self.masked_regions:
-                            self.masked_regions[line_list[0]].append(SeqFeature(FeatureLocation(int(line_list[3]) - 1,
-                                                                                                int(line_list[4])),
-                                                                                type="masked_region", strand=None))
+                            self.masked_regions[line_list[0]] = []
+
+                        self.masked_regions[line_list[0]].append(SeqFeature(FeatureLocation(int(line_list[3]) - 1,
+                                                                                            int(line_list[4])),
+                                                                            type="masked_region", strand=None))
 
     def merge_features_by_coordinate(self, feature_dict_list, return_seq_fetures_dict=True, feature_type='masked_region'):
 
