@@ -544,6 +544,16 @@ class CollectionVCF(Collection):
         """
         return self.filter(self.filter_zygoty_expression)
 
+    @staticmethod
+    def filter_by_filter_presence_expression(record):
+        for filter_entry in record.filter_list:
+            if (filter_entry != "PASS") or (filter_entry != "."):
+                return False
+        return True
+
+    def filter_by_filter_presence(self):
+        return self.filter(self.filter_by_filter_presence_expression)
+
     def record_coordinates(self, black_list=[], white_list=[]):
         """
         Extracts coordinates of records in collection
