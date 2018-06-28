@@ -73,6 +73,7 @@ class RecordSNPeff(Record):
 
         return vcf_part + snpeff_part
 
+
 class HeaderSNPeff(list, Header):
     """
     HeaderVCF class
