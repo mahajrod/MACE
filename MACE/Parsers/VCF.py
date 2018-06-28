@@ -547,7 +547,9 @@ class CollectionVCF(Collection):
     @staticmethod
     def filter_by_filter_presence_expression(record):
         for filter_entry in record.filter_list:
+            print filter_entry
             if (filter_entry != "PASS") or (filter_entry != "."):
+                print "FALSE"
                 return False
         return True
 
