@@ -834,6 +834,8 @@ class CollectionVCF(Collection):
             number_of_windows = self.count_number_of_windows(reference_scaffold_length_dict[scaffold_id],
                                                              window_size,
                                                              window_step)
+            if scaffold_id not in self.records:
+                continue
             if number_of_windows == 0:
                 short_scaffolds_ids.append(scaffold_id)
                 if ignore_scaffolds_shorter_than_window:
