@@ -871,14 +871,14 @@ class CollectionVCF(Collection):
             if scaffold_id in scaffolds_absent_in_vcf:
                 if skip_empty_windows:
                     continue
-                if per_sample_output:
-                    for sample in self.samples:
-                        print scaffold_id
-                        count_dict[sample][scaffold_id] = np.zeros(number_of_windows, dtype=np.int64)
-                        print count_dict[sample][scaffold_id]
-                else:
-                    count_dict[scaffold_id] = np.zeros(number_of_windows, dtype=np.int64)
-                    continue
+            if per_sample_output:
+                for sample in self.samples:
+                    print scaffold_id
+                    count_dict[sample][scaffold_id] = np.zeros(number_of_windows, dtype=np.int64)
+                    print count_dict[sample][scaffold_id]
+            else:
+                count_dict[scaffold_id] = np.zeros(number_of_windows, dtype=np.int64)
+                continue
 
             uncounted_tail_variants_number_dict[scaffold_id] = 0
 
