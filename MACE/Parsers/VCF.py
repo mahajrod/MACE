@@ -944,8 +944,12 @@ class CollectionVCF(Collection):
                             xlabel="Position in genome",
                             ylabel="Number of SNPs",
                             title="SNP counts in windows",
-                            suptitle=None,
-                            extensions=["png", ]):
+                            suptitle="",
+                            extensions=["png", ],
+                            normalize=False,
+                            masked_or_gaped_region_mark=-10,
+                            figure_height_per_plot=3,
+                            figure_width=6):
 
         reference = ReferenceGenome(reference_genome,
                                     masked_regions=None,
@@ -956,10 +960,10 @@ class CollectionVCF(Collection):
                                     masking_gff_list=masking_gff)
 
         gaps_and_masked_region_window_counts = reference.count_gaped_and_masked_positions_in_windows(window_size,
-                                                                                               window_step,
-                                                                                               ignore_scaffolds_shorter_than_window=True,
-                                                                                               output_prefix=output_prefix,
-                                                                                               min_gap_len=1)
+                                                                                                     window_step,
+                                                                                                     ignore_scaffolds_shorter_than_window=True,
+                                                                                                     output_prefix=output_prefix,
+                                                                                                     min_gap_len=1)
 
         variant_window_counts = self.count_variants_in_windows(window_size,
                                                                window_step,
@@ -969,6 +973,14 @@ class CollectionVCF(Collection):
                                                                skip_empty_windows=False,
                                                                expression=expression,
                                                                per_sample_output=per_sample_output)
+        if normalize:
+            if per_sample_output:
+                for sample in variant_window_counts:
+                    for scaffold_id in variant_window_counts[sample]:
+                        variant_window_counts[sample][scaffold_id] /= gaps_and_masked_region_window_counts[scaffold_id]
+            else:
+                for scaffold_id in variant_window_counts:
+                        variant_window_counts[scaffold_id] /= gaps_and_masked_region_window_counts[scaffold_id]
 
         if per_sample_output:
             for sample in variant_window_counts:
@@ -980,16 +992,38 @@ class CollectionVCF(Collection):
             for scaffold_id in variant_window_counts:
                 for window_index in range(0, len(variant_window_counts[scaffold_id])):
                     if float(gaps_and_masked_region_window_counts[scaffold_id][window_index])/float(window_size) > gaps_and_masked_positions_max_fraction:
-                        variant_window_counts[scaffold_id][window_index] = -10 #variant_window_counts[scaffold_id]
+                        variant_window_counts[scaffold_id][window_index] = masked_or_gaped_region_mark #variant_window_counts[scaffold_id]
+                    if np.isnan(variant_window_counts[scaffold_id][window_index]):
+                        variant_window_counts[scaffold_id][window_index] = masked_or_gaped_region_mark
 
-        plt.figure()
         if plot_type == "concatenated":
 
             if per_sample_output:
                 data = OrderedDict()
                 for sample in variant_window_counts:
-                    data[sample] = OrderedDict
+                    data[sample] = []
+                    for scaffold_id in reference.region_sorted_by_length_list:
+                        if scaffold_id not in variant_window_counts:
+                            continue
+                    data[sample] += list(variant_window_counts[scaffold_id]) + [0, ]
+                for sample in variant_window_counts:
+                    data[sample] = np.array(data[sample])
+                    bins = np.arange(len(data[sample]))
+
+                sample_list = list(variant_window_counts.keys())
+                sample_number = len(sample_list)
+
+                figure, subplot_list = plt.subplots(sample_number, sharex=True, sharey=True, figsize=(figure_width, figure_height_per_plot * sample_number))
+
+                for subplot_index in range(0, sample_number):
+                    subplot_list[subplot_index].plot(bins, data[sample_list[subplot_index]])
+                    plt.xlim(xmin=0)
+                    plt.xlabel(xlabel)
+                    plt.ylabel(ylabel)
+                    plt.title(sample_number)
+                plt.suptitle(suptitle)
             else:
+                plt.figure(figsize=(figure_width, figure_height_per_plot))
                 data = []
                 for scaffold_id in reference.region_sorted_by_length_list:
                     if scaffold_id not in variant_window_counts:
@@ -1007,6 +1041,7 @@ class CollectionVCF(Collection):
                 plt.ylabel(ylabel)
                 plt.title(title)
                 plt.suptitle(suptitle)
+
         for extension in extensions:
             plt.savefig("%s.%s" % (output_prefix, extension))
 
@@ -1021,8 +1056,12 @@ class CollectionVCF(Collection):
                                          xlabel="Position in genome",
                                          ylabel="Number of SNPs",
                                          title="SNP counts in windows",
-                                         suptitle=None,
-                                         extensions=["png", ]):
+                                         suptitle="",
+                                         extensions=["png", ],
+                                         normalize=False,
+                                         masked_or_gaped_region_mark=-10,
+                                         figure_height_per_plot=3,
+                                         figure_width=6):
 
         self.draw_snps_histogram(window_size, window_step, output_prefix, reference_genome,
                                  gaps_and_masked_positions_max_fraction=gaps_and_masked_positions_max_fraction,
@@ -1033,8 +1072,11 @@ class CollectionVCF(Collection):
                                  ylabel=ylabel,
                                  title=title,
                                  suptitle=suptitle,
-                                 extensions=extensions)
-
+                                 extensions=extensions,
+                                 normalize=normalize,
+                                 masked_or_gaped_region_mark=masked_or_gaped_region_mark,
+                                 figure_height_per_plot=figure_height_per_plot,
+                                 figure_width=figure_width)
 
     def draw_variant_window_densities(self, reference_fasta, output_prefix, window_size, window_step,
                                       masking=None, parsing_mode="index_db", min_gap_length=10,
