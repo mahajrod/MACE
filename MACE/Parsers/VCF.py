@@ -1001,7 +1001,7 @@ class CollectionVCF(Collection):
                 print max(data)
                 print bins
 
-                plt.bar(bins, data, 5, color="blue", edgecolor="blue", linewidth=1)
+                plt.plot(bins, data)
                 plt.xlim(xmax=950000, xmin=0)
                 plt.xlabel(xlabel)
                 plt.ylabel(ylabel)
