@@ -994,7 +994,7 @@ class CollectionVCF(Collection):
                 for scaffold_id in reference.region_sorted_by_length_list:
                     if scaffold_id not in variant_window_counts:
                         continue
-                    data += list(variant_window_counts[scaffold_id]) + [0]
+                    data += list(variant_window_counts[scaffold_id]) + [0,]
                     data = np.array(data)
                 bins = np.arange(len(data)) * window_step
                 plt.bar(bins, data)
