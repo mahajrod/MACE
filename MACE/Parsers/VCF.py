@@ -848,6 +848,9 @@ class CollectionVCF(Collection):
             else:
                 scaffold_windows_list = []
             """
+            """
+            scaffold_windows_list = np.zeros(number_of_windows, dtype=np.int64)
+
 
             if per_sample_output:
                 scaffold_windows_list = SynDict()
@@ -855,7 +858,7 @@ class CollectionVCF(Collection):
                     scaffold_windows_list[sample] = np.zeros(number_of_windows, dtype=np.int64)
             else:
                 scaffold_windows_list = np.zeros(number_of_windows, dtype=np.int64)
-
+            """
             """
             for i in range(0, number_of_windows):
                 if per_sample_output:
@@ -870,15 +873,15 @@ class CollectionVCF(Collection):
                     continue
                 if per_sample_output:
                     for sample in self.samples:
-                        count_dict[sample][scaffold_id] = scaffold_windows_list[sample]
+                        count_dict[sample][scaffold_id] = np.zeros(number_of_windows, dtype=np.int64)
                 else:
-                    count_dict[scaffold_id] = scaffold_windows_list
+                    count_dict[scaffold_id] = np.zeros(number_of_windows, dtype=np.int64)
                     continue
 
             uncounted_tail_variants_number_dict[scaffold_id] = 0
 
             variant_index = 0
-
+            print list(count_dict.keys())
             for variant in self.records[scaffold_id]:
                 step_size_number = ((variant.pos - 1)/window_step)
 
@@ -903,21 +906,19 @@ class CollectionVCF(Collection):
                                 if (variant.samples_list[sample_index]["GT"][0] == "0/0") or (variant.samples_list[sample_index]["GT"][0] == "./."):
                                     continue
                             if expression:
-                                    scaffold_windows_list[sample_id][i] += 1 if expression(variant) else 0
+                                     count_dict[sample][scaffold_id][i] += 1 if expression(variant) else 0
                             else:
-                                scaffold_windows_list[sample_id][i] += 1
+                                 count_dict[sample][scaffold_id][i] += 1
 
                 else:
 
                     for i in range(max(step_size_number - steps_in_window + 1, 0),
                                    step_size_number + 1 if step_size_number < number_of_windows else number_of_windows):
                         if expression:
-                            scaffold_windows_list[i] += 1 if expression(variant) else 0
+                            count_dict[scaffold_id][i] += 1 if expression(variant) else 0
                         else:
-                            scaffold_windows_list[i] += 1
+                            count_dict[scaffold_id][i] += 1
                 variant_index += 1
-
-            count_dict[scaffold_id] = scaffold_windows_list
 
         if output_prefix:
             scaffolds_absent_in_reference.write("%s.scaffolds_absent_in_reference.ids" % output_prefix)
