@@ -997,6 +997,8 @@ class CollectionVCF(Collection):
                     data += list(variant_window_counts[scaffold_id]) + [0, ]
                 data = np.array(data)
                 bins = np.arange(len(data)) * window_step
+                print data
+                print bins
                 plt.bar(bins, data)
                 plt.xlabel(xlabel)
                 plt.ylabel(ylabel)
