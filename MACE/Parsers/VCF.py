@@ -1021,7 +1021,7 @@ class CollectionVCF(Collection):
 
         self.draw_snps_histogram(window_size, window_step, output_prefix, reference_genome,
                                  gaps_and_masked_positions_max_fraction=gaps_and_masked_positions_max_fraction,
-                                 expression=self.heterozygous_variant(), masking_gff=masking_gff,
+                                 expression=self.heterozygous_variant, masking_gff=masking_gff,
                                  parsing_mode=parsing_mode, per_sample_output=per_sample_output,
                                  plot_type=plot_type,
                                  xlabel=xlabel,
