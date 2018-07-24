@@ -1002,7 +1002,7 @@ class CollectionVCF(Collection):
                 print bins
 
                 plt.plot(bins, data)
-                plt.xlim(xmax=950000, xmin=0)
+                plt.xlim(xmin=0)
                 plt.xlabel(xlabel)
                 plt.ylabel(ylabel)
                 plt.title(title)
