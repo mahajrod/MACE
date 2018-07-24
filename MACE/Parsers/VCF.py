@@ -998,8 +998,10 @@ class CollectionVCF(Collection):
                 data = np.array(data)
                 bins = np.arange(len(data)) * window_step
                 print data
+                print max(data)
                 print bins
-                plt.bar(bins, data, 1, color="blue", edgecolor="blue",)
+
+                plt.bar(bins, data, 5, color="blue", edgecolor="blue",edgewidth=1)
                 plt.xlim(xmax=950000, xmin=0)
                 plt.xlabel(xlabel)
                 plt.ylabel(ylabel)
