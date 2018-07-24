@@ -1635,6 +1635,9 @@ class ReferenceGenome(object):
         self.region_sorted_by_length_list = []
 
         for length in lengths_list:
+            type(self.length_to_region_dict)
+            type(self.region_sorted_by_length_list)
+            type(self.length_to_region_dict[length])
             self.region_sorted_by_length_list += self.length_to_region_dict[length]
 
         self.region_index = self.rec_index()
