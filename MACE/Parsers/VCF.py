@@ -980,7 +980,7 @@ class CollectionVCF(Collection):
             for scaffold_id in variant_window_counts:
                 for window_index in range(0, len(variant_window_counts[scaffold_id])):
                     if float(gaps_and_masked_region_window_counts[scaffold_id][window_index])/float(window_size) > gaps_and_masked_positions_max_fraction:
-                        variant_window_counts[scaffold_id][window_index] = -1 #variant_window_counts[scaffold_id]
+                        variant_window_counts[scaffold_id][window_index] = -10 #variant_window_counts[scaffold_id]
 
         plt.figure()
         if plot_type == "concatenated":
