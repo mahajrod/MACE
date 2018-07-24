@@ -873,7 +873,9 @@ class CollectionVCF(Collection):
                     continue
                 if per_sample_output:
                     for sample in self.samples:
+                        print scaffold_id
                         count_dict[sample][scaffold_id] = np.zeros(number_of_windows, dtype=np.int64)
+                        print count_dict[sample][scaffold_id]
                 else:
                     count_dict[scaffold_id] = np.zeros(number_of_windows, dtype=np.int64)
                     continue
