@@ -1668,7 +1668,7 @@ class ReferenceGenome(object):
         merged_dict = OrderedDict()
 
         region_set = set()
-        print feature_dict_list
+        #print feature_dict_list
 
         for feature_dict in feature_dict_list:
             region_set |= set(feature_dict.keys())
