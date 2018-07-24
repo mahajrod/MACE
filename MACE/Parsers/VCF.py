@@ -996,7 +996,7 @@ class CollectionVCF(Collection):
                         continue
                     data += list(variant_window_counts[scaffold_id]) + [0, ]
                 data = np.array(data)
-                bins = np.arange(len(data)) * window_step
+                bins = np.arange(len(data)) #* window_step
                 print data
                 print max(data)
                 print bins
