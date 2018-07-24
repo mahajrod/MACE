@@ -79,7 +79,7 @@ variants = CollectionVCF(from_file=True, in_file=args.input, parse_only_coordina
 variants.draw_heterozygous_snps_histogram(args.window_size,
                                           args.window_step,
                                           args.output_prefix,
-                                          args.reference_genome,
+                                          args.reference,
                                           gaps_and_masked_positions_max_fraction=0.4,
                                           masking_gff=args.masked_regions,
                                           parsing_mode=args.parsing_mode,
