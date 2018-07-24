@@ -923,7 +923,11 @@ class CollectionVCF(Collection):
             scaffolds_absent_in_reference.write("%s.scaffolds_absent_in_reference.ids" % output_prefix)
             scaffolds_absent_in_vcf.write("%s.scaffolds_absent_in_vcf.ids" % output_prefix)
             uncounted_tail_variants_number_dict.write("%s.uncounted_tail_variant_number.tsv" % output_prefix)
-            count_dict.write("%s.variant_number.tsv" % output_prefix, splited_values=True)
+            if per_sample_output:
+                for sample in count_dict:
+                    count_dict[sample].write("%s.%s.variant_number.tsv" % (output_prefix, sample), splited_values=True)
+            else:
+                count_dict.write("%s.variant_number.tsv" % output_prefix, splited_values=True)
 
         return count_dict
 
