@@ -899,6 +899,7 @@ class CollectionVCF(Collection):
                         print step_size_number, steps_in_window
                         for sample_index in range(0, len(self.samples)):
                             sample_id = self.samples[sample_index]
+                            print sample_id, scaffold_id
                             if "GT" not in variant.samples_list[sample_index]:
                                 print("WARNING: no genotype for sample %s for variant %s!!! Skipping..." % (sample_id, str(variant)))
                                 continue
@@ -911,7 +912,6 @@ class CollectionVCF(Collection):
                                  count_dict[sample_id][scaffold_id][i] += 1
 
                 else:
-
                     for i in range(max(step_size_number - steps_in_window + 1, 0),
                                    step_size_number + 1 if step_size_number < number_of_windows else number_of_windows):
                         if expression:
