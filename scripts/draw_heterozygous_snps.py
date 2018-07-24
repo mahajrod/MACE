@@ -25,8 +25,8 @@ parser.add_argument("-e", "--output_formats", action="store", dest="output_forma
                     help="Comma-separated list of formats (supported by matlotlib) of "
                          "output figure.Default: svg,png")
 
-parser.add_argument("-l", "--suptitle", action="store", dest="suptitle",
-                    help="Suptitle of figure. Default: None")
+parser.add_argument("-l", "--suptitle", action="store", dest="suptitle", default="",
+                    help="Suptitle of figure. Default: ''")
 
 
 parser.add_argument("-g", "--max_gaps_and_masked_per_window_fraction", action="store",
@@ -43,6 +43,11 @@ parser.add_argument("-r", "--reference_genome", action="store", dest="reference"
 parser.add_argument("-m", "--masked_regions", action="store", dest="masked_regions",
                     type=lambda s: s.split(","),
                     help="Comma-separated list of GFF files with masked regions")
+parser.add_argument("-n", "--normalize", action="store_true", dest="normalize",
+                    help="Normalize counts by effective window size, i.e. "
+                         "divide counts by (window_size - gaps - masking. Default: False)")
+parser.add_argument("-u", "--per_sample_plot", action="store_true", dest="per_sample_plot",
+                    help="Separated plot per sample. Default: False")
 
 parser.add_argument("-w", "--window_size", action="store", dest="window_size", default=100000, type=int,
                     help="Size of the windows Default: 100000")
@@ -84,10 +89,12 @@ variants.draw_heterozygous_snps_histogram(args.window_size,
                                           gaps_and_masked_positions_max_fraction=args.max_gaps_and_masked_per_window_fraction,
                                           masking_gff=args.masked_regions,
                                           parsing_mode=args.parsing_mode,
-                                          per_sample_output=False,
+                                          per_sample_output=args.per_sample_plot,
                                           plot_type="concatenated",
                                           xlabel="Position in genome",
                                           ylabel="Number of SNPs",
                                           title="SNP counts in windows",
                                           suptitle=args.suptitle,
-                                          extensions=args.output_formats)
+                                          extensions=args.output_formats,
+                                          normalize=args.normalize,
+                                          masked_or_gaped_region_mark=-10)
