@@ -435,6 +435,7 @@ class CollectionVCF(Collection):
                 elif metadata["INFO"][entry[0]]["Type"] == "Integer":
                     info_dict[entry[0]] = list(map(lambda x: int(x), entry[1].split(",")))
                 elif metadata["INFO"][entry[0]]["Type"] == "Float":
+                    print entry
                     info_dict[entry[0]] = list(map(lambda x: float(x), entry[1].split(",")))
                 else:
                     info_dict[entry[0]] = entry[1].split(",")
