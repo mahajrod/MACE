@@ -837,20 +837,30 @@ class CollectionVCF(Collection):
                 short_scaffolds_ids.append(scaffold_id)
                 if ignore_scaffolds_shorter_than_window:
                     continue
-
+            """
             if per_sample_output:
                 scaffold_windows_list = SynDict()
                 for sample in self.samples:
                     scaffold_windows_list[sample] = []
             else:
                 scaffold_windows_list = []
+            """
 
+            if per_sample_output:
+                scaffold_windows_list = SynDict()
+                for sample in self.samples:
+                    scaffold_windows_list[sample] = np.zeros(number_of_windows, dtype=np.int64)
+            else:
+                scaffold_windows_list = np.zeros(number_of_windows, dtype=np.int64)
+
+            """
             for i in range(0, number_of_windows):
                 if per_sample_output:
                     for sample in self.samples:
                         scaffold_windows_list[sample].append(0)
                 else:
                     scaffold_windows_list.append(0)
+            """
 
             if scaffold_id in scaffolds_absent_in_vcf:
                 if skip_empty_windows:
@@ -926,6 +936,100 @@ class CollectionVCF(Collection):
                                               output_prefix=output_prefix,
                                               skip_empty_windows=skip_empty_windows,
                                               expression=heterozygous_variant, per_sample_output=per_sample_output)
+
+    def draw_snps_histogram(self, window_size, window_step, output_prefix, reference_genome,
+                            gaps_and_masked_positions_max_fraction=0.4,
+                            expression=None, masking_gff=None, parsing_mode="parse", per_sample_output=False,
+                            plot_type="concatenated",
+                            xlabel="Position in genome",
+                            ylabel="Number of SNPs",
+                            title="SNP counts in windows",
+                            suptitle=None,
+                            extensions=["png", ]):
+
+        reference = ReferenceGenome(reference_genome,
+                                    masked_regions=None,
+                                    index_file="refgen.idx",
+                                    filetype="fasta",
+                                    mode=parsing_mode,
+                                    black_list=[],
+                                    masking_gff_list=masking_gff)
+
+        gaps_and_masked_region_window_counts = reference.count_gaped_and_masked_positions_in_windows(window_size,
+                                                                                               window_step,
+                                                                                               ignore_scaffolds_shorter_than_window=True,
+                                                                                               output_prefix=output_prefix,
+                                                                                               min_gap_len=1)
+
+        variant_window_counts = self.count_variants_in_windows(window_size,
+                                                               window_step,
+                                                               reference.region_length,
+                                                               ignore_scaffolds_shorter_than_window=True,
+                                                               output_prefix=output_prefix,
+                                                               skip_empty_windows=False,
+                                                               expression=expression,
+                                                               per_sample_output=per_sample_output)
+
+        if per_sample_output:
+            for sample in variant_window_counts:
+                for scaffold_id in variant_window_counts[sample]:
+                    for window_index in range(0, len(variant_window_counts[sample][scaffold_id])):
+                        if float(gaps_and_masked_region_window_counts[scaffold_id][window_index])/float(window_size) > gaps_and_masked_positions_max_fraction:
+                            variant_window_counts[sample][scaffold_id] = -variant_window_counts[scaffold_id]
+        else:
+            for scaffold_id in variant_window_counts:
+                for window_index in range(0, len(variant_window_counts[scaffold_id])):
+                    if float(gaps_and_masked_region_window_counts[scaffold_id][window_index])/float(window_size) > gaps_and_masked_positions_max_fraction:
+                        variant_window_counts[scaffold_id] = -1 #variant_window_counts[scaffold_id]
+
+        plt.figure()
+        if plot_type == "concatenated":
+
+            if per_sample_output:
+                data = OrderedDict()
+                for sample in variant_window_counts:
+                    data[sample] = OrderedDict
+            else:
+                data = []
+                for scaffold_id in reference_genome.region_sorted_by_length_list:
+                    if scaffold_id not in variant_window_counts:
+                        continue
+                    data += list(variant_window_counts[scaffold_id]) + [0]
+                    data = np.array(data)
+                bins = np.arange(len(data)) * window_step
+                plt.bar(bins, data)
+                plt.xlabel(xlabel)
+                plt.ylabel(ylabel)
+                plt.title(title)
+                plt.suptitle(suptitle)
+        for extension in extensions:
+            plt.savefig("%s.%s" % (output_prefix, extension))
+
+    @staticmethod
+    def heterozygous_variant(record):
+        return not record.is_homozygous()
+
+    def draw_heterozygous_snps_histogram(self, window_size, window_step, output_prefix, reference_genome,
+                                         gaps_and_masked_positions_max_fraction=0.4,
+                                         masking_gff=None, parsing_mode="parse", per_sample_output=False,
+                                         plot_type="concatenated",
+                                         xlabel="Position in genome",
+                                         ylabel="Number of SNPs",
+                                         title="SNP counts in windows",
+                                         suptitle=None,
+                                         extensions=["png", ]):
+
+        self.draw_snps_histogram(window_size, window_step, output_prefix, reference_genome,
+                                 gaps_and_masked_positions_max_fraction=gaps_and_masked_positions_max_fraction,
+                                 expression=self.heterozygous_variant(), masking_gff=masking_gff,
+                                 parsing_mode=parsing_mode, per_sample_output=per_sample_output,
+                                 plot_type=plot_type,
+                                 xlabel=xlabel,
+                                 ylabel=ylabel,
+                                 title=title,
+                                 suptitle=suptitle,
+                                 extensions=extensions)
+
 
     def draw_variant_window_densities(self, reference_fasta, output_prefix, window_size, window_step,
                                       masking=None, parsing_mode="index_db", min_gap_length=10,
@@ -1486,7 +1590,7 @@ class ReferenceGenome(object):
     ReferenceGenome class
     """
     def __init__(self, ref_gen_file, masked_regions=None, index_file="refgen.idx", filetype="fasta", mode="index_db",
-                 black_list=(), masking_gff_list=None, feature_mask_list=None):
+                 black_list=(), masking_gff_list=None, feature_mask_list=None, sort_scaffolds_by_length=True):
         """
 
         :param ref_gen_file: file with sequences of genome.
@@ -1513,10 +1617,25 @@ class ReferenceGenome(object):
         self.length = 0
         self.feature_dict = OrderedDict()
         self.region_length = OrderedDict()
+
         for region in self.reference_genome:
             length = len(self.reference_genome[region])
             self.length += length
             self.region_length[region] = length
+
+        self.length_to_region_dict = OrderedDict()
+        for region in self.region_length:
+            if self.region_length[region] in self.length_to_region_dict:
+                self.length_to_region_dict[self.region_length[region]].append(region)
+            else:
+                self.length_to_region_dict[self.region_length[region]] = [region]
+
+        lengths_list = sorted(self.length_to_region_dict.values(), reverse=True)
+
+        self.region_sorted_by_length_list = []
+
+        for length in lengths_list:
+            self.region_sorted_by_length_list += self.length_to_region_dict[length]
 
         self.region_index = self.rec_index()
         self.gaps_dict = OrderedDict()
@@ -1634,11 +1753,15 @@ class ReferenceGenome(object):
         return self.length
 
     def rec_index(self):
+        """
+        Region order is based on descending region length
+        :return:
+        """
         index_dict = OrderedDict({})
-        index_dict[self.region_list[0]] = [0, self.region_length[self.region_list[0]] - 1]
+        index_dict[self.region_sorted_by_length_list[0]] = [0, self.region_length[self.region_sorted_by_length_list[0]] - 1]
         for index in range(1, self.number_of_regions()):
-            index_dict[self.region_list[index]] = [index_dict[self.region_list[index-1]][1] + 1,
-                                            index_dict[self.region_list[index-1]][1] + self.region_length[self.region_list[index]]]
+            index_dict[self.region_sorted_by_length_list[index]] = [index_dict[self.region_sorted_by_length_list[index-1]][1] + 1,
+                                            index_dict[self.region_sorted_by_length_list[index-1]][1] + self.region_length[self.region_sorted_by_length_list[index]]]
         return index_dict
 
     def get_position(self, coordinate):
@@ -1823,7 +1946,7 @@ class ReferenceGenome(object):
                 if ignore_scaffolds_shorter_than_window:
                     continue
 
-            scaffold_windows_list = [0 for i in range(0, number_of_windows)]
+            scaffold_windows_list = np.zeros(number_of_windows, dtype=np.int64) #[0 for i in range(0, number_of_windows)]
 
             uncounted_tail_variants_number_dict[scaffold_id] = 0
 
