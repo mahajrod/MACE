@@ -41,7 +41,8 @@ parser.add_argument("-r", "--reference_genome", action="store", dest="reference"
                     help="Fasta file with reference genome, required to draw gaps and chromosomes")
 
 parser.add_argument("-m", "--masked_regions", action="store", dest="masked_regions",
-                    help="Gff file with masked regions")
+                    type=lambda s: s.split(","),
+                    help="Comma-separated list of GFF files with masked regions")
 
 parser.add_argument("-w", "--window_size", action="store", dest="window_size", default=100000, type=int,
                     help="Size of the windows Default: 100000")
