@@ -906,9 +906,9 @@ class CollectionVCF(Collection):
                                 if (variant.samples_list[sample_index]["GT"][0] == "0/0") or (variant.samples_list[sample_index]["GT"][0] == "./."):
                                     continue
                             if expression:
-                                     count_dict[sample][scaffold_id][i] += 1 if expression(variant) else 0
+                                     count_dict[sample_id][scaffold_id][i] += 1 if expression(variant) else 0
                             else:
-                                 count_dict[sample][scaffold_id][i] += 1
+                                 count_dict[sample_id][scaffold_id][i] += 1
 
                 else:
 
