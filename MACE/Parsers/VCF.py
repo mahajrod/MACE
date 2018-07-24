@@ -999,7 +999,8 @@ class CollectionVCF(Collection):
                 bins = np.arange(len(data)) * window_step
                 print data
                 print bins
-                plt.bar(bins, data, color="blue", edgecolor="blue", )
+                plt.bar(bins, data, color="blue", edgecolor="blue", linewidth=1)
+                plt.xlim(xmax=6150000)
                 plt.xlabel(xlabel)
                 plt.ylabel(ylabel)
                 plt.title(title)
