@@ -1629,13 +1629,13 @@ class ReferenceGenome(object):
                 self.length_to_region_dict[self.region_length[region]].append(region)
             else:
                 self.length_to_region_dict[self.region_length[region]] = [region]
-
-        lengths_list = sorted(self.length_to_region_dict.values(), reverse=True)
+        print self.length_to_region_dict
+        lengths_list = sorted(list(self.length_to_region_dict.values()), reverse=True)
 
         self.region_sorted_by_length_list = []
-
+        print self.length_to_region_dict
         for length in lengths_list:
-            type(self.length_to_region_dict)
+            print self.length_to_region_dict
             type(self.region_sorted_by_length_list)
             type(self.length_to_region_dict[length])
             self.region_sorted_by_length_list += self.length_to_region_dict[length]
