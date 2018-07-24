@@ -435,7 +435,7 @@ class CollectionVCF(Collection):
                 elif metadata["INFO"][entry[0]]["Type"] == "Integer":
                     info_dict[entry[0]] = list(map(lambda x: int(x), entry[1].split(",")))
                 elif metadata["INFO"][entry[0]]["Type"] == "Float":
-                    print entry
+                    #print entry
                     info_dict[entry[0]] = list(map(lambda x: float(x), entry[1].split(",")))
                 else:
                     info_dict[entry[0]] = entry[1].split(",")
@@ -984,6 +984,8 @@ class CollectionVCF(Collection):
             if per_sample_output:
                 for sample in variant_window_counts:
                     for scaffold_id in variant_window_counts[sample]:
+                        print sample
+                        print scaffold_id
                         variant_window_counts[sample][scaffold_id] /= gaps_and_masked_region_window_counts[scaffold_id]
             else:
                 for scaffold_id in variant_window_counts:
