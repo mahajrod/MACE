@@ -901,7 +901,7 @@ class CollectionVCF(Collection):
                         #print step_size_number, steps_in_window
                         for sample_index in range(0, len(self.samples)):
                             sample_id = self.samples[sample_index]
-                            print sample_id, scaffold_id
+                            #print sample_id, scaffold_id
                             if "GT" not in variant.samples_list[sample_index]:
                                 print("WARNING: no genotype for sample %s for variant %s!!! Skipping..." % (sample_id, str(variant)))
                                 continue
