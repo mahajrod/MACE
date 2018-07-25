@@ -97,4 +97,5 @@ variants.draw_heterozygous_snps_histogram(args.window_size,
                                           suptitle=args.suptitle,
                                           extensions=args.output_formats,
                                           normalize=args.normalize,
-                                          masked_or_gaped_region_mark=-10)
+                                          masked_or_gaped_region_mark=-10,
+                                          multiplier=1000)
