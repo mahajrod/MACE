@@ -959,7 +959,8 @@ class CollectionVCF(Collection):
                             normalize=False,
                             masked_or_gaped_region_mark=-10,
                             figure_height_per_plot=3,
-                            figure_width=6):
+                            figure_width=6,
+                            multiplier=1000):
 
         reference = ReferenceGenome(reference_genome,
                                     masked_regions=None,
@@ -989,10 +990,10 @@ class CollectionVCF(Collection):
                     for scaffold_id in variant_window_counts[sample]:
                         #print sample
                         #print scaffold_id
-                        variant_window_counts[sample][scaffold_id] /= gaps_and_masked_region_window_counts[scaffold_id]
+                        variant_window_counts[sample][scaffold_id] = (variant_window_counts[sample][scaffold_id] / gaps_and_masked_region_window_counts[scaffold_id]) * multiplier
             else:
                 for scaffold_id in variant_window_counts:
-                        variant_window_counts[scaffold_id] /= gaps_and_masked_region_window_counts[scaffold_id]
+                    variant_window_counts[scaffold_id] = (variant_window_counts[scaffold_id] / gaps_and_masked_region_window_counts[scaffold_id]) * variant_window_counts[sample][scaffold_id]
 
         if per_sample_output:
             for sample in variant_window_counts:
@@ -1070,14 +1071,20 @@ class CollectionVCF(Collection):
                                          masking_gff=None, parsing_mode="parse", per_sample_output=False,
                                          plot_type="concatenated",
                                          xlabel="Position in genome",
-                                         ylabel="Number of SNPs",
+                                         ylabel="SNPs",
                                          title="SNP counts in windows",
                                          suptitle="",
                                          extensions=["png", ],
                                          normalize=False,
                                          masked_or_gaped_region_mark=-10,
                                          figure_height_per_plot=3,
-                                         figure_width=6):
+                                         figure_width=6,
+                                         multiplier=1000):
+        kb = multiplier / 1000
+        mb = multiplier / 1000000
+
+        full_ylabel = "%s per %i %s" % (ylabel, mb if mb > 0 else kb, "Mbp" if mb > 0 else "Kbp")
+
 
         self.draw_snps_histogram(window_size, window_step, output_prefix, reference_genome,
                                  gaps_and_masked_positions_max_fraction=gaps_and_masked_positions_max_fraction,
@@ -1085,14 +1092,15 @@ class CollectionVCF(Collection):
                                  parsing_mode=parsing_mode, per_sample_output=per_sample_output,
                                  plot_type=plot_type,
                                  xlabel=xlabel,
-                                 ylabel=ylabel,
+                                 ylabel=full_ylabel,
                                  title=title,
                                  suptitle=suptitle,
                                  extensions=extensions,
                                  normalize=normalize,
                                  masked_or_gaped_region_mark=masked_or_gaped_region_mark,
                                  figure_height_per_plot=figure_height_per_plot,
-                                 figure_width=figure_width)
+                                 figure_width=figure_width,
+                                 multiplier=multiplier)
 
     def draw_variant_window_densities(self, reference_fasta, output_prefix, window_size, window_step,
                                       masking=None, parsing_mode="index_db", min_gap_length=10,
