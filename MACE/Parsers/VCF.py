@@ -873,9 +873,9 @@ class CollectionVCF(Collection):
                     continue
             if per_sample_output:
                 for sample in self.samples:
-                    print scaffold_id
+                    #print scaffold_id
                     count_dict[sample][scaffold_id] = np.zeros(number_of_windows, dtype=np.int64)
-                    print count_dict[sample][scaffold_id]
+                    #print count_dict[sample][scaffold_id]
             else:
                 count_dict[scaffold_id] = np.zeros(number_of_windows, dtype=np.int64)
                 continue
@@ -883,7 +883,7 @@ class CollectionVCF(Collection):
             uncounted_tail_variants_number_dict[scaffold_id] = 0
 
             variant_index = 0
-            print list(count_dict.keys())
+            #print list(count_dict.keys())
             for variant in self.records[scaffold_id]:
                 step_size_number = ((variant.pos - 1)/window_step)
 
@@ -898,7 +898,7 @@ class CollectionVCF(Collection):
 
                     for i in range(max(step_size_number - steps_in_window + 1, 0),
                                     step_size_number + 1 if step_size_number < number_of_windows else number_of_windows):
-                        print step_size_number, steps_in_window
+                        #print step_size_number, steps_in_window
                         for sample_index in range(0, len(self.samples)):
                             sample_id = self.samples[sample_index]
                             print sample_id, scaffold_id
@@ -998,15 +998,21 @@ class CollectionVCF(Collection):
             for sample in variant_window_counts:
                 for scaffold_id in variant_window_counts[sample]:
                     for window_index in range(0, len(variant_window_counts[sample][scaffold_id])):
-                        if float(gaps_and_masked_region_window_counts[scaffold_id][window_index])/float(window_size) > gaps_and_masked_positions_max_fraction:
-                            variant_window_counts[sample][scaffold_id][window_index] = -variant_window_counts[scaffold_id]
+                        if np.isnan(variant_window_counts[sample][scaffold_id][window_index]):
+                            variant_window_counts[sample][scaffold_id][window_index] = masked_or_gaped_region_mark
+                        else:
+                            if float(gaps_and_masked_region_window_counts[scaffold_id][window_index])/float(window_size) > gaps_and_masked_positions_max_fraction:
+                                #print variant_window_counts.keys()
+                                variant_window_counts[sample][scaffold_id][window_index] = masked_or_gaped_region_mark
         else:
             for scaffold_id in variant_window_counts:
                 for window_index in range(0, len(variant_window_counts[scaffold_id])):
-                    if float(gaps_and_masked_region_window_counts[scaffold_id][window_index])/float(window_size) > gaps_and_masked_positions_max_fraction:
-                        variant_window_counts[scaffold_id][window_index] = masked_or_gaped_region_mark #variant_window_counts[scaffold_id]
                     if np.isnan(variant_window_counts[scaffold_id][window_index]):
                         variant_window_counts[scaffold_id][window_index] = masked_or_gaped_region_mark
+                    else:
+                        if float(gaps_and_masked_region_window_counts[scaffold_id][window_index])/float(window_size) > gaps_and_masked_positions_max_fraction:
+                            variant_window_counts[scaffold_id][window_index] = masked_or_gaped_region_mark #variant_window_counts[scaffold_id]
+
 
         if plot_type == "concatenated":
 
