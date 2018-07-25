@@ -987,8 +987,8 @@ class CollectionVCF(Collection):
             if per_sample_output:
                 for sample in variant_window_counts:
                     for scaffold_id in variant_window_counts[sample]:
-                        print sample
-                        print scaffold_id
+                        #print sample
+                        #print scaffold_id
                         variant_window_counts[sample][scaffold_id] /= gaps_and_masked_region_window_counts[scaffold_id]
             else:
                 for scaffold_id in variant_window_counts:
@@ -1013,9 +1013,7 @@ class CollectionVCF(Collection):
                         if float(gaps_and_masked_region_window_counts[scaffold_id][window_index])/float(window_size) > gaps_and_masked_positions_max_fraction:
                             variant_window_counts[scaffold_id][window_index] = masked_or_gaped_region_mark #variant_window_counts[scaffold_id]
 
-
         if plot_type == "concatenated":
-
             if per_sample_output:
                 data = OrderedDict()
                 for sample in variant_window_counts:
@@ -1023,7 +1021,7 @@ class CollectionVCF(Collection):
                     for scaffold_id in reference.region_sorted_by_length_list:
                         if scaffold_id not in variant_window_counts:
                             continue
-                    data[sample] += list(variant_window_counts[scaffold_id]) + [0, ]
+                    data[sample] += list(variant_window_counts[sample][scaffold_id]) + [0, ]
                 for sample in variant_window_counts:
                     data[sample] = np.array(data[sample])
                     bins = np.arange(len(data[sample]))
