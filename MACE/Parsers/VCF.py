@@ -1027,6 +1027,7 @@ class CollectionVCF(Collection):
                     data[sample] = np.array(data[sample])
                     bins = np.arange(len(data[sample]))
 
+
                 sample_list = list(variant_window_counts.keys())
                 sample_number = len(sample_list)
 
