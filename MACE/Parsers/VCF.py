@@ -1019,7 +1019,7 @@ class CollectionVCF(Collection):
                 data = OrderedDict()
                 for sample in variant_window_counts:
                     data[sample] = []
-                    for scaffold_id in reference.region_sorted_by_length_list:
+                    for scaffold_id in gaps_and_masked_region_window_counts:
                         if scaffold_id not in variant_window_counts:
                             continue
                     data[sample] += list(variant_window_counts[sample][scaffold_id]) + [0, ]
@@ -1042,7 +1042,7 @@ class CollectionVCF(Collection):
             else:
                 plt.figure(figsize=(figure_width, figure_height_per_plot))
                 data = []
-                for scaffold_id in reference.region_sorted_by_length_list:
+                for scaffold_id in gaps_and_masked_region_window_counts:
                     if scaffold_id not in variant_window_counts:
                         continue
                     data += list(variant_window_counts[scaffold_id]) + [0, ]
