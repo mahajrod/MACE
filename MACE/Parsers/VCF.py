@@ -1085,7 +1085,6 @@ class CollectionVCF(Collection):
 
         full_ylabel = "%s per %i %s" % (ylabel, mb if mb > 0 else kb, "Mbp" if mb > 0 else "Kbp")
 
-
         self.draw_snps_histogram(window_size, window_step, output_prefix, reference_genome,
                                  gaps_and_masked_positions_max_fraction=gaps_and_masked_positions_max_fraction,
                                  expression=self.heterozygous_variant, masking_gff=masking_gff,
