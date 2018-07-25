@@ -990,7 +990,9 @@ class CollectionVCF(Collection):
                     for scaffold_id in variant_window_counts[sample]:
                         #print sample
                         #print scaffold_id
+                        print variant_window_counts[sample][scaffold_id]
                         variant_window_counts[sample][scaffold_id] = (variant_window_counts[sample][scaffold_id] / gaps_and_masked_region_window_counts[scaffold_id]) * multiplier
+                        print variant_window_counts[sample][scaffold_id]
             else:
                 for scaffold_id in variant_window_counts:
                     variant_window_counts[scaffold_id] = (variant_window_counts[scaffold_id] / gaps_and_masked_region_window_counts[scaffold_id]) * variant_window_counts[sample][scaffold_id]
