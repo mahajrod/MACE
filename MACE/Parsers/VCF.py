@@ -1020,12 +1020,12 @@ class CollectionVCF(Collection):
                         len(data[sample])
                         data[sample] += list(variant_window_counts[sample][scaffold_id]) + [0, ]
                         normalized_data[sample] += list(normalized_variant_window_counts[sample][scaffold_id]) + [0, ]
-                print data
+                #print data
                 for sample in variant_window_counts:
                     data[sample] = np.array(data[sample])
                     normalized_data[sample] = np.array(normalized_data[sample])
                     bins = np.arange(len(data[sample]))
-                    print bins
+                    #print bins
                 #print data[sample]
 
                 sample_list = list(variant_window_counts.keys())
@@ -1042,13 +1042,13 @@ class CollectionVCF(Collection):
                     #if subplot_index % 2 == 0:
                         if column_index == 0:
                             subplot_list[row_index][column_index].plot(bins, data[sample_list[row_index]])
-                            subplot_list[row_index][column_index].ylabel(ylabel)
+                            plt.ylabel(ylabel)
                         else:
                             subplot_list[row_index][column_index].plot(bins, normalized_data[sample_list[row_index]])
-                            subplot_list[row_index][column_index].ylabel(normalized_ylabel)
-                        subplot_list[row_index][column_index].xlim(xmin=0)
-                        subplot_list[row_index][column_index].xlabel(xlabel)
-                        subplot_list[row_index][column_index].title(self.samples[row_index])
+                            plt.ylabel(normalized_ylabel)
+                        plt.xlim(xmin=0)
+                        plt.xlabel(xlabel)
+                        plt.title(self.samples[row_index])
                 plt.suptitle(suptitle)
             else:
                 figure, subplot_list = plt.subplots(nrows=1, ncols=2,
@@ -1067,16 +1067,17 @@ class CollectionVCF(Collection):
                 #print data
                 #print max(data)
                 #print bins
+                for column_index in 0, 1:
+                    if column_index == 0:
+                        subplot_list[0][column_index].plot(bins, data)
+                        plt.ylabel(ylabel)
+                    else:
+                        subplot_list[0][column_index].plot(bins, normalized_data)
+                        plt.ylabel(normalized_ylabel)
 
-                subplot_list[0][0].plot(bins, data)
-                subplot_list[0][0].ylabel(ylabel)
-                subplot_list[0][1].plot(bins, normalized_data)
-                subplot_list[0][1].ylabel(normalized_ylabel)
-                for subplot_index in 0, 1:
-                    subplot_list[0][subplot_index].xlim(xmin=0)
-                    subplot_list[0][subplot_index].xlabel(xlabel)
-
-                    subplot_list[0][subplot_index].title(title)
+                    plt.xlim(xmin=0)
+                    plt.xlabel(xlabel)
+                    plt.title(title)
                 plt.suptitle(suptitle)
 
         for extension in extensions:
