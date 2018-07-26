@@ -882,11 +882,12 @@ class CollectionVCF(Collection):
                                 if (variant.samples_list[sample_index]["GT"][0] == "0/0") or (variant.samples_list[sample_index]["GT"][0] == "./."):
                                     continue
                             if expression:
+
                                 count_dict[sample_id][scaffold_id][i] += 1 if expression(variant) else 0
+                                if expression(variant):
+                                    print count_dict[sample_id][scaffold_id][i]
                             else:
                                  count_dict[sample_id][scaffold_id][i] += 1
-
-
 
                 else:
                     for i in range(max(step_size_number - steps_in_window + 1, 0),
@@ -899,7 +900,7 @@ class CollectionVCF(Collection):
                 variant_index += 1
         #print count_dict[self.samples[0]][list(count_dict[self.samples[0]].keys())[5]]
         print "BBBBBBBBBBBBBB"
-        print count_dict[self.samples[0]]
+        #print count_dict[self.samples[0]]
         if output_prefix:
             scaffolds_absent_in_reference.write("%s.scaffolds_absent_in_reference.ids" % output_prefix)
             scaffolds_absent_in_vcf.write("%s.scaffolds_absent_in_vcf.ids" % output_prefix)
