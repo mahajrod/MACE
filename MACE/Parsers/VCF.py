@@ -860,7 +860,6 @@ class CollectionVCF(Collection):
                     #print count_dict[sample][scaffold_id]
             else:
                 count_dict[scaffold_id] = np.zeros(number_of_windows, dtype=np.int64)
-                continue
 
             uncounted_tail_variants_number_dict[scaffold_id] = 0
 
@@ -1013,6 +1012,7 @@ class CollectionVCF(Collection):
                             continue
                     data[sample] += list(variant_window_counts[sample][scaffold_id]) + [0, ]
 
+                print data
                 for sample in variant_window_counts:
                     data[sample] = np.array(data[sample])
                     bins = np.arange(len(data[sample]))
