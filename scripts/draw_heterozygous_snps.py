@@ -43,9 +43,9 @@ parser.add_argument("-r", "--reference_genome", action="store", dest="reference"
 parser.add_argument("-m", "--masked_regions", action="store", dest="masked_regions",
                     type=lambda s: s.split(","),
                     help="Comma-separated list of GFF files with masked regions")
-parser.add_argument("-n", "--normalize", action="store_true", dest="normalize",
-                    help="Normalize counts by effective window size, i.e. "
-                         "divide counts by (window_size - gaps - masking. Default: False)")
+#parser.add_argument("-n", "--normalize", action="store_true", dest="normalize",
+#                    help="Normalize counts by effective window size, i.e. "
+#                         "divide counts by (window_size - gaps - masking. Default: False)")
 parser.add_argument("-u", "--per_sample_plot", action="store_true", dest="per_sample_plot",
                     help="Separated plot per sample. Default: False")
 
@@ -96,6 +96,5 @@ variants.draw_heterozygous_snps_histogram(args.window_size,
                                           title="SNP counts in windows",
                                           suptitle=args.suptitle,
                                           extensions=args.output_formats,
-                                          normalize=args.normalize,
                                           masked_or_gaped_region_mark=-10,
                                           multiplier=1000)
