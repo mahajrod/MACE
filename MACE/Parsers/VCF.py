@@ -942,9 +942,9 @@ class CollectionVCF(Collection):
                             title="SNP counts in windows",
                             suptitle="",
                             extensions=["png", ],
-                            masked_or_gaped_region_mark=-10,
+                            masked_or_gaped_region_mark=0,
                             figure_height_per_plot=3,
-                            figure_width=6,
+                            figure_width=12,
                             multiplier=1000):
 
         kb = multiplier / 1000
@@ -1042,13 +1042,13 @@ class CollectionVCF(Collection):
                     #if subplot_index % 2 == 0:
                         if column_index == 0:
                             subplot_list[row_index][column_index].plot(bins, data[sample_list[row_index]])
-                            plt.ylabel(ylabel)
+                            subplot_list[row_index][column_index].set_ylabel(ylabel)
                         else:
                             subplot_list[row_index][column_index].plot(bins, normalized_data[sample_list[row_index]])
-                            plt.ylabel(normalized_ylabel)
-                        plt.xlim(xmin=0)
-                        plt.xlabel(xlabel)
-                        plt.title(self.samples[row_index])
+                            subplot_list[row_index][column_index].set_ylabel(normalized_ylabel)
+                        subplot_list[row_index][column_index].set_xlim(xmin=0)
+                        subplot_list[row_index][column_index].set_xlabel(xlabel)
+                        subplot_list[row_index][column_index].set_title(self.samples[row_index])
                 plt.suptitle(suptitle)
             else:
                 figure, subplot_list = plt.subplots(nrows=1, ncols=2,
@@ -1070,16 +1070,16 @@ class CollectionVCF(Collection):
                 for column_index in 0, 1:
                     if column_index == 0:
                         subplot_list[0][column_index].plot(bins, data)
-                        plt.ylabel(ylabel)
+                        subplot_list[0][column_index].set_ylabel(ylabel)
                     else:
                         subplot_list[0][column_index].plot(bins, normalized_data)
-                        plt.ylabel(normalized_ylabel)
+                        subplot_list[0][column_index].set_ylabel(normalized_ylabel)
 
-                    plt.xlim(xmin=0)
-                    plt.xlabel(xlabel)
-                    plt.title(title)
+                    subplot_list[0][column_index].set_xlim(xmin=0)
+                    subplot_list[0][column_index].set_xlabel(xlabel)
+                    subplot_list[0][column_index].set_title(title)
                 plt.suptitle(suptitle)
-
+        plt.tight_layout()
         for extension in extensions:
             plt.savefig("%s.%s" % (output_prefix, extension))
 
@@ -1100,9 +1100,9 @@ class CollectionVCF(Collection):
                                          title="SNP counts in windows",
                                          suptitle="",
                                          extensions=["png", ],
-                                         masked_or_gaped_region_mark=-10,
+                                         masked_or_gaped_region_mark=0,
                                          figure_height_per_plot=3,
-                                         figure_width=6,
+                                         figure_width=12,
                                          multiplier=1000):
 
         self.draw_snps_histogram(window_size, window_step, output_prefix, reference_genome,
