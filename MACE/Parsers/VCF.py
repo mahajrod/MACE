@@ -1012,8 +1012,8 @@ class CollectionVCF(Collection):
                     for scaffold_id in reference.region_length:
                         if scaffold_id not in variant_window_counts[sample]:
                             continue
-                    len(data[sample])
-                    data[sample] += list(variant_window_counts[sample][scaffold_id]) + [0, ]
+                        len(data[sample])
+                        data[sample] += list(variant_window_counts[sample][scaffold_id]) + [0, ]
 
                 print data
                 for sample in variant_window_counts:
