@@ -942,11 +942,15 @@ class CollectionVCF(Collection):
                             title="SNP counts in windows",
                             suptitle="",
                             extensions=["png", ],
-                            normalize=False,
                             masked_or_gaped_region_mark=-10,
                             figure_height_per_plot=3,
                             figure_width=6,
                             multiplier=1000):
+
+        kb = multiplier / 1000
+        mb = multiplier / 1000000
+
+        normalized_ylabel = "%s per %i %s" % (ylabel, mb if mb >= 1 else kb if kb >=1 else multiplier, "Mbp" if mb >= 1 else "Kbp" if kb >= 1 else "bp")
 
         reference = ReferenceGenome(reference_genome,
                                     masked_regions=None,
@@ -971,20 +975,19 @@ class CollectionVCF(Collection):
                                                                expression=expression,
                                                                per_sample_output=per_sample_output)
 
-        if normalize:
-            normalized_variant_window_counts = OrderedDict()
-            if per_sample_output:
-                for sample in variant_window_counts:
-                    normalized_variant_window_counts[sample] = OrderedDict()
-                    for scaffold_id in variant_window_counts[sample]:
+        normalized_variant_window_counts = OrderedDict()
+        if per_sample_output:
+            for sample in variant_window_counts:
+                normalized_variant_window_counts[sample] = OrderedDict()
+                for scaffold_id in variant_window_counts[sample]:
                         #print sample
                         #print scaffold_id
                         #print variant_window_counts[sample][scaffold_id]
-                        normalized_variant_window_counts[sample][scaffold_id] = np.divide(variant_window_counts[sample][scaffold_id].astype(float), window_step - gaps_and_masked_region_window_counts[scaffold_id] + 1) * multiplier
+                    normalized_variant_window_counts[sample][scaffold_id] = np.divide(variant_window_counts[sample][scaffold_id].astype(float), window_step - gaps_and_masked_region_window_counts[scaffold_id] + 1) * multiplier
                         #print variant_window_counts[sample][scaffold_id]
-            else:
-                for scaffold_id in variant_window_counts:
-                    normalized_variant_window_counts[scaffold_id] = np.divide(variant_window_counts[scaffold_id].astype(float), window_step - gaps_and_masked_region_window_counts[scaffold_id] + 1) * multiplier
+        else:
+            for scaffold_id in variant_window_counts:
+                normalized_variant_window_counts[scaffold_id] = np.divide(variant_window_counts[scaffold_id].astype(float), window_step - gaps_and_masked_region_window_counts[scaffold_id] + 1) * multiplier
 
         if per_sample_output:
             for sample in variant_window_counts:
@@ -1007,17 +1010,20 @@ class CollectionVCF(Collection):
         if plot_type == "concatenated":
             if per_sample_output:
                 data = OrderedDict()
+                normalized_data = OrderedDict()
                 for sample in variant_window_counts:
                     data[sample] = []
+                    normalized_data[sample] = []
                     for scaffold_id in reference.region_length:
                         if scaffold_id not in variant_window_counts[sample]:
                             continue
                         len(data[sample])
                         data[sample] += list(variant_window_counts[sample][scaffold_id]) + [0, ]
-
+                        normalized_data += list(normalized_data[sample][scaffold_id]) + [0, ]
                 print data
                 for sample in variant_window_counts:
                     data[sample] = np.array(data[sample])
+                    normalized_data[sample] = np.array(normalized_data[sample])
                     bins = np.arange(len(data[sample]))
                     print bins
                 #print data[sample]
@@ -1025,36 +1031,44 @@ class CollectionVCF(Collection):
                 sample_list = list(variant_window_counts.keys())
                 sample_number = len(sample_list)
 
-                figure, subplot_list = plt.subplots(sample_number, sharex=True, sharey=True, figsize=(figure_width, figure_height_per_plot * sample_number))
+                figure, subplot_list = plt.subplots(nrows=sample_number, ncols=2, sharex=True, sharey=False, figsize=(figure_width, figure_height_per_plot * sample_number))
 
-                if sample_number == 1:
-                    subplot_list = [subplot_list]
-
-                for subplot_index in range(0, sample_number):
-                    subplot_list[subplot_index].plot(bins, data[sample_list[subplot_index]])
-                    plt.xlim(xmin=0)
-                    plt.xlabel(xlabel)
-                    plt.ylabel(ylabel)
-                    plt.title(sample_number)
+                for subplot_index in range(0, 2 * sample_number):
+                    if subplot_index % 2 == 0:
+                        subplot_list[subplot_index].plot(bins, data[sample_list[subplot_index]])
+                        subplot_list[subplot_index].ylabel(ylabel)
+                    else:
+                        subplot_list[subplot_index].plot(bins, normalized_data[sample_list[subplot_index]])
+                        subplot_list[subplot_index].ylabel(normalized_ylabel)
+                    subplot_list[subplot_index].xlim(xmin=0)
+                    subplot_list[subplot_index].xlabel(xlabel)
+                    subplot_list[subplot_index].title(self.samples[subplot_index])
                 plt.suptitle(suptitle)
             else:
-                plt.figure(figsize=(figure_width, figure_height_per_plot))
+                figure, subplot_list = plt.subplots(nrows=1, ncols=2, sharex=True, sharey=False, figsize=(figure_width, figure_height_per_plot ))
                 data = []
+                normalized_data = []
                 for scaffold_id in reference.region_length:
                     if scaffold_id not in variant_window_counts:
                         continue
                     data += list(variant_window_counts[scaffold_id]) + [0, ]
+                    normalized_data += list(normalized_variant_window_counts[scaffold_id]) + [0, ]
                 data = np.array(data)
+                normalized_data = np.array(data)
                 bins = np.arange(len(data)) #* window_step
                 #print data
                 #print max(data)
                 #print bins
 
-                plt.plot(bins, data)
-                plt.xlim(xmin=0)
-                plt.xlabel(xlabel)
-                plt.ylabel(ylabel)
-                plt.title(title)
+                subplot_list[0].plot(bins, data)
+                subplot_list[0].ylabel(ylabel)
+                subplot_list[1].plot(bins, normalized_data)
+                subplot_list[1].ylabel(normalized_ylabel)
+                for subplot_index in 0, 1:
+                    subplot_list[subplot_index].xlim(xmin=0)
+                    subplot_list[subplot_index].xlabel(xlabel)
+
+                    subplot_list[subplot_index].title(title)
                 plt.suptitle(suptitle)
 
         for extension in extensions:
@@ -1077,15 +1091,10 @@ class CollectionVCF(Collection):
                                          title="SNP counts in windows",
                                          suptitle="",
                                          extensions=["png", ],
-                                         normalize=False,
                                          masked_or_gaped_region_mark=-10,
                                          figure_height_per_plot=3,
                                          figure_width=6,
                                          multiplier=1000):
-        kb = multiplier / 1000
-        mb = multiplier / 1000000
-
-        full_ylabel = "%s per %i %s" % (ylabel, mb if mb > 0 else kb, "Mbp" if mb > 0 else "Kbp")
 
         self.draw_snps_histogram(window_size, window_step, output_prefix, reference_genome,
                                  gaps_and_masked_positions_max_fraction=gaps_and_masked_positions_max_fraction,
@@ -1094,11 +1103,10 @@ class CollectionVCF(Collection):
                                  parsing_mode=parsing_mode, per_sample_output=per_sample_output,
                                  plot_type=plot_type,
                                  xlabel=xlabel,
-                                 ylabel=full_ylabel,
+                                 ylabel=ylabel,
                                  title=title,
                                  suptitle=suptitle,
                                  extensions=extensions,
-                                 normalize=normalize,
                                  masked_or_gaped_region_mark=masked_or_gaped_region_mark,
                                  figure_height_per_plot=figure_height_per_plot,
                                  figure_width=figure_width,
