@@ -892,8 +892,8 @@ class CollectionVCF(Collection):
                                     continue
                             if expression:
                                 count_dict[sample_id][scaffold_id][i] += 1 if expression(variant, sample_index) else 0
-                                if expression(variant, sample_index):
-                                    print count_dict[sample_id][scaffold_id][i]
+                                #if expression(variant, sample_index):
+                                    #print count_dict[sample_id][scaffold_id][i]
                             else:
                                  count_dict[sample_id][scaffold_id][i] += 1
 
@@ -908,7 +908,7 @@ class CollectionVCF(Collection):
                 variant_index += 1
         #print count_dict[self.samples[0]][list(count_dict[self.samples[0]].keys())[5]]
         print "BBBBBBBBBBBBBB"
-        #print count_dict[self.samples[0]]
+        print count_dict[self.samples[0]]
         if output_prefix:
             scaffolds_absent_in_reference.write("%s.scaffolds_absent_in_reference.ids" % output_prefix)
             scaffolds_absent_in_vcf.write("%s.scaffolds_absent_in_vcf.ids" % output_prefix)
@@ -1012,9 +1012,11 @@ class CollectionVCF(Collection):
                         if scaffold_id not in variant_window_counts[sample]:
                             continue
                     data[sample] += list(variant_window_counts[sample][scaffold_id]) + [0, ]
+
                 for sample in variant_window_counts:
                     data[sample] = np.array(data[sample])
                     bins = np.arange(len(data[sample]))
+                    print bins
                 #print data[sample]
 
                 sample_list = list(variant_window_counts.keys())
