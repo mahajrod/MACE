@@ -1019,7 +1019,7 @@ class CollectionVCF(Collection):
                             continue
                         len(data[sample])
                         data[sample] += list(variant_window_counts[sample][scaffold_id]) + [0, ]
-                        normalized_data += list(normalized_variant_window_counts[sample][scaffold_id]) + [0, ]
+                        normalized_data[sample] += list(normalized_variant_window_counts[sample][scaffold_id]) + [0, ]
                 print data
                 for sample in variant_window_counts:
                     data[sample] = np.array(data[sample])
