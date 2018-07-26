@@ -897,7 +897,7 @@ class CollectionVCF(Collection):
                             count_dict[scaffold_id][i] += 1
 
                 variant_index += 1
-        print count_dict[self.samples[0]][list(count_dict[self.samples[0]].keys())[5]]
+        #print count_dict[self.samples[0]][list(count_dict[self.samples[0]].keys())[5]]
         print "BBBBBBBBBBBBBB"
         if output_prefix:
             scaffolds_absent_in_reference.write("%s.scaffolds_absent_in_reference.ids" % output_prefix)
