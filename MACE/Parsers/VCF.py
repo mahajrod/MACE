@@ -969,9 +969,9 @@ class CollectionVCF(Collection):
                     for scaffold_id in variant_window_counts[sample]:
                         #print sample
                         #print scaffold_id
-                        print variant_window_counts[sample][scaffold_id]
+                        #print variant_window_counts[sample][scaffold_id]
                         variant_window_counts[sample][scaffold_id] = np.divide(variant_window_counts[sample][scaffold_id].astype(float), window_step - gaps_and_masked_region_window_counts[scaffold_id] + 1) * multiplier
-                        print variant_window_counts[sample][scaffold_id]
+                        #print variant_window_counts[sample][scaffold_id]
             else:
                 for scaffold_id in variant_window_counts:
                     variant_window_counts[scaffold_id] = np.divide(variant_window_counts[scaffold_id].astype(float), window_step - gaps_and_masked_region_window_counts[scaffold_id] + 1) * multiplier
