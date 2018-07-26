@@ -96,5 +96,5 @@ variants.draw_heterozygous_snps_histogram(args.window_size,
                                           title="SNP counts in windows",
                                           suptitle=args.suptitle,
                                           extensions=args.output_formats,
-                                          masked_or_gaped_region_mark=-10,
+                                          masked_or_gaped_region_mark=0,
                                           multiplier=1000)
