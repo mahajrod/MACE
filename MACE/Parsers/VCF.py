@@ -1032,17 +1032,23 @@ class CollectionVCF(Collection):
                 sample_number = len(sample_list)
 
                 figure, subplot_list = plt.subplots(nrows=sample_number, ncols=2, sharex=True, sharey=False, figsize=(figure_width, figure_height_per_plot * sample_number))
+                for row_index in range(0, sample_number):
+                    if row_index > 0:
+                        subplot_list[row_index][0].get_shared_x_axes().join(subplot_list[row_index][0], subplot_list[0][0])
+                        subplot_list[row_index][1].get_shared_x_axes().join(subplot_list[row_index][1], subplot_list[0][1])
+                    for column_index in 0, 1:
 
-                for subplot_index in range(0, 2 * sample_number):
-                    if subplot_index % 2 == 0:
-                        subplot_list[subplot_index].plot(bins, data[sample_list[subplot_index]])
-                        subplot_list[subplot_index].ylabel(ylabel)
-                    else:
-                        subplot_list[subplot_index].plot(bins, normalized_data[sample_list[subplot_index]])
-                        subplot_list[subplot_index].ylabel(normalized_ylabel)
-                    subplot_list[subplot_index].xlim(xmin=0)
-                    subplot_list[subplot_index].xlabel(xlabel)
-                    subplot_list[subplot_index].title(self.samples[subplot_index])
+                #for subplot_index in range(0, 2 * sample_number):
+                    #if subplot_index % 2 == 0:
+                        if column_index == 0:
+                            subplot_list[row_index][column_index].plot(bins, data[sample_list[subplot_index]])
+                            subplot_list[row_index][column_index].ylabel(ylabel)
+                        else:
+                            subplot_list[row_index][column_index].plot(bins, normalized_data[sample_list[subplot_index]])
+                            subplot_list[row_index][column_index].ylabel(normalized_ylabel)
+                        subplot_list[row_index][column_index].xlim(xmin=0)
+                        subplot_list[row_index][column_index].xlabel(xlabel)
+                        subplot_list[row_index][column_index].title(self.samples[row_index])
                 plt.suptitle(suptitle)
             else:
                 figure, subplot_list = plt.subplots(nrows=1, ncols=2, sharex=True, sharey=False, figsize=(figure_width, figure_height_per_plot ))
@@ -1060,15 +1066,15 @@ class CollectionVCF(Collection):
                 #print max(data)
                 #print bins
 
-                subplot_list[0].plot(bins, data)
-                subplot_list[0].ylabel(ylabel)
-                subplot_list[1].plot(bins, normalized_data)
-                subplot_list[1].ylabel(normalized_ylabel)
+                subplot_list[0][0].plot(bins, data)
+                subplot_list[0][0].ylabel(ylabel)
+                subplot_list[0][1].plot(bins, normalized_data)
+                subplot_list[0][1].ylabel(normalized_ylabel)
                 for subplot_index in 0, 1:
-                    subplot_list[subplot_index].xlim(xmin=0)
-                    subplot_list[subplot_index].xlabel(xlabel)
+                    subplot_list[0][subplot_index].xlim(xmin=0)
+                    subplot_list[0][subplot_index].xlabel(xlabel)
 
-                    subplot_list[subplot_index].title(title)
+                    subplot_list[0][subplot_index].title(title)
                 plt.suptitle(suptitle)
 
         for extension in extensions:
