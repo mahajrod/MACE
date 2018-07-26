@@ -899,6 +899,7 @@ class CollectionVCF(Collection):
                 variant_index += 1
         #print count_dict[self.samples[0]][list(count_dict[self.samples[0]].keys())[5]]
         print "BBBBBBBBBBBBBB"
+        print count_dict[self.samples[0]]
         if output_prefix:
             scaffolds_absent_in_reference.write("%s.scaffolds_absent_in_reference.ids" % output_prefix)
             scaffolds_absent_in_vcf.write("%s.scaffolds_absent_in_vcf.ids" % output_prefix)
@@ -1005,7 +1006,7 @@ class CollectionVCF(Collection):
                 for sample in variant_window_counts:
                     data[sample] = np.array(data[sample])
                     bins = np.arange(len(data[sample]))
-                print data[sample]
+                #print data[sample]
 
                 sample_list = list(variant_window_counts.keys())
                 sample_number = len(sample_list)
@@ -1031,9 +1032,9 @@ class CollectionVCF(Collection):
                     data += list(variant_window_counts[scaffold_id]) + [0, ]
                 data = np.array(data)
                 bins = np.arange(len(data)) #* window_step
-                print data
-                print max(data)
-                print bins
+                #print data
+                #print max(data)
+                #print bins
 
                 plt.plot(bins, data)
                 plt.xlim(xmin=0)
