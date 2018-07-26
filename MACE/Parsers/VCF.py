@@ -1041,17 +1041,19 @@ class CollectionVCF(Collection):
                 #for subplot_index in range(0, 2 * sample_number):
                     #if subplot_index % 2 == 0:
                         if column_index == 0:
-                            subplot_list[row_index][column_index].plot(bins, data[sample_list[subplot_index]])
+                            subplot_list[row_index][column_index].plot(bins, data[sample_list[row_index]])
                             subplot_list[row_index][column_index].ylabel(ylabel)
                         else:
-                            subplot_list[row_index][column_index].plot(bins, normalized_data[sample_list[subplot_index]])
+                            subplot_list[row_index][column_index].plot(bins, normalized_data[sample_list[row_index]])
                             subplot_list[row_index][column_index].ylabel(normalized_ylabel)
                         subplot_list[row_index][column_index].xlim(xmin=0)
                         subplot_list[row_index][column_index].xlabel(xlabel)
                         subplot_list[row_index][column_index].title(self.samples[row_index])
                 plt.suptitle(suptitle)
             else:
-                figure, subplot_list = plt.subplots(nrows=1, ncols=2, sharex=True, sharey=False, figsize=(figure_width, figure_height_per_plot ))
+                figure, subplot_list = plt.subplots(nrows=1, ncols=2,
+                                                    sharex=True, sharey=False,
+                                                    figsize=(figure_width, figure_height_per_plot ))
                 data = []
                 normalized_data = []
                 for scaffold_id in reference.region_length:
