@@ -1035,6 +1035,9 @@ class CollectionVCF(Collection):
 
                 figure, subplot_list = plt.subplots(sample_number, sharex=True, sharey=True, figsize=(figure_width, figure_height_per_plot * sample_number))
 
+                if sample_number == 1:
+                    subplot_list = [subplot_list]
+
                 for subplot_index in range(0, sample_number):
                     subplot_list[subplot_index].plot(bins, data[sample_list[subplot_index]])
                     plt.xlim(xmin=0)
