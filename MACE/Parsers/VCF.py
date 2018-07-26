@@ -234,6 +234,15 @@ class RecordVCF(Record):
                 return False
         return True
 
+    def is_homozygous_sample(self, sample_index):
+        zyg = self.samples_list[sample_index]["GT"][0].split("/")
+        if zyg[0] != zyg[1]:
+            return False
+        return True
+
+    def is_homozygous_list(self):
+        zyg_list = [sample_dict["GT"][0].split("/") for sample_dict in self.samples_list]
+        return [None if (zyg[0] == ".") or (zyg[1] == ".") else True if zyg[0] == zyg[1] else False for zyg in zyg_list]
 
 class MetadataVCF(OrderedDict, Metadata):
     """
@@ -884,7 +893,7 @@ class CollectionVCF(Collection):
                             if expression:
 
                                 count_dict[sample_id][scaffold_id][i] += 1 if expression(variant) else 0
-                                if expression(variant):
+                                if expression(variant, sample_index):
                                     print count_dict[sample_id][scaffold_id][i]
                             else:
                                  count_dict[sample_id][scaffold_id][i] += 1
@@ -893,7 +902,7 @@ class CollectionVCF(Collection):
                     for i in range(max(step_size_number - steps_in_window + 1, 0),
                                    step_size_number + 1 if step_size_number < number_of_windows else number_of_windows):
                         if expression:
-                            count_dict[scaffold_id][i] += 1 if expression(variant) else 0
+                            count_dict[scaffold_id][i] += 1 if expression(variant, sample_index) else 0
                         else:
                             count_dict[scaffold_id][i] += 1
 
@@ -1051,6 +1060,10 @@ class CollectionVCF(Collection):
     def heterozygous_variant(record):
         return not record.is_homozygous()
 
+    @staticmethod
+    def heterozygous_sample_variant(record, sample_index):
+        return record.is_homozygous_sample(sample_index)
+
     def draw_heterozygous_snps_histogram(self, window_size, window_step, output_prefix, reference_genome,
                                          gaps_and_masked_positions_max_fraction=0.4,
                                          masking_gff=None, parsing_mode="parse", per_sample_output=False,
@@ -1072,7 +1085,8 @@ class CollectionVCF(Collection):
 
         self.draw_snps_histogram(window_size, window_step, output_prefix, reference_genome,
                                  gaps_and_masked_positions_max_fraction=gaps_and_masked_positions_max_fraction,
-                                 expression=self.heterozygous_variant, masking_gff=masking_gff,
+                                 expression=self.heterozygous_sample_variant if per_sample_output else self.heterozygous_variant,
+                                 masking_gff=masking_gff,
                                  parsing_mode=parsing_mode, per_sample_output=per_sample_output,
                                  plot_type=plot_type,
                                  xlabel=xlabel,
