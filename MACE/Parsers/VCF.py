@@ -891,8 +891,7 @@ class CollectionVCF(Collection):
                                 if (variant.samples_list[sample_index]["GT"][0] == "0/0") or (variant.samples_list[sample_index]["GT"][0] == "./."):
                                     continue
                             if expression:
-
-                                count_dict[sample_id][scaffold_id][i] += 1 if expression(variant) else 0
+                                count_dict[sample_id][scaffold_id][i] += 1 if expression(variant, sample_index) else 0
                                 if expression(variant, sample_index):
                                     print count_dict[sample_id][scaffold_id][i]
                             else:
@@ -902,7 +901,7 @@ class CollectionVCF(Collection):
                     for i in range(max(step_size_number - steps_in_window + 1, 0),
                                    step_size_number + 1 if step_size_number < number_of_windows else number_of_windows):
                         if expression:
-                            count_dict[scaffold_id][i] += 1 if expression(variant, sample_index) else 0
+                            count_dict[scaffold_id][i] += 1 if expression(variant) else 0
                         else:
                             count_dict[scaffold_id][i] += 1
 
