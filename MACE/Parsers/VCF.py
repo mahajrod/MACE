@@ -887,7 +887,7 @@ class CollectionVCF(Collection):
                                  count_dict[sample_id][scaffold_id][i] += 1
 
 
-                    print count_dict[scaffold_id]
+
                 else:
                     for i in range(max(step_size_number - steps_in_window + 1, 0),
                                    step_size_number + 1 if step_size_number < number_of_windows else number_of_windows):
@@ -897,6 +897,7 @@ class CollectionVCF(Collection):
                             count_dict[scaffold_id][i] += 1
 
                 variant_index += 1
+        print count_dict
         print "BBBBBBBBBBBBBB"
         if output_prefix:
             scaffolds_absent_in_reference.write("%s.scaffolds_absent_in_reference.ids" % output_prefix)
