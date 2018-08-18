@@ -928,6 +928,8 @@ class CollectionVCF(Collection):
                                 skip_empty_windows=False, per_sample_output=False):
 
         def heterozygous_variant(record):
+            print record
+            print not record.is_homozygous()
             return not record.is_homozygous()
 
         return self.count_variants_in_windows(window_size, window_step, reference_scaffold_length_dict,
