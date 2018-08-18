@@ -1092,10 +1092,14 @@ class CollectionVCF(Collection):
 
     @staticmethod
     def heterozygous_variant(record):
+        print record.__str__()
+        print not record.is_homozygous()
         return not record.is_homozygous()
 
     @staticmethod
     def heterozygous_sample_variant(record, sample_index):
+        print record.__str__()
+        print not record.is_homozygous()
         return record.is_homozygous_sample(sample_index)
 
     def draw_heterozygous_snps_histogram(self, window_size, window_step, output_prefix, reference_genome,
