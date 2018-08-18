@@ -928,7 +928,7 @@ class CollectionVCF(Collection):
                                 skip_empty_windows=False, per_sample_output=False):
 
         def heterozygous_variant(record):
-            print record
+            print record.__str__()
             print not record.is_homozygous()
             return not record.is_homozygous()
 
