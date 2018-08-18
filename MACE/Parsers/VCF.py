@@ -928,8 +928,8 @@ class CollectionVCF(Collection):
                                 skip_empty_windows=False, per_sample_output=False):
 
         def heterozygous_variant(record):
-            print record.__str__()
-            print not record.is_homozygous()
+            #print record.__str__()
+            #print not record.is_homozygous()
             return not record.is_homozygous()
 
         return self.count_variants_in_windows(window_size, window_step, reference_scaffold_length_dict,
@@ -1099,7 +1099,7 @@ class CollectionVCF(Collection):
     @staticmethod
     def heterozygous_sample_variant(record, sample_index):
         print record.__str__()
-        print not record.is_homozygous()
+        print sample_index, self.samples_list[sample_index], not record.is_homozygous()
         return record.is_homozygous_sample(sample_index)
 
     def draw_heterozygous_snps_histogram(self, window_size, window_step, output_prefix, reference_genome,
