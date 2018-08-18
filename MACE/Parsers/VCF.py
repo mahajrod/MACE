@@ -813,12 +813,15 @@ class CollectionVCF(Collection):
     def count_variants_in_windows(self, window_size, window_step, reference_scaffold_length_dict,
                                   ignore_scaffolds_shorter_than_window=True, output_prefix=None,
                                   skip_empty_windows=False, expression=None, per_sample_output=False):
-        if window_step > window_size:
+
+        window_stepppp = window_size if window_step is None else window_step
+
+        if window_stepppp > window_size:
             raise ValueError("ERROR!!! Window step can't be larger then window size")
-        elif (window_size % window_step) != 0:
+        elif (window_size % window_stepppp) != 0:
             raise ValueError("ERROR!!! Window size is not a multiple of window step...")
 
-        steps_in_window = window_size / window_step
+        steps_in_window = window_size / window_stepppp
 
         short_scaffolds_ids = IdList()
 
@@ -842,7 +845,7 @@ class CollectionVCF(Collection):
         for scaffold_id in self.scaffold_list + list(scaffolds_absent_in_vcf):
             number_of_windows = self.count_number_of_windows(reference_scaffold_length_dict[scaffold_id],
                                                              window_size,
-                                                             window_step)
+                                                             window_stepppp)
             if scaffold_id not in self.records:
                 continue
             if number_of_windows == 0:
@@ -866,7 +869,7 @@ class CollectionVCF(Collection):
             variant_index = 0
             #print list(count_dict.keys())
             for variant in self.records[scaffold_id]:
-                step_size_number = ((variant.pos - 1)/window_step)
+                step_size_number = ((variant.pos - 1)/window_stepppp)
 
                 if step_size_number - steps_in_window + 1 >= number_of_windows:
                     #print scaffold_id
@@ -906,7 +909,7 @@ class CollectionVCF(Collection):
 
                 variant_index += 1
         #print count_dict[self.samples[0]][list(count_dict[self.samples[0]].keys())[5]]
-        print "BBBBBBBBBBBBBB"
+        #print "BBBBBBBBBBBBBB"
         #print count_dict[self.samples[0]]
         if output_prefix:
             scaffolds_absent_in_reference.write("%s.scaffolds_absent_in_reference.ids" % output_prefix)
@@ -947,6 +950,8 @@ class CollectionVCF(Collection):
                             figure_width=12,
                             multiplier=1000):
 
+        window_stepppp = window_size if window_step is None else window_step
+
         kb = multiplier / 1000
         mb = multiplier / 1000000
 
@@ -961,13 +966,13 @@ class CollectionVCF(Collection):
                                     masking_gff_list=masking_gff)
 
         gaps_and_masked_region_window_counts = reference.count_gaped_and_masked_positions_in_windows(window_size,
-                                                                                                     window_step,
+                                                                                                     window_stepppp,
                                                                                                      ignore_scaffolds_shorter_than_window=True,
                                                                                                      output_prefix=output_prefix,
                                                                                                      min_gap_len=1)
 
         variant_window_counts = self.count_variants_in_windows(window_size,
-                                                               window_step,
+                                                               window_stepppp,
                                                                reference.region_length,
                                                                ignore_scaffolds_shorter_than_window=True,
                                                                output_prefix=output_prefix,
@@ -2006,15 +2011,17 @@ class ReferenceGenome(object):
                                                     ignore_scaffolds_shorter_than_window=True,
                                                     output_prefix=None,
                                                     min_gap_len=1):
-        if window_step > window_size:
+
+        window_stepppp = window_size if window_step is None else window_step
+        if window_stepppp > window_size:
             raise ValueError("ERROR!!! Window step can't be larger then window size")
-        elif (window_size % window_step) != 0:
+        elif (window_size % window_stepppp) != 0:
             raise ValueError("ERROR!!! Window size is not a multiple of window step...")
 
         if not self.gaps_dict:
             self.find_gaps(min_gap_len)
 
-        steps_in_window = window_size / window_step
+        steps_in_window = window_size / window_stepppp
 
         short_scaffolds_ids = IdList()
 
@@ -2033,7 +2040,7 @@ class ReferenceGenome(object):
         for scaffold_id in self.region_length:
             number_of_windows = self.count_number_of_windows(self.region_length[scaffold_id],
                                                              window_size,
-                                                             window_step)
+                                                             window_stepppp)
             if number_of_windows == 0:
                 short_scaffolds_ids.append(scaffold_id)
                 if ignore_scaffolds_shorter_than_window:
@@ -2044,9 +2051,9 @@ class ReferenceGenome(object):
             uncounted_tail_variants_number_dict[scaffold_id] = 0
 
             for masked_region_location in masked_region_dict[scaffold_id]:
-                max_start_step = masked_region_location[0] / window_step
+                max_start_step = masked_region_location[0] / window_stepppp
                 min_start_step = max(max_start_step - steps_in_window + 1, 0)
-                max_end_step = (masked_region_location[1] - 1) / window_step
+                max_end_step = (masked_region_location[1] - 1) / window_stepppp
                 min_end_step = max(max_end_step - steps_in_window + 1, 0)
 
                 if min_start_step >= number_of_windows:
@@ -2062,7 +2069,7 @@ class ReferenceGenome(object):
                     scaffold_windows_list[i] += window_size
 
                 for i in range(max(max_start_step + 1, min_end_step), min(max_end_step + 1, number_of_windows)):
-                    scaffold_windows_list[i] += masked_region_location[1] - (i * window_step)
+                    scaffold_windows_list[i] += masked_region_location[1] - (i * window_stepppp)
 
             count_dict[scaffold_id] = scaffold_windows_list
 
