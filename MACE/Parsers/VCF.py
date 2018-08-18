@@ -893,7 +893,7 @@ class CollectionVCF(Collection):
                                 if (variant.samples_list[sample_index]["GT"][0] == "0/0") or (variant.samples_list[sample_index]["GT"][0] == "./."):
                                     continue
                             if expression:
-                                count_dict[sample_id][scaffold_id][i] += 1 if expression(variant, sample_index) else 0
+                                count_dict[sample_id][scaffold_id][i] += (1 if expression(variant, sample_index) else 0)
                                 #if expression(variant, sample_index):
                                     #print count_dict[sample_id][scaffold_id][i]
                             else:
@@ -1096,8 +1096,7 @@ class CollectionVCF(Collection):
         print not record.is_homozygous()
         return not record.is_homozygous()
 
-    @staticmethod
-    def heterozygous_sample_variant(record, sample_index):
+    def heterozygous_sample_variant(self, record, sample_index):
         print record.__str__()
         print sample_index, self.samples_list[sample_index], not record.is_homozygous()
         return record.is_homozygous_sample(sample_index)
