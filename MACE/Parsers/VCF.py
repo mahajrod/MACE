@@ -1074,15 +1074,15 @@ class CollectionVCF(Collection):
                 #print bins
                 for column_index in 0, 1:
                     if column_index == 0:
-                        subplot_list[0][column_index].plot(bins, data)
-                        subplot_list[0][column_index].set_ylabel(ylabel)
+                        subplot_list[column_index].plot(bins, data)
+                        subplot_list[column_index].set_ylabel(ylabel)
                     else:
-                        subplot_list[0][column_index].plot(bins, normalized_data)
-                        subplot_list[0][column_index].set_ylabel(normalized_ylabel)
+                        subplot_list[column_index].plot(bins, normalized_data)
+                        subplot_list[column_index].set_ylabel(normalized_ylabel)
 
-                    subplot_list[0][column_index].set_xlim(xmin=0)
-                    subplot_list[0][column_index].set_xlabel(xlabel)
-                    subplot_list[0][column_index].set_title(title)
+                    subplot_list[column_index].set_xlim(xmin=0)
+                    subplot_list[column_index].set_xlabel(xlabel)
+                    subplot_list[column_index].set_title(title)
                 plt.suptitle(suptitle)
         plt.tight_layout()
         for extension in extensions:
