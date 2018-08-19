@@ -895,7 +895,7 @@ class CollectionVCF(Collection):
                             if expression:
                                 count_dict[sample_id][scaffold_id][i] += (1 if expression(variant, sample_index) else 0)
                                 #if expression(variant, sample_index):
-                                    #print count_dict[sample_id][scaffold_id][i]
+                                print sample_id, sample_index, scaffold_id, i, count_dict[sample_id][scaffold_id][i], expression(variant, sample_index)
                             else:
                                  count_dict[sample_id][scaffold_id][i] += 1
 
