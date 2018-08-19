@@ -893,11 +893,11 @@ class CollectionVCF(Collection):
                                 if (variant.samples_list[sample_index]["GT"][0] == "0/0") or (variant.samples_list[sample_index]["GT"][0] == "./."):
                                     continue
                             if expression:
-                                print("AAAAAAAAAAAAAAAAAAAAAAAAA")
+                                #print("AAAAAAAAAAAAAAAAAAAAAAAAA")
                                 count_dict[sample_id][scaffold_id][i] += (1 if expression(variant, sample_index) else 0)
                                 #if expression(variant, sample_index):
-                                print sample_id, sample_index, scaffold_id, i, count_dict[sample_id][scaffold_id][i]
-                                print "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBb"
+                                #print sample_id, sample_index, scaffold_id, i, count_dict[sample_id][scaffold_id][i]
+                                #print "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBb"
                             else:
                                  count_dict[sample_id][scaffold_id][i] += 1
 
@@ -1094,13 +1094,13 @@ class CollectionVCF(Collection):
 
     @staticmethod
     def heterozygous_variant(record):
-        print record.__str__()
-        print not record.is_homozygous()
+        #print record.__str__()
+        #print not record.is_homozygous()
         return not record.is_homozygous()
 
     def heterozygous_sample_variant(self, record, sample_index):
-        print record.__str__()
-        print sample_index, self.samples[sample_index], not record.is_homozygous()
+        #print record.__str__()
+        #print sample_index, self.samples[sample_index], not record.is_homozygous()
         return not record.is_homozygous_sample(sample_index)
 
     def draw_heterozygous_snps_histogram(self, window_size, window_step, output_prefix, reference_genome,
