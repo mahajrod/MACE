@@ -1460,20 +1460,36 @@ class CollectionVCF(Collection):
                 else:
                     record.info_dict[info_name] = value
 
-    def parse_snpeff_info_record(self, string):
-        effect, parameters = string.split("(")
-        # remove closing bracket and split
-        parameters = parameters[:-1].split("|")
-        return [effect] + parameters
+    def parse_snpeff_info_record(self, string, snpeff_entry="ANN"):
+        if snpeff_entry == "EFF":
+            effect, parameters = string.split("(")
+            # remove closing bracket and split
+            parameters = parameters[:-1].split("|")
+            return [effect] + parameters
+
+        elif snpeff_entry == "ANN":
+            return string.split("|")
 
     def extract_snpeff_info(self, output_file, snpeff_entry="ANN"):
 
         snpeff_info_dict_keys = "EFF", "LOS", "NMD"
         record_header_list = ["Chrom", "Pos", "Ref", "Alt", "Filter"]
-        snpeff_header_list = ["Effect", "Effect_Impact", "Functional_Class", "Codon_Change", "Amino_Acid_Change",
-                  "Amino_Acid_Length", "Gene_Name", "Transcript_BioType", "Gene_Coding", "Transcript_ID",
-                  "Exon_Rank", "Genotype_Number", "ERRORS", "WARNINGS"
-                  ]
+        if snpeff_entry == "EFF":
+            snpeff_header_list = ["Effect", "Effect_Impact", "Functional_Class", "Codon_Change", "Amino_Acid_Change",
+                                  "Amino_Acid_Length", "Gene_Name", "Transcript_BioType", "Gene_Coding",
+                                  "Transcript_ID", "Exon_Rank", "Genotype_Number", "ERRORS", "WARNINGS"]
+        elif snpeff_entry == "ANN":
+            snpeff_header_list = ["Allele", "Annotation",
+                                  "Putative_impact", "Gene_Name",
+                                  "Gene_ID", "Feature type",
+                                  "Feature ID", "Transcript biotype",
+                                  "Rank", "HGVS.c",
+                                  "HGVS.p", "cDNA_position",
+                                  "CDS_position", "Protein_position",
+                                  "Distance_to_feature", "Errors_Warnings"
+                                  ]
+        else:
+            raise ValueError("ERROR!!! Unknow SNPeff entry: %s. Only ANN or EFF are allowed..." % snpeff_entry)
 
         #print(output_file)
         with open(output_file, "w") as out_fd:
@@ -1488,7 +1504,7 @@ class CollectionVCF(Collection):
                         continue
 
                     for effect in record.info_dict[snpeff_entry]:
-                        effect_parameters = self.parse_snpeff_info_record(effect)
+                        effect_parameters = self.parse_snpeff_info_record(effect, snpeff_entry)
                         num_parameters = len(effect_parameters)
                         for i in range(0, num_parameters):
                             if effect_parameters[i] == "":
