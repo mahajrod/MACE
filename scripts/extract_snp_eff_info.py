@@ -11,7 +11,7 @@ parser.add_argument("-i", "--input_file", action="store", dest="input", required
 parser.add_argument("-o", "--output_file", action="store", dest="output", required=True,
                     help="Output file with SNPeff info")
 parser.add_argument("-e", "--snpeff_entry", action="store", dest="snpeff_entry", default="ANN",
-                    help="SNPeff entry in vcf file. Default: ANN")
+                    help="SNPeff entry in vcf file. Allowed: ANN, EFF(used by old SNPeff versions). Default: ANN")
 
 args = parser.parse_args()
 
