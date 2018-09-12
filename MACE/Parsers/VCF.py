@@ -1466,7 +1466,7 @@ class CollectionVCF(Collection):
         parameters = parameters[:-1].split("|")
         return [effect] + parameters
 
-    def extract_snpeff_info(self, output_file):
+    def extract_snpeff_info(self, output_file, snpeff_entry="ANN"):
 
         snpeff_info_dict_keys = "EFF", "LOS", "NMD"
         record_header_list = ["Chrom", "Pos", "Ref", "Alt", "Filter"]
@@ -1483,9 +1483,11 @@ class CollectionVCF(Collection):
                 for record in self.records[scaffold]:
                     common_part = "%s\t%i\t%s\t%s\t%s" % (scaffold, record.pos, record.ref, ",".join(record.alt_list),
                                                           ",".join(record.filter_list))
-                    if "EFF" not in record.info_dict:
+
+                    if snpeff_entry not in record.info_dict:
                         continue
-                    for effect in record.info_dict["EFF"]:
+
+                    for effect in record.info_dict[snpeff_entry]:
                         effect_parameters = self.parse_snpeff_info_record(effect)
                         num_parameters = len(effect_parameters)
                         for i in range(0, num_parameters):
