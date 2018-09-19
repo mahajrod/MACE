@@ -1822,9 +1822,9 @@ class ReferenceGenome(object):
             while i < number_of_records:
                 if unified_dict[region][i][0] > prev_coordinates[1]: # c > b
                     merged_dict[region].append(prev_coordinates)
-                    prev_coordinates = unified_dict[region][i]
+                    prev_coordinates = deepcopy(unified_dict[region][i])
                 elif unified_dict[region][i][1] > prev_coordinates[1]: # d > b; c<=b
-                    prev_coordinates[1] = unified_dict[region][i][1]
+                    prev_coordinates[1] = deepcopy(unified_dict[region][i][1])
                 else: # d <= b
                     pass
                 i += 1
