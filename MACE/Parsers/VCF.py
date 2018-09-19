@@ -1821,13 +1821,19 @@ class ReferenceGenome(object):
 
             while i < number_of_records:
                 if unified_dict[region][i][0] > prev_coordinates[1]: # c > b
-                    merged_dict[region].append(prev_coordinates)
+                    merged_dict[region].append(deepcopy(prev_coordinates))
                     prev_coordinates = deepcopy(unified_dict[region][i])
                 elif unified_dict[region][i][1] > prev_coordinates[1]: # d > b; c<=b
                     prev_coordinates[1] = deepcopy(unified_dict[region][i][1])
                 else: # d <= b
                     pass
                 i += 1
+
+            if unified_dict[region]:
+                if prev_coordinates != unified_dict[region][-1]:
+                    merged_dict[region].append(prev_coordinates)
+            else:
+                merged_dict[region].append(prev_coordinates)
 
         if return_seq_fetures_dict:
             feature_dict = OrderedDict()
