@@ -1817,7 +1817,7 @@ class ReferenceGenome(object):
             # after sorting c >= a
             i = 1
 
-            prev_coordinates = unified_dict[region][0]
+            prev_coordinates = deepcopy(unified_dict[region][0])
 
             while i < number_of_records:
                 if unified_dict[region][i][0] > prev_coordinates[1]: # c > b
