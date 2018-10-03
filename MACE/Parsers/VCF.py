@@ -244,6 +244,20 @@ class RecordVCF(Record):
         zyg_list = [sample_dict["GT"][0].split("/") for sample_dict in self.samples_list]
         return [None if (zyg[0] == ".") or (zyg[1] == ".") else True if zyg[0] == zyg[1] else False for zyg in zyg_list]
 
+    def no_reference_allel_and_multiallel(self, sample_index=None, max_allels=None):
+        if max_allels:
+            if len(self.alt_list) > max_allels:
+                return False
+
+        if sample_index:
+            if "0" in self.samples_list[sample_index]["GT"][0].split("/"):
+                return False
+        else:
+            for sample in self.samples_list:
+                if "0" in sample["GT"][0].split("/"):
+                    return False
+        return True
+
 class MetadataVCF(OrderedDict, Metadata):
     """
     MetadataVCF class
@@ -507,6 +521,17 @@ class CollectionVCF(Collection):
                              header=self.header, samples=self.samples, from_file=False),\
                CollectionVCF(metadata=self.metadata, records_dict=filtered_out_records,
                              header=self.header, samples=self.samples, from_file=False)
+
+    def no_reference_allel_and_multiallel(self, record, sample_index=None, max_allels=None):
+        return record.no_reference_allel_and_multiallel(record, sample_index=sample_index, max_allels=max_allels)
+
+
+    def filter_variants_with_reference_allel_and_multiallelic(self, sample_index=None, max_allels=None):
+
+        def expression(record):
+            return self.no_reference_allel_and_multiallel(record, sample_index=sample_index, max_allels=max_allels)
+
+        return self.filter(expression)
 
     def count_records(self, expression):
         """
