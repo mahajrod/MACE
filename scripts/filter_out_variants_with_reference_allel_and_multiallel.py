@@ -19,6 +19,6 @@ without_filters, with_filters = variants.filter_variants_with_reference_allel_an
                                                                                                max_allels=None)
 
 without_filters.write("%s.no_reference_allel%s.vcf" % (args.output_prefix,
-                                                       "max_allels_%i" % args.max_allels if args.max_allels else ""))
+                                                       ".max_allels_%i" % args.max_allels if args.max_allels else ""))
 with_filters.write("%s.with_reference_allel%s.vcf" % (args.output_prefix,
                                                       ".more_then_allels_%i" % args.max_allels if args.max_allels else ""))
