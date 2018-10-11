@@ -15,6 +15,7 @@ parser.add_argument("-m", "--max_allels", action="store", dest="max_allels", typ
 args = parser.parse_args()
 
 variants = CollectionVCF(in_file=args.input, from_file=True)
+
 without_filters, with_filters = variants.filter_variants_with_reference_allel_and_multiallelic(sample_index=None,
                                                                                                max_allels=None)
 
