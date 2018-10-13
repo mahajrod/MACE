@@ -1023,7 +1023,6 @@ class CollectionVCF(Collection):
             for scaffold_id in variant_window_counts:
                 normalized_variant_window_counts[scaffold_id] = np.divide(variant_window_counts[scaffold_id].astype(float), window_stepppp - gaps_and_masked_region_window_counts[scaffold_id] + 1) * multiplier
 
-        normalized_variant_window_counts.write("%s.normalized_variant_number.tab" % output_prefix, splited_values=True)
 
         if per_sample_output:
             for sample in variant_window_counts:
@@ -1042,6 +1041,9 @@ class CollectionVCF(Collection):
                         normalized_variant_window_counts[scaffold_id][window_index] = masked_or_gaped_region_mark
                     if float(gaps_and_masked_region_window_counts[scaffold_id][window_index])/float(window_size) > gaps_and_masked_positions_max_fraction:
                         variant_window_counts[scaffold_id][window_index] = masked_or_gaped_region_mark #variant_window_counts[scaffold_id]
+                        normalized_variant_window_counts[scaffold_id][window_index] = masked_or_gaped_region_mark
+
+        normalized_variant_window_counts.write("%s.normalized_variant_number.tab" % output_prefix, splited_values=True)
 
         if plot_type == "concatenated":
             if per_sample_output:
@@ -1099,6 +1101,7 @@ class CollectionVCF(Collection):
                     normalized_data += list(normalized_variant_window_counts[scaffold_id]) + [0, ]
                 data = np.array(data)
                 normalized_data = np.array(data)
+                print normalized_data
                 bins = np.arange(len(data)) #* window_step
                 #print data
                 #print max(data)
@@ -1108,6 +1111,7 @@ class CollectionVCF(Collection):
                         subplot_list[column_index].plot(bins, data)
                         subplot_list[column_index].set_ylabel(ylabel)
                     else:
+                        print "BBBBB"
                         subplot_list[column_index].plot(bins, normalized_data)
                         subplot_list[column_index].set_ylabel(normalized_ylabel)
 
