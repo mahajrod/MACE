@@ -1023,7 +1023,7 @@ class CollectionVCF(Collection):
             for scaffold_id in variant_window_counts:
                 normalized_variant_window_counts[scaffold_id] = np.divide(variant_window_counts[scaffold_id].astype(float), window_stepppp - gaps_and_masked_region_window_counts[scaffold_id] + 1) * multiplier
 
-        normalized_variant_window_counts.write("%s.normalized_counts.tab" % output_prefix, splited_values=True)
+        normalized_variant_window_counts.write("%s.normalized_variant_number.tab" % output_prefix, splited_values=True)
 
         if per_sample_output:
             for sample in variant_window_counts:
