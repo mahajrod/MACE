@@ -91,7 +91,6 @@ reference = ReferenceGenome(args.reference,
 
 reference.find_gaps(min_gap_length=10)
 
-
 for sample_name, vcf_file in zip(args.sample_names, args.input):
     count_dict[sample_name] = CollectionVCF(from_file=True, in_file=vcf_file, parse_only_coordinates=True).count_variants_in_windows(args.window_size,
                                                                                                                                      args.window_size if args.window_step is None else args.window_step,
