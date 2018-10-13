@@ -1009,7 +1009,7 @@ class CollectionVCF(Collection):
                                                                expression=expression,
                                                                per_sample_output=per_sample_output)
 
-        normalized_variant_window_counts = OrderedDict()
+        normalized_variant_window_counts = SynDict()
         if per_sample_output:
             for sample in variant_window_counts:
                 normalized_variant_window_counts[sample] = OrderedDict()
@@ -1022,6 +1022,8 @@ class CollectionVCF(Collection):
         else:
             for scaffold_id in variant_window_counts:
                 normalized_variant_window_counts[scaffold_id] = np.divide(variant_window_counts[scaffold_id].astype(float), window_stepppp - gaps_and_masked_region_window_counts[scaffold_id] + 1) * multiplier
+
+        normalized_variant_window_counts.write("%s.normalized_counts.tab" % output_prefix, splited_values=True)
 
         if per_sample_output:
             for sample in variant_window_counts:
