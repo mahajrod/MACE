@@ -986,6 +986,7 @@ class CollectionVCF(Collection):
 
         normalized_ylabel = "%s per %i %s" % (ylabel, mb if mb >= 1 else kb if kb >=1 else multiplier, "Mbp" if mb >= 1 else "Kbp" if kb >= 1 else "bp")
 
+        print "Parsing reference and..."
         reference = ReferenceGenome(reference_genome,
                                     masked_regions=None,
                                     index_file="refgen.idx",
@@ -993,13 +994,14 @@ class CollectionVCF(Collection):
                                     mode=parsing_mode,
                                     black_list=[],
                                     masking_gff_list=masking_gff)
+        print("Merging gaps with masking...")
 
         gaps_and_masked_region_window_counts = reference.count_gaped_and_masked_positions_in_windows(window_size,
                                                                                                      window_stepppp,
                                                                                                      ignore_scaffolds_shorter_than_window=True,
                                                                                                      output_prefix=output_prefix,
                                                                                                      min_gap_len=1)
-
+        print("Counting variants in windows...")
         variant_window_counts = self.count_variants_in_windows(window_size,
                                                                window_stepppp,
                                                                reference.region_length,
@@ -1010,41 +1012,59 @@ class CollectionVCF(Collection):
                                                                per_sample_output=per_sample_output)
 
         normalized_variant_window_counts = SynDict()
+        filtered_normalized_variant_window_counts = SynDict()
+
+        # normalization
         if per_sample_output:
             for sample in variant_window_counts:
-                normalized_variant_window_counts[sample] = OrderedDict()
+                normalized_variant_window_counts[sample] = SynDict()
+                filtered_normalized_variant_window_counts[sample] = SynDict()
                 for scaffold_id in variant_window_counts[sample]:
                         #print sample
                         #print scaffold_id
                         #print variant_window_counts[sample][scaffold_id]
                     normalized_variant_window_counts[sample][scaffold_id] = np.divide(variant_window_counts[sample][scaffold_id].astype(float), window_stepppp - gaps_and_masked_region_window_counts[scaffold_id] + 1) * multiplier
                         #print variant_window_counts[sample][scaffold_id]
+                    filtered_normalized_variant_window_counts[sample][scaffold_id] = []
         else:
             for scaffold_id in variant_window_counts:
                 normalized_variant_window_counts[scaffold_id] = np.divide(variant_window_counts[scaffold_id].astype(float), window_stepppp - gaps_and_masked_region_window_counts[scaffold_id] + 1) * multiplier
+                filtered_normalized_variant_window_counts[scaffold_id] = []
 
-
+        # filtering
         if per_sample_output:
             for sample in variant_window_counts:
                 for scaffold_id in variant_window_counts[sample]:
                     for window_index in range(0, len(variant_window_counts[sample][scaffold_id])):
                         if np.isnan(variant_window_counts[sample][scaffold_id][window_index]):
                             normalized_variant_window_counts[sample][scaffold_id][window_index] = masked_or_gaped_region_mark
-                        if float(gaps_and_masked_region_window_counts[scaffold_id][window_index])/float(window_size) > gaps_and_masked_positions_max_fraction:
+                        elif float(gaps_and_masked_region_window_counts[scaffold_id][window_index])/float(window_size) > gaps_and_masked_positions_max_fraction:
                             #print variant_window_counts.keys()
                             variant_window_counts[sample][scaffold_id][window_index] = masked_or_gaped_region_mark
                             normalized_variant_window_counts[sample][scaffold_id][window_index] = masked_or_gaped_region_mark
+                        else:
+                            filtered_normalized_variant_window_counts[sample][scaffold_id].append(normalized_variant_window_counts[sample][scaffold_id][window_index])
         else:
             for scaffold_id in variant_window_counts:
                 for window_index in range(0, len(variant_window_counts[scaffold_id])):
                     if np.isnan(variant_window_counts[scaffold_id][window_index]):
                         normalized_variant_window_counts[scaffold_id][window_index] = masked_or_gaped_region_mark
-                    if float(gaps_and_masked_region_window_counts[scaffold_id][window_index])/float(window_size) > gaps_and_masked_positions_max_fraction:
+                    elif float(gaps_and_masked_region_window_counts[scaffold_id][window_index])/float(window_size) > gaps_and_masked_positions_max_fraction:
                         variant_window_counts[scaffold_id][window_index] = masked_or_gaped_region_mark #variant_window_counts[scaffold_id]
                         normalized_variant_window_counts[scaffold_id][window_index] = masked_or_gaped_region_mark
-
-        normalized_variant_window_counts.write("%s.normalized_variant_number.tab" % output_prefix, splited_values=True)
-
+                    else:
+                        filtered_normalized_variant_window_counts[scaffold_id].append(normalized_variant_window_counts[sample][scaffold_id][window_index])
+        
+        if per_sample_output:
+            for sample in normalized_variant_window_counts:
+                normalized_variant_window_counts.write("%s.%s.normalized_variant_number.tab" % (sample, output_prefix), splited_values=True)
+                filtered_normalized_variant_window_counts.write("%s.%s.filtered.normalized_variant_number.tab" % (sample, output_prefix), splited_values=True)
+                
+        else:
+            normalized_variant_window_counts.write("%s.normalized_variant_number.tab" % output_prefix, splited_values=True)
+            filtered_normalized_variant_window_counts.write("%s.filtered.normalized_variant_number.tab" % output_prefix, splited_values=True)
+            
+        print("Drawing...")
         if plot_type == "concatenated":
             if per_sample_output:
                 data = OrderedDict()
@@ -1100,7 +1120,7 @@ class CollectionVCF(Collection):
                     data += list(variant_window_counts[scaffold_id]) + [0, ]
                     normalized_data += list(normalized_variant_window_counts[scaffold_id]) + [0, ]
                 data = np.array(data)
-                normalized_data = np.array(data)
+                normalized_data = np.array(normalized_data)
                 print normalized_data
                 bins = np.arange(len(data)) #* window_step
                 #print data
@@ -1111,7 +1131,6 @@ class CollectionVCF(Collection):
                         subplot_list[column_index].plot(bins, data)
                         subplot_list[column_index].set_ylabel(ylabel)
                     else:
-                        print "BBBBB"
                         subplot_list[column_index].plot(bins, normalized_data)
                         subplot_list[column_index].set_ylabel(normalized_ylabel)
 
