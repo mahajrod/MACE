@@ -1053,7 +1053,7 @@ class CollectionVCF(Collection):
                         variant_window_counts[scaffold_id][window_index] = masked_or_gaped_region_mark #variant_window_counts[scaffold_id]
                         normalized_variant_window_counts[scaffold_id][window_index] = masked_or_gaped_region_mark
                     else:
-                        filtered_normalized_variant_window_counts[scaffold_id].append(normalized_variant_window_counts[sample][scaffold_id][window_index])
+                        filtered_normalized_variant_window_counts[scaffold_id].append(normalized_variant_window_counts[scaffold_id][window_index])
         
         if per_sample_output:
             for sample in normalized_variant_window_counts:
