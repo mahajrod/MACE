@@ -33,6 +33,8 @@ class RecordVCF(Record):
     """
     RecordVCF class
     """
+    #__slots__ = ["pos", "id", "ref", "alt_list", "qual", "filter_list", "info_dict", "samples_list", "flags"]
+
     def __init__(self, pos, id, ref, alt_list, qual, filter_list, info_dict, samples_list,
                  flags=None):
         """
