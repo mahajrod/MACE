@@ -34,7 +34,7 @@ parser.add_argument("-g", "--max_gaps_and_masked_per_window_fraction", action="s
                     default=0.4,
                     type=float,
                     help="Maximum number of gaped and masked positions per window. "
-                         "Windows with higher fraction will be shown as having -1 variant."
+                         "Windows with higher fraction will be shown as having 0 variants."
                          "Default: 0.4")
 
 parser.add_argument("-r", "--reference_genome", action="store", dest="reference",

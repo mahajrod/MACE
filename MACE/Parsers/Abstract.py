@@ -19,6 +19,9 @@ built_in_flags = {"DA": "desaminase-like",
 
 
 class Record():
+
+    __slots__ = ["pos", "info_dict", "flags"]
+
     def __init__(self, pos, info_dict=None, flags=None):
         self.pos = pos
         self.info_dict = info_dict if info_dict else OrderedDict({})
