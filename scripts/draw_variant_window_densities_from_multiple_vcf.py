@@ -117,7 +117,7 @@ DrawingRoutines.draw_variant_window_densities(count_dict, reference.region_lengt
                                               figure_height_scale_factor=args.figure_height_scale_factor,
                                               scaffold_synonym_dict=None,
                                               id_replacement_mode="partial", suptitle=None, density_multiplicator=1000,
-                                              scaffold_black_list=args.scaffold_white_list,
+                                              scaffold_black_list=args.scaffold_black_list,
                                               sort_scaffolds=args.sort_scaffolds,
                                               scaffold_ordered_list=args.scaffold_ordered_list,
                                               scaffold_white_list=args.scaffold_white_list,
