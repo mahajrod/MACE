@@ -52,6 +52,7 @@ class DrawingRoutines:
             scaffold_set = scaffold_set - black_set
             print "QQQQQQQQQQQQQQQQ"
             print black_set
+
         print "RRRRRRRRRRRRRRRRRR"
         print scaffold_set
         scaffold_list = list(scaffold_set)
