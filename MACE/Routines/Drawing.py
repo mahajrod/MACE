@@ -35,8 +35,7 @@ class DrawingRoutines:
 
         scaffold_set = set()
         print white_set
-        print "AAAAAAAAAAAAA"
-        print count_dict
+
         for sample in count_dict:
             scaffold_set |= set(count_dict[sample])
         print "BBBBBBBBBBBB"
@@ -46,9 +45,10 @@ class DrawingRoutines:
 
         if black_set:
             scaffold_set = scaffold_set - black_set
-
+        print "CCCCCCCC"
+        print scaffold_set
         scaffold_list = list(scaffold_set)
-
+        print scaffold_list
         if sort_scaffolds:
             scaffold_list.sort()
 
