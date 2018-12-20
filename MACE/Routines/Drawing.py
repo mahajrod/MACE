@@ -65,9 +65,11 @@ class DrawingRoutines:
 
         if scaffold_ordered_list:
             for entry in scaffold_ordered_list:
-                print entry
-                final_scaffold_list.append(entry)
-                scaffold_list.remove(entry)
+                if entry in scaffold_list:
+                    final_scaffold_list.append(entry)
+                    scaffold_list.remove(entry)
+                else:
+                    print("WARNING!!!Entry(%s) from order list is absent in list of scaffolds!" % entry)
             final_scaffold_list = final_scaffold_list + scaffold_list
         else:
             final_scaffold_list = scaffold_list
