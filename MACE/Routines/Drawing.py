@@ -21,8 +21,8 @@ from matplotlib import text
 from MACE.General import FileRoutines
 from MACE.Functions.Generators import recursive_generator
 
-class DrawingRoutines():
 
+class DrawingRoutines:
 
     @staticmethod
     def get_filtered_scaffold_list(count_dict,
@@ -50,10 +50,10 @@ class DrawingRoutines():
 
         final_scaffold_list = []
 
-        print len(scaffold_list)
-        print (white_set)
-        print len(white_set)
-        print "AAAAAAAAAAAAAAAAAA"
+        print count_dict
+        print "AAAAAAA"
+        print count_dict[sample]
+
         print scaffold_list
         if scaffold_ordered_list:
             for entry in scaffold_ordered_list:
