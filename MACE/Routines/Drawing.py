@@ -49,6 +49,12 @@ class DrawingRoutines():
             scaffold_list.sort()
 
         final_scaffold_list = []
+
+        print len(scaffold_list)
+        print (white_set)
+        print len(white_set)
+        print "AAAAAAAAAAAAAAAAAA"
+        print scaffold_list
         if scaffold_ordered_list:
             for entry in scaffold_ordered_list:
                 print entry
