@@ -51,6 +51,7 @@ class DrawingRoutines():
         final_scaffold_list = []
         if scaffold_ordered_list:
             for entry in scaffold_ordered_list:
+                print entry
                 final_scaffold_list.append(entry)
                 scaffold_list.remove(entry)
             final_scaffold_list = final_scaffold_list + scaffold_list
