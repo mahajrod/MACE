@@ -305,6 +305,15 @@ class DrawingRoutines:
         ylabel = "Number of windows"
 
         scaled_count_dict = OrderedDict()
+
+        empty_windows_scaffold_dict = OrderedDict()
+        for scaffold in final_scaffold_list:
+            for sample in count_dict:
+                if scaffold not in count_dict[sample]:
+                    continue
+                empty_windows_scaffold_dict[scaffold] = np.zeros(len(count_dict[sample][scaffold]))
+                break
+
         for sample in samples_list:
             scaled_count_dict[sample] = OrderedDict()
             for scaffold in final_scaffold_list:
@@ -315,7 +324,7 @@ class DrawingRoutines:
         extended_label_dict = OrderedDict()
         for scaffold in final_scaffold_list:
             print("Drawing histogram for scaffold %s" % scaffold)
-            scaffold_data = [scaled_count_dict[sample][scaffold] for sample in samples_list]
+            scaffold_data = [scaled_count_dict[sample][scaffold] if scaffold in scaled_count_dict[sample] else empty_windows_scaffold_dict[scaffold] for sample in samples_list]
             out_prefix = "%s/%s.%s" % (per_scaffold_histo_dir, output_prefix, scaffold) if output_prefix else "%s/%s" % (per_scaffold_histo_dir, scaffold)
             for sample in samples_list:
                 median = np.median(scaled_count_dict[sample][scaffold])
