@@ -107,8 +107,6 @@ for sample_name, vcf_file in zip(args.sample_names, args.input):
                                                                                                                                      output_prefix="%s.%s" % (args.output_prefix, sample_name),
                                                                                                                                      skip_empty_windows=False)
 
-
-
 DrawingRoutines.draw_variant_window_densities(count_dict, reference.region_length, args.window_size,
                                               args.window_size if args.window_step is None else args.window_step,
                                               args.output_prefix,
