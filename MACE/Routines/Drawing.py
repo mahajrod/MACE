@@ -349,8 +349,8 @@ class DrawingRoutines:
         #print scaled_count_dict
         print("Drawing histograms for all scaffolds on same figure...")
         data = list(recursive_generator(scaled_count_dict))
-        min_value = min(data)
-        max_value = max(data)
+        min_value = min(data) if data else 0
+        max_value = max(data) if data else 0
         #print len(scaled_count_dict)
         #print data
         bin_array = self.generate_bin_array(data, y_list=None, bin_number=number_of_bins,
