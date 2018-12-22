@@ -304,7 +304,6 @@ class DrawingRoutines:
         xlabel = "Number of SNPs"
         ylabel = "Number of windows"
 
-
         scaled_count_dict = OrderedDict()
 
         empty_windows_scaffold_dict = OrderedDict()
