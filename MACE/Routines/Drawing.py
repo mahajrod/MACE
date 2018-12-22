@@ -84,7 +84,7 @@ class DrawingRoutines:
                                       scaffold_black_list=[], sort_scaffolds=False, scaffold_ordered_list=None,
                                       scaffold_white_list=[], add_sample_name_to_labels=False,
                                       dist_between_scaffolds_scaling_factor=1,
-                                      gap_color="grey",
+                                      masked_color="grey", no_snp_color="white",
                                       colormap_tuple_list=((0.0, "#333a97"), (0.1, "#3d3795"), (0.5, "#5d3393"),
                                                            (0.75, "#813193"), (1.0, "#9d2d7f"), (1.25, "#b82861"),
                                                            (1.5, "#d33845"), (2.0, "#ea2e2e"), (2.5, "#f5ae27"))):
@@ -250,8 +250,18 @@ class DrawingRoutines:
 
         square_y_pos = legend_y_position - legend_element_side
 
+        for color, legend_label in zip((masked_color, no_snp_color), ("masked", "no SNP")):
+            square_y_pos += legend_element_side
+            fragment = Rectangle((legend_x_position, square_y_pos), max_scaffold_length/64, legend_element_side, fill=True,
+                                 edgecolor="black", facecolor=color, linewidth=0.5)
+
+            subplot.add_patch(fragment)
+            subplot.annotate(legend_label,
+                             xy=(legend_x_position + 2 * max_scaffold_length/64, square_y_pos), xycoords='data', fontsize=13,
+                             xytext=(legend_x_position + 2 * max_scaffold_length/64, square_y_pos),)
+
         for i in range(0, len(colormap_tuple_list)):
-            square_y_pos = square_y_pos + legend_element_side
+            square_y_pos += legend_element_side
             #print (colormap_tuple_list[i][1])
             fragment = Rectangle((legend_x_position, square_y_pos), max_scaffold_length/64, legend_element_side, fill=True,
                                  edgecolor="black", facecolor=colormap_tuple_list[i][1], linewidth=0.5)
