@@ -63,7 +63,9 @@ parser.add_argument("-u", "--figure_height_scale_factor", action="store", dest="
                     default=0.5, type=float,
                     help="Figure height scale factor. Figure height is calculated in inches as "
                          "int(figure_scale_factor * scaffold_number * sample_number). Default: 0.5")
-
+parser.add_argument("--masking_gff_list", action="store", dest="masking_gff_list", default=None,
+                    type=lambda s: s.split(","),
+                    help="Comma-separated list of GFF files with masked regions")
 
 args = parser.parse_args()
 
@@ -87,10 +89,12 @@ else:
 
 variants.draw_variant_window_densities(args.reference, args.output_prefix, args.window_size,
                                        args.window_size if args.window_step is None else args.window_step,
-                                       masking=None, parsing_mode=args.parsing_mode, min_gap_length=10,
+                                       masking_gff=args.masking_gff_list,
+                                       gap_fraction_threshold=0.4,
+                                       parsing_mode=args.parsing_mode, min_gap_length=10,
                                        figure_width=args.figure_width,
                                        figure_height_scale_factor=args.figure_height_scale_factor,
-                                       masked_region_color="grey", gap_color="white",
+                                       masked_region_color="grey", gap_color="grey",
                                        ignore_scaffolds_shorter_than_window=True,
                                        skip_empty_windows=False, scaffold_black_list=args.scaffold_black_list,
                                        sort_scaffolds=args.sort_scaffolds,
