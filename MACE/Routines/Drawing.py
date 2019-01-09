@@ -21,6 +21,7 @@ from matplotlib import text
 from MACE.General import FileRoutines
 from MACE.Functions.Generators import recursive_generator
 
+from MACE.General.GeneralCollections import TwoLvlDict
 
 class DrawingRoutines:
 
@@ -162,9 +163,18 @@ class DrawingRoutines:
         #normalize_colors = colors.BoundaryNorm(boundaries_for_colormap, len(boundaries_for_colormap) - 1) * int(256/(len(boundaries_for_colormap) - 1))
         #normalize_colors = colors.Normalize(vmin=boundaries_for_colormap[0], vmax=boundaries_for_colormap[-1])
 
+        masked_windows_count_dict = TwoLvlDict()
+        no_snps_windows_count_dict = TwoLvlDict()
+
+        for sample in count_dict:
+            masked_windows_count_dict[sample] = OrderedDict()
+
         for scaffold in final_scaffold_list:
+
             sample_index = 0
             for sample in count_dict:
+                masked_windows_count_dict[sample][scaffold] = 0
+                no_snps_windows_count_dict[sample][scaffold] = 0
                 #if scaffold in scaffold_black_list:
                 #    continue
                 #print gap_coords_list, gap_len_list
@@ -247,6 +257,11 @@ class DrawingRoutines:
                         #print scaffold
                         #print i, variant_density, window_color
 
+                        if window_color == masked_color:
+                            masked_windows_count_dict[sample][scaffold] += 1
+                        elif window_color == no_snp_color:
+                            no_snps_windows_count_dict[sample][scaffold] += 1
+
                         window = Rectangle((window_start, start_y), window_size, scaffold_height, fill=True,
                                            edgecolor=None, facecolor=window_color, linewidth=0.0000000000001)
                         #print prev_x
@@ -304,6 +319,9 @@ class DrawingRoutines:
         for extension in ext_list:
             plt.savefig("%s.%s" % (output_prefix, extension))
         plt.close()
+
+        no_snps_windows_count_dict.write("%s.no_snps.windows.count" % output_prefix)
+        masked_windows_count_dict.write("%s.masked.windows.count" % output_prefix)
 
     def draw_window_density_distribution(self, count_dict, window_size, output_prefix=None, suptitle="SNP density distribution",
                                          density_multiplicator=1000,
