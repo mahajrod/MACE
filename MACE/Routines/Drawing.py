@@ -250,10 +250,10 @@ class DrawingRoutines:
                                 else:
                                     for i in range(0, len(thresholds) - 1):
                                         if thresholds[i] < variant_density <= thresholds[i+1]:
-                                            window_color = cmap[i]
+                                            window_color = cmap(i)
                                             break
                                     else:
-                                        window_color = cmap[i+1]
+                                        window_color = cmap(i+1)
 
                             else:
                                 if variant_density <= colormap_tuple_list[0][0]:
