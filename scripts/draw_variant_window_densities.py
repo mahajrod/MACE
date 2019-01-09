@@ -66,9 +66,18 @@ parser.add_argument("-u", "--figure_height_scale_factor", action="store", dest="
 parser.add_argument("--masking_gff_list", action="store", dest="masking_gff_list", default=None,
                     type=lambda s: s.split(","),
                     help="Comma-separated list of GFF files with masked regions")
-parser.add_argument("--masking_threshold", action="store", dest="masking_threshold", default=0.4,
+parser.add_argument("--masking_threshold", action="store", dest="masking_threshold", default=0.5,
                     type=float,
-                    help="Maximum gaped or masked fraction of the window. Default: 0.4")
+                    help="Maximum gaped or masked fraction of the window. Default: 0.5")
+parser.add_argument("--colormap", action="store", dest="colormap",
+                    help="Matplotlib colormap to use for SNP densities. Default: not set, "
+                         "colors from HapMap article are used")
+parser.add_argument("--density_threshold", action="store", dest="density_thresholds",
+                    default=(0.0, 0.1, 0.5, 0.75, 1.0, 1.25, 1.5, 2.0, 2.5),
+                    type=lambda s: map(float, s.split(",")),
+                    help="Thresholds(SNPs/kb) for SNP densities to use for window coloring. "
+                         "Default: values from Hapmap article"
+                         "(0.0, 0.1, 0.5, 0.75, 1.0, 1.25, 1.5, 2.0, 2.5)")
 
 args = parser.parse_args()
 
@@ -90,4 +99,6 @@ variants.draw_variant_window_densities(args.reference, args.output_prefix, args.
                                        scaffold_white_list=args.scaffold_white_list,
                                        figure_extensions=args.output_formats,
                                        add_sample_name_to_labels=False,
-                                       sample_label="SampleZZZ",)
+                                       sample_label="SampleZZZ",
+                                       colormap=args.colormap,
+                                       thresholds=args.density_threshold,)
