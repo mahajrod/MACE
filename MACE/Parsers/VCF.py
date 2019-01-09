@@ -1255,8 +1255,8 @@ class CollectionVCF(Collection):
                                                       dist_between_scaffolds_scaling_factor=dist_between_scaffolds_scaling_factor)
 
         DrawingRoutines.draw_window_density_distribution(count_dict, output_prefix=output_prefix,
+                                                         density_multiplicator=density_multiplicator,
                                                          suptitle="SNP density distribution",
-                                                         denominator=1000,
                                                          number_of_bins=None, width_of_bins=None,
                                                          max_threshold=None, min_threshold=None,
                                                          scaffold_black_list=[], scaffold_white_list=[],
