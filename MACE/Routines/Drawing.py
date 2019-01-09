@@ -215,8 +215,11 @@ class DrawingRoutines:
 
                         window_start = i * window_step
                         window_end = window_start + window_size - 1  # TODO: check end coordinate
-
-                        variant_density = float(count_dict[sample][scaffold][i] * density_multiplicator) / float(window_size)
+                        if masking_dict:
+                            if scaffold in masking_dict:
+                                variant_density = float(count_dict[sample][scaffold][i] * density_multiplicator) / float(window_size - masking_dict[scaffold][i])
+                        else:
+                            variant_density = float(count_dict[sample][scaffold][i] * density_multiplicator) / float(window_size)
 
                         if variant_density <= colormap_tuple_list[0][0]:
                             window_color = "white"
