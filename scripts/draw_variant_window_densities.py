@@ -73,21 +73,6 @@ parser.add_argument("--masking_threshold", action="store", dest="masking_thresho
 args = parser.parse_args()
 
 variants = CollectionVCF(from_file=True, in_file=args.input, parse_only_coordinates=True)
-"""
-if args.ref_genome:
-    reference_genome = ReferenceGenome(args.reference)
-    reference_genome.find_gaps()
-else:
-    reference_genome = None
-
-if args.masked_regions:
-    masked_regions = {}
-    with open(args.masked_regions) as gff_fd:
-        for record in GFF.parse(gff_fd):
-            masked_regions[record.id] = record
-else:
-    masked_regions = None
-"""
 
 
 variants.draw_variant_window_densities(args.reference, args.output_prefix, args.window_size,
