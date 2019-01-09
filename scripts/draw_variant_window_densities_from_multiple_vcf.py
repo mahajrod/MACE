@@ -94,7 +94,7 @@ parser.add_argument("--masking_threshold", action="store", dest="masking_thresho
 parser.add_argument("--colormap", action="store", dest="colormap",
                     help="Matplotlib colormap to use for SNP densities. Default: not set, "
                          "colors from HapMap article are used")
-parser.add_argument("--density_threshold", action="store", dest="density_thresholds",
+parser.add_argument("--density_thresholds", action="store", dest="density_thresholds",
                     default=(0.0, 0.1, 0.5, 0.75, 1.0, 1.25, 1.5, 2.0, 2.5),
                     type=lambda s: map(float, s.split(",")),
                     help="Comma-separated list of thresholds(SNPs/kb) for SNP densities to use for window coloring. "
