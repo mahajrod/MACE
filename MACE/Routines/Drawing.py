@@ -89,6 +89,10 @@ class DrawingRoutines:
                                       dist_between_scaffolds_scaling_factor=1,
                                       gap_color="grey",
                                       masked_color="grey", no_snp_color="white",
+                                      colormap=None,
+                                      colors=("#333a97", "#3d3795","#5d3393", "#813193", "#9d2d7f", "#b82861",
+                                                        "#d33845", "#ea2e2e", "#f5ae27"),
+                                      thresholds=(0.0, 0.1, 0.5, 0.75, 1.0, 1.25, 1.5, 2.0, 2.5),
                                       colormap_tuple_list=((0.0, "#333a97"), (0.1, "#3d3795"), (0.5, "#5d3393"),
                                                            (0.75, "#813193"), (1.0, "#9d2d7f"), (1.25, "#b82861"),
                                                            (1.5, "#d33845"), (2.0, "#ea2e2e"), (2.5, "#f5ae27"))):
@@ -169,6 +173,9 @@ class DrawingRoutines:
         for sample in count_dict:
             masked_windows_count_dict[sample] = OrderedDict()
 
+        if colormap:
+            cmap = plt.get_cmap(colormap, len(thresholds))
+
         for scaffold in final_scaffold_list:
 
             sample_index = 0
@@ -236,17 +243,29 @@ class DrawingRoutines:
                             variant_density = float(count_dict[sample][scaffold][i] * density_multiplicator) / float(window_size)
 
                         if variant_density:
-                            if variant_density <= colormap_tuple_list[0][0]:
-                                window_color = "white"
-                            else:
-                                for lower_boundary, color in colormap_tuple_list:
-                                    if variant_density <= lower_boundary:
-                                        break
-                                    if variant_density > lower_boundary:
-                                        prev_color = color
+                            if colormap:
+                                if variant_density <= thresholds[0]:
+                                    window_color = no_snp_color
                                 else:
-                                    prev_color = color
-                                window_color = prev_color
+                                    for i in range(0, len(thresholds) - 1):
+                                        if thresholds[i] < variant_density <= thresholds[i+1]:
+                                            window_color = cmap[i]
+                                            break
+                                    else:
+                                        window_color = cmap[i+1]
+
+                            else:
+                                if variant_density <= colormap_tuple_list[0][0]:
+                                    window_color = no_snp_color
+                                else:
+                                    for lower_boundary, color in colormap_tuple_list:
+                                        if variant_density <= lower_boundary:
+                                            break
+                                        if variant_density > lower_boundary:
+                                            prev_color = color
+                                    else:
+                                        prev_color = color
+                                    window_color = prev_color
                         else:
                             window_color = masked_color
 
