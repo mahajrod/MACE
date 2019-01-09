@@ -1187,7 +1187,8 @@ class CollectionVCF(Collection):
 
     def draw_variant_window_densities(self, reference_fasta, output_prefix, window_size, window_step,
                                       masking=None, parsing_mode="index_db", min_gap_length=10,
-                                      masked_region_color="grey", gap_color="white",
+                                      masked_region_color="grey", gap_color="grey",
+                                      no_snp_color="white",
                                       ignore_scaffolds_shorter_than_window=True,
                                       skip_empty_windows=False, reference_scaffold_black_list=(),
                                       figure_extensions=("png", "svg"),
@@ -1231,6 +1232,8 @@ class CollectionVCF(Collection):
                                                       scaffold_ordered_list=scaffold_ordered_list,
                                                       scaffold_white_list=scaffold_white_list,
                                                       gap_color=gap_color,
+                                                      masked_color=masked_region_color,
+                                                      no_snp_color=no_snp_color,
                                                       add_sample_name_to_labels=add_sample_name_to_labels,
                                                       dist_between_scaffolds_scaling_factor=dist_between_scaffolds_scaling_factor)
 
