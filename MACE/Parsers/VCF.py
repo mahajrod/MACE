@@ -1205,7 +1205,9 @@ class CollectionVCF(Collection):
                                       dist_between_scaffolds_scaling_factor=1,
                                       colormap_tuple_list=((0.0, "#333a97"), (0.1, "#3d3795"), (0.5, "#5d3393"),
                                                            (0.75, "#813193"), (1.0, "#9d2d7f"), (1.25, "#b82861"),
-                                                           (1.5, "#d33845"), (2.0, "#ea2e2e"), (2.5, "#f5ae27"))):
+                                                           (1.5, "#d33845"), (2.0, "#ea2e2e"), (2.5, "#f5ae27")),
+                                      colormap=None,
+                                      thresholds=(0.0, 0.1, 0.5, 0.75, 1.0, 1.25, 1.5, 2.0, 2.5),):
         if window_step > window_size:
             raise ValueError("ERROR!!! Window step can't be larger then window size")
 
@@ -1252,7 +1254,9 @@ class CollectionVCF(Collection):
                                                       masked_color=masked_region_color,
                                                       no_snp_color=no_snp_color,
                                                       add_sample_name_to_labels=add_sample_name_to_labels,
-                                                      dist_between_scaffolds_scaling_factor=dist_between_scaffolds_scaling_factor)
+                                                      dist_between_scaffolds_scaling_factor=dist_between_scaffolds_scaling_factor,
+                                                      colormap=colormap,
+                                                      thresholds=thresholds,)
 
         DrawingRoutines.draw_window_density_distribution(count_dict, output_prefix=output_prefix,
                                                          density_multiplicator=density_multiplicator,
