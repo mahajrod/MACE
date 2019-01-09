@@ -245,17 +245,19 @@ class DrawingRoutines:
                         else:
                             variant_density = float(count_dict[sample][scaffold][i] * density_multiplicator) / float(window_size)
 
-                        if variant_density:
+                        if variant_density is None:
+                            window_color = masked_color
+                        else:
                             if colormap:
                                 if variant_density <= thresholds[0]:
                                     window_color = no_snp_color
                                 else:
-                                    for i in range(0, len(thresholds) - 1):
-                                        if thresholds[i] < variant_density <= thresholds[i+1]:
-                                            window_color = cmap(i)
+                                    for j in range(0, len(thresholds) - 1):
+                                        if thresholds[j] < variant_density <= thresholds[j+1]:
+                                            window_color = cmap(j)
                                             break
                                     else:
-                                        window_color = cmap(i+1)
+                                        window_color = cmap(j+1)
 
                             else:
                                 if variant_density <= colormap_tuple_list[0][0]:
@@ -269,8 +271,6 @@ class DrawingRoutines:
                                     else:
                                         prev_color = color
                                     window_color = prev_color
-                        else:
-                            window_color = masked_color
 
                         if masking_dict:
                             if scaffold in masking_dict:
