@@ -66,6 +66,9 @@ parser.add_argument("-u", "--figure_height_scale_factor", action="store", dest="
 parser.add_argument("--masking_gff_list", action="store", dest="masking_gff_list", default=None,
                     type=lambda s: s.split(","),
                     help="Comma-separated list of GFF files with masked regions")
+parser.add_argument("--masking_threshold", action="store", dest="masking_threshold", default=0.4,
+                    type=float,
+                    help="Maximum gaped or masked fraction of the window. Default: 0.4")
 
 args = parser.parse_args()
 
@@ -90,7 +93,7 @@ else:
 variants.draw_variant_window_densities(args.reference, args.output_prefix, args.window_size,
                                        args.window_size if args.window_step is None else args.window_step,
                                        masking_gff=args.masking_gff_list,
-                                       gap_fraction_threshold=0.4,
+                                       gap_fraction_threshold=args.masking_threshold,
                                        parsing_mode=args.parsing_mode, min_gap_length=10,
                                        figure_width=args.figure_width,
                                        figure_height_scale_factor=args.figure_height_scale_factor,
