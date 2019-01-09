@@ -177,7 +177,7 @@ class DrawingRoutines:
         if colormap:
             cmap = plt.get_cmap(colormap, len(thresholds))
 
-        masked_regions_fd = open("%s.masked_regions" % output_prefix)
+        masked_regions_fd = open("%s.masked_regions" % output_prefix, "w")
         masked_regions_fd.write("#scaffold\twindow\tmasked_position\tmasked_position,fraction\n")
         for scaffold in final_scaffold_list:
 
