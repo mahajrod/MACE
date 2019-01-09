@@ -88,6 +88,9 @@ parser.add_argument("--subplot_size", action="store", dest="subplot_size", defau
 parser.add_argument("--masking_gff_list", action="store", dest="masking_gff_list", default=None,
                     type=lambda s: s.split(","),
                     help="Comma-separated list of GFF files with masked regions")
+parser.add_argument("--masking_threshold", action="store", dest="masking_threshold", default=0.4,
+                    type=float,
+                    help="Maximum gaped or masked fraction of the window. Default: 0.4")
 
 args = parser.parse_args()
 
@@ -120,6 +123,8 @@ for sample_name, vcf_file in zip(args.sample_names, args.input):
 DrawingRoutines.draw_variant_window_densities(count_dict, reference.region_length, args.window_size,
                                               args.window_size if args.window_step is None else args.window_step,
                                               args.output_prefix,
+                                              masking_dict=gaps_and_masked_region_window_count_dict,
+                                              gap_fraction_threshold=args.masking_threshold,
                                               record_style=None, ext_list=args.output_formats,
                                               label_fontsize=13, left_offset=0.2, figure_width=args.figure_width,
                                               figure_height_scale_factor=args.figure_height_scale_factor,
