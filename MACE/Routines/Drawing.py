@@ -172,6 +172,7 @@ class DrawingRoutines:
 
         for sample in count_dict:
             masked_windows_count_dict[sample] = OrderedDict()
+            no_snps_windows_count_dict[sample] = OrderedDict()
 
         if colormap:
             cmap = plt.get_cmap(colormap, len(thresholds))
