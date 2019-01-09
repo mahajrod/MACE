@@ -77,6 +77,8 @@ class DrawingRoutines:
         return final_scaffold_list
 
     def draw_variant_window_densities(self, count_dict, scaffold_length_dict, window_size, window_step, output_prefix,
+                                      masking_dict=None,
+                                      gap_fraction_threshold=0.4,
                                       record_style=None, ext_list=("svg", "png"),
                                       label_fontsize=13, left_offset=0.2, figure_width=12,
                                       figure_height_scale_factor=0.5, scaffold_synonym_dict=None,
@@ -228,6 +230,10 @@ class DrawingRoutines:
                                 prev_color = color
                             window_color = prev_color
 
+                        if masking_dict:
+                            if scaffold in masking_dict:
+                                if float(masking_dict[scaffold][i]) / float(window_size) > gap_fraction_threshold:
+                                    window_color = masked_color
                         #print scaffold
                         #print i, variant_density, window_color
 
@@ -251,7 +257,7 @@ class DrawingRoutines:
 
         square_y_pos = legend_y_position - legend_element_side
 
-        for color, legend_label in zip((masked_color, no_snp_color), ("masked", "no SNP")):
+        for color, legend_label in zip((masked_color, no_snp_color), ("masked", "no SNPs")):
             square_y_pos += legend_element_side
             fragment = Rectangle((legend_x_position, square_y_pos), max_scaffold_length/64, legend_element_side, fill=True,
                                  edgecolor="black", facecolor=color, linewidth=0.5)
