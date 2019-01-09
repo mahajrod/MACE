@@ -177,6 +177,8 @@ class DrawingRoutines:
         if colormap:
             cmap = plt.get_cmap(colormap, len(thresholds))
 
+        masked_regions_fd = open("%s.masked_regions" % output_prefix)
+        masked_regions_fd.write("#scaffold\twindow\tmasked_position\tmasked_position,fraction\n")
         for scaffold in final_scaffold_list:
 
             sample_index = 0
@@ -279,6 +281,7 @@ class DrawingRoutines:
 
                         if window_color == masked_color:
                             masked_windows_count_dict[sample][scaffold] += 1
+                            masked_regions_fd.write("%s\t%i\t%i\t%f\n" % (scaffold, i, masking_dict[scaffold][i], float(masking_dict[scaffold][i]) / float(window_size)))
                         elif window_color == no_snp_color:
                             no_snps_windows_count_dict[sample][scaffold] += 1
 
@@ -358,6 +361,7 @@ class DrawingRoutines:
 
         no_snps_windows_count_dict.write("%s.no_snps.windows.count" % output_prefix)
         masked_windows_count_dict.write("%s.masked.windows.count" % output_prefix)
+        masked_regions_fd.close()
 
     def draw_window_density_distribution(self, count_dict, window_size, output_prefix=None, suptitle="SNP density distribution",
                                          density_multiplicator=1000,
