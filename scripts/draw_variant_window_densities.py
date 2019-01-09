@@ -101,4 +101,4 @@ variants.draw_variant_window_densities(args.reference, args.output_prefix, args.
                                        add_sample_name_to_labels=False,
                                        sample_label="SampleZZZ",
                                        colormap=args.colormap,
-                                       thresholds=args.density_threshold,)
+                                       thresholds=args.density_thresholds,)

@@ -147,7 +147,7 @@ DrawingRoutines.draw_variant_window_densities(count_dict, reference.region_lengt
                                               gap_color="grey",
                                               dist_between_scaffolds_scaling_factor=args.dist_between_scaffolds_scaling_factor,
                                               colormap=args.colormap,
-                                              thresholds=args.density_threshold,
+                                              thresholds=args.density_thresholds,
                                               colormap_tuple_list=((0.0, "#333a97"), (0.1, "#3d3795"),
                                                                    (0.5, "#5d3393"), (0.75, "#813193"),
                                                                    (1.0, "#9d2d7f"), (1.25, "#b82861"),
