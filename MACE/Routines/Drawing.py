@@ -311,22 +311,38 @@ class DrawingRoutines:
             subplot.annotate(legend_label,
                              xy=(legend_x_position + 2 * max_scaffold_length/64, square_y_pos), xycoords='data', fontsize=13,
                              xytext=(legend_x_position + 2 * max_scaffold_length/64, square_y_pos),)
+        if colormap:
+            for i in range(0, len(thresholds)):
+                square_y_pos += legend_element_side
+                #print (colormap_tuple_list[i][1])
+                fragment = Rectangle((legend_x_position, square_y_pos), max_scaffold_length/64, legend_element_side, fill=True,
+                                     edgecolor="black", facecolor=cmap(i), linewidth=0.5)
 
-        for i in range(0, len(colormap_tuple_list)):
-            square_y_pos += legend_element_side
-            #print (colormap_tuple_list[i][1])
-            fragment = Rectangle((legend_x_position, square_y_pos), max_scaffold_length/64, legend_element_side, fill=True,
-                                 edgecolor="black", facecolor=colormap_tuple_list[i][1], linewidth=0.5)
+                subplot.add_patch(fragment)
+                if i == (len(thresholds) - 1):
+                    legend_element_label = "> %.2f" % thresholds[i]
+                else:
+                    legend_element_label = "%.2f - %.2f" % (thresholds[i], thresholds[i + 1])
 
-            subplot.add_patch(fragment)
-            if i == (len(colormap_tuple_list) - 1):
-                legend_element_label = "> %.2f" % colormap_tuple_list[i][0]
-            else:
-                legend_element_label = "%.2f - %.2f" % (colormap_tuple_list[i][0], colormap_tuple_list[i + 1][0])
+                subplot.annotate(legend_element_label,
+                                 xy=(legend_x_position + 2 * max_scaffold_length/64, square_y_pos), xycoords='data', fontsize=13,
+                                 xytext=(legend_x_position + 2 * max_scaffold_length/64, square_y_pos),)
+        else:
+            for i in range(0, len(colormap_tuple_list)):
+                square_y_pos += legend_element_side
+                #print (colormap_tuple_list[i][1])
+                fragment = Rectangle((legend_x_position, square_y_pos), max_scaffold_length/64, legend_element_side, fill=True,
+                                     edgecolor="black", facecolor=colormap_tuple_list[i][1], linewidth=0.5)
 
-            subplot.annotate(legend_element_label,
-                             xy=(legend_x_position + 2 * max_scaffold_length/64, square_y_pos), xycoords='data', fontsize=13,
-                             xytext=(legend_x_position + 2 * max_scaffold_length/64, square_y_pos),)
+                subplot.add_patch(fragment)
+                if i == (len(colormap_tuple_list) - 1):
+                    legend_element_label = "> %.2f" % colormap_tuple_list[i][0]
+                else:
+                    legend_element_label = "%.2f - %.2f" % (colormap_tuple_list[i][0], colormap_tuple_list[i + 1][0])
+
+                subplot.annotate(legend_element_label,
+                                 xy=(legend_x_position + 2 * max_scaffold_length/64, square_y_pos), xycoords='data', fontsize=13,
+                                 xytext=(legend_x_position + 2 * max_scaffold_length/64, square_y_pos),)
 
         plt.xlim(xmin=0, xmax=int(1.2 * max_scaffold_length))
         plt.ylim(ymin=0, ymax=start_y + 2 * scaffold_height)
