@@ -113,37 +113,3 @@ DrawingRoutines.draw_window_density_distribution(count_dict, args.window_size, o
                                                  per_scaffold_histo_dir="per_scaffold_histo_dir/",
                                                  subplot_tuple=None, share_x_axis=True, share_y_axis=True,
                                                  extensions=("png",), show_mean_and_median=True)
-
-
-
-
-"""
-if args.ref_genome:
-    reference_genome = ReferenceGenome(args.reference)
-    reference_genome.find_gaps()
-else:
-    reference_genome = None
-
-if args.masked_regions:
-    masked_regions = {}
-    with open(args.masked_regions) as gff_fd:
-        for record in GFF.parse(gff_fd):
-            masked_regions[record.id] = record
-else:
-    masked_regions = None
-"""
-
-"""
-variants.draw_variant_window_densities(args.reference, args.output_prefix, args.window_size,
-                                       args.window_size if args.window_step is None else args.window_step,
-                                       masking=None, parsing_mode=args.parsing_mode, min_gap_length=10,
-                                       masked_region_color="grey", gap_color="white",
-                                       ignore_scaffolds_shorter_than_window=True,
-                                       skip_empty_windows=False, scaffold_black_list=args.scaffold_black_list,
-                                       sort_scaffolds=args.sort_scaffolds,
-                                       scaffold_ordered_list=args.scaffold_ordered_list,
-                                       scaffold_white_list=args.scaffold_white_list,
-                                       figure_extensions=args.output_formats,
-                                       add_sample_name_to_labels=False,
-                                       sample_label="SampleZZZ",)
-"""
