@@ -1186,7 +1186,9 @@ class CollectionVCF(Collection):
                                  multiplier=multiplier)
 
     def draw_variant_window_densities(self, reference_fasta, output_prefix, window_size, window_step,
-                                      masking=None, parsing_mode="index_db", min_gap_length=10,
+                                      masking_gff=None,
+                                      gap_fraction_threshold=0.4,
+                                      parsing_mode="index_db", min_gap_length=10,
                                       masked_region_color="grey", gap_color="grey",
                                       no_snp_color="white",
                                       ignore_scaffolds_shorter_than_window=True,
@@ -1206,10 +1208,23 @@ class CollectionVCF(Collection):
                                                            (1.5, "#d33845"), (2.0, "#ea2e2e"), (2.5, "#f5ae27"))):
         if window_step > window_size:
             raise ValueError("ERROR!!! Window step can't be larger then window size")
-        reference = ReferenceGenome(reference_fasta, masked_regions=None, index_file="refgen.idx", filetype="fasta",
+
+        print("Parsing reference...")
+        reference = ReferenceGenome(reference_fasta,
+                                    masked_regions=None,
+                                    index_file="refgen.idx",
+                                    filetype="fasta",
                                     mode=parsing_mode,
-                                    black_list=reference_scaffold_black_list)
-        reference.find_gaps(min_gap_length=min_gap_length)
+                                    black_list=reference_scaffold_black_list,
+                                    masking_gff_list=masking_gff)
+
+        print("Merging gaps with masking...")
+
+        gaps_and_masked_region_window_count_dict = reference.count_gaped_and_masked_positions_in_windows(window_size,
+                                                                                                         window_step,
+                                                                                                         ignore_scaffolds_shorter_than_window=True,
+                                                                                                         output_prefix=output_prefix,
+                                                                                                         min_gap_len=min_gap_length)
 
         count_dict = {sample_label: self.count_variants_in_windows(window_size, window_step, reference.region_length,
                                                                    ignore_scaffolds_shorter_than_window=ignore_scaffolds_shorter_than_window,
@@ -1218,6 +1233,8 @@ class CollectionVCF(Collection):
 
         DrawingRoutines.draw_variant_window_densities(count_dict, reference.region_length, window_size, window_step,
                                                       output_prefix,
+                                                      masking_dict=gaps_and_masked_region_window_count_dict,
+                                                      gap_fraction_threshold=gap_fraction_threshold,
                                                       colormap_tuple_list=colormap_tuple_list,
                                                       record_style=None, ext_list=figure_extensions,
                                                       label_fontsize=13, left_offset=0.2,
@@ -1821,7 +1838,7 @@ class ReferenceGenome(object):
 
         if masking_gff_list:
             masking_gffs = [masking_gff_list] if isinstance(masking_gff_list, str) else masking_gff_list
-            for gff in masking_gff_list:
+            for gff in masking_gffs:
                 with open(gff, "r") as gff_fd:
                     for line in gff_fd:
                         if line[0] == "#":
