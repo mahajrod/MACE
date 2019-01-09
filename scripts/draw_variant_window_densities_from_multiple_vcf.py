@@ -85,6 +85,9 @@ parser.add_argument("-g", "--min_thresholds", action="store", dest="min_threshol
 parser.add_argument("--subplot_size", action="store", dest="subplot_size", default=4,
                     type=int,
                     help="Size of subplot(inches) on distribution histogram with all scaffolds. Default: 4")
+parser.add_argument("--masking_gff_list", action="store", dest="masking_gff_list", default=None,
+                    type=lambda s: s.split(","),
+                    help="Comma-separated list of GFF files with masked regions")
 
 args = parser.parse_args()
 
@@ -95,9 +98,16 @@ reference = ReferenceGenome(args.reference,
                             index_file="refgen.idx",
                             filetype="fasta",
                             mode=args.parsing_mode,
-                            black_list=[])
+                            black_list=[],
+                            masking_gff_list=args.masking_gff_list)
 
-reference.find_gaps(min_gap_length=10)
+
+gaps_and_masked_region_window_count_dict = reference.count_gaped_and_masked_positions_in_windows(args.window_size,
+                                                                                                 args.window_size if args.window_step is None else args.window_step,
+                                                                                                 ignore_scaffolds_shorter_than_window=True,
+                                                                                                 output_prefix=args.output_prefix,
+                                                                                                 min_gap_len=10)
+
 
 for sample_name, vcf_file in zip(args.sample_names, args.input):
     count_dict[sample_name] = CollectionVCF(from_file=True, in_file=vcf_file, parse_only_coordinates=True).count_variants_in_windows(args.window_size,
