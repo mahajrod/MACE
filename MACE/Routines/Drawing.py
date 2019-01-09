@@ -217,21 +217,28 @@ class DrawingRoutines:
                         window_end = window_start + window_size - 1  # TODO: check end coordinate
                         if masking_dict:
                             if scaffold in masking_dict:
-                                variant_density = float(count_dict[sample][scaffold][i] * density_multiplicator) / float(window_size - masking_dict[scaffold][i])
+                                unmasked_length = window_size - masking_dict[scaffold][i]
+                                if unmasked_length > 0:
+                                    variant_density = float(count_dict[sample][scaffold][i] * density_multiplicator) / float(unmasked_length)
+                                else:
+                                    variant_density = None
                         else:
                             variant_density = float(count_dict[sample][scaffold][i] * density_multiplicator) / float(window_size)
 
-                        if variant_density <= colormap_tuple_list[0][0]:
-                            window_color = "white"
-                        else:
-                            for lower_boundary, color in colormap_tuple_list:
-                                if variant_density <= lower_boundary:
-                                    break
-                                if variant_density > lower_boundary:
-                                    prev_color = color
+                        if variant_density:
+                            if variant_density <= colormap_tuple_list[0][0]:
+                                window_color = "white"
                             else:
-                                prev_color = color
-                            window_color = prev_color
+                                for lower_boundary, color in colormap_tuple_list:
+                                    if variant_density <= lower_boundary:
+                                        break
+                                    if variant_density > lower_boundary:
+                                        prev_color = color
+                                else:
+                                    prev_color = color
+                                window_color = prev_color
+                        else:
+                            window_color = masked_color
 
                         if masking_dict:
                             if scaffold in masking_dict:
