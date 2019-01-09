@@ -84,6 +84,7 @@ class DrawingRoutines:
                                       scaffold_black_list=[], sort_scaffolds=False, scaffold_ordered_list=None,
                                       scaffold_white_list=[], add_sample_name_to_labels=False,
                                       dist_between_scaffolds_scaling_factor=1,
+                                      gap_color="grey",
                                       masked_color="grey", no_snp_color="white",
                                       colormap_tuple_list=((0.0, "#333a97"), (0.1, "#3d3795"), (0.5, "#5d3393"),
                                                            (0.75, "#813193"), (1.0, "#9d2d7f"), (1.25, "#b82861"),
