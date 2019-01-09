@@ -231,19 +231,19 @@ class DrawingRoutines:
                                  xytext=(-15, 1.5 * label_line_y_shift), textcoords='offset points',
                                  ha='right', va='top')
                 if scaffold in count_dict[sample]:
-                    for i in range(0, len(count_dict[sample][scaffold])):
+                    for window_index in range(0, len(count_dict[sample][scaffold])):
 
-                        window_start = i * window_step
+                        window_start = window_index * window_step
                         window_end = window_start + window_size - 1  # TODO: check end coordinate
                         if masking_dict:
                             if scaffold in masking_dict:
-                                unmasked_length = window_size - masking_dict[scaffold][i]
+                                unmasked_length = window_size - masking_dict[scaffold][window_index]
                                 if unmasked_length > 0:
-                                    variant_density = float(count_dict[sample][scaffold][i] * density_multiplicator) / float(unmasked_length)
+                                    variant_density = float(count_dict[sample][scaffold][window_index] * density_multiplicator) / float(unmasked_length)
                                 else:
                                     variant_density = None
                         else:
-                            variant_density = float(count_dict[sample][scaffold][i] * density_multiplicator) / float(window_size)
+                            variant_density = float(count_dict[sample][scaffold][window_index] * density_multiplicator) / float(window_size)
 
                         if variant_density is None:
                             window_color = masked_color
@@ -252,12 +252,12 @@ class DrawingRoutines:
                                 if variant_density <= thresholds[0]:
                                     window_color = no_snp_color
                                 else:
-                                    for j in range(0, len(thresholds) - 1):
-                                        if thresholds[j] < variant_density <= thresholds[j+1]:
-                                            window_color = cmap(j)
+                                    for threshold_index in range(0, len(thresholds) - 1):
+                                        if thresholds[threshold_index] < variant_density <= thresholds[threshold_index+1]:
+                                            window_color = cmap(threshold_index)
                                             break
                                     else:
-                                        window_color = cmap(j+1)
+                                        window_color = cmap(threshold_index+1)
 
                             else:
                                 if variant_density <= colormap_tuple_list[0][0]:
@@ -274,14 +274,14 @@ class DrawingRoutines:
 
                         if masking_dict:
                             if scaffold in masking_dict:
-                                if float(masking_dict[scaffold][i]) / float(window_size) > gap_fraction_threshold:
+                                if float(masking_dict[scaffold][window_index]) / float(window_size) > gap_fraction_threshold:
                                     window_color = masked_color
                         #print scaffold
                         #print i, variant_density, window_color
 
                         if window_color == masked_color:
                             masked_windows_count_dict[sample][scaffold] += 1
-                            masked_regions_fd.write("%s\t%i\t%i\t%f\n" % (scaffold, i, masking_dict[scaffold][i], float(masking_dict[scaffold][i]) / float(window_size)))
+                            masked_regions_fd.write("%s\t%i\t%i\t%f\n" % (scaffold, window_index, masking_dict[scaffold][window_index], float(masking_dict[scaffold][window_index]) / float(window_size)))
                         elif window_color == no_snp_color:
                             no_snps_windows_count_dict[sample][scaffold] += 1
 
