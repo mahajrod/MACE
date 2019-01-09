@@ -88,9 +88,18 @@ parser.add_argument("--subplot_size", action="store", dest="subplot_size", defau
 parser.add_argument("--masking_gff_list", action="store", dest="masking_gff_list", default=None,
                     type=lambda s: s.split(","),
                     help="Comma-separated list of GFF files with masked regions")
-parser.add_argument("--masking_threshold", action="store", dest="masking_threshold", default=0.4,
+parser.add_argument("--masking_threshold", action="store", dest="masking_threshold", default=0.5,
                     type=float,
-                    help="Maximum gaped or masked fraction of the window. Default: 0.4")
+                    help="Maximum gaped or masked fraction of the window. Default: 0.5")
+parser.add_argument("--colormap", action="store", dest="colormap",
+                    help="Matplotlib colormap to use for SNP densities. Default: not set, "
+                         "colors from HapMap article are used")
+parser.add_argument("--density_threshold", action="store", dest="density_thresholds",
+                    default=(0.0, 0.1, 0.5, 0.75, 1.0, 1.25, 1.5, 2.0, 2.5),
+                    type=lambda s: map(float, s.split(",")),
+                    help="Thresholds(SNPs/kb) for SNP densities to use for window coloring. "
+                         "Default: values from Hapmap article"
+                         "(0.0, 0.1, 0.5, 0.75, 1.0, 1.25, 1.5, 2.0, 2.5)")
 
 args = parser.parse_args()
 
@@ -137,6 +146,8 @@ DrawingRoutines.draw_variant_window_densities(count_dict, reference.region_lengt
                                               add_sample_name_to_labels=True,
                                               gap_color="grey",
                                               dist_between_scaffolds_scaling_factor=args.dist_between_scaffolds_scaling_factor,
+                                              colormap=args.colormap,
+                                              thresholds=args.density_threshold,
                                               colormap_tuple_list=((0.0, "#333a97"), (0.1, "#3d3795"),
                                                                    (0.5, "#5d3393"), (0.75, "#813193"),
                                                                    (1.0, "#9d2d7f"), (1.25, "#b82861"),
