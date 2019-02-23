@@ -22,16 +22,21 @@ parser = argparse.ArgumentParser()
 
 parser.add_argument("-i", "--input_file", action="store", dest="input", required=True,
                     help="Input vcf file with mutations.")
-parser.add_argument("-o", "--output_file_prefix", action="store", dest="output_prefix", required=True,
+parser.add_argument("-o", "--output_file_prefix", action="store", dest="output_prefix",
+                    required=True,
                     help="Prefix of output file with rainfall plot")
 parser.add_argument("-d", "--dpi", action="store", dest="dpi", type=int, default=300,
                     help="Dpi of figure")
-parser.add_argument("-f", "--size_of_figure", action="store", dest="size_of_figure", type=figsize_from_str,
+parser.add_argument("-f", "--size_of_figure", action="store", dest="size_of_figure",
+                    type=figsize_from_str,
                     default=(40, 40),
-                    help="Size of figure in inches. X and Y values should be separated by comma. Default: 40,40")
-parser.add_argument("-e", "--output_formats", action="store", dest="output_formats", type=list_from_str,
+                    help="Size of figure in inches. X and Y values should be separated "
+                         "by comma. Default: 40,40")
+parser.add_argument("-e", "--output_formats", action="store", dest="output_formats",
+                    type=list_from_str,
                     default=["svg", "eps", "pdf", "png", "jpg"],
-                    help="Comma-separated list of formats (supported by matlotlib) of output figure.Default: svg,eps,pdf,png,jpg")
+                    help="Comma-separated list of formats (supported by matlotlib) "
+                         "of output figure.Default: svg,eps,pdf,png,jpg")
 parser.add_argument("-l", "--suptitle", action="store", dest="suptitle",
                     help="Suptitle of figure. Default: 'Rainfall plot'")
 parser.add_argument("-g", "--draw_gaps", action="store_true", dest="draw_gaps",
@@ -40,8 +45,21 @@ parser.add_argument("-r", "--reference_genome", action="store", dest="ref_genome
                     help="Fasta file with reference genome, required to draw gaps")
 parser.add_argument("-m", "--masked_regions", action="store", dest="masked_regions",
                     help="Gff file with masked regions")
-parser.add_argument("-b", "--logbase", action="store", dest="logbase", default=2, type=int,
+parser.add_argument("-u", "--logbase", action="store", dest="logbase", default=2, type=int,
                     help="Logbase of y axis")
+parser.add_argument("-a", "--scaffold_white_list", action="store", dest="scaffold_white_list", default=[],
+                    type=lambda s: s.split(","),
+                    help="Comma-separated list of the only scaffolds to draw. Default: all")
+parser.add_argument("-b", "--scaffold_black_list", action="store", dest="scaffold_black_list", default=[],
+                    type=lambda s: s.split(","),
+                    help="Comma-separated list of scaffolds to skip at drawing. Default: not set")
+parser.add_argument("-y", "--sort_scaffolds", action="store_true", dest="sort_scaffolds", default=False,
+                    help="Order  scaffolds according to their names. Default: False")
+parser.add_argument("-z", "--scaffold_ordered_list", action="store", dest="scaffold_ordered_list", default=[],
+                    type=lambda s: s.split(","),
+                    help="Comma-separated list of scaffolds to draw first and exactly in same order. "
+                         "Scaffolds absent in this list are drawn last and in order according to vcf file . "
+                         "Default: not set")
 args = parser.parse_args()
 
 mutations = CollectionVCF(from_file=True, in_file=args.input, dont_parse_info_and_data=True)
@@ -65,4 +83,6 @@ mutations.rainfall_plot(args.output_prefix, single_fig=True, dpi=args.dpi, figsi
                         ref_genome=reference_genome, masked_regions=masked_regions, min_gap_length=10,
                         draw_gaps=args.draw_gaps, suptitle=args.suptitle,
                         gaps_color="#777777", masked_regions_color="#aaaaaa", logbase=args.logbase,
-                        extension_list=args.output_formats)
+                        extension_list=args.output_formats,
+                        scaffold_black_list=args.scaffold_black_list, scaffold_white_list=args.scaffold_white_list,
+                        scaffold_ordered_list=args.scaffold_ordered_list, sort_scaffolds=args.sort_scaffolds)

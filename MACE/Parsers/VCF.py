@@ -736,7 +736,9 @@ class CollectionVCF(Collection):
     def rainfall_plot(self, plot_name, base_colors=[], single_fig=True, dpi=300, figsize=(40, 40), facecolor="#D6D6D6",
                       ref_genome=None, masked_regions=None, min_gap_length=10, draw_gaps=False, suptitle=None,
                       gaps_color="#777777", masked_regions_color="#aaaaaa", logbase=2,
-                      extension_list=("svg", "eps", "pdf", "png", "jpg")):
+                      extension_list=("svg", "eps", "pdf", "png", "jpg"),
+                      scaffold_black_list=None, scaffold_white_list=None,
+                      scaffold_ordered_list=None, sort_scaffolds=False):
         """
 
         :param plot_name:
@@ -754,7 +756,11 @@ class CollectionVCF(Collection):
         :param masked_regions_color:
         :param logbase:
         :param extension_list:
+        :param scaffold_black_list:
+        :param scaffold_white_list=:
+        :param scaffold_order_list=None
         :return:
+
         """
         # TODO: add multithreading drawing if possible and multipicture drawing
         print("Drawing rainfall plot...")
@@ -779,7 +785,15 @@ class CollectionVCF(Collection):
             sub_plot_dict = OrderedDict({})
         index = 1
 
-        for region in self.records:
+        final_scaffold_list = DrawingRoutines.get_filtered_scaffold_list(self.records,
+                                                                         scaffold_black_list=scaffold_black_list,
+                                                                         sort_scaffolds=sort_scaffolds,
+                                                                         scaffold_ordered_list=scaffold_ordered_list,
+                                                                         scaffold_white_list=scaffold_white_list,
+                                                                         sample_level=False)
+
+        for region in final_scaffold_list: # self.records
+
             # np.ediff1d return differences between consecutive elements in array, then 0 is added to the beginning
             distances_dict[region] = np.insert(np.ediff1d(positions_dict[region]), 0, 0)
             region_reference_dict[region] = OrderedDict({"A": [[], []],

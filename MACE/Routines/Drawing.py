@@ -30,14 +30,17 @@ class DrawingRoutines:
                                    scaffold_black_list=[],
                                    sort_scaffolds=False,
                                    scaffold_ordered_list=None,
-                                   scaffold_white_list=[]):
+                                   scaffold_white_list=[],
+                                   sample_level=True):
         white_set = set(scaffold_white_list)
         black_set = set(scaffold_black_list)
 
         scaffold_set = set()
-
-        for sample in count_dict:
-            scaffold_set |= set(count_dict[sample])
+        if sample_level:
+            for sample in count_dict:
+                scaffold_set |= set(count_dict[sample])
+        else:
+            scaffold_set |= set(count_dict)
 
         if white_set:
             #print "XXXXXXXXXXXXXX"
