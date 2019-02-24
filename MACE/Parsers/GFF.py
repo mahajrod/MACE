@@ -67,6 +67,6 @@ class CollectionGFF:
             self.records = pd.read_csv(in_file, sep='\t', header=None, na_values=".",
                                        usecols=columns_to_read,
                                        converters=self.only_coordinates_converters,
-                                       names=self.only_coordinates_field_names,
+                                       names=self.coordinates_and_type_field_names,
                                        index_col=(self.GFF_COLUMNS["scaffold"],
                                                   self.GFF_COLUMNS["source"]))
