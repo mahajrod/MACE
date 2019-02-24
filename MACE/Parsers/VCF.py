@@ -812,7 +812,8 @@ class CollectionVCF(Collection):
                     sub_plot_dict[region] = plt.subplot(num_of_regions, 1, index,
                                                         sharex=sub_plot_dict[keys[0]],
                                                         sharey=sub_plot_dict[keys[0]],
-                                                        axisbg=facecolor)
+                                                        facecolor=facecolor)
+                                                        #axisbg=facecolor)
 
                 index += 1
                 if draw_gaps:
