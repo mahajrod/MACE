@@ -431,7 +431,7 @@ class CollectionVCF(Collection):
                                           self.vcf_filter_col: self.converters[self.vcf_filter_col],})
 
             self.records = pd.read_csv(fd, sep='\t', header=None, na_values=".",
-                                       usecols=columns_to_read, converters=converters)
+                                       usecols=columns_to_read) # converters=converters
 
     @staticmethod
     def _split_by_equal_sign(string):
