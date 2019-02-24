@@ -400,38 +400,41 @@ class CollectionVCF(Collection):
         self.metadata = MetadataVCF()
         self.records = None
 
-        with FileRoutines.metaopen(in_file, "r") as fd:
-            for line in fd:
-                if line[:2] != "##":
-                    self.header = HeaderVCF(line[1:].strip().split("\t"))   # line[1:].strip().split("\t")
-                    self.samples = self.header[9:]
-                    break
-                self.metadata.add_metadata(line)
+        fd = FileRoutines.metaopen(in_file, "r")
+        while True:
+            line = fd.readline()
+            if line[:2] != "##":
+                self.header = HeaderVCF(line[1:].strip().split("\t"))   # line[1:].strip().split("\t")
+                self.samples = self.header[9:]
+                break
+            self.metadata.add_metadata(line)
 
-            columns_to_read = None      # by default read all columns from vcf file
-            converters = self.converters
-            for sample_col in range(9, 9 +len(self.samples)):
-                converters[sample_col] = self.parse_sample_field_simple
+        columns_to_read = None      # by default read all columns from vcf file
+        converters = self.converters
+        for sample_col in range(9, 9 +len(self.samples)):
+            converters[sample_col] = self.parse_sample_field_simple
 
-            if parse_only_coordinates:
-                columns_to_read = [self.vcf_chrom_col, self.vcf_pos_col]
-                converters = OrderedDict({self.vcf_chrom_col: self.converters[self.vcf_chrom_col],
-                                          self.vcf_pos_col: self.converters[self.vcf_pos_col]})
-            elif dont_parse_info_and_data:
-                columns_to_read = [self.vcf_chrom_col, self.vcf_pos_col,
-                                   self.vcf_id_col, self.vcf_ref_col,
-                                   self.vcf_alt_col, self.vcf_qual_col,
-                                   self.vcf_filter_col]
-                converters = OrderedDict({self.vcf_chrom_col: self.converters[self.vcf_chrom_col],
-                                          self.vcf_pos_col: self.converters[self.vcf_pos_col],
-                                          self.vcf_id_col: self.converters[self.vcf_id_col],
-                                          self.vcf_ref_col: self.converters[self.vcf_ref_col],
-                                          self.vcf_alt_col: self.converters[self.vcf_alt_col],
-                                          self.vcf_qual_col: self.converters[self.vcf_qual_col],
-                                          self.vcf_filter_col: self.converters[self.vcf_filter_col],})
+        if parse_only_coordinates:
+            columns_to_read = [self.vcf_chrom_col, self.vcf_pos_col]
+            converters = OrderedDict({self.vcf_chrom_col: self.converters[self.vcf_chrom_col],
+                                      self.vcf_pos_col: self.converters[self.vcf_pos_col]})
+        elif dont_parse_info_and_data:
+            columns_to_read = [self.vcf_chrom_col, self.vcf_pos_col,
+                               self.vcf_id_col, self.vcf_ref_col,
+                               self.vcf_alt_col, self.vcf_qual_col,
+                               self.vcf_filter_col]
+            converters = OrderedDict({self.vcf_chrom_col: self.converters[self.vcf_chrom_col],
+                                      self.vcf_pos_col: self.converters[self.vcf_pos_col],
+                                      self.vcf_id_col: self.converters[self.vcf_id_col],
+                                      self.vcf_ref_col: self.converters[self.vcf_ref_col],
+                                      self.vcf_alt_col: self.converters[self.vcf_alt_col],
+                                      self.vcf_qual_col: self.converters[self.vcf_qual_col],
+                                      self.vcf_filter_col: self.converters[self.vcf_filter_col],})
 
-            self.records = pd.read_csv(fd, sep='\t', header=None, na_values=".",
-                                       usecols=columns_to_read) # converters=converters
+        self.records = pd.read_csv(fd, sep='\t', header=None, na_values=".",
+                                       usecols=columns_to_read, converters=converters)
+
+        fd.close()
 
     @staticmethod
     def _split_by_equal_sign(string):
