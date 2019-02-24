@@ -379,12 +379,6 @@ class CollectionVCF():
                                                         },
                                    }
 
-        self.converters = OrderedDict()
-
-        self.only_coordinates_field_names = ["CHROM", "POS"]
-        self.only_coordinates_converters = OrderedDict([(entry, self.converters[entry]) for entry in self.only_coordinates_field_names])
-
-
         self.linkage_dict = None
         if in_file:
             self.read(in_file, external_metadata=external_metadata,
