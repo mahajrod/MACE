@@ -503,7 +503,7 @@ class CollectionVCF():
         """
         return np.sum(self.check_records_by_expression(expression))
 
-    def rainfall_plot(self, plot_name, single_fig=True, dpi=300, figsize=(40, 40), facecolor="#D6D6D6",
+    def rainfall_plot(self, plot_name, single_fig=True, dpi=300, figsize=(20, 20), facecolor="#D6D6D6",
                       ref_genome=None, masked_scaffolds=None, min_gap_length=10, draw_gaps=False, suptitle=None,
                       gaps_color="#777777", masked_scaffolds_color="#aaaaaa", logbase=2,
                       extension_list=("pdf", "png"),
@@ -611,8 +611,8 @@ class CollectionVCF():
                                  marker='.', linestyle='None')
                 else:
                     #print distances_dict[scaffold]
-                    print distances_dict[scaffold]['POS']
-                    print distances_dict[scaffold]['DIST']
+                    #print distances_dict[scaffold]['POS']
+                    #print distances_dict[scaffold]['DIST']
                     plt.plot(distances_dict[scaffold]['POS'],
                              distances_dict[scaffold]['DIST'],
                              color=default_point_color,
@@ -628,6 +628,7 @@ class CollectionVCF():
                 plt.axhline(y=500, color="purple")
                 plt.axhline(y=10, color="#000000")
                 sub_plot_dict[scaffold].set_yscale('log', basey=logbase)
+                plt.xlim(xmin=0)
 
         for extension in extension_list:
             plt.savefig("%s/%s_log_scale.%s" % (plot_dir, plot_name, extension))
