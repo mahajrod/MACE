@@ -311,7 +311,7 @@ class CollectionVCF(Collection):
 
     """
 
-    def __init__(self, metadata=None, records=None, header=None, in_file=None, samples=None,
+    def __init__(self, in_file=None, metadata=None, records=None, header=None, samples=None,
                  external_metadata=None, threads=1, dont_parse_info_and_data=False, parse_only_coordinates=False):
         """
         Initializes collection. If from_file is True collection will be read from file (arguments other then in_file, external_metadata and threads are ignored)
