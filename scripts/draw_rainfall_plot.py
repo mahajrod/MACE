@@ -47,8 +47,7 @@ parser.add_argument("-m", "--masked_regions", action="store", dest="masked_regio
                     help="Gff file with masked regions")
 parser.add_argument("-u", "--logbase", action="store", dest="logbase", default=2, type=int,
                     help="Logbase of y axis")
-parser.add_argument("-z", "--dot_size", action="store", dest="dot_size", default=None, type=int,
-                    help="Size of dots corresponding to the variants. Default: matplotlib default.")
+
 parser.add_argument("-a", "--scaffold_white_list", action="store", dest="scaffold_white_list", default=[],
                     type=lambda s: s.split(","),
                     help="Comma-separated list of the only scaffolds to draw. Default: all")
@@ -88,4 +87,4 @@ mutations.rainfall_plot(args.output_prefix, single_fig=True, dpi=args.dpi, figsi
                         extension_list=args.output_formats,
                         scaffold_black_list=args.scaffold_black_list, scaffold_white_list=args.scaffold_white_list,
                         scaffold_ordered_list=args.scaffold_ordered_list, sort_scaffolds=args.sort_scaffolds,
-                        dot_size)
+                        )
