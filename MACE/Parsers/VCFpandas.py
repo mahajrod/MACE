@@ -625,13 +625,11 @@ class CollectionVCF():
                 plt.axhline(y=1000, color="#000000")
                 plt.axhline(y=500, color="purple")
                 plt.axhline(y=10, color="#000000")
-
-        if single_fig:
-            for scaffold in sub_plot_dict:
                 sub_plot_dict[scaffold].set_yscale('log', basey=logbase)
-            for extension in extension_list:
-                plt.savefig("%s/%s_log_scale.%s" % (plot_dir, plot_name, extension))
-            plt.close()
+
+        for extension in extension_list:
+            plt.savefig("%s/%s_log_scale.%s" % (plot_dir, plot_name, extension))
+        plt.close()
 
     # methods below were not yet rewritten for compatibility with VCFpandas
     def no_reference_allel_and_multiallel(self, record, sample_index=None, max_allels=None):
