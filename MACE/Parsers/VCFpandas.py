@@ -631,7 +631,8 @@ class CollectionVCF():
 
         if single_fig:
             for scaffold in sub_plot_dict:
-                sub_plot_dict[scaffold].set_yscale('log', basey=logbase)
+                pass
+                #sub_plot_dict[scaffold].set_yscale('log', basey=logbase)
             for extension in extension_list:
                 plt.savefig("%s/%s_log_scale.%s" % (plot_dir, plot_name, extension))
             plt.close()
