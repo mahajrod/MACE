@@ -417,7 +417,7 @@ class CollectionVCF(Collection):
 
         if parse_only_coordinates:
             columns_to_read = [self.vcf_chrom_col, self.vcf_pos_col]
-            column_names = ["#CHROM", "POS"]
+            column_names = ["CHROM", "POS"]
             converters = OrderedDict({self.vcf_chrom_col: self.converters[self.vcf_chrom_col],
                                       self.vcf_pos_col: self.converters[self.vcf_pos_col]})
         elif dont_parse_info_and_data:
@@ -425,7 +425,7 @@ class CollectionVCF(Collection):
                                self.vcf_id_col, self.vcf_ref_col,
                                self.vcf_alt_col, self.vcf_qual_col,
                                self.vcf_filter_col]
-            column_names = ["#CHROM", "POS", "ID", "REF", "ALT",	"QUAL", "FILTER"]
+            column_names = ["CHROM", "POS", "ID", "REF", "ALT",	"QUAL", "FILTER"]
             converters = OrderedDict({self.vcf_chrom_col: self.converters[self.vcf_chrom_col],
                                       self.vcf_pos_col: self.converters[self.vcf_pos_col],
                                       self.vcf_id_col: self.converters[self.vcf_id_col],
@@ -436,7 +436,7 @@ class CollectionVCF(Collection):
 
         self.records = pd.read_csv(fd, sep='\t', header=None, na_values=".",
                                    usecols=columns_to_read, converters=converters,
-                                   names=column_names)
+                                   names=column_names, index_col=0)
 
         fd.close()
 
