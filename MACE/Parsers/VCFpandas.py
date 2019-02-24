@@ -411,11 +411,13 @@ class CollectionVCF(Collection):
 
         columns_to_read = None      # by default read all columns from vcf file
         converters = self.converters
+        column_names = self.header
         for sample_col in range(9, 9 +len(self.samples)):
             converters[sample_col] = self.parse_sample_field_simple
 
         if parse_only_coordinates:
             columns_to_read = [self.vcf_chrom_col, self.vcf_pos_col]
+            column_names = ["#CHROM", "POS"]
             converters = OrderedDict({self.vcf_chrom_col: self.converters[self.vcf_chrom_col],
                                       self.vcf_pos_col: self.converters[self.vcf_pos_col]})
         elif dont_parse_info_and_data:
@@ -423,6 +425,7 @@ class CollectionVCF(Collection):
                                self.vcf_id_col, self.vcf_ref_col,
                                self.vcf_alt_col, self.vcf_qual_col,
                                self.vcf_filter_col]
+            column_names = ["#CHROM", "POS", "ID", "REF", "ALT",	"QUAL", "FILTER"]
             converters = OrderedDict({self.vcf_chrom_col: self.converters[self.vcf_chrom_col],
                                       self.vcf_pos_col: self.converters[self.vcf_pos_col],
                                       self.vcf_id_col: self.converters[self.vcf_id_col],
@@ -432,7 +435,8 @@ class CollectionVCF(Collection):
                                       self.vcf_filter_col: self.converters[self.vcf_filter_col],})
 
         self.records = pd.read_csv(fd, sep='\t', header=None, na_values=".",
-                                       usecols=columns_to_read, converters=converters)
+                                   usecols=columns_to_read, converters=converters,
+                                   columns=column_names)
 
         fd.close()
 
