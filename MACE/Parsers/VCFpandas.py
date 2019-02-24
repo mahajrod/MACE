@@ -613,8 +613,8 @@ class CollectionVCF():
                     #print distances_dict[scaffold]
                     print distances_dict[scaffold]['POS']
                     print distances_dict[scaffold]['DIST']
-                    plt.plot(distances_dict[scaffold]['POS'].values(),
-                             distances_dict[scaffold]['DIST'].values(),
+                    plt.plot(distances_dict[scaffold]['POS'],
+                             distances_dict[scaffold]['DIST'],
                              color=default_point_color,
                              marker='.', linestyle='None')
 
