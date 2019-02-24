@@ -511,7 +511,8 @@ class CollectionVCF():
                       scaffold_ordered_list=None, sort_scaffolds=False,
                       color_expression=None,
                       default_point_color='black',
-                      dot_size=None):
+                      dot_size=None,
+                      label_fontsize=None):
         """
 
         :param plot_name:
@@ -542,7 +543,7 @@ class CollectionVCF():
         os.system("mkdir -p %s" % plot_dir)
         if single_fig:
             fig = plt.figure(1, dpi=dpi, figsize=figsize, facecolor=facecolor)
-            fig.suptitle(suptitle if suptitle else "Rainfall plot", fontsize=40, fontweight='bold', y=0.94)
+            fig.suptitle(suptitle if suptitle else "Rainfall plot", fontsize=label_fontsize, fontweight='bold', y=0.94)
             sub_plot_dict = OrderedDict({})
         index = 1
 
@@ -620,7 +621,7 @@ class CollectionVCF():
                                 marker='.', s=dot_size)
 
                 plt.text(-0.08, 0.5, scaffold, rotation=0, fontweight="bold", transform=sub_plot_dict[scaffold].transAxes,
-                         fontsize=30,
+                         fontsize=label_fontsize,
                          horizontalalignment='center',
                          verticalalignment='center')
                 plt.ylabel("Distanse")
