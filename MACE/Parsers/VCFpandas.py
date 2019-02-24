@@ -554,7 +554,7 @@ class CollectionVCF():
         num_of_scaffolds = len(final_scaffold_list)
         distances_dict = OrderedDict()
         for scaffold in final_scaffold_list: # self.records
-            print("Handling scaffold; %s ..." % scaffold)
+            print("Handling scaffold: %s ..." % scaffold)
             distances_dict[scaffold] = self.records.loc[scaffold, "POS"].diff()
             # pandas DataFrame diff methods return differences between consecutive elements in array,
             # and first distance is NaN always, so it is replaced by 0
@@ -603,7 +603,7 @@ class CollectionVCF():
                                                            feature.location.end - feature.location.start,
                                                            1024*32, facecolor=masked_scaffolds_color, edgecolor='none'))
                     """
-                print("Drawing scaffold; %s ..." % scaffold)
+                print("Drawing scaffold: %s ..." % scaffold)
                 if color_expression:
                     for color in color_list:
                         plt.plot(distances_dict[scaffold].loc[color],
@@ -613,8 +613,8 @@ class CollectionVCF():
                     #print distances_dict[scaffold]
                     print distances_dict[scaffold]['POS']
                     print distances_dict[scaffold]['DIST']
-                    plt.plot(x=distances_dict[scaffold]['POS'],
-                             y=distances_dict[scaffold]['DIST'],
+                    plt.plot(distances_dict[scaffold]['POS'].values(),
+                             distances_dict[scaffold]['DIST'].values(),
                              color=default_point_color,
                              marker='.', linestyle='None')
 
