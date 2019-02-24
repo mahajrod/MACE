@@ -27,7 +27,7 @@ from Bio.SeqFeature import SeqFeature, FeatureLocation
 from MACE.Parsers.Abstract import Record, Collection, Metadata, Header
 from MACE.General.GeneralCollections import IdList, IdSet, SynDict, TwoLvlDict
 from MACE.Routines import DrawingRoutines
-
+from MACE.General.File import FileRoutines
 ref_alt_variants = {"deaminases": [("C", ["T"]), ("G", ["A"])]
                     }
 
@@ -312,7 +312,7 @@ class CollectionVCF(Collection):
     """
 
     def __init__(self, metadata=None, records=None, header=None, in_file=None, samples=None,
-                 from_file=True, external_metadata=None, threads=1, dont_parse_info_and_data=False, parse_only_coordinates=False):
+                 external_metadata=None, threads=1, dont_parse_info_and_data=False, parse_only_coordinates=False):
         """
         Initializes collection. If from_file is True collection will be read from file (arguments other then in_file, external_metadata and threads are ignored)
         Otherwise collection will be initialize from meta, records_dict, header, samples
@@ -348,7 +348,7 @@ class CollectionVCF(Collection):
                                        self.vcf_format_col: lambda s: s.split(":"),})
 
         self.linkage_dict = None
-        if from_file:
+        if in_file:
             self.read(in_file, external_metadata=external_metadata,
                       dont_parse_info_and_data=dont_parse_info_and_data,
                       parse_only_coordinates=parse_only_coordinates)
@@ -400,7 +400,7 @@ class CollectionVCF(Collection):
         self.metadata = MetadataVCF()
         self.records = None
 
-        with open(in_file, "r") as fd:
+        with FileRoutines.metaopen(in_file, "r") as fd:
             for line in fd:
                 if line[:2] != "##":
                     self.header = HeaderVCF(line[1:].strip().split("\t"))   # line[1:].strip().split("\t")
@@ -446,7 +446,7 @@ class CollectionVCF(Collection):
 
     @staticmethod
     def _split_by_sign(string, sign=","):
-        # ignores sign in "
+        #IMPORTANT!!! ignores sign in "
         index_list = [-1]
         i = 1
         while (i < len(string)):
