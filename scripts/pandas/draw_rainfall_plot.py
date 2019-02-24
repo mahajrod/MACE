@@ -22,9 +22,9 @@ parser.add_argument("-f", "--size_of_figure", action="store", dest="size_of_figu
                          "by comma. Default: 40,40")
 parser.add_argument("-e", "--output_formats", action="store", dest="output_formats",
                     type=lambda s: s.split(","),
-                    default=["png", "jpg"],
+                    default=["png"],
                     help="Comma-separated list of formats (supported by matlotlib) "
-                         "of output figure.Default: png,jpg")
+                         "of output figure.Default: png")
 parser.add_argument("-l", "--suptitle", action="store", dest="suptitle",
                     help="Suptitle of figure. Default: 'Rainfall plot'")
 parser.add_argument("-g", "--draw_gaps", action="store_true", dest="draw_gaps",
