@@ -611,13 +611,10 @@ class CollectionVCF():
                                  marker='.', linestyle='None')
                 else:
                     print distances_dict[scaffold]
-                    #plt.plot(distances_dict[scaffold],
-                    #         color=default_point_color,
-                    #         marker='.', linestyle='None')
-                    distances_dict[scaffold].plot(kind='line',
-                                                  color=default_point_color,
-                                                  marker='.',
-                                                  linestyle='None')
+                    plt.plot(x=distances_dict[scaffold]['POS'],
+                             y=distances_dict[scaffold]['DIST'],
+                             color=default_point_color,
+                             marker='.', linestyle='None')
 
                 plt.text(-0.08, 0.5, scaffold, rotation=0, fontweight="bold", transform=sub_plot_dict[scaffold].transAxes,
                          fontsize=30,
@@ -631,8 +628,7 @@ class CollectionVCF():
 
         if single_fig:
             for scaffold in sub_plot_dict:
-                pass
-                #sub_plot_dict[scaffold].set_yscale('log', basey=logbase)
+                sub_plot_dict[scaffold].set_yscale('log', basey=logbase)
             for extension in extension_list:
                 plt.savefig("%s/%s_log_scale.%s" % (plot_dir, plot_name, extension))
             plt.close()
