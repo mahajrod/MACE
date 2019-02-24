@@ -104,35 +104,6 @@ class DrawingRoutines:
         if dist_between_scaffolds_scaling_factor < 1:
             raise ValueError("Scaling factor for distance between scaffolds have to be >=1.0")
 
-        """
-        white_set = set(scaffold_white_list)
-        black_set = set(scaffold_black_list)
-
-        scaffold_set = set()
-        for sample in count_dict:
-            scaffold_set |= set(count_dict[sample])
-
-        if white_set:
-            scaffold_set = scaffold_set & white_set
-
-        if black_set:
-            scaffold_set = scaffold_set - black_set
-
-        scaffold_list = list(scaffold_set)
-
-        if sort_scaffolds:
-            scaffold_list.sort()
-
-        final_scaffold_list = []
-        if scaffold_ordered_list:
-            for entry in scaffold_ordered_list:
-                final_scaffold_list.append(entry)
-                scaffold_list.remove(entry)
-            final_scaffold_list = final_scaffold_list + scaffold_list
-        else:
-            final_scaffold_list = scaffold_list
-        """
-
         final_scaffold_list = self.get_filtered_scaffold_list(count_dict,
                                                               scaffold_black_list=scaffold_black_list,
                                                               sort_scaffolds=sort_scaffolds,
