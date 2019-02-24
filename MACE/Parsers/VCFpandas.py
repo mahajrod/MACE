@@ -342,7 +342,7 @@ class CollectionVCF(Collection):
                                        self.vcf_id_col: str,
                                        self.vcf_ref_col: str,
                                        self.vcf_alt_col: lambda s: s.split(","),
-                                       self.vcf_qual_col: np.int32,
+                                       self.vcf_qual_col: np.float16,
                                        self.vcf_filter_col: lambda s: s.split(","),
                                        self.vcf_info_col: self.parse_info_field,
                                        self.vcf_format_col: lambda s: s.split(":"),})
