@@ -506,7 +506,7 @@ class CollectionVCF():
     def rainfall_plot(self, plot_name, single_fig=True, dpi=300, figsize=(40, 40), facecolor="#D6D6D6",
                       ref_genome=None, masked_scaffolds=None, min_gap_length=10, draw_gaps=False, suptitle=None,
                       gaps_color="#777777", masked_scaffolds_color="#aaaaaa", logbase=2,
-                      extension_list=("pdf", "png", "jpg"),
+                      extension_list=("pdf", "png"),
                       scaffold_black_list=None, scaffold_white_list=None,
                       scaffold_ordered_list=None, sort_scaffolds=False,
                       color_expression=None,
