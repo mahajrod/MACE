@@ -312,7 +312,7 @@ class CollectionVCF():
     """
 
     def __init__(self, in_file=None, metadata=None, records=None, header=None, samples=None,
-                 external_metadata=None, threads=1, dont_parse_info_and_data=False, parse_only_coordinates=False):
+                 external_metadata=None, threads=1, parsing_mode="all"): #dont_parse_info_and_data=False, parse_only_coordinates=False):
         """
         Initializes collection. If from_file is True collection will be read from file (arguments other then in_file, external_metadata and threads are ignored)
         Otherwise collection will be initialize from meta, records_dict, header, samples
@@ -327,31 +327,68 @@ class CollectionVCF():
         :return:
         """
         # vcf file columns
-        self.vcf_chrom_col = 0
-        self.vcf_pos_col = 1
-        self.vcf_id_col = 2
-        self.vcf_ref_col = 3
-        self.vcf_alt_col = 4
-        self.vcf_qual_col = 5
-        self.vcf_filter_col = 6
-        self.vcf_info_col = 7
-        self.vcf_format_col = 8
+        self.VCF_COLS = OrderedDict({"CHROM":  0,
+                                     "POS":    1,
+                                     "ID":     2,
+                                     "REF":    3,
+                                     "ALT":    4,
+                                     "QUAL":   5,
+                                     "FILTER": 6,
+                                     "INFO":   7,
+                                     "FORMAT": 8})
 
-        self.converters = OrderedDict({self.vcf_chrom_col: str,
-                                       self.vcf_pos_col: np.int32,
-                                       self.vcf_id_col: str,
-                                       self.vcf_ref_col: str,
-                                       self.vcf_alt_col: lambda s: s.split(","),
-                                       self.vcf_qual_col: np.float16,
-                                       self.vcf_filter_col: lambda s: s.split(","),
-                                       self.vcf_info_col: self.parse_info_field,
-                                       self.vcf_format_col: lambda s: s.split(":"),})
+        self.parsing_parameters = {
+                                   "only_coordinates": {
+                                                        "col_names": ["CHROM", "POS"],
+                                                        "cols":   [0, 1],
+                                                        "index_cols": "CHROM",
+                                                        "converters": {
+                                                                       "CHROM":  str,
+                                                                       "POS":    np.int32,
+                                                                       },
+                                                        },
+                                   "except_data":      {
+                                                        "col_names": ["CHROM", "POS", "ID", "REF", "ALT", "QUAL", "FILTER"],
+                                                        "cols":   [0, 1, 2, 3, 4, 5, 6],
+                                                        "index_cols": "CHROM",
+                                                        "converters": {
+                                                                       "CHROM":  str,
+                                                                       "POS":    np.int32,
+                                                                       "ID":     str,
+                                                                       "REF":    str,
+                                                                       "ALT":    lambda s: s.split(","),
+                                                                       "QUAL":   np.float16,
+                                                                       "FILTER": lambda s: s.split(","),
+                                                                       },
+                                                        },
+                                   "all":              {
+                                                        "col_names": ["CHROM", "POS", "ID", "REF", "ALT", "QUAL", "FILTER", "INFO", "FORMAT"],
+                                                        "cols": None,
+                                                        "index_cols": "CHROM",
+                                                        "converters": {
+                                                                       "CHROM":  str,
+                                                                       "POS":    np.int32,
+                                                                       "ID":     str,
+                                                                       "REF":    str,
+                                                                       "ALT":    lambda s: s.split(","),
+                                                                       "QUAL":   np.float16,
+                                                                       "FILTER": lambda s: s.split(","),
+                                                                       "INFO":   self.parse_info_field,
+                                                                       "FORMAT": lambda s: s.split(":")
+                                                                       },
+                                                        },
+                                   }
+
+        self.converters = OrderedDict()
+
+        self.only_coordinates_field_names = ["CHROM", "POS"]
+        self.only_coordinates_converters = OrderedDict([(entry, self.converters[entry]) for entry in self.only_coordinates_field_names])
+
 
         self.linkage_dict = None
         if in_file:
             self.read(in_file, external_metadata=external_metadata,
-                      dont_parse_info_and_data=dont_parse_info_and_data,
-                      parse_only_coordinates=parse_only_coordinates)
+                      parsing_mode=parsing_mode)
         else:
             self.metadata = metadata
             self.records = None if records is None else records
@@ -390,7 +427,7 @@ class CollectionVCF():
             sample_field_list = map(lambda s: s.split(","), string.split(":"))
             return sample_field_list
 
-    def read(self, in_file, external_metadata=None, dont_parse_info_and_data=False, parse_only_coordinates=False):
+    def read(self, in_file, external_metadata=None, parsing_mode="all"):
         """
         Reads collection from vcf file
         :param in_file: path to file
@@ -409,34 +446,16 @@ class CollectionVCF():
                 break
             self.metadata.add_metadata(line)
 
-        columns_to_read = None      # by default read all columns from vcf file
-        converters = self.converters
-        column_names = self.header
-        for sample_col in range(9, 9 +len(self.samples)):
-            converters[sample_col] = self.parse_sample_field_simple
-
-        if parse_only_coordinates:
-            columns_to_read = [self.vcf_chrom_col, self.vcf_pos_col]
-            column_names = ["CHROM", "POS"]
-            converters = OrderedDict({self.vcf_chrom_col: self.converters[self.vcf_chrom_col],
-                                      self.vcf_pos_col: self.converters[self.vcf_pos_col]})
-        elif dont_parse_info_and_data:
-            columns_to_read = [self.vcf_chrom_col, self.vcf_pos_col,
-                               self.vcf_id_col, self.vcf_ref_col,
-                               self.vcf_alt_col, self.vcf_qual_col,
-                               self.vcf_filter_col]
-            column_names = ["CHROM", "POS", "ID", "REF", "ALT",	"QUAL", "FILTER"]
-            converters = OrderedDict({self.vcf_chrom_col: self.converters[self.vcf_chrom_col],
-                                      self.vcf_pos_col: self.converters[self.vcf_pos_col],
-                                      self.vcf_id_col: self.converters[self.vcf_id_col],
-                                      self.vcf_ref_col: self.converters[self.vcf_ref_col],
-                                      self.vcf_alt_col: self.converters[self.vcf_alt_col],
-                                      self.vcf_qual_col: self.converters[self.vcf_qual_col],
-                                      self.vcf_filter_col: self.converters[self.vcf_filter_col],})
+        if parsing_mode == "all":
+            self.parsing_parameters["all"]["col_names"] = self.header
+            for sample_col in range(9, 9 +len(self.samples)):
+                self.parsing_parameters["all"]["converters"][self.header[sample_col]] = self.parse_sample_field_simple
 
         self.records = pd.read_csv(fd, sep='\t', header=None, na_values=".",
-                                   usecols=columns_to_read, converters=converters,
-                                   names=column_names, index_col=0)
+                                   usecols=self.parsing_parameters[parsing_mode]["cols"],
+                                   converters=self.parsing_parameters[parsing_mode]["converters"],
+                                   names=self.parsing_parameters[parsing_mode]["col_names"],
+                                   index_col=self.VCF_COLS["CHROM"])
 
         fd.close()
 
