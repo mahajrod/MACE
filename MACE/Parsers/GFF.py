@@ -76,9 +76,6 @@ class CollectionGFF:
                                            }
                                    }
 
-
-
-
         if in_file:
             self.read(in_file, format=format, parsing_mode=parsing_mode)
 
