@@ -436,7 +436,7 @@ class CollectionVCF(Collection):
 
         self.records = pd.read_csv(fd, sep='\t', header=None, na_values=".",
                                    usecols=columns_to_read, converters=converters,
-                                   columns=column_names)
+                                   names=column_names)
 
         fd.close()
 
