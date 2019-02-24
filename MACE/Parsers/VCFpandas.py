@@ -613,10 +613,10 @@ class CollectionVCF():
                     #print distances_dict[scaffold]
                     #print distances_dict[scaffold]['POS']
                     #print distances_dict[scaffold]['DIST']
-                    plt.plot(distances_dict[scaffold]['POS'],
-                             distances_dict[scaffold]['DIST'],
-                             color=default_point_color,
-                             marker='.', linestyle='None')
+                    plt.scatter(distances_dict[scaffold]['POS'],
+                                distances_dict[scaffold]['DIST'],
+                                color=default_point_color,
+                                marker='.', s=0)
 
                 plt.text(-0.08, 0.5, scaffold, rotation=0, fontweight="bold", transform=sub_plot_dict[scaffold].transAxes,
                          fontsize=30,
