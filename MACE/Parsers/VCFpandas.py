@@ -609,6 +609,7 @@ class CollectionVCF():
                                  color=color,
                                  marker='.', linestyle='None')
                 else:
+                    print distances_dict[scaffold]
                     plt.plot(distances_dict[scaffold],
                              color=default_point_color,
                              marker='.', linestyle='None')
