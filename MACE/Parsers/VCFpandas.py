@@ -559,14 +559,15 @@ class CollectionVCF():
             # pandas DataFrame diff methods return differences between consecutive elements in array,
             # and first distance is NaN always, so it is replaced by 0
             distances_dict[scaffold][0] = 0
+            distances_dict[scaffold].name = 'DIST'
             if color_expression:
                 colors = self.records.loc[scaffold].apply(color_expression, axis=1)
-                colors.name = 'color'
+                colors.name = 'COLOR'
                 distances_dict[scaffold] = pd.concat([self.records.loc[scaffold, "POS"],
                                                       distances_dict[scaffold],
                                                       colors],
                                                      axis=1)
-                distances_dict[scaffold] = distances_dict[scaffold].set_index('color')
+                distances_dict[scaffold] = distances_dict[scaffold].set_index('COLOR')
                 color_list = colors.index.values
             else:
                 distances_dict[scaffold] = pd.concat([self.records.loc[scaffold, "POS"],
