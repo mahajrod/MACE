@@ -16,7 +16,7 @@ parser.add_argument("-o", "--output_file_prefix", action="store", dest="output_p
 parser.add_argument("-d", "--dpi", action="store", dest="dpi", type=int, default=300,
                     help="Dpi of figure")
 parser.add_argument("-f", "--size_of_figure", action="store", dest="size_of_figure",
-                    type=lambda s: s.split(","),
+                    type=lambda s: map(int, s.split(",")),
                     default=(20, 20),
                     help="Size of figure in inches. X and Y values should be separated "
                          "by comma. Default: 40,40")
