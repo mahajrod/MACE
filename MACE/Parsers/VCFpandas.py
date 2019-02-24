@@ -629,6 +629,7 @@ class CollectionVCF():
                 plt.axhline(y=500, color="purple")
                 plt.axhline(y=10, color="#000000")
                 sub_plot_dict[scaffold].set_yscale('log', basey=logbase)
+                sub_plot_dict[scaffold].get_xaxis().set_visible(False)
                 plt.xlim(xmin=0)
 
         for extension in extension_list:
