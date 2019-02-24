@@ -510,7 +510,8 @@ class CollectionVCF():
                       scaffold_black_list=None, scaffold_white_list=None,
                       scaffold_ordered_list=None, sort_scaffolds=False,
                       color_expression=None,
-                      default_point_color='black'):
+                      default_point_color='black',
+                      dot_size=None):
         """
 
         :param plot_name:
@@ -616,7 +617,7 @@ class CollectionVCF():
                     plt.scatter(distances_dict[scaffold]['POS'],
                                 distances_dict[scaffold]['DIST'],
                                 color=default_point_color,
-                                marker='.', s=0)
+                                marker='.', s=dot_size)
 
                 plt.text(-0.08, 0.5, scaffold, rotation=0, fontweight="bold", transform=sub_plot_dict[scaffold].transAxes,
                          fontsize=30,
