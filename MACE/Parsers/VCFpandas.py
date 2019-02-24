@@ -305,7 +305,7 @@ class HeaderVCF(list, Header):
         return self[9:]
 
 
-class CollectionVCF(Collection):
+class CollectionVCF():
     """
     CollectionVCF class
 
@@ -357,10 +357,10 @@ class CollectionVCF(Collection):
             self.records = None if records is None else records
             self.header = header
             self.samples = samples
-        self.scaffold_list = self.scaffolds()
-        self.scaffold_length = self.scaffold_len()
+        self.record_number = len(self.records)
+        self.per_scaffold_record_number = self.records.groupby(self.records.index).size() # pandas Series with scaffold ids as index
+        self.scaffold_list = self.records.index.values
         self.number_of_scaffolds = len(self.scaffold_list)
-        self.record_index = self.rec_index()
         self.threads = threads
 
     def parse_info_field(self, string):
@@ -467,19 +467,169 @@ class CollectionVCF(Collection):
         index_list.append(len(string))
         return [string[index_list[j] + 1: index_list[j + 1]] for j in range(0, len(index_list) - 1)]
 
+    def check_records_by_expression(self, expression):
+        """
+        Checks records in collection by expression. Expression must be a function with one argument - record entry,
+        returning boolean
+        :param expression:  expression to check
+        :return: array of booleans with length of record number.
+        """
+        return self.records.apply(expression, axis=1)
+
+    def filter_records(self, expression):
+        boolean_array = self.records.apply(expression, axis=1)
+
+        return self.records[boolean_array], self.records[~boolean_array]
+
     def filter(self, expression):
         """
-        Splits collection based on expression. Expression should be a function with one argument - record entry
+        Splits collection based on expression. Expression must be a function with one argument - record entry
         :param expression: filtering expression
         :return: tuple of two CollectionVCF. First contains records for which expression is True, second - False.
         """
         #
         filtered_records, filtered_out_records = self.filter_records(expression)
-        return CollectionVCF(metadata=self.metadata, records_dict=filtered_records,
-                             header=self.header, samples=self.samples, from_file=False),\
-               CollectionVCF(metadata=self.metadata, records_dict=filtered_out_records,
-                             header=self.header, samples=self.samples, from_file=False)
+        return CollectionVCF(metadata=self.metadata, records=filtered_records,
+                             header=self.header, samples=self.samples, ),\
+               CollectionVCF(metadata=self.metadata, records=filtered_out_records,
+                             header=self.header, samples=self.samples, )
 
+    def count_records(self, expression):
+        """
+        Counts records passed expression in collection based on expression.
+        Expression must be a function with one argument - record entryreturning boolean
+        :param expression: filtering expression
+        :return: tuple of two numbers. First is number of records for which expression is True, second - False.
+        """
+        return np.sum(self.check_records_by_expression(expression))
+
+    def rainfall_plot(self, plot_name, single_fig=True, dpi=300, figsize=(40, 40), facecolor="#D6D6D6",
+                      ref_genome=None, masked_scaffolds=None, min_gap_length=10, draw_gaps=False, suptitle=None,
+                      gaps_color="#777777", masked_scaffolds_color="#aaaaaa", logbase=2,
+                      extension_list=("pdf", "png", "jpg"),
+                      scaffold_black_list=None, scaffold_white_list=None,
+                      scaffold_ordered_list=None, sort_scaffolds=False,
+                      color_expression=None,
+                      default_point_color='black'):
+        """
+
+        :param plot_name:
+        :param base_colors:
+        :param single_fig:
+        :param dpi:
+        :param figsize:
+        :param facecolor:
+        :param ref_genome:
+        :param masked_scaffolds:
+        :param min_gap_length:
+        :param draw_gaps:
+        :param suptitle:
+        :param gaps_color:
+        :param masked_scaffolds_color:
+        :param logbase:
+        :param extension_list:
+        :param scaffold_black_list:
+        :param scaffold_white_list=:
+        :param scaffold_order_list=None
+        :return:
+
+        """
+        # TODO: add multithreading drawing if possible and multipicture drawing
+        print("Drawing rainfall plot...")
+        plot_dir = "rainfall_plot"
+
+        os.system("mkdir -p %s" % plot_dir)
+        if single_fig:
+            fig = plt.figure(1, dpi=dpi, figsize=figsize, facecolor=facecolor)
+            fig.suptitle(suptitle if suptitle else "Rainfall plot", fontsize=40, fontweight='bold', y=0.94)
+            sub_plot_dict = OrderedDict({})
+        index = 1
+
+        final_scaffold_list = DrawingRoutines.get_filtered_scaffold_list(self.scaffold_list,
+                                                                         scaffold_black_list=scaffold_black_list,
+                                                                         sort_scaffolds=sort_scaffolds,
+                                                                         scaffold_ordered_list=scaffold_ordered_list,
+                                                                         scaffold_white_list=scaffold_white_list,
+                                                                         sample_level=False)
+        num_of_scaffolds = len(final_scaffold_list)
+        distances_dict = OrderedDict()
+        for scaffold in final_scaffold_list: # self.records
+
+            distances_dict[scaffold] = self.records.loc[scaffold, "POS"].diff()
+            # pandas DataFrame diff methods return differences between consecutive elements in array,
+            # and first distance is NaN always, so it is replaced by 0
+            distances_dict[scaffold][0] = 0
+            if color_expression:
+                colors = self.records.loc[scaffold].apply(color_expression, axis=1)
+                colors.name = 'color'
+                distances_dict[scaffold] = pd.concat([self.records.loc[scaffold, "POS"],
+                                                      distances_dict[scaffold],
+                                                      colors],
+                                                     axis=1)
+                distances_dict[scaffold] = distances_dict[scaffold].set_index('color')
+                color_list = colors.index.values
+            else:
+                distances_dict[scaffold] = pd.concat([self.records.loc[scaffold, "POS"],
+                                                      distances_dict[scaffold]],
+                                                     axis=1)
+
+            if single_fig:
+                if not sub_plot_dict:
+                    sub_plot_dict[scaffold] = plt.subplot(num_of_scaffolds, 1, index, axisbg=facecolor)
+                else:
+                    keys = list(sub_plot_dict.keys())
+                    sub_plot_dict[scaffold] = plt.subplot(num_of_scaffolds, 1, index,
+                                                          sharex=sub_plot_dict[keys[0]],
+                                                          sharey=sub_plot_dict[keys[0]],
+                                                          facecolor=facecolor)
+
+                index += 1
+                if draw_gaps:
+                    pass
+                    """
+                    if ref_genome:
+                        for gap in ref_genome.gaps_dict[scaffold]:
+                            plt.gca().add_patch(plt.Rectangle((gap.location.start, 1),
+                                                              gap.location.end - gap.location.start,
+                                                              1024*32, facecolor=gaps_color, edgecolor='none'))
+                # masked scaffolds should be SeqRecord dict
+                    """
+                if masked_scaffolds:
+                    pass
+                    """
+                    for feature in masked_scaffolds[scaffold].features:
+                        plt.gca().add_patch(plt.Rectangle((int(feature.location.start)+1, 1),
+                                                           feature.location.end - feature.location.start,
+                                                           1024*32, facecolor=masked_scaffolds_color, edgecolor='none'))
+                    """
+                if color_expression:
+                    for color in color_list:
+                        plt.plot(distances_dict[scaffold].loc[color],
+                                 color=color,
+                                 marker='.', linestyle='None')
+                else:
+                    plt.plot(distances_dict[scaffold],
+                             color=default_point_color,
+                             marker='.', linestyle='None')
+
+                plt.text(-0.08, 0.5, scaffold, rotation=0, fontweight="bold", transform=sub_plot_dict[scaffold].transAxes,
+                         fontsize=30,
+                         horizontalalignment='center',
+                         verticalalignment='center')
+                plt.ylabel("Distanse")
+                plt.axhline(y=100, color="#000000")
+                plt.axhline(y=1000, color="#000000")
+                plt.axhline(y=500, color="purple")
+                plt.axhline(y=10, color="#000000")
+
+        if single_fig:
+            for scaffold in sub_plot_dict:
+                sub_plot_dict[scaffold].set_yscale('log', basey=logbase)
+            for extension in extension_list:
+                plt.savefig("%s/%s_log_scale.%s" % (plot_dir, plot_name, extension))
+            plt.close()
+
+    # methods below were not yet rewritten for compatibility with VCFpandas
     def no_reference_allel_and_multiallel(self, record, sample_index=None, max_allels=None):
         return record.no_reference_allel_and_multiallel(sample_index=sample_index, max_allels=max_allels)
 
@@ -489,23 +639,6 @@ class CollectionVCF(Collection):
             return self.no_reference_allel_and_multiallel(record, sample_index=sample_index, max_allels=max_allels)
 
         return self.filter(expression)
-
-    def count_records(self, expression):
-        """
-        Counts records in collection based on expression. Expression should be a function with one argument - record entry
-        :param expression: filtering expression
-        :return: tuple of two numbers. First is number of records for which expression is True, second - False.
-        """
-
-        true_records = 0
-        false_records = 0
-        for scaffold in self.scaffold_list:
-            for record in self.records[scaffold]:
-                if expression(record):
-                    true_records += 1
-                else:
-                    false_records += 1
-        return true_records, false_records
 
     def count_zygoty(self):
         """
@@ -688,124 +821,7 @@ class CollectionVCF(Collection):
             return record.ref
         return "INDEL"
 
-    def rainfall_plot(self, plot_name, base_colors=[], single_fig=True, dpi=300, figsize=(40, 40), facecolor="#D6D6D6",
-                      ref_genome=None, masked_regions=None, min_gap_length=10, draw_gaps=False, suptitle=None,
-                      gaps_color="#777777", masked_regions_color="#aaaaaa", logbase=2,
-                      extension_list=("svg", "eps", "pdf", "png", "jpg"),
-                      scaffold_black_list=None, scaffold_white_list=None,
-                      scaffold_ordered_list=None, sort_scaffolds=False):
-        """
 
-        :param plot_name:
-        :param base_colors:
-        :param single_fig:
-        :param dpi:
-        :param figsize:
-        :param facecolor:
-        :param ref_genome:
-        :param masked_regions:
-        :param min_gap_length:
-        :param draw_gaps:
-        :param suptitle:
-        :param gaps_color:
-        :param masked_regions_color:
-        :param logbase:
-        :param extension_list:
-        :param scaffold_black_list:
-        :param scaffold_white_list=:
-        :param scaffold_order_list=None
-        :return:
-
-        """
-        # TODO: add multithreading drawing if possible and multipicture drawing
-        print("Drawing rainfall plot...")
-        plot_dir = "rainfall_plot"
-        reference_colors = {"A": "#FBFD2B",    # yellow
-                            "C": "#FF000F",     # red
-                            "G": "#000FFF",     # blue
-                            "T": "#4ED53F",     # green
-                            "INDEL": "#000000"  # black
-                            }
-        if base_colors:
-            reference_colors = base_colors
-
-        num_of_regions = self.number_of_scaffolds
-        positions_dict = self.get_positions()
-        distances_dict = {}
-        region_reference_dict = {}
-        os.system("mkdir -p %s" % plot_dir)
-        if single_fig:
-            fig = plt.figure(1, dpi=dpi, figsize=figsize, facecolor=facecolor)
-            fig.suptitle(suptitle if suptitle else "Rainfall plot", fontsize=40, fontweight='bold', y=0.94)
-            sub_plot_dict = OrderedDict({})
-        index = 1
-
-        final_scaffold_list = DrawingRoutines.get_filtered_scaffold_list(self.records,
-                                                                         scaffold_black_list=scaffold_black_list,
-                                                                         sort_scaffolds=sort_scaffolds,
-                                                                         scaffold_ordered_list=scaffold_ordered_list,
-                                                                         scaffold_white_list=scaffold_white_list,
-                                                                         sample_level=False)
-
-        for region in final_scaffold_list: # self.records
-
-            # np.ediff1d return differences between consecutive elements in array, then 0 is added to the beginning
-            distances_dict[region] = np.insert(np.ediff1d(positions_dict[region]), 0, 0)
-            region_reference_dict[region] = OrderedDict({"A": [[], []],
-                                                         "C": [[], []],
-                                                         "G": [[], []],
-                                                         "T": [[], []],
-                                                         "INDEL": [[], []]})
-            for i in range(0, len(self.records[region])):
-                region_reference_dict[region][self._reference(self.records[region][i])][0].append(positions_dict[region][i])
-                region_reference_dict[region][self._reference(self.records[region][i])][1].append(distances_dict[region][i])
-            if single_fig:
-                if not sub_plot_dict:
-                    sub_plot_dict[region] = plt.subplot(num_of_regions, 1, index, axisbg=facecolor)
-                else:
-                    keys = list(sub_plot_dict.keys())
-                    sub_plot_dict[region] = plt.subplot(num_of_regions, 1, index,
-                                                        sharex=sub_plot_dict[keys[0]],
-                                                        sharey=sub_plot_dict[keys[0]],
-                                                        facecolor=facecolor)
-                                                        #axisbg=facecolor)
-
-                index += 1
-                if draw_gaps:
-                    if ref_genome:
-                        for gap in ref_genome.gaps_dict[region]:
-                            plt.gca().add_patch(plt.Rectangle((gap.location.start, 1),
-                                                              gap.location.end - gap.location.start,
-                                                              1024*32, facecolor=gaps_color, edgecolor='none'))
-                # masked regions should be SeqRecord dict
-                if masked_regions:
-                    for feature in masked_regions[region].features:
-                        plt.gca().add_patch(plt.Rectangle((int(feature.location.start)+1, 1),
-                                                           feature.location.end - feature.location.start,
-                                                           1024*32, facecolor=masked_regions_color, edgecolor='none'))
-
-                for reference in region_reference_dict[region]:
-                    plt.plot(region_reference_dict[region][reference][0],
-                             region_reference_dict[region][reference][1],
-                             color=reference_colors[reference],
-                             marker='.', linestyle='None', label=reference)
-
-                plt.text(-0.08, 0.5, region, rotation=0, fontweight="bold", transform=sub_plot_dict[region].transAxes,
-                         fontsize=30,
-                         horizontalalignment='center',
-                         verticalalignment='center')
-                plt.ylabel("Distanse")
-                plt.axhline(y=100, color="#000000")
-                plt.axhline(y=1000, color="#000000")
-                plt.axhline(y=500, color="purple")
-                plt.axhline(y=10, color="#000000")
-
-        if single_fig:
-            for region in sub_plot_dict:
-                sub_plot_dict[region].set_yscale('log', basey=logbase)
-            for extension in extension_list:
-                plt.savefig("%s/%s_log_scale.%s" % (plot_dir, plot_name, extension))
-            plt.close()
 
     def count_variants_in_windows(self, window_size, window_step, reference_scaffold_length_dict,
                                   ignore_scaffolds_shorter_than_window=True, output_prefix=None,
