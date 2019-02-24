@@ -48,6 +48,8 @@ parser.add_argument("-z", "--scaffold_ordered_list", action="store", dest="scaff
                     help="Comma-separated list of scaffolds to draw first and exactly in same order. "
                          "Scaffolds absent in this list are drawn last and in order according to vcf file . "
                          "Default: not set")
+parser.add_argument("-w", "--dot_size", action="store", dest="dot_size", default=None, type=int,
+                    help="Size of dots corresponding to the variants. Default: matplotlib default.")
 args = parser.parse_args()
 
 mutations = CollectionVCF(args.input, dont_parse_info_and_data=True)
@@ -76,4 +78,5 @@ mutations.rainfall_plot(args.output_prefix, single_fig=True, dpi=args.dpi, figsi
                         scaffold_ordered_list=args.scaffold_ordered_list, sort_scaffolds=args.sort_scaffolds,
                         color_expression=None,
                         default_point_color='black',
+                        dot_size=args.dot_size,
                         label_fontsize=None)
