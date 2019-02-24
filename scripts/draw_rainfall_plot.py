@@ -34,9 +34,9 @@ parser.add_argument("-f", "--size_of_figure", action="store", dest="size_of_figu
                          "by comma. Default: 40,40")
 parser.add_argument("-e", "--output_formats", action="store", dest="output_formats",
                     type=list_from_str,
-                    default=["svg", "eps", "pdf", "png", "jpg"],
+                    default=["png", "jpg"],
                     help="Comma-separated list of formats (supported by matlotlib) "
-                         "of output figure.Default: svg,eps,pdf,png,jpg")
+                         "of output figure.Default: png,jpg")
 parser.add_argument("-l", "--suptitle", action="store", dest="suptitle",
                     help="Suptitle of figure. Default: 'Rainfall plot'")
 parser.add_argument("-g", "--draw_gaps", action="store_true", dest="draw_gaps",
