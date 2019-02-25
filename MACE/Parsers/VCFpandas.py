@@ -391,7 +391,7 @@ class CollectionVCF():
             self.samples = samples
         self.record_number = len(self.records)
         self.per_scaffold_record_number = self.records.groupby(self.records.index).size() # pandas Series with scaffold ids as index
-        self.scaffold_list = self.records.index.values
+        self.scaffold_list = self.records.index.unique().to_list()
         self.number_of_scaffolds = len(self.scaffold_list)
         self.threads = threads
 
