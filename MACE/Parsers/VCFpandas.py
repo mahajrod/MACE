@@ -517,9 +517,9 @@ class CollectionVCF():
         """
         return np.sum(self.check_records_by_expression(expression))
 
-    def rainfall_plot(self, plot_name, single_fig=True, dpi=300, figsize=(20, 20), facecolor="#D6D6D6",
-                      ref_genome=None, masked_scaffolds=None, min_gap_length=10, draw_gaps=False, suptitle=None,
-                      gaps_color="#777777", masked_scaffolds_color="#aaaaaa", logbase=2,
+    def rainfall_plot(self, plot_name, dpi=300, figsize=(20, 20), facecolor="#D6D6D6",
+                      ref_genome=None, min_masking_length=10, suptitle=None,
+                      masking_color="#777777", logbase=2,
                       extension_list=("pdf", "png"),
                       scaffold_black_list=None, scaffold_white_list=None,
                       scaffold_ordered_list=None, sort_scaffolds=False,
@@ -555,10 +555,10 @@ class CollectionVCF():
         plot_dir = "rainfall_plot"
 
         os.system("mkdir -p %s" % plot_dir)
-        if single_fig:
-            fig = plt.figure(1, dpi=dpi, figsize=figsize, facecolor=facecolor)
-            fig.suptitle(suptitle if suptitle else "Rainfall plot", fontsize=label_fontsize, fontweight='bold', y=0.94)
-            sub_plot_dict = OrderedDict({})
+
+        fig = plt.figure(1, dpi=dpi, figsize=figsize, facecolor=facecolor)
+        fig.suptitle(suptitle if suptitle else "Rainfall plot", fontsize=label_fontsize, fontweight='bold', y=0.94)
+        sub_plot_dict = OrderedDict({})
         index = 1
 
         final_scaffold_list = DrawingRoutines.get_filtered_scaffold_list(self.scaffold_list,
@@ -590,62 +590,54 @@ class CollectionVCF():
                                                       distances_dict[scaffold]],
                                                      axis=1)
 
-            if single_fig:
-                if not sub_plot_dict:
-                    sub_plot_dict[scaffold] = plt.subplot(num_of_scaffolds, 1, index, axisbg=facecolor)
-                else:
-                    keys = list(sub_plot_dict.keys())
-                    sub_plot_dict[scaffold] = plt.subplot(num_of_scaffolds, 1, index,
-                                                          sharex=sub_plot_dict[keys[0]],
-                                                          sharey=sub_plot_dict[keys[0]],
-                                                          facecolor=facecolor)
+            if not sub_plot_dict:
+                sub_plot_dict[scaffold] = plt.subplot(num_of_scaffolds, 1, index, axisbg=facecolor)
+            else:
+                keys = list(sub_plot_dict.keys())
+                sub_plot_dict[scaffold] = plt.subplot(num_of_scaffolds, 1, index,
+                                                      sharex=sub_plot_dict[keys[0]],
+                                                      sharey=sub_plot_dict[keys[0]],
+                                                      facecolor=facecolor)
 
-                index += 1
-                if draw_gaps:
-                    pass
-                    """
-                    if ref_genome:
-                        for gap in ref_genome.gaps_dict[scaffold]:
-                            plt.gca().add_patch(plt.Rectangle((gap.location.start, 1),
-                                                              gap.location.end - gap.location.start,
-                                                              1024*32, facecolor=gaps_color, edgecolor='none'))
-                # masked scaffolds should be SeqRecord dict
-                    """
-                if masked_scaffolds:
-                    pass
-                    """
-                    for feature in masked_scaffolds[scaffold].features:
-                        plt.gca().add_patch(plt.Rectangle((int(feature.location.start)+1, 1),
-                                                           feature.location.end - feature.location.start,
-                                                           1024*32, facecolor=masked_scaffolds_color, edgecolor='none'))
-                    """
-                print("Drawing scaffold: %s ..." % scaffold)
-                if color_expression:
-                    for color in color_list:
-                        plt.plot(distances_dict[scaffold].loc[color],
-                                 color=color,
-                                 marker='.', linestyle='None')
-                else:
-                    #print distances_dict[scaffold]
-                    #print distances_dict[scaffold]['POS']
-                    #print distances_dict[scaffold]['DIST']
-                    plt.scatter(distances_dict[scaffold]['POS'],
-                                distances_dict[scaffold]['DIST'],
-                                color=default_point_color,
-                                marker='.', s=dot_size)
+            index += 1
+            if ref_genome:
 
-                plt.text(-0.08, 0.5, scaffold, rotation=0, fontweight="bold", transform=sub_plot_dict[scaffold].transAxes,
-                         fontsize=label_fontsize,
-                         horizontalalignment='center',
-                         verticalalignment='center')
-                plt.ylabel("Distanse")
-                plt.axhline(y=100, color="#000000")
-                plt.axhline(y=1000, color="#000000")
-                plt.axhline(y=500, color="purple")
-                plt.axhline(y=10, color="#000000")
-                sub_plot_dict[scaffold].set_yscale('log', basey=logbase)
-                sub_plot_dict[scaffold].get_xaxis().set_visible(False)
-                plt.xlim(xmin=0)
+                masking_df = ref_genome.get_merged_gaps_and_masking()
+                if min_masking_length > 1:
+                    masking_df.remove_small_records(min_masking_length)
+
+                for masked_region in masking_df.loc[scaffold].itertuples(index=False):
+                    plt.gca().add_patch(plt.Rectangle((masked_region[0] + 1, 1),
+                                                      masked_region[1] - masked_region[0],
+                                                      1024*32, facecolor=masking_color, edgecolor='none'))
+
+            print("Drawing scaffold: %s ..." % scaffold)
+            if color_expression:
+                for color in color_list:
+                    plt.plot(distances_dict[scaffold].loc[color],
+                             color=color,
+                             marker='.', linestyle='None')
+            else:
+                #print distances_dict[scaffold]
+                #print distances_dict[scaffold]['POS']
+                #print distances_dict[scaffold]['DIST']
+                plt.scatter(distances_dict[scaffold]['POS'],
+                            distances_dict[scaffold]['DIST'],
+                            color=default_point_color,
+                            marker='.', s=dot_size)
+
+            plt.text(-0.08, 0.5, scaffold, rotation=0, fontweight="bold", transform=sub_plot_dict[scaffold].transAxes,
+                     fontsize=label_fontsize,
+                     horizontalalignment='center',
+                     verticalalignment='center')
+            plt.ylabel("Distanse")
+            plt.axhline(y=100, color="#000000")
+            plt.axhline(y=1000, color="#000000")
+            plt.axhline(y=500, color="purple")
+            plt.axhline(y=10, color="#000000")
+            sub_plot_dict[scaffold].set_yscale('log', basey=logbase)
+            sub_plot_dict[scaffold].get_xaxis().set_visible(False)
+            plt.xlim(xmin=0)
 
         for extension in extension_list:
             plt.savefig("%s/%s_log_scale.%s" % (plot_dir, plot_name, extension))
