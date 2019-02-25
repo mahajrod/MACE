@@ -4,11 +4,6 @@ GFF Parser Module based on pandas
 """
 __author__ = 'Sergei F. Kliver'
 
-import os
-import re
-
-from math import sqrt
-from copy import deepcopy
 from collections import OrderedDict, Iterable
 
 import numpy as np
@@ -93,6 +88,8 @@ class CollectionGFF:
                                    }
         self.parsing_mode = parsing_mode
         self.format = format
+        self.black_list = self.black_list
+        self.white_list = self.white_list
 
         # init aliases
         self.record_start_col = self.parsing_parameters[self.format][self.parsing_mode]["col_name_indexes"]["start"]
@@ -102,7 +99,7 @@ class CollectionGFF:
 
         # load records
         if in_file:
-            self.read(in_file, format=format, parsing_mode=parsing_mode, black_list=black_list, white_list=black_list)
+            self.read(in_file, format=format, parsing_mode=parsing_mode, black_list=black_list, white_list=white_list)
 
         else:
             self.records = records
@@ -155,3 +152,24 @@ class CollectionGFF:
         if verbose:
             print("Records before collapsing: %i\nRecords after collapsing: %i" % (records_before_collapse,
                                                                                    len(self.records)))
+
+    def remove_small_records(self, min_record_length):
+        self.records = self.records[(self.records['end'] - self.records['start']) >= min_record_length]
+
+    def __add__(self, other):
+        new_gff_record = CollectionGFF(records=pd.concat([self.records, other.records]),
+                                       in_file=None, format=self.format,
+                                       parsing_mode=self.parsing_mode,
+                                       black_list=self.black_list, white_list=self.white_list)
+        new_gff_record.records.sort_values(by=["scaffold", "start", "end"])
+
+        return new_gff_record
+
+    def __radd__(self, other):
+        new_gff_record = CollectionGFF(records=pd.concat([other.records, self.records]),
+                                       in_file=None, format=other.format,
+                                       parsing_mode=other.parsing_mode,
+                                       black_list=other.black_list, white_list=other.white_list)
+        new_gff_record.records.sort_values(by=["scaffold", "start", "end"])
+
+        return new_gff_record
