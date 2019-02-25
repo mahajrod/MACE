@@ -31,9 +31,8 @@ class CollectionSequence:
         self.black_list = black_list
 
         if in_file:
-            print("Parsing sequences...")
             self.read(in_file, format=format, parsing_mode=parsing_mode,
-                      black_list=black_list,  white_list=white_list)
+                      black_list=black_list,  white_list=white_list, verbose=verbose)
         else:
             self.records = records
 
@@ -59,7 +58,7 @@ class CollectionSequence:
                     if line[0] == ">":
                         if seq_id and (seq_id not in black_list):
                             if (not white_list) or (seq_id in white_list):
-                                print seq_id
+                                #print seq_id
                                 yield seq_id, seq
                         seq_id = line[1:].split()[0]
                         seq = ""
@@ -68,20 +67,22 @@ class CollectionSequence:
                 else:
                     if seq_id and (seq_id not in black_list):
                         if (not white_list) or (seq_id in white_list):
-                            print seq_id
+                            #print seq_id
                             yield seq_id, seq
 
     def reset_seq_generator(self):
         self.records = self.sequence_generator(self.seq_file, format=self.seq_file_format,
                                                black_list=self.black_list,  white_list=self.white_list)
 
-    def read(self, seq_file, format="fasta", parsing_mode="generator", black_list=(), white_list=()):
+    def read(self, seq_file, format="fasta", parsing_mode="generator", black_list=(), white_list=(),
+             verbose=False):
         if format not in self.formats:
             raise ValueError("ERROR!!! This format(%s) was not implemented yet for parsing!" % parsing_mode)
         if parsing_mode == "generator":
             self.records = self.sequence_generator(seq_file, format=format,
                                                    black_list=black_list,  white_list=white_list)
         elif parsing_mode == "parse":
+            print("Parsing sequences...")
             self.records = OrderedDict()
             for seq_id, seq in self.sequence_generator(seq_file, format=format,
                                                        black_list=black_list,
@@ -110,8 +111,6 @@ class CollectionSequence:
                 length_list.append([seq_id, len(seq)])
                 if count_gaps:
                     gaps_list.append(self.find_gaps_in_seq(seq, seq_id, min_gap_length=min_gap_length))
-                    self.gaps = pd.concat(gaps_list)
-                    self.gaps.sort_values(by=["scaffold", "start", "end"])
 
             self.reset_seq_generator()
         else:
@@ -119,8 +118,9 @@ class CollectionSequence:
                 length_list.append([seq_id, len(self.records[seq_id])])
                 if count_gaps:
                     gaps_list.append(self.find_gaps_in_seq(self.records[seq_id], seq_id, min_gap_length=min_gap_length))
-                    self.gaps = pd.concat(gaps_list)
-                    self.gaps.sort_values(by=["scaffold", "start", "end"])
+
+        self.gaps = pd.concat(gaps_list)
+        self.gaps.sort_values(by=["scaffold", "start", "end"])
 
         self.seq_lengths = pd.DataFrame.from_records(length_list, columns=("scaffold", "length"), index="scaffold")
         if sort:
