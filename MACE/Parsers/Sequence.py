@@ -105,15 +105,22 @@ class CollectionSequence:
     def get_stats_and_features(self, count_gaps=True, sort="True", min_gap_length=1):
         length_list = []
         gaps_list = []
-
-        for seq_id, seq in self.records:
-            length_list.append([seq_id, len(seq)])
-            if count_gaps:
-                gaps_list.append(self.find_gaps_in_seq(seq, seq_id, min_gap_length=min_gap_length))
-                self.gaps = pd.concat(gaps_list)
-                self.gaps.sort_values(by=["scaffold", "start", "end"])
         if self.parsing_mode == "generator":
+            for seq_id, seq in self.records:
+                length_list.append([seq_id, len(seq)])
+                if count_gaps:
+                    gaps_list.append(self.find_gaps_in_seq(seq, seq_id, min_gap_length=min_gap_length))
+                    self.gaps = pd.concat(gaps_list)
+                    self.gaps.sort_values(by=["scaffold", "start", "end"])
+
             self.reset_seq_generator()
+        else:
+            for seq_id in self.records:
+                length_list.append([seq_id, len(self.records[seq_id])])
+                if count_gaps:
+                    gaps_list.append(self.find_gaps_in_seq(self.records[seq_id], seq_id, min_gap_length=min_gap_length))
+                    self.gaps = pd.concat(gaps_list)
+                    self.gaps.sort_values(by=["scaffold", "start", "end"])
 
         self.seq_lengths = pd.DataFrame.from_records(length_list, columns=("scaffold", "length"), index="scaffold")
         if sort:
