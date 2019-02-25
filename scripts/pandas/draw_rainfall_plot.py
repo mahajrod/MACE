@@ -3,8 +3,8 @@ __author__ = 'Sergei F. Kliver'
 import sys
 import argparse
 
-from BCBio import GFF
-from MACE.Parsers.VCFpandas import CollectionVCF, ReferenceGenome
+from MACE.Parsers.VCFpandas import CollectionVCF
+from MACE.Parsers.Sequence import CollectionSequence
 
 parser = argparse.ArgumentParser()
 
@@ -27,12 +27,18 @@ parser.add_argument("-e", "--output_formats", action="store", dest="output_forma
                          "of output figure.Default: png")
 parser.add_argument("-l", "--suptitle", action="store", dest="suptitle",
                     help="Suptitle of figure. Default: 'Rainfall plot'")
-parser.add_argument("-g", "--draw_gaps", action="store_true", dest="draw_gaps",
-                    help="Draw gaps, ignored if reference genome is not set. Default: False")
 parser.add_argument("-r", "--reference_genome", action="store", dest="ref_genome",
                     help="Fasta file with reference genome, required to draw gaps")
+parser.add_argument("-p", "--reference_parsing_mode", action="store",
+                    dest="reference_parsing_mode", default="parse",
+                    help="Parsing mode for fasta file with reference genome. Use 'generator' mode"
+                         "if your machine have low memory. Allowed parse(default), generator")
+
 parser.add_argument("-m", "--masked_regions", action="store", dest="masked_regions",
                     help="Gff file with masked regions")
+parser.add_argument("-n", "--min_masking_length", action="store", dest="min_masking_length", default=1,
+                    help="Minimum length of masked or gapped region to be shown. "
+                         "Increase this parameter if you deal wit hlarge genome. Default: 1(show all)")
 parser.add_argument("-u", "--logbase", action="store", dest="logbase", default=2, type=int,
                     help="Logbase of y axis")
 parser.add_argument("-a", "--scaffold_white_list", action="store", dest="scaffold_white_list", default=[],
@@ -52,27 +58,23 @@ parser.add_argument("-w", "--dot_size", action="store", dest="dot_size", default
                     help="Size of dots corresponding to the variants. Default: matplotlib default.")
 args = parser.parse_args()
 
-mutations = CollectionVCF(args.input, dont_parse_info_and_data=True)
+mutations = CollectionVCF(args.input, parsing_mode="only_coordinates")
 
 if args.ref_genome:
-    reference_genome = ReferenceGenome(args.ref_genome)
-    reference_genome.find_gaps()
+    reference_genome = CollectionSequence(args.ref_genome,
+                                          parsing_mode=args.reference_parsing_mode,
+                                          masking_file=args.masked_regions,
+                                          black_list=args.scaffold_black_list,
+                                          white_list=args.scaffold_white_list)
 else:
     reference_genome = None
 
-if args.masked_regions:
-    masked_regions = {}
-    with open(args.masked_regions) as gff_fd:
-        for record in GFF.parse(gff_fd):
-            masked_regions[record.id] = record
-else:
-    masked_regions = None
-
-mutations.rainfall_plot(args.output_prefix, single_fig=True, dpi=args.dpi, figsize=args.size_of_figure,
+mutations.rainfall_plot(args.output_prefix, dpi=args.dpi, figsize=args.size_of_figure,
                         facecolor="#D6D6D6",
-                        ref_genome=reference_genome, masked_scaffolds=masked_regions, min_gap_length=10,
-                        draw_gaps=args.draw_gaps, suptitle=args.suptitle,
-                        gaps_color="#777777", masked_scaffolds_color="#aaaaaa", logbase=args.logbase,
+                        ref_genome=reference_genome,
+                        min_masking_length=args.min_masking_length,
+                        suptitle=args.suptitle,
+                        masking_color="#777777", logbase=args.logbase,
                         extension_list=args.output_formats,
                         scaffold_black_list=args.scaffold_black_list, scaffold_white_list=args.scaffold_white_list,
                         scaffold_ordered_list=args.scaffold_ordered_list, sort_scaffolds=args.sort_scaffolds,
