@@ -524,7 +524,7 @@ class CollectionVCF():
                       scaffold_black_list=None, scaffold_white_list=None,
                       scaffold_ordered_list=None, sort_scaffolds=False,
                       color_expression=None,
-                      default_point_color='black',
+                      default_point_color='blue',
                       dot_size=None,
                       label_fontsize=None):
         """
