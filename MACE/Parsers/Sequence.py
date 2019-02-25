@@ -61,6 +61,7 @@ class CollectionSequence:
                     else:
                         seq += line[:-1]
 
+
     def reset_seq_generator(self):
         self.records = self.sequence_generator(self.seq_file, format=self.seq_file_format,
                                                black_list=self.black_list,  white_list=self.white_list)
