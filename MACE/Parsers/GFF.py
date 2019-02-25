@@ -88,8 +88,8 @@ class CollectionGFF:
                                    }
         self.parsing_mode = parsing_mode
         self.format = format
-        self.black_list = self.black_list
-        self.white_list = self.white_list
+        self.black_list = black_list
+        self.white_list = white_list
 
         # init aliases
         self.record_start_col = self.parsing_parameters[self.format][self.parsing_mode]["col_name_indexes"]["start"]
