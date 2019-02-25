@@ -129,9 +129,9 @@ class CollectionGFF:
         if sort:
             self.records.sort_values(by=["scaffold", "start", "end"])
         row_list = []
-        for scaffold in self.records:
+        for scaffold in self.records.index:
             # remove nested records
-            end_diff = self.records.loc[scaffold]['end'].diff(axis=0)
+            end_diff = self.records.loc[scaffold]['end'].diff()
             end_diff[0] = 1
             no_nested_records_df = self.records.loc[scaffold][end_diff > 0]
 
