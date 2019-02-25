@@ -327,6 +327,7 @@ class CollectionVCF():
         :return:
         """
         # vcf file columns
+        self.formats = ["vcf"]
         self.VCF_COLS = OrderedDict({"CHROM":  0,
                                      "POS":    1,
                                      "ID":     2,
@@ -1957,13 +1958,6 @@ class ReferenceGenome(object):
                                                                               "ID=%i" % feature_id))
                     feature_id += 1
 
-    def __len__(self):
-        """
-
-        :return: length of genome.
-        """
-        return self.length
-
     def rec_index(self):
         """
         Region order is based on descending region length
@@ -1990,136 +1984,6 @@ class ReferenceGenome(object):
             raise ValueError("Coordinate %i is too large for this genome" % tmp_coordinate)
         shift = tmp_coordinate - start
         return coordinate_region, shift
-
-    def number_of_regions(self):
-        """
-
-        :return: number of regions/scaffolds/chromosomes in genome
-        """
-        return len(self.region_length)
-
-    def find_gaps(self, min_gap_length=1):
-        """
-        Finds gaps (N) in reference genome and writes them as SeqFeatures to self.gaps_dict.
-        Keys of dict are region names.
-        :return: None
-        """
-        gap_reg_exp = re.compile("N+", re.IGNORECASE)
-        for region in self.reference_genome:
-            self.gaps_dict[region] = []
-            gaps = gap_reg_exp.finditer(str(self.reference_genome[region].seq))  # iterator with
-            for match in gaps:
-                if (match.end() - match.start()) >= min_gap_length:
-                    self.gaps_dict[region].append(SeqFeature(FeatureLocation(match.start(), match.end()),
-                                                             type="gap", strand=None))
-
-    def generate_snp_set(self, size, substitution_dict=None, zygoty="homo", out_vcf="synthetic.vcf"):
-        """
-        Generates set of mutations
-        :param size: size of snp set to be generated.
-        :param substitution_dict: dictionary of substitutions.
-        :param zygoty: zygoty of mutations in set.
-        :param out_vcf: output .,vcf file with mutations
-        """
-
-        multiplier = (5 - len(substitution_dict)) if substitution_dict else 1
-        unique_set = np.array([], dtype=np.int64)
-        print("Generating...")
-
-        index = 1
-        while len(unique_set) < size:
-            print("Iteration %i..." % index)
-            print("    Generating raw set %i..." % index)
-            raw_set = np.random.random_integers(0, high=self.length-1, size=size*multiplier)
-            print("    Generated %i..." % len(raw_set))
-            print("    Removing duplicates from raw set %i..." % index)
-            raw_set = np.hstack((unique_set, raw_set))
-            unique_set = np.unique(raw_set)
-            np.random.shuffle(unique_set)
-            np.random.shuffle(unique_set)
-            print("    After removing  duplicates left %i.." % len(unique_set))
-            print("    Checking filtered set %i..." % index)
-            mutation_count = 0
-            report_count = 1
-            if substitution_dict is not None:
-                tmp_list = []
-                references = list(substitution_dict.keys())
-                for coordinate in unique_set:
-                    region, interregion_pos = self.get_position(coordinate)
-                    if self.reference_genome[region][interregion_pos] in references:
-                        if self.masked_regions and (region in self.masked_regions):
-                            for masked_region in self.masked_regions[region].features:
-                                #print(self.masked_regions[region].features)
-                                #print(masked_region)
-                                if interregion_pos in masked_region:
-                                    break
-                            else:
-                                tmp_list.append(coordinate)
-                                mutation_count += 1
-                        else:
-                            tmp_list.append(coordinate)
-                            mutation_count += 1
-                    if mutation_count/report_count == 500:
-                        print("    Generated %i" % mutation_count)
-                        report_count += 1
-                unique_set = np.array(tmp_list)
-            index += 1
-        print("    Generated %i" % mutation_count)
-        nucleotides = {"A", "C", "G", "T"}
-        alt_dict = {}
-        if not substitution_dict:
-            for nuc in nucleotides:
-                alt_dict[nuc] = list(nucleotides - {nuc})
-        else:
-            for ref in substitution_dict:
-                if substitution_dict[ref]:
-                    alt_dict[ref] = list(set(substitution_dict[ref]) - {ref})
-                else:
-                    alt_dict[ref] = list(nucleotides - {ref})
-        print("Writing vcf...")
-
-        coordinates_dict = dict((record_id, []) for record_id in self.region_list)
-        check = 0
-        for coordinate in unique_set[:size]:
-            region, interregion_pos = self.get_position(coordinate)
-            coordinates_dict[region].append(interregion_pos)
-
-        with open(out_vcf, "w") as out_fd:
-            out_fd.write("##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">\n")
-            out_fd.write("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tSynthetic_uniform_sample\n")
-            #mutation_count = 0
-            for region in coordinates_dict:
-                if not coordinates_dict[region]:
-                    continue
-                num_of_snps = len(coordinates_dict[region])
-                check += num_of_snps
-
-                coordinates_dict[region].sort()
-                #region, interregion_pos = self.get_position(coordinate)
-                for interregion_pos in coordinates_dict[region]:
-                    ref = self.reference_genome[region][interregion_pos]
-
-                    if len(substitution_dict[ref]) != 1:
-                        alt = alt_dict[ref][np.random.randint(0, len(alt_dict[ref]))]
-                    else:
-                        alt = alt_dict[ref][0]
-                    if zygoty == "homo":
-                        zyg = "1/1"
-                    elif zygoty == "hetero":
-                        zyg = "0/1"
-                    out_fd.write("%s\t%i\t.\t%s\t%s\t.\t.\t.\tGT\t%s\n" %
-                                 (region, interregion_pos + 1, ref, alt, zyg))
-                print("    %s : %i SNPs" % (region, num_of_snps))
-                    #mutation_count += 1
-                    #if mutation_count == size:
-                    #    break
-            print ("Totaly %i mutations were written" % check)
-
-    @staticmethod
-    def count_number_of_windows(scaffold_length, window_size, window_step):
-        if scaffold_length < window_size:
-            return 0
-        return int((scaffold_length - window_size)/window_step) + 1
 
     def count_gaped_and_masked_positions_in_windows(self, window_size, window_step,
                                                     ignore_scaffolds_shorter_than_window=True,
