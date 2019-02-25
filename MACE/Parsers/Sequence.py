@@ -53,10 +53,9 @@ class CollectionSequence:
     def sequence_generator(sequence_file, format="fasta", black_list=(), white_list=()):
         if format == "fasta":
             with FileRoutines.metaopen(sequence_file, "r") as seq_fd:
-                line = seq_fd.next()
                 seq_id = None
                 seq = ""
-                while True:
+                for line in seq_fd:
                     if line[0] == ">":
                         if seq_id and (seq_id not in black_list):
                             if (not white_list) or (seq_id in white_list):
@@ -66,7 +65,11 @@ class CollectionSequence:
                         seq = ""
                     else:
                         seq += line[:-1]
-                    line = seq_fd.next()
+                else:
+                    if seq_id and (seq_id not in black_list):
+                        if (not white_list) or (seq_id in white_list):
+                            print seq_id
+                                yield seq_id, seq
 
     def reset_seq_generator(self):
         self.records = self.sequence_generator(self.seq_file, format=self.seq_file_format,
