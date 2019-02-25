@@ -104,6 +104,8 @@ class CollectionGFF:
         else:
             self.records = records
 
+        self.scaffold_list = self.records.index.unique().to_list()
+
     def read(self, in_file, format="gff", parsing_mode="only_coordinates", sort=False,
              black_list=(), white_list=()):
         if format not in self.parsing_parameters:
@@ -129,7 +131,7 @@ class CollectionGFF:
         if sort:
             self.records.sort_values(by=["scaffold", "start", "end"])
         row_list = []
-        for scaffold in self.records.index:
+        for scaffold in self.scaffold_list:
             print scaffold
             # remove nested records
             end_diff = self.records.loc[scaffold]['end'].diff()
