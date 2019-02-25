@@ -79,6 +79,6 @@ mutations.rainfall_plot(args.output_prefix, dpi=args.dpi, figsize=args.size_of_f
                         scaffold_black_list=args.scaffold_black_list, scaffold_white_list=args.scaffold_white_list,
                         scaffold_ordered_list=args.scaffold_ordered_list, sort_scaffolds=args.sort_scaffolds,
                         color_expression=None,
-                        default_point_color='black',
+                        default_point_color='blue',
                         dot_size=args.dot_size,
                         label_fontsize=None)
