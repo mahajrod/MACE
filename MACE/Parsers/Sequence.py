@@ -69,7 +69,7 @@ class CollectionSequence:
                     if seq_id and (seq_id not in black_list):
                         if (not white_list) or (seq_id in white_list):
                             print seq_id
-                                yield seq_id, seq
+                            yield seq_id, seq
 
     def reset_seq_generator(self):
         self.records = self.sequence_generator(self.seq_file, format=self.seq_file_format,
