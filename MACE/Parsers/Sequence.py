@@ -16,11 +16,13 @@ from MACE.General import FileRoutines
 
 from MACE.Parsers.GFF import CollectionGFF
 
+
 class CollectionSequence:
 
     def __init__(self, in_file=None, records=None, format="fasta",
                  parsing_mode="parse", black_list=(), white_list=(),
-                 masking=None, masking_file=None, masking_filetype="gff"):
+                 masking=None, masking_file=None, masking_filetype="gff",
+                 verbose=False):
         self.formats = ["fasta"]
         self.parsing_mode = parsing_mode
         self.seq_file = in_file
@@ -29,13 +31,16 @@ class CollectionSequence:
         self.black_list = black_list
 
         if in_file:
+            print("Parsing sequences...")
             self.read(in_file, format=format, parsing_mode=parsing_mode,
                       black_list=black_list,  white_list=white_list)
         else:
             self.records = records
 
         if masking_file:
-            self.masking = CollectionGFF(masking_file, format=masking_filetype, parsing_mode="only_coordinates")
+            print("Parsing masking...")
+            self.masking = CollectionGFF(masking_file, format=masking_filetype, parsing_mode="only_coordinates",
+                                         black_list=black_list, white_list=white_list)
         else:
             self.masking = masking
 
@@ -55,12 +60,12 @@ class CollectionSequence:
                     if line[0] == ">":
                         if seq_id and (seq_id not in black_list):
                             if (not white_list) or (seq_id in white_list):
+                                print seq_id
                                 yield seq_id, seq
                         seq_id = line[1:].split()[0]
                         seq = ""
                     else:
                         seq += line[:-1]
-
 
     def reset_seq_generator(self):
         self.records = self.sequence_generator(self.seq_file, format=self.seq_file_format,
@@ -73,9 +78,12 @@ class CollectionSequence:
             self.records = self.sequence_generator(seq_file, format=format,
                                                    black_list=black_list,  white_list=white_list)
         elif parsing_mode == "parse":
-            self.records = OrderedDict([(seq_id, seq) for seq_id, seq in self.sequence_generator(seq_file, format=format,
-                                                                                                 black_list=black_list,
-                                                                                                 white_list=white_list)])
+            self.records = OrderedDict()
+            for seq_id, seq in self.sequence_generator(seq_file, format=format,
+                                                       black_list=black_list,
+                                                       white_list=white_list):
+                self.records[seq_id] = seq
+
             return self.records
 
     def __len__(self):
