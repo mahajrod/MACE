@@ -44,12 +44,12 @@ class CollectionSequence:
             self.masking = masking
 
         self.seq_lengths = None
-        self.length = None        # None or pandas dataframe with seq_id as index
+        self.length = 0        # None or pandas dataframe with seq_id as index
         self.scaffolds = None
         self.gaps = None          # None or pandas dataframe with seq_id as index
 
     @staticmethod
-    def sequence_generator(sequence_file, format="fasta", black_list=(), white_list=()):
+    def sequence_generator(sequence_file, format="fasta", black_list=(), white_list=(), verbose=False):
         if format == "fasta":
             with FileRoutines.metaopen(sequence_file, "r") as seq_fd:
                 seq_id = None
@@ -58,7 +58,8 @@ class CollectionSequence:
                     if line[0] == ">":
                         if seq_id and (seq_id not in black_list):
                             if (not white_list) or (seq_id in white_list):
-                                #print seq_id
+                                if verbose:
+                                    print("Parsing %s" % seq_id)
                                 yield seq_id, seq
                         seq_id = line[1:].split()[0]
                         seq = ""
@@ -67,7 +68,8 @@ class CollectionSequence:
                 else:
                     if seq_id and (seq_id not in black_list):
                         if (not white_list) or (seq_id in white_list):
-                            #print seq_id
+                            if verbose:
+                                print("Parsing %s" % seq_id)
                             yield seq_id, seq
 
     def reset_seq_generator(self):
@@ -80,7 +82,8 @@ class CollectionSequence:
             raise ValueError("ERROR!!! This format(%s) was not implemented yet for parsing!" % parsing_mode)
         if parsing_mode == "generator":
             self.records = self.sequence_generator(seq_file, format=format,
-                                                   black_list=black_list,  white_list=white_list)
+                                                   black_list=black_list,  white_list=white_list,
+                                                   verbose=verbose)
         elif parsing_mode == "parse":
             print("Parsing sequences...")
             self.records = OrderedDict()
