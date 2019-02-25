@@ -136,18 +136,21 @@ class CollectionGFF:
             no_nested_records_df = self.records.loc[scaffold][end_diff > 0]
 
             # collapse overlapping records
+
             row_iterator = no_nested_records_df.itertuples(index=True)
 
-            prev_row = row_iterator.next()
+            prev_row = list(row_iterator.next())
 
             for row in row_iterator:
-                if row[self.record_start_col] > prev_row[self.record_end_col]:
+                row_l = list(row)
+                if row_l[self.record_start_col] > prev_row[self.record_end_col]:
                     row_list.append(prev_row)
-                    prev_row = row
+                    prev_row = row_l
                 else:
-                    prev_row[self.record_end_col] = row[self.record_end_col]
+                    prev_row[self.record_end_col] = row_l[self.record_end_col]
+
             row_list.append(prev_row)
-        self.records = pd.DataFrame(row_list, columns=self.col_names, index=self.index_cols)
+        self.records = pd.DataFrame.from_records(row_list, columns=self.col_names, index=self.index_cols)
 
         if verbose:
             print("Records before collapsing: %i\nRecords after collapsing: %i" % (records_before_collapse,
