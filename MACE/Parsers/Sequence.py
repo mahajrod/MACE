@@ -159,7 +159,7 @@ class CollectionSequence:
     def get_merged_gaps_and_masking(self):
         if self.masking and self.gaps:
             merged = self.masking + self.gaps
-            merged.collapse_records(self, sort=False, verbose=True) # sorting is called during addition
+            merged.collapse_records(sort=False, verbose=True) # sorting is called during addition
             return merged
         elif self.masking:
             return self.masking
