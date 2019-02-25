@@ -81,6 +81,7 @@ class CollectionSequence:
         if format not in self.formats:
             raise ValueError("ERROR!!! This format(%s) was not implemented yet for parsing!" % parsing_mode)
         if parsing_mode == "generator":
+            print("Creating sequence generator...")
             self.records = self.sequence_generator(seq_file, format=format,
                                                    black_list=black_list,  white_list=white_list,
                                                    verbose=verbose)
@@ -122,8 +123,11 @@ class CollectionSequence:
                 if count_gaps:
                     gaps_list.append(self.find_gaps_in_seq(self.records[seq_id], seq_id, min_gap_length=min_gap_length))
 
-        self.gaps = pd.concat(gaps_list)
-        self.gaps.sort_values(by=["scaffold", "start", "end"])
+        self.gaps = CollectionGFF(records=pd.concat(gaps_list), format="gff", parsing_mode="only_coordinates",
+                                  black_list=self.black_list, white_list=self.white_list
+                                  )
+
+        self.gaps.records.sort_values(by=["scaffold", "start", "end"])
 
         self.seq_lengths = pd.DataFrame.from_records(length_list, columns=("scaffold", "length"), index="scaffold")
         if sort:
@@ -148,3 +152,18 @@ class CollectionSequence:
             # add seq id as index
             gaps_list.index = pd.Index([seq_id] * len(gaps_list), name="scaffold")
         return gaps_list
+
+    def remove_small_gaps(self, min_gap_length):
+        self.gaps = self.gaps[(self.gaps['end'] - self.gaps['start']) >= min_gap_length]
+
+    def get_merged_gaps_and_masking(self):
+        if self.masking and self.gaps:
+            merged = self.masking + self.gaps
+            merged.collapse_records(self, sort=False, verbose=True) # sorting is called during addition
+            return merged
+        elif self.masking:
+            return self.masking
+        elif self.gaps:
+            return self.gaps
+        else:
+            return None
