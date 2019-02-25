@@ -17,7 +17,8 @@ import pandas as pd
 
 class CollectionGFF:
 
-    def __init__(self, in_file=None, records=None, format="gff", parsing_mode="only_coordinates"):
+    def __init__(self, in_file=None, records=None, format="gff", parsing_mode="only_coordinates",
+                 black_list=(), white_list=()):
 
         self.formats = ["gff", "gtf", "bed"]
         self.GFF_COLS = OrderedDict({
@@ -101,12 +102,13 @@ class CollectionGFF:
 
         # load records
         if in_file:
-            self.read(in_file, format=format, parsing_mode=parsing_mode)
+            self.read(in_file, format=format, parsing_mode=parsing_mode, black_list=black_list, white_list=black_list)
 
         else:
             self.records = records
 
-    def read(self, in_file, format="gff", parsing_mode="only_coordinates", sort=False):
+    def read(self, in_file, format="gff", parsing_mode="only_coordinates", sort=False,
+             black_list=(), white_list=()):
         if format not in self.parsing_parameters:
             raise ValueError("ERROR!!! This format(%s) was not implemented yet for parsing!" % parsing_mode)
         elif parsing_mode not in self.parsing_parameters[format]:
