@@ -130,11 +130,13 @@ class CollectionGFF:
             self.records.sort_values(by=["scaffold", "start", "end"])
         row_list = []
         for scaffold in self.records.index:
+            print scaffold
             # remove nested records
             end_diff = self.records.loc[scaffold]['end'].diff()
+            print len(end_diff)
             end_diff[0] = 1
             no_nested_records_df = self.records.loc[scaffold][end_diff > 0]
-
+            print len(no_nested_records_df)
             # collapse overlapping records
 
             row_iterator = no_nested_records_df.itertuples(index=True)
@@ -164,7 +166,7 @@ class CollectionGFF:
                                        in_file=None, format=self.format,
                                        parsing_mode=self.parsing_mode,
                                        black_list=self.black_list, white_list=self.white_list)
-        new_gff_record.records.sort_values(by=["scaffold", "start", "end"])
+        new_gff_record.records = new_gff_record.records.sort_values(by=["scaffold", "start", "end"])
 
         return new_gff_record
 
@@ -173,6 +175,6 @@ class CollectionGFF:
                                        in_file=None, format=other.format,
                                        parsing_mode=other.parsing_mode,
                                        black_list=other.black_list, white_list=other.white_list)
-        new_gff_record.records.sort_values(by=["scaffold", "start", "end"])
+        new_gff_record.records = new_gff_record.records.sort_values(by=["scaffold", "start", "end"])
 
         return new_gff_record
