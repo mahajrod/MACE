@@ -560,7 +560,7 @@ class CollectionVCF():
         os.system("mkdir -p %s" % plot_dir)
 
         fig = plt.figure(1, dpi=dpi, figsize=figsize ) #, facecolor=facecolor)
-        fig.suptitle(suptitle if suptitle else "Rainfall plot", fontsize=label_fontsize, fontweight='bold', y=0.94)
+        fig.suptitle(suptitle if suptitle else "Rainfall plot", fontweight='bold', y=0.94) #fontsize=label_fontsize,
         sub_plot_dict = OrderedDict({})
         index = 1
 
@@ -679,8 +679,6 @@ class CollectionVCF():
         sub_plot_dict[final_scaffold_list[-1]].get_xaxis().set_visible(True)
         sub_plot_dict[scaffold].spines['bottom'].set_color('black')
         #plt.ylim(ymax=max_distance * 1.10)
-
-
 
         for extension in extension_list:
             plt.savefig("%s/%s_log_scale.%s" % (plot_dir, plot_name, extension))
