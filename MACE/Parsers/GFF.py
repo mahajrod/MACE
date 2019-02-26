@@ -138,6 +138,7 @@ class CollectionGFF:
                 for row in self.records.loc[scaffold].itertuple(index=True):
                     row_list.append(list(row))
                 continue
+            print self.records.loc[scaffold]
             # remove nested records
             end_diff = self.records.loc[scaffold]['end'].diff()
             print len(end_diff)
