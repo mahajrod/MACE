@@ -638,6 +638,7 @@ class CollectionVCF():
                 #print distances_dict[scaffold]
                 #print distances_dict[scaffold]['POS']
                 #print distances_dict[scaffold]['DIST']
+                print "UUUUUUUU"
                 plt.scatter(distances_dict[scaffold]['POS'],
                             distances_dict[scaffold]['DIST'],
                             color=default_point_color,
