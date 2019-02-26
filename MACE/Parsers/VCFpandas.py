@@ -614,7 +614,7 @@ class CollectionVCF():
                 print("\tScaffold length:%i" % ref_genome.seq_lengths.loc[scaffold])
                 plt.gca().add_patch(plt.Rectangle((1, 0),
                                               ref_genome.seq_lengths.loc[scaffold],
-                                              10**7, facecolor=facecolor, edgecolor='black'))
+                                              10**7, facecolor=facecolor, edgecolor='black', alpha=0.5))
                 if draw_masking:
                     for masked_region in masking_df.records.loc[scaffold].itertuples(index=False):
                         #print masked_region
@@ -627,9 +627,10 @@ class CollectionVCF():
 
             if color_expression:
                 for color in color_list:
-                    plt.plot(distances_dict[scaffold].loc[color],
-                             color=color,
-                             marker='.', linestyle='None')
+                    plt.scatter(distances_dict[scaffold].loc[color]['POS'],
+                                distances_dict[scaffold]['DIST'],
+                                color=color,
+                                marker='.', s=dot_size)
             else:
                 #print distances_dict[scaffold]
                 #print distances_dict[scaffold]['POS']
