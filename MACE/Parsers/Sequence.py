@@ -122,12 +122,12 @@ class CollectionSequence:
                 length_list.append([seq_id, len(self.records[seq_id])])
                 if count_gaps:
                     gaps_list.append(self.find_gaps_in_seq(self.records[seq_id], seq_id, min_gap_length=min_gap_length))
+        if count_gaps:
+            self.gaps = CollectionGFF(records=pd.concat(gaps_list), format="gff", parsing_mode="only_coordinates",
+                                      black_list=self.black_list, white_list=self.white_list
+                                      )
 
-        self.gaps = CollectionGFF(records=pd.concat(gaps_list), format="gff", parsing_mode="only_coordinates",
-                                  black_list=self.black_list, white_list=self.white_list
-                                  )
-
-        self.gaps.records.sort_values(by=["scaffold", "start", "end"])
+            self.gaps.records.sort_values(by=["scaffold", "start", "end"])
 
         self.seq_lengths = pd.DataFrame.from_records(length_list, columns=("scaffold", "length"), index="scaffold")
         if sort:
