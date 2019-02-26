@@ -600,7 +600,7 @@ class CollectionVCF():
                                                      axis=1)
 
             if not sub_plot_dict:
-                sub_plot_dict[scaffold] = plt.subplot(num_of_scaffolds, 1, index, axisbg=facecolor)
+                sub_plot_dict[scaffold] = plt.subplot(num_of_scaffolds, 1, index) #, axisbg=facecolor)
             else:
                 keys = list(sub_plot_dict.keys())
                 sub_plot_dict[scaffold] = plt.subplot(num_of_scaffolds, 1, index,
