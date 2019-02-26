@@ -526,7 +526,7 @@ class CollectionVCF():
                       color_expression=None,
                       default_point_color='blue',
                       dot_size=None,
-                      label_fontsize=None, show_masking=False):
+                      label_fontsize=None, draw_masking=False):
         """
 
         :param plot_name:
@@ -571,7 +571,7 @@ class CollectionVCF():
         distances_dict = OrderedDict()
         max_distance = 0
 
-        if ref_genome and show_masking:
+        if ref_genome and draw_masking:
             masking_df = ref_genome.get_merged_gaps_and_masking()
             if min_masking_length > 1:
                 masking_df.remove_small_records(min_masking_length)
@@ -613,7 +613,7 @@ class CollectionVCF():
                 plt.gca().add_patch(plt.Rectangle((1, 0),
                                               ref_genome.seq_lengths.loc[scaffold],
                                               10**7, facecolor=facecolor, edgecolor='black'))
-                if show_masking:
+                if draw_masking:
                     for masked_region in masking_df.records.loc[scaffold].itertuples(index=False):
                         #print masked_region
 
