@@ -677,6 +677,7 @@ class CollectionVCF():
             #plt.tight_layout()
         #sub_plot_dict[scaffold].unshare_x_axes(sub_plot_dict[first_scaffold])
         sub_plot_dict[final_scaffold_list[-1]].get_xaxis().set_visible(True)
+        sub_plot_dict[scaffold].spines['bottom'].set_color('black')
         #plt.ylim(ymax=max_distance * 1.10)
 
 
