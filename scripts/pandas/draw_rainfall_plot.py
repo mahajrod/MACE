@@ -60,7 +60,7 @@ parser.add_argument("-z", "--scaffold_ordered_list", action="store", dest="scaff
                     help="Comma-separated list of scaffolds to draw first and exactly in same order. "
                          "Scaffolds absent in this list are drawn last and in order according to vcf file . "
                          "Default: not set")
-parser.add_argument("-w", "--dot_size", action="store", dest="dot_size", default=None, type=int,
+parser.add_argument("-w", "--dot_size", action="store", dest="dot_size", default=None, type=float,
                     help="Size of dots corresponding to the variants. Default: matplotlib default.")
 args = parser.parse_args()
 
