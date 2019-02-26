@@ -612,7 +612,7 @@ class CollectionVCF():
             if ref_genome:
 
                 for masked_region in masking_df.records.loc[scaffold].itertuples(index=False):
-                    print masked_region
+                    #print masked_region
 
                     plt.gca().add_patch(plt.Rectangle((masked_region[0] + 1, 1),
                                                       masked_region[1] - masked_region[0],
