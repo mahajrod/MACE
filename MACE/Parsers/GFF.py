@@ -134,7 +134,7 @@ class CollectionGFF:
         for scaffold in self.scaffold_list:
             print scaffold
             # check if there is only one record per scaffold, necessary as pandas will return interger instead of Series
-            if len(self.records.loc[scaffold]) == 1:
+            if isinstance(self.records.loc[scaffold], pd.Series):
                 for row in self.records.loc[scaffold].itertuple(index=True):
                     row_list.append(list(row))
                 continue
