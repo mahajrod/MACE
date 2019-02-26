@@ -161,8 +161,10 @@ class CollectionGFF:
                                                                                    len(self.records)))
 
     def remove_small_records(self, min_record_length):
+        records_before_collapse = self.records
         self.records = self.records[(self.records['end'] - self.records['start']) >= min_record_length]
-
+        print("Records before filtering: %i\nRecords afterfiltering: %i" % (records_before_collapse,
+                                                                                   len(self.records)))
     def __add__(self, other):
         new_gff_record = CollectionGFF(records=pd.concat([self.records, other.records]),
                                        in_file=None, format=self.format,
