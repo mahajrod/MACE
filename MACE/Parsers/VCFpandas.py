@@ -526,7 +526,7 @@ class CollectionVCF():
                       color_expression=None,
                       default_point_color='blue',
                       dot_size=None,
-                      label_fontsize=None):
+                      label_fontsize=None, show_masking=False):
         """
 
         :param plot_name:
@@ -571,11 +571,10 @@ class CollectionVCF():
         distances_dict = OrderedDict()
         max_distance = 0
 
-        if ref_genome:
+        if ref_genome and show_masking:
             masking_df = ref_genome.get_merged_gaps_and_masking()
             if min_masking_length > 1:
                 masking_df.remove_small_records(min_masking_length)
-            print masking_df
 
         for scaffold in final_scaffold_list: # self.records
             print("Handling scaffold: %s ..." % scaffold)
@@ -593,7 +592,7 @@ class CollectionVCF():
                                                       colors],
                                                      axis=1)
                 distances_dict[scaffold] = distances_dict[scaffold].set_index('COLOR')
-                color_list = colors.index.values
+                color_list = colors.index.values.unique().to_list()
             else:
                 distances_dict[scaffold] = pd.concat([self.records.loc[scaffold, "POS"],
                                                       distances_dict[scaffold]],
@@ -610,19 +609,19 @@ class CollectionVCF():
 
             index += 1
             if ref_genome:
-
-                for masked_region in masking_df.records.loc[scaffold].itertuples(index=False):
-                    #print masked_region
-
-                    plt.gca().add_patch(plt.Rectangle((masked_region[0] + 1, 1),
-                                                      masked_region[1] - masked_region[0],
-                                                      1024*32, facecolor=masking_color, edgecolor='none'))
-
-            print("Drawing scaffold: %s ..." % scaffold)
-            print("\tScaffold length:%i" % ref_genome.seq_lengths.loc[scaffold])
-            plt.gca().add_patch(plt.Rectangle((1, 0),
+                print("\tScaffold length:%i" % ref_genome.seq_lengths.loc[scaffold])
+                plt.gca().add_patch(plt.Rectangle((1, 0),
                                               ref_genome.seq_lengths.loc[scaffold],
                                               10**7, facecolor=facecolor, edgecolor='black'))
+                if show_masking:
+                    for masked_region in masking_df.records.loc[scaffold].itertuples(index=False):
+                        #print masked_region
+
+                        plt.gca().add_patch(plt.Rectangle((masked_region[0] + 1, 1),
+                                                          masked_region[1] - masked_region[0],
+                                                          1024*32, facecolor=masking_color, edgecolor='none'))
+
+            print("Drawing scaffold: %s ..." % scaffold)
 
             if color_expression:
                 for color in color_list:
