@@ -167,7 +167,7 @@ class CollectionGFF:
                                                                                    len(self.records)))
 
     def remove_small_records(self, min_record_length):
-        records_before_collapse = self.records
+        records_before_collapse = len(self.records)
         self.records = self.records[(self.records['end'] - self.records['start']) >= min_record_length]
         print("Records before filtering: %i\nRecords afterfiltering: %i" % (records_before_collapse,
                                                                                    len(self.records)))
