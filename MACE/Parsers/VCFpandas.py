@@ -570,6 +570,13 @@ class CollectionVCF():
         num_of_scaffolds = len(final_scaffold_list)
         distances_dict = OrderedDict()
         max_distance = 0
+
+        if ref_genome:
+            masking_df = ref_genome.get_merged_gaps_and_masking()
+            if min_masking_length > 1:
+                masking_df.remove_small_records(min_masking_length)
+            print masking_df
+
         for scaffold in final_scaffold_list: # self.records
             print("Handling scaffold: %s ..." % scaffold)
             distances_dict[scaffold] = self.records.loc[scaffold, "POS"].diff()
@@ -604,10 +611,6 @@ class CollectionVCF():
             index += 1
             if ref_genome:
 
-                masking_df = ref_genome.get_merged_gaps_and_masking()
-                if min_masking_length > 1:
-                    masking_df.remove_small_records(min_masking_length)
-                print masking_df
                 for masked_region in masking_df.loc[scaffold].itertuples(index=False):
                     print masked_region
 
