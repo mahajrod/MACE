@@ -658,7 +658,7 @@ class CollectionVCF():
                             color=default_point_color,
                             marker='.', s=dot_size)
 
-            plt.text(-0.10, 0.5, scaffold, rotation=0, fontweight="bold", transform=sub_plot_dict[scaffold].transAxes,
+            plt.text(-0.13, 0.5, scaffold, rotation=0, fontweight="bold", transform=sub_plot_dict[scaffold].transAxes,
                      fontsize=label_fontsize,
                      horizontalalignment='center',
                      verticalalignment='center')
