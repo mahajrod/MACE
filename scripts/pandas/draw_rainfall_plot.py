@@ -27,6 +27,10 @@ parser.add_argument("-e", "--output_formats", action="store", dest="output_forma
                          "of output figure.Default: png")
 parser.add_argument("-l", "--suptitle", action="store", dest="suptitle",
                     help="Suptitle of figure. Default: 'Rainfall plot'")
+
+parser.add_argument("-q", "--fontsize", action="store", dest="fontsize", type=int,
+                    help="Size of font for suptitle and scaffold labels. Default: matplotlib defaults")
+
 parser.add_argument("-r", "--reference_genome", action="store", dest="ref_genome",
                     help="Fasta file with reference genome, required to draw gaps")
 parser.add_argument("-p", "--reference_parsing_mode", action="store",
