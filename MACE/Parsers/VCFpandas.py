@@ -605,8 +605,10 @@ class CollectionVCF():
                 masking_df = ref_genome.get_merged_gaps_and_masking()
                 if min_masking_length > 1:
                     masking_df.remove_small_records(min_masking_length)
-
+                print masking_df
                 for masked_region in masking_df.loc[scaffold].itertuples(index=False):
+                    print masked_region
+
                     plt.gca().add_patch(plt.Rectangle((masked_region[0] + 1, 1),
                                                       masked_region[1] - masked_region[0],
                                                       1024*32, facecolor=masking_color, edgecolor='none'))
