@@ -604,8 +604,8 @@ class CollectionVCF():
                 keys = list(sub_plot_dict.keys())
                 sub_plot_dict[scaffold] = plt.subplot(num_of_scaffolds, 1, index,
                                                       sharex=sub_plot_dict[keys[0]],
-                                                      sharey=sub_plot_dict[keys[0]],
-                                                      facecolor=facecolor)
+                                                      sharey=sub_plot_dict[keys[0]])
+                                                      #facecolor=facecolor)
 
             index += 1
             if ref_genome:
@@ -642,10 +642,10 @@ class CollectionVCF():
                      horizontalalignment='center',
                      verticalalignment='center')
             plt.ylabel("Distanse")
-            plt.axhline(y=100, color="#000000")
-            plt.axhline(y=1000, color="#000000")
-            plt.axhline(y=500, color="purple")
-            plt.axhline(y=10, color="#000000")
+            #plt.axhline(y=100, color="#000000")
+            #plt.axhline(y=1000, color="#000000")
+            #plt.axhline(y=500, color="purple")
+            #plt.axhline(y=10, color="#000000")
             sub_plot_dict[scaffold].set_yscale('log', basey=logbase)
             sub_plot_dict[scaffold].get_xaxis().set_visible(False)
             plt.xlim(xmin=0)
