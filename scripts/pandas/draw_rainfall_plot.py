@@ -88,5 +88,5 @@ mutations.rainfall_plot(args.output_prefix, dpi=args.dpi, figsize=args.size_of_f
                         color_expression=None,
                         default_point_color='blue',
                         dot_size=args.dot_size,
-                        label_fontsize=None,
+                        label_fontsize=args.fontsize,
                         draw_masking=args.draw_masking)
