@@ -569,7 +569,7 @@ class CollectionVCF():
                                                                          sample_level=False)
         num_of_scaffolds = len(final_scaffold_list)
         distances_dict = OrderedDict()
-        max_distance = 0
+        height = 0
 
         if (ref_genome is not None) and draw_masking:
             masking_df = ref_genome.get_merged_gaps_and_masking()
@@ -579,7 +579,7 @@ class CollectionVCF():
         for scaffold in final_scaffold_list: # self.records
             print("Handling scaffold: %s ..." % scaffold)
             distances_dict[scaffold] = self.records.loc[scaffold, "POS"].diff()
-            max_distance = max(np.max(distances_dict[scaffold]), max_distance)
+            height = max(np.max(distances_dict[scaffold]), height)
             # pandas DataFrame diff methods return differences between consecutive elements in array,
             # and first distance is NaN always, so it is replaced by 0
             distances_dict[scaffold][0] = 0
@@ -598,35 +598,36 @@ class CollectionVCF():
                                                       distances_dict[scaffold]],
                                                      axis=1)
 
+        length = np.max(ref_genome.seq_lengths['length']) if ref_genome is not None else np.max(self.records.["POS"])
+
+        height *= 1.1
+        length *= 1.1
+        for scaffold in final_scaffold_list:
             if not sub_plot_dict:
                 first_scaffold = scaffold
                 sub_plot_dict[scaffold] = plt.subplot(num_of_scaffolds, 1, index) #, axisbg=facecolor)
             else:
                 keys = list(sub_plot_dict.keys())
-                sub_plot_dict[scaffold] = plt.subplot(num_of_scaffolds, 1, index,
-                                                      sharex=sub_plot_dict[keys[0]],
-                                                      sharey=sub_plot_dict[keys[0]])
+                sub_plot_dict[scaffold] = plt.subplot(num_of_scaffolds, 1, index)
+                                                      #sharex=sub_plot_dict[keys[0]],
+                                                      #sharey=sub_plot_dict[keys[0]])
                                                       #facecolor=facecolor)
 
             index += 1
 
-        print max_distance
-        longest_scaffold = np.max(ref_genome.seq_lengths['length'])
-        print longest_scaffold
-        for scaffold in final_scaffold_list:
             #print ref_genome
             if ref_genome is not None:
                 print("\tScaffold length:%i" % ref_genome.seq_lengths.loc[scaffold])
                 plt.gca().add_patch(plt.Rectangle((1, 0),
                                                   ref_genome.seq_lengths.loc[scaffold],
-                                                  10**7, facecolor=facecolor, edgecolor='none', alpha=0.5))
+                                                  height, facecolor=facecolor, edgecolor='none', alpha=0.5))
                 if draw_masking:
                     for masked_region in masking_df.records.loc[scaffold].itertuples(index=False):
                         #print masked_region
 
                         plt.gca().add_patch(plt.Rectangle((masked_region[0] + 1, 1),
                                                           masked_region[1] - masked_region[0],
-                                                          1024*32, facecolor=masking_color, edgecolor='none'))
+                                                          height, facecolor=masking_color, edgecolor='none'))
 
             print("Drawing scaffold: %s ..." % scaffold)
 
@@ -659,7 +660,8 @@ class CollectionVCF():
             sub_plot_dict[scaffold].spines['right'].set_color('none')
             sub_plot_dict[scaffold].spines['top'].set_color('none')
 
-            plt.xlim(xmin=1)
+            plt.xlim(xmin=1, xmax=length)
+            plt.ylim(ymax=height)
             #plt.tight_layout()
         #sub_plot_dict[scaffold].unshare_x_axes(sub_plot_dict[first_scaffold])
         #sub_plot_dict[scaffold].get_xaxis().set_visible(True)
