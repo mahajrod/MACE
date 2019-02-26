@@ -556,7 +556,7 @@ class CollectionVCF():
 
         os.system("mkdir -p %s" % plot_dir)
 
-        fig = plt.figure(1, dpi=dpi, figsize=figsize, facecolor=facecolor)
+        fig = plt.figure(1, dpi=dpi, figsize=figsize ) #, facecolor=facecolor)
         fig.suptitle(suptitle if suptitle else "Rainfall plot", fontsize=label_fontsize, fontweight='bold', y=0.94)
         sub_plot_dict = OrderedDict({})
         index = 1
@@ -569,9 +569,11 @@ class CollectionVCF():
                                                                          sample_level=False)
         num_of_scaffolds = len(final_scaffold_list)
         distances_dict = OrderedDict()
+        max_distance = 0
         for scaffold in final_scaffold_list: # self.records
             print("Handling scaffold: %s ..." % scaffold)
             distances_dict[scaffold] = self.records.loc[scaffold, "POS"].diff()
+            max_distance = max(np.max(distances_dict[scaffold]), max_distance)
             # pandas DataFrame diff methods return differences between consecutive elements in array,
             # and first distance is NaN always, so it is replaced by 0
             distances_dict[scaffold][0] = 0
@@ -614,6 +616,11 @@ class CollectionVCF():
                                                       1024*32, facecolor=masking_color, edgecolor='none'))
 
             print("Drawing scaffold: %s ..." % scaffold)
+            print("\tScaffold length:%i" % ref_genome.seq_lengths[scaffold])
+            plt.gca().add_patch(plt.Rectangle((1, 0),
+                                              ref_genome.seq_lengths[scaffold],
+                                              10**7, facecolor=facecolor, edgecolor='black'))
+
             if color_expression:
                 for color in color_list:
                     plt.plot(distances_dict[scaffold].loc[color],
@@ -640,7 +647,7 @@ class CollectionVCF():
             sub_plot_dict[scaffold].set_yscale('log', basey=logbase)
             sub_plot_dict[scaffold].get_xaxis().set_visible(False)
             plt.xlim(xmin=0)
-
+        plt.ylim(ymax=max_distance * 1.10)
         for extension in extension_list:
             plt.savefig("%s/%s_log_scale.%s" % (plot_dir, plot_name, extension))
         plt.close()
