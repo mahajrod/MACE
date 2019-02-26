@@ -649,7 +649,7 @@ class CollectionVCF():
             sub_plot_dict[scaffold].set_yscale('log', basey=logbase)
             sub_plot_dict[scaffold].get_xaxis().set_visible(False)
             plt.xlim(xmin=0)
-        plt.ylim(ymax=max_distance * 1.10)
+        #plt.ylim(ymax=max_distance * 1.10)
         for extension in extension_list:
             plt.savefig("%s/%s_log_scale.%s" % (plot_dir, plot_name, extension))
         plt.close()
