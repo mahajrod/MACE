@@ -621,7 +621,7 @@ class CollectionVCF():
             print("Drawing scaffold: %s ..." % scaffold)
             print("\tScaffold length:%i" % ref_genome.seq_lengths.loc[scaffold])
             plt.gca().add_patch(plt.Rectangle((1, 0),
-                                              ref_genome.seq_lengths[scaffold],
+                                              ref_genome.seq_lengths.loc[scaffold],
                                               10**7, facecolor=facecolor, edgecolor='black'))
 
             if color_expression:
