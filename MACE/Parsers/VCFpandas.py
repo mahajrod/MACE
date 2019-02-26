@@ -600,15 +600,17 @@ class CollectionVCF():
 
         length = np.max(ref_genome.seq_lengths['length']) if ref_genome is not None else np.max(self.records["POS"])
 
-        height *= 1.1
-        length *= 1.1
+        #height *= 1.2
+        length *= 1.2
         for scaffold in final_scaffold_list:
             if not sub_plot_dict:
                 sub_plot_dict[scaffold] = plt.subplot(num_of_scaffolds, 1, index) #, axisbg=facecolor)
+                first_scaffold = scaffold
             else:
-                sub_plot_dict[scaffold] = plt.subplot(num_of_scaffolds, 1, index)
+                sub_plot_dict[scaffold] = plt.subplot(num_of_scaffolds, 1, index,
+                                                      sharey=sub_plot_dict[first_scaffold])
                                                       #sharex=sub_plot_dict[keys[0]],
-                                                      #sharey=sub_plot_dict[keys[0]])
+                                                      #)
                                                       #facecolor=facecolor)
 
             index += 1
@@ -659,7 +661,7 @@ class CollectionVCF():
             plt.ylim(ymax=height)
             #plt.tight_layout()
         #sub_plot_dict[scaffold].unshare_x_axes(sub_plot_dict[first_scaffold])
-        #sub_plot_dict[scaffold].get_xaxis().set_visible(True)
+        sub_plot_dict[scaffold].get_xaxis().set_visible(True)
         #plt.ylim(ymax=max_distance * 1.10)
 
 
