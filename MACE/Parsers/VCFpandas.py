@@ -608,6 +608,7 @@ class CollectionVCF():
                                                       #facecolor=facecolor)
 
             index += 1
+            print ref_genome
             if ref_genome:
                 print("\tScaffold length:%i" % ref_genome.seq_lengths.loc[scaffold])
                 plt.gca().add_patch(plt.Rectangle((1, 0),
