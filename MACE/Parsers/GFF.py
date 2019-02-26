@@ -133,10 +133,12 @@ class CollectionGFF:
         row_list = []
         for scaffold in self.scaffold_list:
             print scaffold
-            # remove nested records
+            # check if there is only one record per scaffold, necessary as pandas will return interger instead of Series
             if len(self.records.loc[scaffold]) == 1:
                 for row in self.records.loc[scaffold].itertuple(index=True):
                     row_list.append(list(row))
+                continue
+            # remove nested records
             end_diff = self.records.loc[scaffold]['end'].diff()
             print len(end_diff)
             end_diff[0] = 1
