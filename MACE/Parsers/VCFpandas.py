@@ -599,6 +599,7 @@ class CollectionVCF():
                                                      axis=1)
 
             if not sub_plot_dict:
+                first_scaffold = scaffold
                 sub_plot_dict[scaffold] = plt.subplot(num_of_scaffolds, 1, index) #, axisbg=facecolor)
             else:
                 keys = list(sub_plot_dict.keys())
@@ -649,12 +650,14 @@ class CollectionVCF():
             #plt.axhline(y=500, color="purple")
             #plt.axhline(y=10, color="#000000")
             sub_plot_dict[scaffold].set_yscale('log', basey=logbase)
-            #sub_plot_dict[scaffold].get_xaxis().set_visible(False)
+            sub_plot_dict[scaffold].get_xaxis().set_visible(False)
             sub_plot_dict[scaffold].spines['right'].set_color('none')
             sub_plot_dict[scaffold].spines['top'].set_color('none')
 
             plt.xlim(xmin=1)
-            plt.tight_layout()
+            #plt.tight_layout()
+        sub_plot_dict[scaffold].unshare_x_axes(sub_plot_dict[first_scaffold])
+        sub_plot_dict[scaffold].get_xaxis().set_visible(True)
         #plt.ylim(ymax=max_distance * 1.10)
         for extension in extension_list:
             plt.savefig("%s/%s_log_scale.%s" % (plot_dir, plot_name, extension))
