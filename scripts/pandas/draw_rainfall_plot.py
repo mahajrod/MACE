@@ -33,7 +33,8 @@ parser.add_argument("-p", "--reference_parsing_mode", action="store",
                     dest="reference_parsing_mode", default="parse",
                     help="Parsing mode for fasta file with reference genome. Use 'generator' mode"
                          "if your machine have low memory. Allowed parse(default), generator")
-
+parser.add_argument("-s", "--draw_masking", action="store_true", dest="draw_masking",
+                    help="Draw masked regions. Default: false")
 parser.add_argument("-m", "--masked_regions", action="store", dest="masked_regions",
                     help="Gff file with masked regions")
 parser.add_argument("-n", "--min_masking_length", action="store", dest="min_masking_length", default=1,
@@ -83,4 +84,5 @@ mutations.rainfall_plot(args.output_prefix, dpi=args.dpi, figsize=args.size_of_f
                         color_expression=None,
                         default_point_color='blue',
                         dot_size=args.dot_size,
-                        label_fontsize=None)
+                        label_fontsize=None,
+                        draw_masking=args.draw_masking)
