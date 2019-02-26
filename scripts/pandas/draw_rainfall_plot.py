@@ -68,7 +68,8 @@ if args.ref_genome:
                                           masking_file=args.masked_regions,
                                           black_list=args.scaffold_black_list,
                                           white_list=args.scaffold_white_list)
-    reference_genome.get_stats_and_features(count_gaps=True, sort="True", min_gap_length=1)
+    if args.draw_masking:
+        reference_genome.get_stats_and_features(count_gaps=True, sort="True", min_gap_length=1)
 else:
     reference_genome = None
 
