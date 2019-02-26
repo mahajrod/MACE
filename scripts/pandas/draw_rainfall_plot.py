@@ -37,6 +37,7 @@ parser.add_argument("-p", "--reference_parsing_mode", action="store",
 parser.add_argument("-m", "--masked_regions", action="store", dest="masked_regions",
                     help="Gff file with masked regions")
 parser.add_argument("-n", "--min_masking_length", action="store", dest="min_masking_length", default=1,
+                    type=int,
                     help="Minimum length of masked or gapped region to be shown. "
                          "Increase this parameter if you deal wit hlarge genome. Default: 1(show all)")
 parser.add_argument("-u", "--logbase", action="store", dest="logbase", default=2, type=int,
