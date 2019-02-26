@@ -679,7 +679,7 @@ class CollectionVCF():
         sub_plot_dict[final_scaffold_list[-1]].get_xaxis().set_visible(True)
         sub_plot_dict[scaffold].spines['bottom'].set_color('black')
         #plt.ylim(ymax=max_distance * 1.10)
-
+        plt.subplots_adjust(left=0.175, bottom=0.05, right=0.95, top=0.95, wspace=None, hspace=None)
         for extension in extension_list:
             plt.savefig("%s/%s_log_scale.%s" % (plot_dir, plot_name, extension))
         plt.close()
