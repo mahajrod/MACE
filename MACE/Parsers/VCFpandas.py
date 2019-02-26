@@ -658,7 +658,7 @@ class CollectionVCF():
                             color=default_point_color,
                             marker='.', s=dot_size)
 
-            plt.text(-0.08, 0.5, scaffold, rotation=0, fontweight="bold", transform=sub_plot_dict[scaffold].transAxes,
+            plt.text(-0.10, 0.5, scaffold, rotation=0, fontweight="bold", transform=sub_plot_dict[scaffold].transAxes,
                      fontsize=label_fontsize,
                      horizontalalignment='center',
                      verticalalignment='center')
@@ -679,7 +679,7 @@ class CollectionVCF():
         sub_plot_dict[final_scaffold_list[-1]].get_xaxis().set_visible(True)
         sub_plot_dict[scaffold].spines['bottom'].set_color('black')
         #plt.ylim(ymax=max_distance * 1.10)
-        plt.subplots_adjust(left=0.175, bottom=0.05, right=0.95, top=0.95, wspace=None, hspace=None)
+        plt.subplots_adjust(left=0.175, bottom=0.05, right=0.95, top=0.90, wspace=None, hspace=None)
         for extension in extension_list:
             plt.savefig("%s/%s_log_scale.%s" % (plot_dir, plot_name, extension))
         plt.close()
