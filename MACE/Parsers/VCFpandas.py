@@ -20,6 +20,7 @@ from scipy.cluster.hierarchy import linkage, dendrogram, inconsistent, cophenet,
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+from matplotlib.ticker import FuncFormatter
 
 from Bio import SeqIO
 from Bio.SeqFeature import SeqFeature, FeatureLocation
@@ -28,6 +29,8 @@ from MACE.Parsers.Abstract import Record, Collection, Metadata, Header
 from MACE.General.GeneralCollections import IdList, IdSet, SynDict, TwoLvlDict
 from MACE.Routines import DrawingRoutines
 from MACE.General.File import FileRoutines
+
+
 ref_alt_variants = {"deaminases": [("C", ["T"]), ("G", ["A"])]
                     }
 
@@ -600,19 +603,30 @@ class CollectionVCF():
 
         length = np.max(ref_genome.seq_lengths['length']) if ref_genome is not None else np.max(self.records["POS"])
 
-        #height *= 1.2
-        length *= 1.2
+        length *= 1.1
+        if length // (10 ** 9) > 2:
+            def tick_formater(x, pos):
+                return '%1.1fGbp' % (x*1e-9)
+        elif length // (10 ** 6) > 200:
+            def tick_formater(x, pos):
+                return '%.0fMbp' % (x*1e-6)
+        elif length // (10 ** 6) > 2:
+            def tick_formater(x, pos):
+                return '%.1fMbp' % (x*1e-6)
+
+        formatter = FuncFormatter(tick_formater)
+
         for scaffold in final_scaffold_list:
             if not sub_plot_dict:
                 sub_plot_dict[scaffold] = plt.subplot(num_of_scaffolds, 1, index) #, axisbg=facecolor)
-                first_scaffold = scaffold
+
             else:
                 sub_plot_dict[scaffold] = plt.subplot(num_of_scaffolds, 1, index,
-                                                      sharey=sub_plot_dict[first_scaffold])
+                                                      sharey=sub_plot_dict[final_scaffold_list[0]])
                                                       #sharex=sub_plot_dict[keys[0]],
                                                       #)
                                                       #facecolor=facecolor)
-
+            sub_plot_dict[scaffold].xaxis.set_major_formatter(formatter)
             index += 1
 
             if ref_genome is not None:
