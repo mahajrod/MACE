@@ -609,6 +609,11 @@ class CollectionVCF():
                                                       #facecolor=facecolor)
 
             index += 1
+
+        print max_distance
+        longest_scaffold = np.max(ref_genome.seq_lengths['length'])
+        print longest_scaffold
+        for scaffold in final_scaffold_list:
             #print ref_genome
             if ref_genome is not None:
                 print("\tScaffold length:%i" % ref_genome.seq_lengths.loc[scaffold])
@@ -656,9 +661,12 @@ class CollectionVCF():
 
             plt.xlim(xmin=1)
             #plt.tight_layout()
-        sub_plot_dict[scaffold].unshare_x_axes(sub_plot_dict[first_scaffold])
-        sub_plot_dict[scaffold].get_xaxis().set_visible(True)
+        #sub_plot_dict[scaffold].unshare_x_axes(sub_plot_dict[first_scaffold])
+        #sub_plot_dict[scaffold].get_xaxis().set_visible(True)
         #plt.ylim(ymax=max_distance * 1.10)
+
+
+
         for extension in extension_list:
             plt.savefig("%s/%s_log_scale.%s" % (plot_dir, plot_name, extension))
         plt.close()
