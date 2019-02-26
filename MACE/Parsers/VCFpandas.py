@@ -606,13 +606,13 @@ class CollectionVCF():
         length *= 1.1
         if length // (10 ** 9) > 2:
             def tick_formater(x, pos):
-                return '%1.1fGbp' % (x*1e-9)
+                return '%1.1f Gbp' % (x*1e-9)
         elif length // (10 ** 6) > 200:
             def tick_formater(x, pos):
-                return '%.0fMbp' % (x*1e-6)
+                return '%.0f Mbp' % (x*1e-6)
         elif length // (10 ** 6) > 2:
             def tick_formater(x, pos):
-                return '%.1fMbp' % (x*1e-6)
+                return '%.1f Mbp' % (x*1e-6)
 
         formatter = FuncFormatter(tick_formater)
 
@@ -652,7 +652,7 @@ class CollectionVCF():
                 #print distances_dict[scaffold]
                 #print distances_dict[scaffold]['POS']
                 #print distances_dict[scaffold]['DIST']
-                print "UUUUUUUU"
+                #print "UUUUUUUU"
                 plt.scatter(distances_dict[scaffold]['POS'],
                             distances_dict[scaffold]['DIST'],
                             color=default_point_color,
