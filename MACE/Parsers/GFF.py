@@ -132,19 +132,19 @@ class CollectionGFF:
             self.records.sort_values(by=["scaffold", "start", "end"])
         row_list = []
         for scaffold in self.scaffold_list:
-            print scaffold
+            #print scaffold
             # check if there is only one record per scaffold, necessary as pandas will return interger instead of Series
             if len(self.records.loc[[scaffold]]) == 1:
                 for row in self.records.loc[[scaffold]].itertuples(index=True):
                     row_list.append(list(row))
                 continue
-            print self.records.loc[scaffold]
+            #print self.records.loc[scaffold]
             # remove nested records
             end_diff = self.records.loc[[scaffold]]['end'].diff()
-            print len(end_diff)
+            #print len(end_diff)
             end_diff[0] = 1
             no_nested_records_df = self.records.loc[[scaffold]][end_diff > 0]
-            print len(no_nested_records_df)
+            #print len(no_nested_records_df)
             # collapse overlapping records
 
             row_iterator = no_nested_records_df.itertuples(index=True)
@@ -171,6 +171,7 @@ class CollectionGFF:
         self.records = self.records[(self.records['end'] - self.records['start']) >= min_record_length]
         print("Records before filtering: %i\nRecords afterfiltering: %i" % (records_before_collapse,
                                                                                    len(self.records)))
+
     def __add__(self, other):
         new_gff_record = CollectionGFF(records=pd.concat([self.records, other.records]),
                                        in_file=None, format=self.format,
