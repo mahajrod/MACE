@@ -560,7 +560,7 @@ class CollectionVCF():
         os.system("mkdir -p %s" % plot_dir)
 
         fig = plt.figure(1, dpi=dpi, figsize=figsize ) #, facecolor=facecolor)
-        fig.suptitle(suptitle if suptitle else "Rainfall plot", fontweight='bold', y=0.94) #fontsize=label_fontsize,
+        fig.suptitle(suptitle if suptitle else "Rainfall plot", fontweight='bold', y=0.94, fontsize=label_fontsize) #
         sub_plot_dict = OrderedDict({})
         index = 1
 
