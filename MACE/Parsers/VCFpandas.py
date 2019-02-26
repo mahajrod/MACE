@@ -598,16 +598,14 @@ class CollectionVCF():
                                                       distances_dict[scaffold]],
                                                      axis=1)
 
-        length = np.max(ref_genome.seq_lengths['length']) if ref_genome is not None else np.max(self.records.["POS"])
+        length = np.max(ref_genome.seq_lengths['length']) if ref_genome is not None else np.max(self.records["POS"])
 
         height *= 1.1
         length *= 1.1
         for scaffold in final_scaffold_list:
             if not sub_plot_dict:
-                first_scaffold = scaffold
                 sub_plot_dict[scaffold] = plt.subplot(num_of_scaffolds, 1, index) #, axisbg=facecolor)
             else:
-                keys = list(sub_plot_dict.keys())
                 sub_plot_dict[scaffold] = plt.subplot(num_of_scaffolds, 1, index)
                                                       #sharex=sub_plot_dict[keys[0]],
                                                       #sharey=sub_plot_dict[keys[0]])
@@ -615,7 +613,6 @@ class CollectionVCF():
 
             index += 1
 
-            #print ref_genome
             if ref_genome is not None:
                 print("\tScaffold length:%i" % ref_genome.seq_lengths.loc[scaffold])
                 plt.gca().add_patch(plt.Rectangle((1, 0),
@@ -623,8 +620,6 @@ class CollectionVCF():
                                                   height, facecolor=facecolor, edgecolor='none', alpha=0.5))
                 if draw_masking:
                     for masked_region in masking_df.records.loc[scaffold].itertuples(index=False):
-                        #print masked_region
-
                         plt.gca().add_patch(plt.Rectangle((masked_region[0] + 1, 1),
                                                           masked_region[1] - masked_region[0],
                                                           height, facecolor=masking_color, edgecolor='none'))
