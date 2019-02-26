@@ -134,16 +134,16 @@ class CollectionGFF:
         for scaffold in self.scaffold_list:
             print scaffold
             # check if there is only one record per scaffold, necessary as pandas will return interger instead of Series
-            if isinstance(self.records.loc[scaffold], pd.Series):
-                for row in self.records.loc[scaffold].itertuple(index=True):
+            if len(self.records.loc[[scaffold]]) == 1:
+                for row in self.records.loc[[scaffold]].itertuples(index=True):
                     row_list.append(list(row))
                 continue
             print self.records.loc[scaffold]
             # remove nested records
-            end_diff = self.records.loc[scaffold]['end'].diff()
+            end_diff = self.records.loc[[scaffold]]['end'].diff()
             print len(end_diff)
             end_diff[0] = 1
-            no_nested_records_df = self.records.loc[scaffold][end_diff > 0]
+            no_nested_records_df = self.records.loc[[scaffold]][end_diff > 0]
             print len(no_nested_records_df)
             # collapse overlapping records
 
