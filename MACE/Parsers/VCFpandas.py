@@ -609,12 +609,11 @@ class CollectionVCF():
 
             index += 1
             #print ref_genome
-            if ref_genome is not None: print "AAAa"
             if ref_genome is not None:
                 print("\tScaffold length:%i" % ref_genome.seq_lengths.loc[scaffold])
                 plt.gca().add_patch(plt.Rectangle((1, 0),
-                                              ref_genome.seq_lengths.loc[scaffold],
-                                              10**7, facecolor=facecolor, edgecolor='black', alpha=0.5))
+                                                  ref_genome.seq_lengths.loc[scaffold],
+                                                  10**7, facecolor=facecolor, edgecolor='none', alpha=0.5))
                 if draw_masking:
                     for masked_region in masking_df.records.loc[scaffold].itertuples(index=False):
                         #print masked_region
@@ -650,8 +649,12 @@ class CollectionVCF():
             #plt.axhline(y=500, color="purple")
             #plt.axhline(y=10, color="#000000")
             sub_plot_dict[scaffold].set_yscale('log', basey=logbase)
-            sub_plot_dict[scaffold].get_xaxis().set_visible(False)
-            plt.xlim(xmin=0)
+            #sub_plot_dict[scaffold].get_xaxis().set_visible(False)
+            sub_plot_dict[scaffold].spines['right'].set_color('none')
+            sub_plot_dict[scaffold].spines['top'].set_color('none')
+
+            plt.xlim(xmin=1)
+            plt.tight_layout()
         #plt.ylim(ymax=max_distance * 1.10)
         for extension in extension_list:
             plt.savefig("%s/%s_log_scale.%s" % (plot_dir, plot_name, extension))
