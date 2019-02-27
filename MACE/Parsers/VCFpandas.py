@@ -377,7 +377,7 @@ class CollectionVCF():
                                                                        "ALT":    lambda s: s.split(","),
                                                                        "QUAL":   np.float16,
                                                                        "FILTER": lambda s: s.split(","),
-                                                                       "INFO":   self.parse_info_field,
+                                                                       "INFO":   str, #self.parse_info_field,
                                                                        "FORMAT": lambda s: s.split(":")
                                                                        },
                                                         },
@@ -447,7 +447,7 @@ class CollectionVCF():
         if parsing_mode == "all":
             self.parsing_parameters["all"]["col_names"] = self.header
             for sample_col in range(9, 9 +len(self.samples)):
-                self.parsing_parameters["all"]["converters"][self.header[sample_col]] = self.parse_sample_field_simple
+                self.parsing_parameters["all"]["converters"][self.header[sample_col]] = str # self.parse_sample_field_simple
 
         self.records = pd.read_csv(fd, sep='\t', header=None, na_values=".",
                                    usecols=self.parsing_parameters[parsing_mode]["cols"],
