@@ -432,7 +432,7 @@ class CollectionVCF():
                                                                        "QUAL":   np.float16,
                                                                        "FILTER": lambda s: s.split(","),
                                                                        "INFO":   str, #self.parse_info_field,
-                                                                       "FORMAT": lambda s: s.split(":")
+                                                                       "FORMAT": str #lambda s: s.split(":")
                                                                        },
                                                         },
                                    }
@@ -525,13 +525,19 @@ class CollectionVCF():
             for param in self.metadata.info_flag_list + self.metadata.info_nonflag_list:
                 if self.metadata["INFO"][param]["Type"] == 'Flag':
                     tmp = pd.concat([dataframe[dataframe[0] == param][0].apply(lambda s: True) for dataframe in tmp_info_list])
+                    #print tmp
                 else:
                     tmp = pd.concat([dataframe[dataframe[0] == param][1].apply(self.metadata.converters["INFO"][param]) for dataframe in tmp_info_list])
-                if len(tmp) > 0:
+                if np.shape(tmp)[0] > 0:
+                    #tmp.columns = [param]
+                    tmp.name = param
                     info_df_list.append(tmp)
-                    info_df_list[-1].columns = [param]
+                    #print(info_df_list[-1])
 
-            del tmp_info_list
+
+
+
+
 
     @staticmethod
     def _split_by_equal_sign(string):
