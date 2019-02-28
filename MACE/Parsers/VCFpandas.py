@@ -660,14 +660,13 @@ class CollectionVCF():
             #tmp = pd.concat([dataframe[dataframe[0] == param][1].apply(self.metadata.converters["INFO"][param]) for dataframe in tmp_info_list])
             shape = np.shape(tmp)
             column_number = 1 if len(shape) == 1 else shape[1]
-
+            tmp = tmp.to_frame(param) if isinstance(tmp, pd.Series) else tmp
             if self.parsing_mode == "all":
-                tmp.name = param
                 tmp.columns = pd.MultiIndex.from_arrays([
                                                       ["INFO"] * column_number,
                                                       [param] * column_number
                                                       ])
-            elif self.parsing_mode == "complete":
+            if self.parsing_mode == "complete":
 
                 tmp.columns = pd.MultiIndex.from_arrays([
                                                          ["INFO"] * column_number,
