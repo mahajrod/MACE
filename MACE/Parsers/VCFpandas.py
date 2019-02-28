@@ -220,6 +220,8 @@ class MetadataVCF(OrderedDict):
         self.converters  = OrderedDict()
         self.info_flag_list = []
         self.info_nonflag_list = []
+        self.format_flag_list = []
+        self.format_nonflag_list = []
         if metadata or from_file:
             self.create_converters(create_convertors_for_list=create_convertors_for_list)
 
@@ -232,14 +234,15 @@ class MetadataVCF(OrderedDict):
                 except:
                     a = 2
                 if self[field][entry]["Type"] == "Flag":
-                    self.info_flag_list.append(entry)
+
+                    self.info_flag_list.append(entry) if field == "INFO" else self.format_flag_list.append(entry)
                     continue
-                self.info_nonflag_list.append(entry)
+                self.info_nonflag_list.append(entry) if field == "INFO" else self.format_nonflag_list.append(entry)
                 if a == 1:
                     if self[field][entry]["Type"] == "Integer":
-                        self.converters[field][entry] = lambda n: np.int32
+                        self.converters[field][entry] = np.int32
                     elif self[field][entry]["Type"] == "Float":
-                        self.converters[field][entry] = lambda n: np.float32
+                        self.converters[field][entry] = np.float32
                     elif self[field][entry]["Type"] == "String":
                         self.converters[field][entry] = str
                     else:
@@ -253,7 +256,7 @@ class MetadataVCF(OrderedDict):
                     elif self[field][entry]["Type"] == "Float":
                         self.converters[field][entry] = (lambda n: map(np.float32, n.split(","))) if create_convertors_for_list else str
                     elif self[field][entry]["Type"] == "String":
-                        self.converters[field][entry] = str
+                        self.converters[field][entry] = lambda n: n.split(",")
                     else:
                         raise ValueError("ERROR!!! Unknown value type in metadata: %s, %s, %s" % (field,
                                                                                                   entry,
@@ -521,10 +524,9 @@ class CollectionVCF():
             info_df_list = []
             for param in self.metadata.info_flag_list + self.metadata.info_nonflag_list:
                 if self.metadata["INFO"][param]["Type"] == 'Flag':
-                    print "AAAA"
-                    tmp = pd.concat([dataframe[dataframe[0] == param].apply(lambda s: True) for dataframe in tmp_info_list])
+                    tmp = pd.concat([dataframe[dataframe[0] == param][0].apply(lambda s: True) for dataframe in tmp_info_list])
                 else:
-                    tmp = pd.concat([dataframe[dataframe[0] == param][1].apply(self.metadata.converters["INFO"][param], expand=True) for dataframe in tmp_info_list])
+                    tmp = pd.concat([dataframe[dataframe[0] == param][1].apply(self.metadata.converters["INFO"][param]) for dataframe in tmp_info_list])
                 if len(tmp) > 0:
                     info_df_list.append(tmp)
                     info_df_list[-1].columns = [param]
