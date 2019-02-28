@@ -251,14 +251,18 @@ class MetadataVCF(OrderedDict):
                         raise ValueError("ERROR!!! Unknown value type in metadata: %s, %s, %s" % (field,
                                                                                                   entry,
                                                                                                   self[field][entry]))
-
                 else:
                     if self[field][entry]["Type"] == "Integer":
-                        self.converters[field][entry] = (lambda n: map(np.int32, n.split(","))) if parsing_mode == "complete" else str
+                        #self.converters[field][entry] = (lambda n: map(np.int32, n.split(","))) if parsing_mode == "complete" else str
+                        self.converters[field][entry] = np.int32 if parsing_mode == "complete" else str
                     elif self[field][entry]["Type"] == "Float":
-                        self.converters[field][entry] = (lambda n: map(np.float32, n.split(","))) if parsing_mode == "complete" else str
+                        #self.converters[field][entry] = (lambda n: map(np.float32, n.split(","))) if parsing_mode == "complete" else str
+                        self.converters[field][entry] = np.float32 if parsing_mode == "complete" else str
                     elif self[field][entry]["Type"] == "String":
                         self.converters[field][entry] = lambda n: n.split(",") if parsing_mode == "complete" else str
+                        self.converters[field][entry] =  str
+                    elif self[field][entry]["Type"] == "Flag":
+                        self.converters[field][entry] = lambda s: True
                     else:
                         raise ValueError("ERROR!!! Unknown value type in metadata: %s, %s, %s" % (field,
                                                                                                   entry,
@@ -649,7 +653,10 @@ class CollectionVCF():
         for param in self.metadata.info_flag_list + self.metadata.info_nonflag_list:
             temp_list = []
             for dataframe in tmp_info_list:
-                kkkkk = dataframe[dataframe[0] == param][1].apply(self.metadata.converters["INFO"][param])
+                if self.parsing_mode == "all":
+                    kkkkk = dataframe[dataframe[0] == param][1].apply(self.metadata.converters["INFO"][param])
+                elif self.parsing_mode == "complete":
+                    kkkkk = dataframe[dataframe[0] == param][1].str.split(",", expand=True).apply(self.metadata.converters["INFO"][param])
                 if not kkkkk.empty:
                     temp_list.append(kkkkk)
             if not temp_list:
