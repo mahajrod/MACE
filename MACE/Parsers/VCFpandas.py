@@ -535,6 +535,86 @@ class CollectionVCF():
         self.records.index = pd.MultiIndex.from_arrays([self.records.index, np.arange(0, len(self.records))],
                                                        names=("CHROM", "ROW"))
 
+        if self.parsing_mode in ("all", "complete"):
+            tmp_info = self.records["INFO"].str.split(";", expand=True)
+            tmp_info_list = [tmp_info[column].str.split("=", expand=True) for column in tmp_info.columns]
+
+            del tmp_info
+            info_df_list = []
+            for param in self.metadata.info_flag_list + self.metadata.info_nonflag_list:
+                if self.metadata["INFO"][param]["Type"] == 'Flag':
+                    tmp = pd.concat([dataframe[dataframe[0] == param][0].apply(lambda s: True) for dataframe in tmp_info_list])
+                    #print tmp
+                else:
+                    tmp = pd.concat([dataframe[dataframe[0] == param][1].apply(self.metadata.converters["INFO"][param],
+                                                                               result_type='expand') for dataframe in tmp_info_list])
+                if np.shape(tmp)[0] > 0:
+                    #tmp.columns = [param]
+                    if self.parsing_mode == "all":
+                        tmp.name = param
+                    elif self.parsing_mode == "complete":
+                        tmp.columns = pd.MultiIndex.from_arrays([
+                                                                 ["INFO"] * np.shape(tmp)[1],
+                                                                 [param] * np.shape(tmp)[1],
+                                                                 np.arange(0, np.shape(tmp)[1])
+                                                                 ])
+                    info_df_list.append(tmp)
+                    #print(info_df_list[-1])
+            info = pd.concat(info_df_list, axis=1)
+
+            if self.parsing_mode == "all":
+                columns = np.shape(info)
+                info.columns = pd.MultiIndex.from_arrays([
+                                                          ["INFO"] * columns,
+                                                          info.columns
+                                                          ])
+
+            uniq_format_set = self.records['FORMAT'].drop_duplicates()
+            uniq_format_dict = OrderedDict([(format_entry, format_entry.split(":")) for format_entry in uniq_format_set])
+            sample_data_dict = {}
+            for sample in self.samples:
+                sample_data_dict[sample] = OrderedDict()
+                for format_entry in uniq_format_dict:
+                    sample_data_dict[sample][format_entry] = list()
+                    tmp = self.records[self.records['FORMAT'] == format_entry][sample].str.split([":"], expand=True)
+                    tmp.columns = uniq_format_dict[format_entry]
+                    sample_data_dict[sample][format_entry] = [tmp[parameter].apply(self.metadata.converters["FORMAT"][parameter],
+                                                                                   result_type='expand') for parameter in uniq_format_dict[format_entry]]
+                    for i in range(0, len(uniq_format_dict[format_entry])):
+                        shape = np.shape(sample_data_dict[sample][format_entry][i])
+                        column_number = 1 if len(shape) == 1 else shape[1]
+                        if self.parsing_mode == "all":
+                            column_index = pd.MultiIndex.from_arrays([
+                                                                      [sample] * column_number,
+                                                                      uniq_format_dict[format_entry] * column_number
+                                                                      ],)
+                        elif self.parsing_mode == "complete":
+                            column_index = pd.MultiIndex.from_arrays([
+                                                                      [sample] * column_number,
+                                                                      uniq_format_dict[format_entry] * column_number,
+                                                                      np.arange(0, column_number)
+                                                                      ],)
+
+                        sample_data_dict[sample][format_entry][i].columns = column_index
+
+                    sample_data_dict[sample][format_entry] = pd.concat(sample_data_dict[sample][format_entry],
+                                                                       axis=1)
+                sample_data_dict[sample] = pd.concat(sample_data_dict[sample],
+                                                     axis=0)
+            if self.parsing_mode == "all":
+                self.records.columns = pd.MultiIndex.from_arrays([
+                                                                  self.records.columns,
+                                                                  self.records.columns
+                                                                 ])
+            elif self.parsing_mode == "complete":
+                self.records.columns = pd.MultiIndex.from_arrays([
+                                                                  self.records.columns,
+                                                                  self.records.columns,
+                                                                  self.records.columns
+                                                                 ])
+            self.records = pd.concat([self.records[["POS", "ID", "REF", "ALT", "QUAL", "FILTER"]],
+                                      info] + sample_data_dict.values(), axis=1)
+
 
 
 
