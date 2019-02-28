@@ -656,24 +656,25 @@ class CollectionVCF():
                 continue
             tmp = pd.concat(temp_list)
             #tmp = pd.concat([dataframe[dataframe[0] == param][1].apply(self.metadata.converters["INFO"][param]) for dataframe in tmp_info_list])
+            shape = np.shape(tmp)
+            column_number = 1 if len(shape) == 1 else shape[1]
+
             if self.parsing_mode == "all":
                 tmp.name = param
-            elif self.parsing_mode == "complete":
                 tmp.columns = pd.MultiIndex.from_arrays([
-                                                         ["INFO"] * np.shape(tmp)[1],
-                                                         [param] * np.shape(tmp)[1],
-                                                         np.arange(0, np.shape(tmp)[1])
+                                                      ["INFO"] * column_number,
+                                                      [param] * column_number
+                                                      ])
+            elif self.parsing_mode == "complete":
+
+                tmp.columns = pd.MultiIndex.from_arrays([
+                                                         ["INFO"] * column_number,
+                                                         [param] * column_number,
+                                                         np.arange(0, column_number)
                                                          ])
             info_df_list.append(tmp)
                 #print(info_df_list[-1])
         info = pd.concat(info_df_list, axis=1)
-
-        if self.parsing_mode == "all":
-            columns = np.shape(info)[1]
-            info.columns = pd.MultiIndex.from_arrays([
-                                                      ["INFO"] * columns,
-                                                      info.columns
-                                                      ])
         return info
 
     def parse_samples(self):
