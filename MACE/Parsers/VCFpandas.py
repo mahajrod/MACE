@@ -220,7 +220,10 @@ class MetadataVCF(OrderedDict):
         self.converters  = OrderedDict()
         self.info_flag_list = []
         self.info_nonflag_list = []
-        print self.keys()
+        if metadata or from_file:
+            self.create_converters(create_convertors_for_list=create_convertors_for_list)
+
+    def create_converters(self, create_convertors_for_list=False):
         for field in "INFO", "FORMAT":
             self.converters[field] = OrderedDict()
             for entry in self[field]:
@@ -362,7 +365,8 @@ class CollectionVCF():
     """
 
     def __init__(self, in_file=None, metadata=None, records=None, header=None, samples=None,
-                 external_metadata=None, threads=1, parsing_mode="all"): #dont_parse_info_and_data=False, parse_only_coordinates=False):
+                 external_metadata=None, threads=1, parsing_mode="all",
+                 create_convertors_for_metadata_list_entries=False): #dont_parse_info_and_data=False, parse_only_coordinates=False):
         """
         Initializes collection. If from_file is True collection will be read from file (arguments other then in_file, external_metadata and threads are ignored)
         Otherwise collection will be initialize from meta, records_dict, header, samples
@@ -433,7 +437,8 @@ class CollectionVCF():
         self.linkage_dict = None
         if in_file:
             self.read(in_file, external_metadata=external_metadata,
-                      parsing_mode=parsing_mode)
+                      parsing_mode=parsing_mode,
+                      create_convertors_for_metadata_list_entries=create_convertors_for_metadata_list_entries)
         else:
             self.metadata = metadata
             self.records = None if records is None else records
@@ -472,7 +477,8 @@ class CollectionVCF():
             sample_field_list = map(lambda s: s.split(","), string.split(":"))
             return sample_field_list
 
-    def read(self, in_file, external_metadata=None, parsing_mode="all"):
+    def read(self, in_file, external_metadata=None, parsing_mode="all",
+             create_convertors_for_metadata_list_entries=False):
         """
         Reads collection from vcf file
         :param in_file: path to file
@@ -490,6 +496,8 @@ class CollectionVCF():
                 self.samples = self.header[9:]
                 break
             self.metadata.add_metadata(line)
+
+        self.metadata.create_converters(create_convertors_for_list=create_convertors_for_metadata_list_entries)
 
         if parsing_mode == "all":
             self.parsing_parameters["all"]["col_names"] = self.header
