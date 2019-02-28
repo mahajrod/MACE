@@ -258,7 +258,7 @@ class MetadataVCF(OrderedDict):
                     elif self[field][entry]["Type"] == "Float":
                         self.converters[field][entry] = (lambda n: map(np.float32, n.split(","))) if parsing_mode == "complete" else str
                     elif self[field][entry]["Type"] == "String":
-                        self.converters[field][entry] = lambda n: n.split(",")
+                        self.converters[field][entry] = lambda n: n.split(",") if parsing_mode == "complete" else str
                     else:
                         raise ValueError("ERROR!!! Unknown value type in metadata: %s, %s, %s" % (field,
                                                                                                   entry,
