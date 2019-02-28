@@ -649,16 +649,16 @@ class CollectionVCF():
                 #print tmp
             else:
                 print "UUUUUUUUUUUUUUUUUUUU", param
-                print [dataframe[dataframe[0] == param][1] for dataframe in tmp_info_list]
+                #print [dataframe[dataframe[0] == param][1] for dataframe in tmp_info_list]
                 ttttttt_list = []
                 for dataframe in tmp_info_list:
                     kkkkk = dataframe[dataframe[0] == param][1].apply(self.metadata.converters["INFO"][param])
                     if not kkkkk.empty:
                         ttttttt_list.append(kkkkk)
+                if not ttttttt_list:
+                    continue
                 tmp = pd.concat(ttttttt_list)
                 #tmp = pd.concat([dataframe[dataframe[0] == param][1].apply(self.metadata.converters["INFO"][param]) for dataframe in tmp_info_list])
-            if np.shape(tmp)[0] > 0:
-                #tmp.columns = [param]
                 if self.parsing_mode == "all":
                     tmp.name = param
                 elif self.parsing_mode == "complete":
