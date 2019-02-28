@@ -211,6 +211,7 @@ class MetadataVCF(OrderedDict):
     """
     def __init__(self, metadata=[], from_file=False, in_file=None,
                  create_convertors_for_list=False):
+        OrderedDict.__init__(self)
         if from_file:
             self.metadata = []
             self.read(in_file)
