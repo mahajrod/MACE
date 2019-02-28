@@ -220,6 +220,7 @@ class MetadataVCF(OrderedDict):
         self.converters  = OrderedDict()
         self.info_flag_list = []
         self.info_nonflag_list = []
+        print self.keys()
         for field in "INFO", "FORMAT":
             self.converters[field] = OrderedDict()
             for entry in self[field]:
@@ -305,9 +306,6 @@ class MetadataVCF(OrderedDict):
             self[key][value_id] = value
         else:
             self[key] = value
-
-
-
 
     def add_metadata_from_values(self, name, number, ntype, description):
         """
