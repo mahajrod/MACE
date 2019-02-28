@@ -655,6 +655,8 @@ class CollectionVCF():
             if not temp_list:
                 continue
             tmp = pd.concat(temp_list)
+
+            del temp_list
             #tmp = pd.concat([dataframe[dataframe[0] == param][1].apply(self.metadata.converters["INFO"][param]) for dataframe in tmp_info_list])
             shape = np.shape(tmp)
             column_number = 1 if len(shape) == 1 else shape[1]
