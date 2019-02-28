@@ -509,8 +509,27 @@ class CollectionVCF():
                                    converters=self.parsing_parameters[parsing_mode]["converters"],
                                    names=self.parsing_parameters[parsing_mode]["col_names"],
                                    index_col=self.VCF_COLS["CHROM"])
-        self.records.index = pd.MultiIndex.from_arrays([self.records.index, np.arange(0, len(self.records))])
         fd.close()
+        self.records.index = pd.MultiIndex.from_arrays([self.records.index, np.arange(0, len(self.records))],
+                                                       names=("CHROM", "ROW"))
+
+        if parsing_mode == "all":
+            tmp_info = self.records["INFO"].str.split(";", expand=True)
+            tmp_info_list = [tmp_info[column].str.split("=", expand=True) for column in tmp_info.columns]
+
+            del tmp_info
+            info_df_list = []
+            for param in self.metadata.info_flag_list + self.metadata.info_nonflag_list:
+                if self.metadata["INFO"][param]["Type"] == 'Flag':
+                    print "AAAA"
+                    tmp = pd.concat([dataframe[dataframe[0] == param].apply(lambda s: True) for dataframe in tmp_info_list])
+                else:
+                    tmp = pd.concat([dataframe[dataframe[0] == param][1].apply(self.metadata.converters["INFO"][param], expand=True) for dataframe in tmp_info_list])
+                if len(tmp) > 0:
+                    info_df_list.append(tmp)
+                    info_df_list[-1].columns = [param]
+
+            del tmp_info_list
 
     @staticmethod
     def _split_by_equal_sign(string):
