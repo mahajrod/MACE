@@ -475,34 +475,7 @@ class CollectionVCF():
         self.scaffold_list = self.records.index.unique().to_list()
         self.number_of_scaffolds = len(self.scaffold_list)
         self.threads = threads
-    """
-    def parse_info_field(self, string):
-        flag_set = set()
-        info_dict = OrderedDict()
-        info_tuple_list = [self._split_by_equal_sign(entry) for entry in string.split(";")]
 
-        for entry in info_tuple_list:
-            if entry[0] not in self.metadata["INFO"]:
-                # do not parse data from INFO field that are not described in metadata
-                continue
-            if self.metadata["INFO"][entry[0]]["Type"] == "Flag":
-                flag_set.add(entry[0]) #info_dict[entry[0]] = []
-            elif self.metadata["INFO"][entry[0]]["Type"] == "Integer":
-                info_dict[entry[0]] = list(map(lambda x: int(x), entry[1].split(",")))
-            elif self.metadata["INFO"][entry[0]]["Type"] == "Float":
-                #print entry
-                info_dict[entry[0]] = list(map(lambda x: float(x), entry[1].split(",")))
-            else:
-                info_dict[entry[0]] = entry[1].split(",")
-        return [list(flag_set) if flag_set else np.NaN, info_dict if info_dict else np.NaN]
-
-    def parse_sample_field_simple(self, string):
-        if string == ".":
-            return np.NaN
-        else:
-            sample_field_list = map(lambda s: s.split(","), string.split(":"))
-            return sample_field_list
-        """
     def read(self, in_file, external_metadata=None, parsing_mode=None):
         """
         Reads collection from vcf file
@@ -531,6 +504,10 @@ class CollectionVCF():
             self.parsing_parameters["all"]["col_names"] = self.header
             for sample_col in range(9, 9 + len(self.samples)):
                 self.parsing_parameters["all"]["converters"][self.header[sample_col]] = str # self.parse_sample_field_simple
+                
+        print self.parsing_parameters[self.parsing_mode]["cols"]
+        print self.parsing_parameters[self.parsing_mode]["converters"]
+        print self.parsing_parameters[self.parsing_mode]["col_names"]
 
         self.records = pd.read_csv(fd, sep='\t', header=None, na_values=".",
                                    usecols=self.parsing_parameters[self.parsing_mode]["cols"],
