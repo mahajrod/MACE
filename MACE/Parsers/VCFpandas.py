@@ -649,6 +649,8 @@ class CollectionVCF():
                 tmp = pd.concat([dataframe[dataframe[0] == param][0].apply(lambda s: True) for dataframe in tmp_info_list])
                 #print tmp
             else:
+                print "UUUUUUUUUUUUUUUUUUUU", param
+                print [dataframe[dataframe[0] == param][1] for dataframe in tmp_info_list]
                 tmp = pd.concat([dataframe[dataframe[0] == param][1].apply(self.metadata.converters["INFO"][param],
                                                                            result_type='expand') for dataframe in tmp_info_list])
             if np.shape(tmp)[0] > 0:
