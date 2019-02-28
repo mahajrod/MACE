@@ -509,7 +509,7 @@ class CollectionVCF():
                                    converters=self.parsing_parameters[parsing_mode]["converters"],
                                    names=self.parsing_parameters[parsing_mode]["col_names"],
                                    index_col=self.VCF_COLS["CHROM"])
-        self.records.index = pd.MultiIndex.from_arrays(self.records.index, np.arrange(0, len(self.records)))
+        self.records.index = pd.MultiIndex.from_arrays(self.records.index, np.arange(0, len(self.records)))
         fd.close()
 
     @staticmethod
