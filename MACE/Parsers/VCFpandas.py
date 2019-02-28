@@ -205,10 +205,55 @@ class RecordVCF(Record):
     """
 
 
-class MetadataVCF(OrderedDict, Metadata):
+class MetadataVCF(OrderedDict):
     """
     MetadataVCF class
     """
+    def __init__(self, metadata=[], from_file=False, in_file=None,
+                 create_convertors_for_list=False):
+        if from_file:
+            self.metadata = []
+            self.read(in_file)
+        else:
+            self.metadata = metadata
+        self.converters  = OrderedDict()
+        self.info_flag_list = []
+        self.info_nonflag_list = []
+        for field in "INFO", "FORMAT":
+            self.converters[field] = OrderedDict()
+            for entry in self[field]:
+                try:
+                    a = int(self[field][entry]["Number"])
+                except:
+                    a = 2
+                if self[field][entry]["Type"] == "Flag":
+                    self.info_flag_list.append(entry)
+                    continue
+                self.info_nonflag_list.append(entry)
+                if a == 1:
+                    if self[field][entry]["Type"] == "Integer":
+                        self.converters[field][entry] = lambda n: np.int32
+                    elif self[field][entry]["Type"] == "Float":
+                        self.converters[field][entry] = lambda n: np.float32
+                    elif self[field][entry]["Type"] == "String":
+                        self.converters[field][entry] = str
+                    else:
+                        raise ValueError("ERROR!!! Unknown value type in metadata: %s, %s, %s" % (field,
+                                                                                                  entry,
+                                                                                                  self[field][entry]))
+
+                else:
+                    if self[field][entry]["Type"] == "Integer":
+                        self.converters[field][entry] = (lambda n: map(np.int32, n.split(","))) if create_convertors_for_list else str
+                    elif self[field][entry]["Type"] == "Float":
+                        self.converters[field][entry] = (lambda n: map(np.float32, n.split(","))) if create_convertors_for_list else str
+                    elif self[field][entry]["Type"] == "String":
+                        self.converters[field][entry] = str
+                    else:
+                        raise ValueError("ERROR!!! Unknown value type in metadata: %s, %s, %s" % (field,
+                                                                                                  entry,
+                                                                                                  self[field][entry]))
+
     def read(self, in_file):
         with open(in_file, "r") as fd:
             for line in fd:
@@ -259,6 +304,9 @@ class MetadataVCF(OrderedDict, Metadata):
             self[key][value_id] = value
         else:
             self[key] = value
+
+
+
 
     def add_metadata_from_values(self, name, number, ntype, description):
         """
@@ -446,7 +494,7 @@ class CollectionVCF():
 
         if parsing_mode == "all":
             self.parsing_parameters["all"]["col_names"] = self.header
-            for sample_col in range(9, 9 +len(self.samples)):
+            for sample_col in range(9, 9 + len(self.samples)):
                 self.parsing_parameters["all"]["converters"][self.header[sample_col]] = str # self.parse_sample_field_simple
 
         self.records = pd.read_csv(fd, sep='\t', header=None, na_values=".",
@@ -454,7 +502,7 @@ class CollectionVCF():
                                    converters=self.parsing_parameters[parsing_mode]["converters"],
                                    names=self.parsing_parameters[parsing_mode]["col_names"],
                                    index_col=self.VCF_COLS["CHROM"])
-
+        self.records.index = pd.MultiIndex.from_arrays(self.records.index, np.arrange(0, len(self.records)))
         fd.close()
 
     @staticmethod
