@@ -210,7 +210,7 @@ class MetadataVCF(OrderedDict):
     MetadataVCF class
     """
     def __init__(self, metadata=[], from_file=False, in_file=None,
-                 create_convertors_for_list=False):
+                 parsing_mode="all"):
         OrderedDict.__init__(self)
         if from_file:
             self.metadata = []
@@ -222,10 +222,10 @@ class MetadataVCF(OrderedDict):
         self.info_nonflag_list = []
         self.format_flag_list = []
         self.format_nonflag_list = []
-        if metadata or from_file:
-            self.create_converters(create_convertors_for_list=create_convertors_for_list)
+        if (metadata or from_file) and (parsing_mode in ("all", "complete")):
+            self.create_converters(parsing_mode=parsing_mode)
 
-    def create_converters(self, create_convertors_for_list=False):
+    def create_converters(self, parsing_mode="all"):
         for field in "INFO", "FORMAT":
             self.converters[field] = OrderedDict()
             for entry in self[field]:
@@ -252,9 +252,9 @@ class MetadataVCF(OrderedDict):
 
                 else:
                     if self[field][entry]["Type"] == "Integer":
-                        self.converters[field][entry] = (lambda n: map(np.int32, n.split(","))) if create_convertors_for_list else str
+                        self.converters[field][entry] = (lambda n: map(np.int32, n.split(","))) if parsing_mode == "complete" else str
                     elif self[field][entry]["Type"] == "Float":
-                        self.converters[field][entry] = (lambda n: map(np.float32, n.split(","))) if create_convertors_for_list else str
+                        self.converters[field][entry] = (lambda n: map(np.float32, n.split(","))) if parsing_mode == "complete" else str
                     elif self[field][entry]["Type"] == "String":
                         self.converters[field][entry] = lambda n: n.split(",")
                     else:
@@ -435,13 +435,30 @@ class CollectionVCF():
                                                                        "FORMAT": str #lambda s: s.split(":")
                                                                        },
                                                         },
+                                   "complete":         {
+                                                        "col_names": ["CHROM", "POS", "ID", "REF", "ALT", "QUAL", "FILTER", "INFO", "FORMAT"],
+                                                        "cols": None,
+                                                        "index_cols": "CHROM",
+                                                        "converters": {
+                                                                       "CHROM":  str,
+                                                                       "POS":    np.int32,
+                                                                       "ID":     str,
+                                                                       "REF":    str,
+                                                                       "ALT":    lambda s: s.split(","),
+                                                                       "QUAL":   np.float16,
+                                                                       "FILTER": lambda s: s.split(","),
+                                                                       "INFO":   str, #self.parse_info_field,
+                                                                       "FORMAT": str #lambda s: s.split(":")
+                                                                       },
+                                                        },
                                    }
 
         self.linkage_dict = None
+        self.parsing_mode = parsing_mode
+        
         if in_file:
             self.read(in_file, external_metadata=external_metadata,
-                      parsing_mode=parsing_mode,
-                      create_convertors_for_metadata_list_entries=create_convertors_for_metadata_list_entries)
+                      parsing_mode=self.parsing_mode)
         else:
             self.metadata = metadata
             self.records = None if records is None else records
@@ -480,14 +497,16 @@ class CollectionVCF():
             sample_field_list = map(lambda s: s.split(","), string.split(":"))
             return sample_field_list
 
-    def read(self, in_file, external_metadata=None, parsing_mode="all",
-             create_convertors_for_metadata_list_entries=False):
+    def read(self, in_file, external_metadata=None, parsing_mode=None):
         """
         Reads collection from vcf file
         :param in_file: path to file
         :param external_metadata: external(not from input file) metadata that could be used to parse records
         :return: None
         """
+        if parsing_mode is not None:
+            self.parsing_mode = parsing_mode
+
         self.metadata = MetadataVCF()
         self.records = None
 
@@ -499,42 +518,22 @@ class CollectionVCF():
                 self.samples = self.header[9:]
                 break
             self.metadata.add_metadata(line)
+        if self.parsing_mode in ("all", "complete"):
+            self.metadata.create_converters(parsing_mode=self.parsing_mode)
 
-        self.metadata.create_converters(create_convertors_for_list=create_convertors_for_metadata_list_entries)
-
-        if parsing_mode == "all":
+        if self.parsing_mode in ("all", "complete"):
             self.parsing_parameters["all"]["col_names"] = self.header
             for sample_col in range(9, 9 + len(self.samples)):
                 self.parsing_parameters["all"]["converters"][self.header[sample_col]] = str # self.parse_sample_field_simple
 
         self.records = pd.read_csv(fd, sep='\t', header=None, na_values=".",
-                                   usecols=self.parsing_parameters[parsing_mode]["cols"],
-                                   converters=self.parsing_parameters[parsing_mode]["converters"],
-                                   names=self.parsing_parameters[parsing_mode]["col_names"],
+                                   usecols=self.parsing_parameters[self.parsing_mode]["cols"],
+                                   converters=self.parsing_parameters[self.parsing_mode]["converters"],
+                                   names=self.parsing_parameters[self.parsing_mode]["col_names"],
                                    index_col=self.VCF_COLS["CHROM"])
         fd.close()
         self.records.index = pd.MultiIndex.from_arrays([self.records.index, np.arange(0, len(self.records))],
                                                        names=("CHROM", "ROW"))
-
-        if parsing_mode == "all":
-            tmp_info = self.records["INFO"].str.split(";", expand=True)
-            tmp_info_list = [tmp_info[column].str.split("=", expand=True) for column in tmp_info.columns]
-
-            del tmp_info
-            info_df_list = []
-            for param in self.metadata.info_flag_list + self.metadata.info_nonflag_list:
-                if self.metadata["INFO"][param]["Type"] == 'Flag':
-                    tmp = pd.concat([dataframe[dataframe[0] == param][0].apply(lambda s: True) for dataframe in tmp_info_list])
-                    #print tmp
-                else:
-                    tmp = pd.concat([dataframe[dataframe[0] == param][1].apply(self.metadata.converters["INFO"][param]) for dataframe in tmp_info_list])
-                if np.shape(tmp)[0] > 0:
-                    #tmp.columns = [param]
-                    tmp.name = param
-                    info_df_list.append(tmp)
-                    #print(info_df_list[-1])
-
-
 
 
 
