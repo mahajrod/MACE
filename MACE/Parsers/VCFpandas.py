@@ -664,7 +664,7 @@ class CollectionVCF():
                                                          [param] * np.shape(tmp)[1],
                                                          np.arange(0, np.shape(tmp)[1])
                                                          ])
-                info_df_list.append(tmp)
+            info_df_list.append(tmp)
                 #print(info_df_list[-1])
         info = pd.concat(info_df_list, axis=1)
 
