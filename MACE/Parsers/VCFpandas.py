@@ -240,7 +240,7 @@ class MetadataVCF(OrderedDict):
 
                 if a == 1:
                     if self[field][entry]["Type"] == "Integer":
-                        self.converters[field][entry] = np.int32
+                        self.converters[field][entry] = lambda n : np.NaN if pd.isnull(n) else np.int32(n)
                     elif self[field][entry]["Type"] == "Float":
                         self.converters[field][entry] = np.float32
                     elif self[field][entry]["Type"] == "String":
@@ -254,7 +254,7 @@ class MetadataVCF(OrderedDict):
                 else:
                     if self[field][entry]["Type"] == "Integer":
                         #self.converters[field][entry] = (lambda n: map(np.int32, n.split(","))) if parsing_mode == "complete" else str
-                        self.converters[field][entry] = np.int32 if parsing_mode == "complete" else str
+                        self.converters[field][entry] = lambda n : np.NaN if pd.isnull(n) else np.int32(n) if parsing_mode == "complete" else str
                     elif self[field][entry]["Type"] == "Float":
                         #self.converters[field][entry] = (lambda n: map(np.float32, n.split(","))) if parsing_mode == "complete" else str
                         self.converters[field][entry] = np.float32 if parsing_mode == "complete" else str
