@@ -234,10 +234,10 @@ class MetadataVCF(OrderedDict):
                 except:
                     a = 2
                 if self[field][entry]["Type"] == "Flag":
-
+                    a = 1
                     self.info_flag_list.append(entry) if field == "INFO" else self.format_flag_list.append(entry)
-                    continue
                 self.info_nonflag_list.append(entry) if field == "INFO" else self.format_nonflag_list.append(entry)
+
                 if a == 1:
                     if self[field][entry]["Type"] == "Integer":
                         self.converters[field][entry] = np.int32
@@ -245,6 +245,8 @@ class MetadataVCF(OrderedDict):
                         self.converters[field][entry] = np.float32
                     elif self[field][entry]["Type"] == "String":
                         self.converters[field][entry] = str
+                    elif self[field][entry]["Type"] == "Flag":
+                        self.converters[field][entry] = lambda s: True
                     else:
                         raise ValueError("ERROR!!! Unknown value type in metadata: %s, %s, %s" % (field,
                                                                                                   entry,
@@ -643,30 +645,25 @@ class CollectionVCF():
 
         del tmp_info
         info_df_list = []
+
         for param in self.metadata.info_flag_list + self.metadata.info_nonflag_list:
-            if self.metadata["INFO"][param]["Type"] == 'Flag':
-                tmp = pd.concat([dataframe[dataframe[0] == param][0].apply(lambda s: True) for dataframe in tmp_info_list])
-                #print tmp
-            else:
-                print "UUUUUUUUUUUUUUUUUUUU", param
-                #print [dataframe[dataframe[0] == param][1] for dataframe in tmp_info_list]
-                ttttttt_list = []
-                for dataframe in tmp_info_list:
-                    kkkkk = dataframe[dataframe[0] == param][1].apply(self.metadata.converters["INFO"][param])
-                    if not kkkkk.empty:
-                        ttttttt_list.append(kkkkk)
-                if not ttttttt_list:
-                    continue
-                tmp = pd.concat(ttttttt_list)
-                #tmp = pd.concat([dataframe[dataframe[0] == param][1].apply(self.metadata.converters["INFO"][param]) for dataframe in tmp_info_list])
-                if self.parsing_mode == "all":
-                    tmp.name = param
-                elif self.parsing_mode == "complete":
-                    tmp.columns = pd.MultiIndex.from_arrays([
-                                                             ["INFO"] * np.shape(tmp)[1],
-                                                             [param] * np.shape(tmp)[1],
-                                                             np.arange(0, np.shape(tmp)[1])
-                                                             ])
+            temp_list = []
+            for dataframe in tmp_info_list:
+                kkkkk = dataframe[dataframe[0] == param][1].apply(self.metadata.converters["INFO"][param])
+                if not kkkkk.empty:
+                    temp_list.append(kkkkk)
+            if not temp_list:
+                continue
+            tmp = pd.concat(temp_list)
+            #tmp = pd.concat([dataframe[dataframe[0] == param][1].apply(self.metadata.converters["INFO"][param]) for dataframe in tmp_info_list])
+            if self.parsing_mode == "all":
+                tmp.name = param
+            elif self.parsing_mode == "complete":
+                tmp.columns = pd.MultiIndex.from_arrays([
+                                                         ["INFO"] * np.shape(tmp)[1],
+                                                         [param] * np.shape(tmp)[1],
+                                                         np.arange(0, np.shape(tmp)[1])
+                                                         ])
                 info_df_list.append(tmp)
                 #print(info_df_list[-1])
         info = pd.concat(info_df_list, axis=1)
