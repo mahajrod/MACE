@@ -669,7 +669,7 @@ class CollectionVCF():
         info = pd.concat(info_df_list, axis=1)
 
         if self.parsing_mode == "all":
-            columns = np.shape(info)
+            columns = np.shape(info)[1]
             info.columns = pd.MultiIndex.from_arrays([
                                                       ["INFO"] * columns,
                                                       info.columns
