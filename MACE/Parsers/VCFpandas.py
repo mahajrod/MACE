@@ -546,6 +546,8 @@ class CollectionVCF():
         
     def parse_column(self, column, param, param_group):
         if self.parsing_mode == "all":
+            if self.metadata.converters[param_group][param] == str:
+                return column
             #col = column.apply(self.metadata.converters["INFO"][param])
             if self.metadata.converters[param_group][param] in self.metadata.pandas_int_type_correspondence:
                 col = column.apply(self.metadata.pandas_int_type_correspondence[self.metadata.converters[param_group][param]]).astype(self.metadata.converters[param_group][param])
@@ -554,6 +556,8 @@ class CollectionVCF():
         elif self.parsing_mode == "complete":
             col = column.str.split(self.metadata.parameter_separator_dict[param] if param in self.metadata.parameter_separator_dict else ",",
                                    expand=True)
+            if self.metadata.converters[param_group][param] == str:
+                return col
             if self.metadata.converters[param_group][param] in self.metadata.pandas_int_type_correspondence:
                 col = col.apply(self.metadata.pandas_int_type_correspondence[self.metadata.converters[param_group][param]]).astype(self.metadata.converters[param_group][param])
             else:
