@@ -565,7 +565,7 @@ class CollectionVCF():
                 column = dataframe[dataframe[0] == param][1]
                 if column.empty:
                     continue
-                column = self.parse_column(column)
+                column = self.parse_column(column, param)
                 temp_list.append(column)
             if not temp_list:
                 continue
