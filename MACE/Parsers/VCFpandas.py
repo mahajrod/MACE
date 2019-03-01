@@ -244,6 +244,7 @@ class MetadataVCF(OrderedDict):
 
     def create_converters(self, parsing_mode="all"):
         if parsing_mode in ("genotypes", "coordinates_and_genotypes"):
+            self.converters["FORMAT"] = OrderedDict()
             self.converters["FORMAT"]["GT"] = "Int8"
         elif parsing_mode in ("all", "complete"):
             for field in "INFO", "FORMAT":
