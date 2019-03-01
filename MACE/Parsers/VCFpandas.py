@@ -557,6 +557,8 @@ class CollectionVCF():
                         kkkkk = kkkkk.apply(self.metadata.converters["INFO"][param])
                     else:
                         kkkkk_list = []
+                        print param
+                        print kkkkk
                         for column in kkkkk.columns:
                             kkkkk.append(kkkkk[column][kkkkk[column].notna()].apply(self.metadata.converters["INFO"][param]))
                         kkkkk = pd.concat(kkkkk_list, axis=1)
