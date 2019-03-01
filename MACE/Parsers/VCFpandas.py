@@ -228,7 +228,7 @@ class MetadataVCF(OrderedDict):
                                                      "GT": "/"})
         self.pandas_int_type_correspondence = OrderedDict({
                                                            "Int8": np.float16,
-                                                           "Int16": np.float16,
+                                                           "Int16": np.float32,
                                                            "Int32": np.float32,
                                                            "Int64": np.float64,
                                                            })
