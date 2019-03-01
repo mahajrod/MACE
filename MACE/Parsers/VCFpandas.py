@@ -554,9 +554,12 @@ class CollectionVCF():
         elif self.parsing_mode == "complete":
             col = column.str.split(self.metadata.parameter_separator_dict[param] if param in self.metadata.parameter_separator_dict else ",",
                                    expand=True)
-            if self.metadata.converters["INFO"][param] in self.metadata.converters["INFO"][param] in self.metadata.pandas_int_type_correspondence:
-                col = col.apply(self.metadata.converters["INFO"][param]).astype(self.metadata.converters["INFO"][param])
+            if self.metadata.converters["INFO"][param] in self.metadata.pandas_int_type_correspondence:
+                col = col.apply(self.metadata.pandas_int_type_correspondence[self.metadata.converters["INFO"][param]]).astype(self.metadata.converters["INFO"][param])
+            else:
+                col = col.apply(self.metadata.converters["INFO"][param])
                 """
+
             shape = np.shape(col)
             col_number = 1 if len(shape) == 1 else shape[1]
             if col_number == 1:
