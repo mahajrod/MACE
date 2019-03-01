@@ -990,7 +990,8 @@ class CollectionVCF():
 
         plt.ylabel('Variants')
         plt.xlabel('Sample')
-        plt.xticks([coord + bar_width for coord in range(len(bin_coord))], zygoty_counts.columns)
+        plt.xticks([coord + bar_width for coord in range(len(bin_coord))], zygoty_counts.columns,
+                   rotation=45)
         if title:
             plt.title(title)
         plt.legend()
