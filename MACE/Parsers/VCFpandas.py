@@ -564,15 +564,10 @@ class CollectionVCF():
         elif self.parsing_mode == "complete":
             col = column.str.split(self.metadata.parameter_separator_dict[param] if param in self.metadata.parameter_separator_dict else ",",
                                    expand=True)
-            #if param in self.metadata.parameter_replace_dict:
-            #    #print "aaaaa"
             col.replace(self.metadata.default_replace_dict, inplace=True)
-                ##print col
             if self.metadata.converters[param_group][param] == str:
                 return col
             if self.metadata.converters[param_group][param] in self.metadata.pandas_int_type_correspondence:
-                print param, param_group
-                print col
                 col = col.apply(self.metadata.pandas_int_type_correspondence[self.metadata.converters[param_group][param]]).astype(self.metadata.converters[param_group][param])
             else:
                 col = col.apply(self.metadata.converters[param_group][param])
