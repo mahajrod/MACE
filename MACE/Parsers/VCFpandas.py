@@ -533,7 +533,24 @@ class CollectionVCF():
             self.records = pd.concat([self.records[["POS", "ID", "REF", "ALT", "QUAL", "FILTER"]],
                                       info] + sample_list, axis=1)
         """
-
+        
+    def parse_column(self, column, param):
+        if self.parsing_mode == "all":
+            col = column.apply(self.metadata.converters["INFO"][param])
+        elif self.parsing_mode == "complete":
+            col = column.str.split(",", expand=True)
+            shape = np.shape(col)
+            col_number = 1 if len(shape) == 1 else shape[1]
+            if col_number == 1:
+                col = col.apply(self.metadata.converters["INFO"][param])
+            else:
+                col_list = []
+                for col in col.cols:
+                    col_list.append(col[col][col[col].notna()].apply(self.metadata.converters["INFO"][param]))
+                col = pd.concat(col_list, axis=1)
+                del col_list
+        return col
+    
     def parse_info(self):
 
         tmp_info = self.records["INFO"].str.split(";", expand=True)
@@ -545,24 +562,11 @@ class CollectionVCF():
         for param in self.metadata.info_flag_list + self.metadata.info_nonflag_list:
             temp_list = []
             for dataframe in tmp_info_list:
-                kkkkk = dataframe[dataframe[0] == param][1]
-                if kkkkk.empty:
+                column = dataframe[dataframe[0] == param][1]
+                if column.empty:
                     continue
-                if self.parsing_mode == "all":
-                    kkkkk = kkkkk.apply(self.metadata.converters["INFO"][param])
-                elif self.parsing_mode == "complete":
-                    kkkkk = kkkkk.str.split(",", expand=True)
-                    shape = np.shape(kkkkk)
-                    column_number = 1 if len(shape) == 1 else shape[1]
-                    if column_number == 1:
-                        kkkkk = kkkkk.apply(self.metadata.converters["INFO"][param])
-                    else:
-                        kkkkk_list = []
-                        for column in kkkkk.columns:
-                            kkkkk_list.append(kkkkk[column][kkkkk[column].notna()].apply(self.metadata.converters["INFO"][param]))
-                        kkkkk = pd.concat(kkkkk_list, axis=1)
-                        del kkkkk_list
-                temp_list.append(kkkkk)
+                column = self.parse_column(column)
+                temp_list.append(column)
             if not temp_list:
                 continue
             tmp = pd.concat(temp_list)
@@ -599,6 +603,7 @@ class CollectionVCF():
                 sample_data_dict[sample][format_entry] = list()
                 tmp = self.records[self.records['FORMAT'] == format_entry][sample].str.split([":"], expand=True)
                 tmp.columns = uniq_format_dict[format_entry]
+                
                 sample_data_dict[sample][format_entry] = [tmp[parameter].apply(self.metadata.converters["FORMAT"][parameter],
                                                                                result_type='expand') for parameter in uniq_format_dict[format_entry]]
                 for i in range(0, len(uniq_format_dict[format_entry])):
