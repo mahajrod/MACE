@@ -699,7 +699,7 @@ class CollectionVCF():
                                                                   [sample] * column_number,
                                                                   [uniq_format_dict[format_entry][i]] * column_number
                                                                   ],)
-                    elif self.parsing_mode == "complete":
+                    elif self.parsing_mode in ("complete", "genotypes", "coordinates_and_genotypes"):
                         column_index = pd.MultiIndex.from_arrays([
                                                                   [sample] * column_number,
                                                                   [uniq_format_dict[format_entry][i]] * column_number,
