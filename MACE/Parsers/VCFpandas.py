@@ -643,15 +643,16 @@ class CollectionVCF():
                 for i in range(0, len(uniq_format_dict[format_entry])):
                     shape = np.shape(sample_data_dict[sample][format_entry][i])
                     column_number = 1 if len(shape) == 1 else shape[1]
+                    print column_number
                     if self.parsing_mode == "all":
                         column_index = pd.MultiIndex.from_arrays([
                                                                   [sample] * column_number,
-                                                                  uniq_format_dict[format_entry] * column_number
+                                                                  uniq_format_dict[format_entry][i] * column_number
                                                                   ],)
                     elif self.parsing_mode == "complete":
                         column_index = pd.MultiIndex.from_arrays([
                                                                   [sample] * column_number,
-                                                                  uniq_format_dict[format_entry] * column_number,
+                                                                  uniq_format_dict[format_entry][i] * column_number,
                                                                   np.arange(0, column_number)
                                                                   ],)
 
