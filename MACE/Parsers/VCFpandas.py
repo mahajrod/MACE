@@ -549,10 +549,9 @@ class CollectionVCF():
             for sample_col in range(9, 9 + len(self.samples)):
                 self.parsing_parameters[self.parsing_mode]["converters"][self.header[sample_col]] = str # self.parse_sample_field_simple
 
-        #print self.parsing_parameters[self.parsing_mode]["cols"]
-        #print self.parsing_parameters[self.parsing_mode]["converters"]
-        #print self.parsing_parameters[self.parsing_mode]["col_names"]
         print self.parsing_parameters[self.parsing_mode]["cols"]
+        print self.parsing_parameters[self.parsing_mode]["converters"]
+        print self.parsing_parameters[self.parsing_mode]["col_names"]
 
         self.records = pd.read_csv(fd, sep='\t', header=None, na_values=".",
                                    usecols=self.parsing_parameters[self.parsing_mode]["cols"],
