@@ -551,7 +551,7 @@ class CollectionVCF():
                     kkkkk = dataframe[dataframe[0] == param][1].apply(self.metadata.converters["INFO"][param])
                 elif self.parsing_mode == "complete":
                     kkkkk = dataframe[dataframe[0] == param][1].str.split(",", expand=True)
-                    shape = np.shape(tmp)
+                    shape = np.shape(kkkkk)
                     column_number = 1 if len(shape) == 1 else shape[1]
                     if column_number == 1:
                         kkkkk = kkkkk.apply(self.metadata.converters["INFO"][param])
