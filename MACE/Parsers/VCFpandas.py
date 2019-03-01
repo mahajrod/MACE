@@ -224,6 +224,14 @@ class MetadataVCF(OrderedDict):
         self.format_nonflag_list = []
         if (metadata or from_file) and (parsing_mode in ("all", "complete")):
             self.create_converters(parsing_mode=parsing_mode)
+        self.parameter_separator_dict = OrderedDict({
+                                                     "GT": "/"})
+        self.pandas_int_type_correspondence = OrderedDict({
+                                                           "Int8": np.float8,
+                                                           "Int16": np.float16,
+                                                           "Int32": np.float32,
+                                                           "Int64": np.float64,
+                                                           })
 
     def create_converters(self, parsing_mode="all"):
         for field in "INFO", "FORMAT":
@@ -238,32 +246,35 @@ class MetadataVCF(OrderedDict):
                     self.info_flag_list.append(entry) if field == "INFO" else self.format_flag_list.append(entry)
                 self.info_nonflag_list.append(entry) if field == "INFO" else self.format_nonflag_list.append(entry)
 
-                if a == 1:
-                    if self[field][entry]["Type"] == "Integer":
-                        self.converters[field][entry] = np.int32
-                    elif self[field][entry]["Type"] == "Float":
-                        self.converters[field][entry] = np.float32
-                    elif self[field][entry]["Type"] == "String":
-                        self.converters[field][entry] = str
-                    elif self[field][entry]["Type"] == "Flag":
-                        self.converters[field][entry] = lambda s: True
-                    else:
-                        raise ValueError("ERROR!!! Unknown value type in metadata: %s, %s, %s" % (field,
-                                                                                                  entry,
-                                                                                                  self[field][entry]))
+                if entry == "GT":
+                    self.converters[field][entry] = "Int8" if parsing_mode == "complete" else str
                 else:
-                    if self[field][entry]["Type"] == "Integer":
-                        self.converters[field][entry] = np.int32 if parsing_mode == "complete" else str
-                    elif self[field][entry]["Type"] == "Float":
-                        self.converters[field][entry] = np.float32 if parsing_mode == "complete" else str
-                    elif self[field][entry]["Type"] == "String":
-                        self.converters[field][entry] = str
-                    elif self[field][entry]["Type"] == "Flag":
-                        self.converters[field][entry] = lambda s: True
+                    if a == 1:
+                        if self[field][entry]["Type"] == "Integer":
+                            self.converters[field][entry] = "Int16"
+                        elif self[field][entry]["Type"] == "Float":
+                            self.converters[field][entry] = np.float32
+                        elif self[field][entry]["Type"] == "String":
+                            self.converters[field][entry] = str
+                        elif self[field][entry]["Type"] == "Flag":
+                            self.converters[field][entry] = lambda s: True
+                        else:
+                            raise ValueError("ERROR!!! Unknown value type in metadata: %s, %s, %s" % (field,
+                                                                                                      entry,
+                                                                                                      self[field][entry]))
                     else:
-                        raise ValueError("ERROR!!! Unknown value type in metadata: %s, %s, %s" % (field,
-                                                                                                  entry,
-                                                                                                  self[field][entry]))
+                        if self[field][entry]["Type"] == "Integer":
+                            self.converters[field][entry] = np.int32 if parsing_mode == "complete" else str
+                        elif self[field][entry]["Type"] == "Float":
+                            self.converters[field][entry] = np.float32 if parsing_mode == "complete" else str
+                        elif self[field][entry]["Type"] == "String":
+                            self.converters[field][entry] = str
+                        elif self[field][entry]["Type"] == "Flag":
+                            self.converters[field][entry] = lambda s: True
+                        else:
+                            raise ValueError("ERROR!!! Unknown value type in metadata: %s, %s, %s" % (field,
+                                                                                                      entry,
+                                                                                                      self[field][entry]))
 
     def read(self, in_file):
         with open(in_file, "r") as fd:
@@ -371,8 +382,7 @@ class CollectionVCF():
     """
 
     def __init__(self, in_file=None, metadata=None, records=None, header=None, samples=None,
-                 external_metadata=None, threads=1, parsing_mode="all",
-                 create_convertors_for_metadata_list_entries=False): #dont_parse_info_and_data=False, parse_only_coordinates=False):
+                 external_metadata=None, threads=1, parsing_mode="all",):
         """
         Initializes collection. If from_file is True collection will be read from file (arguments other then in_file, external_metadata and threads are ignored)
         Otherwise collection will be initialize from meta, records_dict, header, samples
@@ -536,9 +546,18 @@ class CollectionVCF():
         
     def parse_column(self, column, param):
         if self.parsing_mode == "all":
-            col = column.apply(self.metadata.converters["INFO"][param])
+            #col = column.apply(self.metadata.converters["INFO"][param])
+            if self.metadata.converters["INFO"][param] in self.metadata.pandas_int_type_correspondence:
+                # TODO adjust type usage based on correspondence between pandas and numpy types
+                col = column.apply(self.metadata.pandas_int_type_correspondence[self.metadata.converters["INFO"][param]]).astype(self.metadata.converters["INFO"][param])
+            else:
+                col = column.apply(self.metadata.converters["INFO"][param])
         elif self.parsing_mode == "complete":
-            col = column.str.split(",", expand=True)
+            col = column.str.split(self.metadata.parameter_separator_dict[param] if param in self.metadata.parameter_separator_dict else ",",
+                                   expand=True)
+            if self.metadata.converters["INFO"][param] in self.metadata.converters["INFO"][param] in self.metadata.pandas_int_type_correspondence:
+                col = col.apply(self.metadata.converters["INFO"][param]).astype(self.metadata.converters["INFO"][param])
+                """
             shape = np.shape(col)
             col_number = 1 if len(shape) == 1 else shape[1]
             if col_number == 1:
@@ -547,8 +566,9 @@ class CollectionVCF():
                 col_list = []
                 for index in col.columns:
                     col_list.append(col[index][col[index].notna()].apply(self.metadata.converters["INFO"][param]))
-                col = pd.concat(col_list, axis=1)
+             col = pd.concat(col_list, axis=1)
                 del col_list
+                """
         return col
     
     def parse_info(self):
@@ -572,7 +592,7 @@ class CollectionVCF():
             tmp = pd.concat(temp_list)
 
             del temp_list
-            #tmp = pd.concat([dataframe[dataframe[0] == param][1].apply(self.metadata.converters["INFO"][param]) for dataframe in tmp_info_list])
+            # TODO: check if 3 lines below are redundant in all possible cases
             shape = np.shape(tmp)
             column_number = 1 if len(shape) == 1 else shape[1]
             tmp = tmp.to_frame(param) if isinstance(tmp, pd.Series) else tmp
@@ -604,8 +624,8 @@ class CollectionVCF():
                 tmp = self.records[self.records['FORMAT'] == format_entry][sample].str.split([":"], expand=True)
                 tmp.columns = uniq_format_dict[format_entry]
                 
-                sample_data_dict[sample][format_entry] = [tmp[parameter].apply(self.metadata.converters["FORMAT"][parameter],
-                                                                               result_type='expand') for parameter in uniq_format_dict[format_entry]]
+                sample_data_dict[sample][format_entry] = [self.parse_column(tmp[parameter], parameter)
+                                                          for parameter in uniq_format_dict[format_entry]]
                 for i in range(0, len(uniq_format_dict[format_entry])):
                     shape = np.shape(sample_data_dict[sample][format_entry][i])
                     column_number = 1 if len(shape) == 1 else shape[1]
