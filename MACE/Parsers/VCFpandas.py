@@ -243,47 +243,50 @@ class MetadataVCF(OrderedDict):
                                                            })
 
     def create_converters(self, parsing_mode="all"):
-        for field in "INFO", "FORMAT":
-            self.converters[field] = OrderedDict()
-            for entry in self[field]:
-                try:
-                    a = int(self[field][entry]["Number"])
-                except:
-                    a = 2
-                if self[field][entry]["Type"] == "Flag":
-                    a = 1
-                    self.info_flag_list.append(entry) if field == "INFO" else self.format_flag_list.append(entry)
-                self.info_nonflag_list.append(entry) if field == "INFO" else self.format_nonflag_list.append(entry)
+        if parsing_mode in ("genotypes", "coordinates_and_genotypes"):
+            self.converters["FORMAT"]["GT"] = "Int8"
+        elif parsing_mode in ("all", "complete"):
+            for field in "INFO", "FORMAT":
+                self.converters[field] = OrderedDict()
+                for entry in self[field]:
+                    try:
+                        a = int(self[field][entry]["Number"])
+                    except:
+                        a = 2
+                    if self[field][entry]["Type"] == "Flag":
+                        a = 1
+                        self.info_flag_list.append(entry) if field == "INFO" else self.format_flag_list.append(entry)
+                    self.info_nonflag_list.append(entry) if field == "INFO" else self.format_nonflag_list.append(entry)
 
-                if entry == "GT":
-                    self.converters[field][entry] = "Int8" if parsing_mode == "complete" else str
-                else:
-                    if a == 1:
-                        if self[field][entry]["Type"] == "Integer":
-                            self.converters[field][entry] = "Int32"
-                        elif self[field][entry]["Type"] == "Float":
-                            self.converters[field][entry] = np.float32
-                        elif self[field][entry]["Type"] == "String":
-                            self.converters[field][entry] = str
-                        elif self[field][entry]["Type"] == "Flag":
-                            self.converters[field][entry] = lambda s: True
-                        else:
-                            raise ValueError("ERROR!!! Unknown value type in metadata: %s, %s, %s" % (field,
-                                                                                                      entry,
-                                                                                                      self[field][entry]))
+                    if entry == "GT":
+                        self.converters[field][entry] = "Int8" if parsing_mode == "complete" else str
                     else:
-                        if self[field][entry]["Type"] == "Integer":
-                            self.converters[field][entry] = "Int32" if parsing_mode == "complete" else str
-                        elif self[field][entry]["Type"] == "Float":
-                            self.converters[field][entry] = np.float32 if parsing_mode == "complete" else str
-                        elif self[field][entry]["Type"] == "String":
-                            self.converters[field][entry] = str
-                        elif self[field][entry]["Type"] == "Flag":
-                            self.converters[field][entry] = lambda s: True
+                        if a == 1:
+                            if self[field][entry]["Type"] == "Integer":
+                                self.converters[field][entry] = "Int32"
+                            elif self[field][entry]["Type"] == "Float":
+                                self.converters[field][entry] = np.float32
+                            elif self[field][entry]["Type"] == "String":
+                                self.converters[field][entry] = str
+                            elif self[field][entry]["Type"] == "Flag":
+                                self.converters[field][entry] = lambda s: True
+                            else:
+                                raise ValueError("ERROR!!! Unknown value type in metadata: %s, %s, %s" % (field,
+                                                                                                          entry,
+                                                                                                          self[field][entry]))
                         else:
-                            raise ValueError("ERROR!!! Unknown value type in metadata: %s, %s, %s" % (field,
-                                                                                                      entry,
-                                                                                                      self[field][entry]))
+                            if self[field][entry]["Type"] == "Integer":
+                                self.converters[field][entry] = "Int32" if parsing_mode == "complete" else str
+                            elif self[field][entry]["Type"] == "Float":
+                                self.converters[field][entry] = np.float32 if parsing_mode == "complete" else str
+                            elif self[field][entry]["Type"] == "String":
+                                self.converters[field][entry] = str
+                            elif self[field][entry]["Type"] == "Flag":
+                                self.converters[field][entry] = lambda s: True
+                            else:
+                                raise ValueError("ERROR!!! Unknown value type in metadata: %s, %s, %s" % (field,
+                                                                                                          entry,
+                                                                                                          self[field][entry]))
 
     def read(self, in_file):
         with open(in_file, "r") as fd:
@@ -538,7 +541,7 @@ class CollectionVCF():
                 self.samples = self.header[9:]
                 break
             self.metadata.add_metadata(line)
-        if self.parsing_mode in ("all", "complete"):
+        if self.parsing_mode in ("all", "complete", "genotypes", "coordinates_and_genotypes"):
             self.metadata.create_converters(parsing_mode=self.parsing_mode)
 
         if self.parsing_mode in ("all", "complete", "genotypes", "coordinates_and_genotypes"):
@@ -549,6 +552,7 @@ class CollectionVCF():
         #print self.parsing_parameters[self.parsing_mode]["cols"]
         #print self.parsing_parameters[self.parsing_mode]["converters"]
         #print self.parsing_parameters[self.parsing_mode]["col_names"]
+        print self.parsing_parameters[self.parsing_mode]["cols"]
 
         self.records = pd.read_csv(fd, sep='\t', header=None, na_values=".",
                                    usecols=self.parsing_parameters[self.parsing_mode]["cols"],
@@ -573,7 +577,7 @@ class CollectionVCF():
                 self.records = pd.concat([self.records[["POS", "ID", "REF", "ALT", "QUAL", "FILTER"]],
                                           ] + sample_genotypes, axis=1)
 
-        if self.parsing_mode in ("all", "complete"):
+        elif self.parsing_mode in ("all", "complete"):
             info = self.parse_info()
             sample_list = self.parse_samples()
             if self.parsing_mode == "all":
