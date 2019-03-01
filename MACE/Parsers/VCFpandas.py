@@ -631,7 +631,7 @@ class CollectionVCF():
 
                 for parameter in uniq_format_dict[format_entry]:
                     print parameter
-
+                    print self.metadata.converters["INFO"][parameter]
                     parameter_col = self.parse_column(tmp[parameter], parameter, "FORMAT")
                     print parameter_col
                     sample_data_dict[sample][format_entry].append(parameter_col)
