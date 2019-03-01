@@ -543,7 +543,6 @@ class CollectionVCF():
             self.records = pd.concat([self.records[["POS", "ID", "REF", "ALT", "QUAL", "FILTER"]],
                                       info] + sample_list, axis=1)
 
-        
     def parse_column(self, column, param, param_group):
         if self.parsing_mode == "all":
             if self.metadata.converters[param_group][param] == str:
@@ -617,6 +616,7 @@ class CollectionVCF():
             info_df_list.append(tmp)
                 #print(info_df_list[-1])
         info = pd.concat(info_df_list, axis=1)
+        info.sort_index(level=1, inplace=True)
         return info
 
     def parse_samples(self):
