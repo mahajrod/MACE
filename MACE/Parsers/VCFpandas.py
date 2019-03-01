@@ -973,7 +973,7 @@ class CollectionVCF():
             raise ValueError("ERROR!!! Zygoty can't be counted for this parsing mode: %s."
                              "Use 'coordinates_and_genotypes', 'genotypes' or 'complete modes'" % self.parsing_mode)
 
-    def zygoty_bar_plot(self, output_prefix, extension_list=("png",), figsize=(5,5), dpi=200, title=None):
+    def zygoty_bar_plot(self, output_prefix, extension_list=("png",), figsize=(5, 5), dpi=200, title=None):
 
         zygoty_counts = self.count_zygoty()
         df_shape = np.shape(zygoty_counts)
