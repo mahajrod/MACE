@@ -963,7 +963,7 @@ class CollectionVCF():
                                                      "hetero": 0,
                                                      "absent": 0
                                                      })
-                zygoty_counts[sample]["absent"] = np.sum(self.records[sample]["GT"][0].isna() or self.records[sample]["GT"][1].isna())
+                zygoty_counts[sample]["absent"] = np.sum(self.records[sample]["GT"][0].isna() | self.records[sample]["GT"][1].isna())
                 zygoty_counts[sample]["homo"] = np.sum(self.records[sample]["GT"][0] == self.records[sample]["GT"][1])
                 zygoty_counts[sample]["hetero"] = variant_number - zygoty_counts[sample]["absent"] - zygoty_counts[sample]["homo"]
                 #self.records.xs('GT', axis=1, level=1, drop_level=False).apply()
