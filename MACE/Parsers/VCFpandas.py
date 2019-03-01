@@ -427,6 +427,16 @@ class CollectionVCF():
                                                                        "POS":    np.int32,
                                                                        },
                                                         },
+                                   "coordinates_and_genotypes": {
+                                                                 "col_names": ["CHROM", "POS", "FORMAT"],
+                                                        "cols": [0, 1, 8],
+                                                        "index_cols": "CHROM",
+                                                        "converters": {
+                                                                       "CHROM":  str,
+                                                                       "POS":    np.int32,
+                                                                       "FORMAT": str
+                                                                       },
+                                                                },
                                    "except_data":      {
                                                         "col_names": ["CHROM", "POS", "ID", "REF", "ALT", "QUAL", "FILTER"],
                                                         "cols":   [0, 1, 2, 3, 4, 5, 6],
@@ -439,6 +449,21 @@ class CollectionVCF():
                                                                        "ALT":    lambda s: s.split(","),
                                                                        "QUAL":   np.float16,
                                                                        "FILTER": lambda s: s.split(","),
+                                                                       },
+                                                        },
+                                   "genotypes":        {
+                                                        "col_names": ["CHROM", "POS", "ID", "REF", "ALT", "QUAL", "FILTER", "FORMAT"],
+                                                        "cols": [0, 1, 2, 3, 4, 5, 6, 8],
+                                                        "index_cols": "CHROM",
+                                                        "converters": {
+                                                                       "CHROM":  str,
+                                                                       "POS":    np.int32,
+                                                                       "ID":     str,
+                                                                       "REF":    str,
+                                                                       "ALT":    lambda s: s.split(","),
+                                                                       "QUAL":   np.float16,
+                                                                       "FILTER": lambda s: s.split(","),
+                                                                       "FORMAT": str #lambda s: s.split(":")
                                                                        },
                                                         },
                                    "all":              {
@@ -516,7 +541,7 @@ class CollectionVCF():
         if self.parsing_mode in ("all", "complete"):
             self.metadata.create_converters(parsing_mode=self.parsing_mode)
 
-        if self.parsing_mode in ("all", "complete"):
+        if self.parsing_mode in ("all", "complete", "genotypes", "coordinates_and_genotypes"):
             self.parsing_parameters[self.parsing_mode]["col_names"] = self.header
             for sample_col in range(9, 9 + len(self.samples)):
                 self.parsing_parameters[self.parsing_mode]["converters"][self.header[sample_col]] = str # self.parse_sample_field_simple
@@ -533,6 +558,20 @@ class CollectionVCF():
         fd.close()
         self.records.index = pd.MultiIndex.from_arrays([self.records.index, np.arange(0, len(self.records))],
                                                        names=("CHROM", "ROW"))
+        if self.parsing_mode in ("genotypes", "coordinates_and_genotypes"):
+            sample_genotypes = self.parse_samples(["GT"])
+            self.records.columns = pd.MultiIndex.from_arrays([
+                                                              self.records.columns,
+                                                              self.records.columns,
+                                                              self.records.columns
+                                                              ])
+            if self.parsing_mode == "coordinates_and_genotypes":
+
+                self.records = pd.concat([self.records[["POS"]],
+                                          ] + sample_genotypes, axis=1)
+            else:
+                self.records = pd.concat([self.records[["POS", "ID", "REF", "ALT", "QUAL", "FILTER"]],
+                                          ] + sample_genotypes, axis=1)
 
         if self.parsing_mode in ("all", "complete"):
             info = self.parse_info()
@@ -571,23 +610,11 @@ class CollectionVCF():
                 col = col.apply(self.metadata.pandas_int_type_correspondence[self.metadata.converters[param_group][param]]).astype(self.metadata.converters[param_group][param])
             else:
                 col = col.apply(self.metadata.converters[param_group][param])
-                """
 
-            shape = np.shape(col)
-            col_number = 1 if len(shape) == 1 else shape[1]
-            if col_number == 1:
-                col = col.apply(self.metadata.converters["INFO"][param])
-            else:
-                col_list = []
-                for index in col.columns:
-                    col_list.append(col[index][col[index].notna()].apply(self.metadata.converters["INFO"][param]))
-             col = pd.concat(col_list, axis=1)
-                del col_list
-                """
         return col
     
     def parse_info(self):
-
+        print "Parsing info field..."
         tmp_info = self.records["INFO"].str.split(";", expand=True)
         tmp_info_list = [tmp_info[column].str.split("=", expand=True) for column in tmp_info.columns]
 
@@ -629,10 +656,19 @@ class CollectionVCF():
         info.sort_index(level=1, inplace=True)
         return info
 
-    def parse_samples(self):
+    def parse_samples(self, parameter_list=[]):
+        print "Parsing samples..."
         uniq_format_set = self.records['FORMAT'].drop_duplicates()
         uniq_format_dict = OrderedDict([(format_entry, format_entry.split(":")) for format_entry in uniq_format_set])
         sample_data_dict = {}
+
+        present_parameter_dict = OrderedDict()
+        for parameter in parameter_list:
+            for format_entry in uniq_format_dict:
+                present_parameter_dict[format_entry] = []
+                if parameter in uniq_format_dict[format_entry]:
+                    present_parameter_dict[format_entry].append(parameter)
+
         for sample in self.samples:
             sample_data_dict[sample] = OrderedDict()
             for format_entry in uniq_format_dict:
@@ -643,14 +679,14 @@ class CollectionVCF():
                 tmp.columns = uniq_format_dict[format_entry]
                 sample_data_dict[sample][format_entry] = []
 
-                for parameter in uniq_format_dict[format_entry]:
+                for parameter in present_parameter_dict[format_entry] if parameter_list else uniq_format_dict[format_entry]:
                     #print parameter
                     #print self.metadata.converters["FORMAT"][parameter]
                     parameter_col = self.parse_column(tmp[parameter], parameter, "FORMAT")
                     #print parameter_col
                     sample_data_dict[sample][format_entry].append(parameter_col)
 
-                for i in range(0, len(uniq_format_dict[format_entry])):
+                for i in range(0, len(present_parameter_dict[format_entry])) if parameter_list else range(0, len(uniq_format_dict[format_entry])):
                     shape = np.shape(sample_data_dict[sample][format_entry][i])
                     column_number = 1 if len(shape) == 1 else shape[1]
                     if self.parsing_mode == "all":
@@ -666,22 +702,23 @@ class CollectionVCF():
                                                                   ],)
 
                     sample_data_dict[sample][format_entry][i].columns = column_index
-
-                sample_data_dict[sample][format_entry] = pd.concat(sample_data_dict[sample][format_entry],
-                                                                   axis=1)
-
-            sample_data_dict[sample] = pd.concat(sample_data_dict[sample].values(),
-                                                 axis=0)
-            if self.parsing_mode == "all":
-                column_index = pd.MultiIndex.from_arrays([
-                                                          [sample] * len(sample_data_dict[sample].columns),
-                                                          sample_data_dict[sample].columns
-                                                          ],)
-                sample_data_dict[sample].columns = column_index
-            # sort by row number
-            sample_data_dict[sample].sort_index(level=1, inplace=True)
+                if sample_data_dict[sample][format_entry]:
+                    sample_data_dict[sample][format_entry] = pd.concat(sample_data_dict[sample][format_entry],
+                                                                       axis=1)
+            if sample_data_dict[sample]:
+                sample_data_dict[sample] = pd.concat(sample_data_dict[sample].values(),
+                                                     axis=0)
+                if self.parsing_mode == "all":
+                    column_index = pd.MultiIndex.from_arrays([
+                                                              [sample] * len(sample_data_dict[sample].columns),
+                                                              sample_data_dict[sample].columns
+                                                              ],)
+                    sample_data_dict[sample].columns = column_index
+                # sort by row number
+                sample_data_dict[sample].sort_index(level=1, inplace=True)
+            else:
+                sample_data_dict.pop(sample, None)
         return list(sample_data_dict.values())
-
 
     @staticmethod
     def _split_by_equal_sign(string):
@@ -910,6 +947,9 @@ class CollectionVCF():
             plt.savefig("%s/%s_log_scale.%s" % (plot_dir, plot_name, extension))
         plt.close()
 
+    def count_zygoty(self):
+        if self.parsing_mode == "complete":
+            self.records.xs('GT', axis=1, level=1, drop_level=False).apply()
 
     # methods below were not yet rewritten for compatibility with VCFpandas
     def no_reference_allel_and_multiallel(self, record, sample_index=None, max_allels=None):
