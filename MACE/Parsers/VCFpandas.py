@@ -996,7 +996,8 @@ class CollectionVCF():
             plt.title(title)
         plt.legend()
         for extension in extension_list:
-            plt.savefig("%s.%s" % (output_prefix, extension))
+            plt.savefig("%s.%s" % (output_prefix, extension), bbox_inches='tight')
+
         plt.close()
 
     # methods below were not yet rewritten for compatibility with VCFpandas
