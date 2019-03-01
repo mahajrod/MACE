@@ -562,7 +562,9 @@ class CollectionVCF():
             col = column.str.split(self.metadata.parameter_separator_dict[param] if param in self.metadata.parameter_separator_dict else ",",
                                    expand=True)
             if param in self.metadata.parameter_replace_dict:
+                print "aaaaa"
                 col.replace(self.metadata.parameter_replace_dict[param], inplace=True)
+                print col
             if self.metadata.converters[param_group][param] == str:
                 return col
             if self.metadata.converters[param_group][param] in self.metadata.pandas_int_type_correspondence:
