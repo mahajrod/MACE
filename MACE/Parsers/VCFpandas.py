@@ -627,9 +627,13 @@ class CollectionVCF():
                 #print self.records[sample]
                 #print self.records[self.records['FORMAT'] == format_entry][sample]
                 tmp.columns = uniq_format_dict[format_entry]
-                print tmp
-                sample_data_dict[sample][format_entry] = [self.parse_column(tmp[parameter], parameter, "FORMAT")
-                                                          for parameter in uniq_format_dict[format_entry]]
+                sample_data_dict[sample][format_entry] = []
+
+                for parameter in uniq_format_dict[format_entry]:
+                    print parameter
+                    parameter_col = self.parse_column(tmp[parameter], parameter, "FORMAT")
+                    sample_data_dict[sample][format_entry].append(parameter_col)
+
                 for i in range(0, len(uniq_format_dict[format_entry])):
                     shape = np.shape(sample_data_dict[sample][format_entry][i])
                     column_number = 1 if len(shape) == 1 else shape[1]
