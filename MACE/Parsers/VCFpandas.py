@@ -240,7 +240,7 @@ class MetadataVCF(OrderedDict):
 
                 if a == 1:
                     if self[field][entry]["Type"] == "Integer":
-                        self.converters[field][entry] = lambda n : np.NaN if pd.isnull(n) else np.int32(n)
+                        self.converters[field][entry] = np.int32
                     elif self[field][entry]["Type"] == "Float":
                         self.converters[field][entry] = np.float32
                     elif self[field][entry]["Type"] == "String":
@@ -253,10 +253,8 @@ class MetadataVCF(OrderedDict):
                                                                                                   self[field][entry]))
                 else:
                     if self[field][entry]["Type"] == "Integer":
-                        #self.converters[field][entry] = (lambda n: map(np.int32, n.split(","))) if parsing_mode == "complete" else str
                         self.converters[field][entry] = np.int32 if parsing_mode == "complete" else str
                     elif self[field][entry]["Type"] == "Float":
-                        #self.converters[field][entry] = (lambda n: map(np.float32, n.split(","))) if parsing_mode == "complete" else str
                         self.converters[field][entry] = np.float32 if parsing_mode == "complete" else str
                     elif self[field][entry]["Type"] == "String":
                         self.converters[field][entry] = str
@@ -564,7 +562,7 @@ class CollectionVCF():
                         print kkkkk
                         for column in kkkkk.columns:
                             print column
-                            print kkkkk[column].notna()
+                            print kkkkk[column][kkkkk[column].notna()]
                             kkkkk.append(kkkkk[column][kkkkk[column].notna()].apply(self.metadata.converters["INFO"][param]))
                         kkkkk = pd.concat(kkkkk_list, axis=1)
                         del kkkkk_list
