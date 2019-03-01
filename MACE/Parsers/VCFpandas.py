@@ -645,17 +645,17 @@ class CollectionVCF():
                     column_number = 1 if len(shape) == 1 else shape[1]
                     print column_number
                     print [sample] * column_number,
-                    print  uniq_format_dict[format_entry][i] * column_number
+                    print  [uniq_format_dict[format_entry][i]] * column_number
                     print np.arange(0, column_number)
                     if self.parsing_mode == "all":
                         column_index = pd.MultiIndex.from_arrays([
                                                                   [sample] * column_number,
-                                                                  uniq_format_dict[format_entry][i] * column_number
+                                                                  [uniq_format_dict[format_entry][i]] * column_number
                                                                   ],)
                     elif self.parsing_mode == "complete":
                         column_index = pd.MultiIndex.from_arrays([
                                                                   [sample] * column_number,
-                                                                  uniq_format_dict[format_entry][i] * column_number,
+                                                                  [uniq_format_dict[format_entry][i]] * column_number,
                                                                   np.arange(0, column_number)
                                                                   ],)
 
