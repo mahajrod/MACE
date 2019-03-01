@@ -524,7 +524,7 @@ class CollectionVCF():
         fd.close()
         self.records.index = pd.MultiIndex.from_arrays([self.records.index, np.arange(0, len(self.records))],
                                                        names=("CHROM", "ROW"))
-        """
+
         if self.parsing_mode in ("all", "complete"):
             info = self.parse_info()
             sample_list = self.parse_samples()
@@ -542,7 +542,7 @@ class CollectionVCF():
 
             self.records = pd.concat([self.records[["POS", "ID", "REF", "ALT", "QUAL", "FILTER"]],
                                       info] + sample_list, axis=1)
-        """
+
         
     def parse_column(self, column, param, param_group):
         if self.parsing_mode == "all":
@@ -661,7 +661,7 @@ class CollectionVCF():
                                                                    axis=1)
             sample_data_dict[sample] = pd.concat(sample_data_dict[sample].values(),
                                                  axis=0)
-
+            sample_data_dict[sample].sort_index(level=1, inplace=True)
         return list(sample_data_dict.values())
 
 
