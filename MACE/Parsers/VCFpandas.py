@@ -545,8 +545,8 @@ class CollectionVCF():
                 col = col.apply(self.metadata.converters["INFO"][param])
             else:
                 col_list = []
-                for col in col.columns:
-                    col_list.append(col[col][col[col].notna()].apply(self.metadata.converters["INFO"][param]))
+                for index in col.columns:
+                    col_list.append(col[index][col[index].notna()].apply(self.metadata.converters["INFO"][param]))
                 col = pd.concat(col_list, axis=1)
                 del col_list
         return col
