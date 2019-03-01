@@ -225,7 +225,13 @@ class MetadataVCF(OrderedDict):
         if (metadata or from_file) and (parsing_mode in ("all", "complete")):
             self.create_converters(parsing_mode=parsing_mode)
         self.parameter_separator_dict = OrderedDict({
-                                                     "GT": "/"})
+                                                     "GT": "/"
+                                                     })
+        self.parameter_replace_dict = OrderedDict({
+                                                   "GT": {
+                                                          ".": None,
+                                                          }
+                                                   })
         self.pandas_int_type_correspondence = OrderedDict({
                                                            "Int8": np.float16,
                                                            "Int16": np.float16,
@@ -555,6 +561,8 @@ class CollectionVCF():
         elif self.parsing_mode == "complete":
             col = column.str.split(self.metadata.parameter_separator_dict[param] if param in self.metadata.parameter_separator_dict else ",",
                                    expand=True)
+            if param in self.metadata.parameter_replace_dict:
+                col.replace(self.metadata.parameter_replace_dict[param], inplace=True)
             if self.metadata.converters[param_group][param] == str:
                 return col
             if self.metadata.converters[param_group][param] in self.metadata.pandas_int_type_correspondence:
@@ -899,6 +907,7 @@ class CollectionVCF():
         for extension in extension_list:
             plt.savefig("%s/%s_log_scale.%s" % (plot_dir, plot_name, extension))
         plt.close()
+
 
     # methods below were not yet rewritten for compatibility with VCFpandas
     def no_reference_allel_and_multiallel(self, record, sample_index=None, max_allels=None):
