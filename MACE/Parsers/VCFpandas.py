@@ -558,15 +558,8 @@ class CollectionVCF():
                         kkkkk = kkkkk.apply(self.metadata.converters["INFO"][param])
                     else:
                         kkkkk_list = []
-                        print param
-                        print kkkkk
                         for column in kkkkk.columns:
-                            print column
-                            uu = kkkkk[column][kkkkk[column].notna()]
-                            print uu
-                            print self.metadata.converters["INFO"][param]
-                            uu.apply(self.metadata.converters["INFO"][param])
-                            kkkkk.append(uu)
+                            kkkkk_list.append(kkkkk[column][kkkkk[column].notna()].apply(self.metadata.converters["INFO"][param]))
                         kkkkk = pd.concat(kkkkk_list, axis=1)
                         del kkkkk_list
                 temp_list.append(kkkkk)
