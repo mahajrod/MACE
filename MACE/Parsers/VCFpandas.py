@@ -550,9 +550,9 @@ class CollectionVCF():
             if self.parsing_mode in ("genotypes", "coordinates_and_genotypes"):
                 self.parsing_parameters[self.parsing_mode]["cols"] += [i for i in range(9, 9 + len(self.samples))]
 
-        print self.parsing_parameters[self.parsing_mode]["cols"]
-        print self.parsing_parameters[self.parsing_mode]["converters"]
-        print self.parsing_parameters[self.parsing_mode]["col_names"]
+        #print self.parsing_parameters[self.parsing_mode]["cols"]
+        #print self.parsing_parameters[self.parsing_mode]["converters"]
+        #print self.parsing_parameters[self.parsing_mode]["col_names"]
 
         self.records = pd.read_csv(fd, sep='\t', header=None, na_values=".",
                                    usecols=self.parsing_parameters[self.parsing_mode]["cols"],
@@ -604,7 +604,7 @@ class CollectionVCF():
                 col = col.apply(self.metadata.pandas_int_type_correspondence[self.metadata.converters[param_group][param]]).astype(self.metadata.converters[param_group][param])
             else:
                 col = col.apply(self.metadata.converters["INFO"][param])
-        elif self.parsing_mode == "complete":
+        elif self.parsing_mode in ("complete", "genotypes", "coordinates_and_genotypes"):
             col = column.str.split(self.metadata.parameter_separator_dict[param] if param in self.metadata.parameter_separator_dict else ",",
                                    expand=True)
             col.replace(self.metadata.default_replace_dict, inplace=True)
@@ -677,7 +677,7 @@ class CollectionVCF():
             sample_data_dict[sample] = OrderedDict()
             for format_entry in uniq_format_dict:
                 sample_data_dict[sample][format_entry] = list()
-                print self.records
+                #print self.records
                 tmp = self.records[self.records['FORMAT'] == format_entry][sample].str.split(":", expand=True)
                 #print self.records[sample]
                 #print self.records[self.records['FORMAT'] == format_entry][sample]
