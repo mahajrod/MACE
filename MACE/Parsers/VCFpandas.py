@@ -264,7 +264,7 @@ class MetadataVCF(OrderedDict):
                                                                                                       self[field][entry]))
                     else:
                         if self[field][entry]["Type"] == "Integer":
-                            self.converters[field][entry] = np.int32 if parsing_mode == "complete" else str
+                            self.converters[field][entry] = "Int16" if parsing_mode == "complete" else str
                         elif self[field][entry]["Type"] == "Float":
                             self.converters[field][entry] = np.float32 if parsing_mode == "complete" else str
                         elif self[field][entry]["Type"] == "String":
