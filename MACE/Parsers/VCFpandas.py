@@ -988,16 +988,15 @@ class CollectionVCF():
                     width=bar_width, edgecolor='white',
                     label=zygoty_counts.index[i])
 
-        plt.ylabel('Variants')
-        plt.xlabel('Sample')
+        plt.ylabel('Variants', fontweight='bold')
+        plt.xlabel('Sample', fontweight='bold')
         plt.xticks([coord + bar_width for coord in range(len(bin_coord))], zygoty_counts.columns,
                    rotation=45)
         if title:
             plt.title(title)
-        plt.legend()
+        plt.legend(fontweight='bold')
         for extension in extension_list:
             plt.savefig("%s.%s" % (output_prefix, extension), bbox_inches='tight')
-
         plt.close()
 
     # methods below were not yet rewritten for compatibility with VCFpandas
