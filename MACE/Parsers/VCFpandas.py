@@ -952,7 +952,7 @@ class CollectionVCF():
             plt.savefig("%s/%s_log_scale.%s" % (plot_dir, plot_name, extension))
         plt.close()
 
-    def count_zygoty(self,):
+    def count_zygoty(self):
         # suitable onl for diploid genomes
         if self.parsing_mode in ("complete", "genotypes", "coordinates_and_genotypes"):
             zygoty_counts = OrderedDict()
@@ -1008,12 +1008,6 @@ class CollectionVCF():
             return self.no_reference_allel_and_multiallel(record, sample_index=sample_index, max_allels=max_allels)
 
         return self.filter(expression)
-
-    def count_zygoty(self):
-        """
-        :return: tuple - (N of homozygotes, N of heterozygotes)
-        """
-        return self.count_records(self.filter_zygoty_expression)
 
     @staticmethod
     def filter_zygoty_expression(record):
