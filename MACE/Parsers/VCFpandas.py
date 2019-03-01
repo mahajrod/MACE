@@ -544,20 +544,20 @@ class CollectionVCF():
                                       info] + sample_list, axis=1)
         """
         
-    def parse_column(self, column, param):
+    def parse_column(self, column, param, param_group):
         if self.parsing_mode == "all":
             #col = column.apply(self.metadata.converters["INFO"][param])
-            if self.metadata.converters["INFO"][param] in self.metadata.pandas_int_type_correspondence:
-                col = column.apply(self.metadata.pandas_int_type_correspondence[self.metadata.converters["INFO"][param]]).astype(self.metadata.converters["INFO"][param])
+            if self.metadata.converters[param_group][param] in self.metadata.pandas_int_type_correspondence:
+                col = column.apply(self.metadata.pandas_int_type_correspondence[self.metadata.converters[param_group][param]]).astype(self.metadata.converters[param_group][param])
             else:
                 col = column.apply(self.metadata.converters["INFO"][param])
         elif self.parsing_mode == "complete":
             col = column.str.split(self.metadata.parameter_separator_dict[param] if param in self.metadata.parameter_separator_dict else ",",
                                    expand=True)
-            if self.metadata.converters["INFO"][param] in self.metadata.pandas_int_type_correspondence:
-                col = col.apply(self.metadata.pandas_int_type_correspondence[self.metadata.converters["INFO"][param]]).astype(self.metadata.converters["INFO"][param])
+            if self.metadata.converters[param_group][param] in self.metadata.pandas_int_type_correspondence:
+                col = col.apply(self.metadata.pandas_int_type_correspondence[self.metadata.converters[param_group][param]]).astype(self.metadata.converters[param_group][param])
             else:
-                col = col.apply(self.metadata.converters["INFO"][param])
+                col = col.apply(self.metadata.converters[param_group][param])
                 """
 
             shape = np.shape(col)
@@ -587,7 +587,7 @@ class CollectionVCF():
                 column = dataframe[dataframe[0] == param][1]
                 if column.empty:
                     continue
-                column = self.parse_column(column, param)
+                column = self.parse_column(column, param, "INFO")
                 temp_list.append(column)
             if not temp_list:
                 continue
@@ -628,7 +628,7 @@ class CollectionVCF():
                 #print self.records[self.records['FORMAT'] == format_entry][sample]
                 tmp.columns = uniq_format_dict[format_entry]
                 print tmp
-                sample_data_dict[sample][format_entry] = [self.parse_column(tmp[parameter], parameter)
+                sample_data_dict[sample][format_entry] = [self.parse_column(tmp[parameter], parameter, "FORMAT")
                                                           for parameter in uniq_format_dict[format_entry]]
                 for i in range(0, len(uniq_format_dict[format_entry])):
                     shape = np.shape(sample_data_dict[sample][format_entry][i])
