@@ -659,8 +659,15 @@ class CollectionVCF():
 
                 sample_data_dict[sample][format_entry] = pd.concat(sample_data_dict[sample][format_entry],
                                                                    axis=1)
+
             sample_data_dict[sample] = pd.concat(sample_data_dict[sample].values(),
                                                  axis=0)
+            if self.parsing_mode == "all":
+                column_index = pd.MultiIndex.from_arrays([
+                                                          [sample] * len(sample_data_dict[sample].columns),
+                                                          sample_data_dict[sample].columns
+                                                          ],)
+            # sort by row number
             sample_data_dict[sample].sort_index(level=1, inplace=True)
         return list(sample_data_dict.values())
 
