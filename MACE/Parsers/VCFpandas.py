@@ -634,16 +634,19 @@ class CollectionVCF():
                 sample_data_dict[sample][format_entry] = []
 
                 for parameter in uniq_format_dict[format_entry]:
-                    print parameter
-                    print self.metadata.converters["FORMAT"][parameter]
+                    #print parameter
+                    #print self.metadata.converters["FORMAT"][parameter]
                     parameter_col = self.parse_column(tmp[parameter], parameter, "FORMAT")
-                    print parameter_col
+                    #print parameter_col
                     sample_data_dict[sample][format_entry].append(parameter_col)
 
                 for i in range(0, len(uniq_format_dict[format_entry])):
                     shape = np.shape(sample_data_dict[sample][format_entry][i])
                     column_number = 1 if len(shape) == 1 else shape[1]
                     print column_number
+                    print [sample] * column_number,
+                    print  uniq_format_dict[format_entry][i] * column_number
+                    print np.arange(0, column_number)
                     if self.parsing_mode == "all":
                         column_index = pd.MultiIndex.from_arrays([
                                                                   [sample] * column_number,
