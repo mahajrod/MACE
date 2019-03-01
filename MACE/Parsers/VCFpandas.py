@@ -564,10 +564,12 @@ class CollectionVCF():
             if param in self.metadata.parameter_replace_dict:
                 print "aaaaa"
                 col.replace(self.metadata.parameter_replace_dict[param], inplace=True)
-                print col
+                #print col
             if self.metadata.converters[param_group][param] == str:
                 return col
             if self.metadata.converters[param_group][param] in self.metadata.pandas_int_type_correspondence:
+                print param, param_group
+                print col
                 col = col.apply(self.metadata.pandas_int_type_correspondence[self.metadata.converters[param_group][param]]).astype(self.metadata.converters[param_group][param])
             else:
                 col = col.apply(self.metadata.converters[param_group][param])
