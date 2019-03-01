@@ -667,6 +667,7 @@ class CollectionVCF():
                                                           [sample] * len(sample_data_dict[sample].columns),
                                                           sample_data_dict[sample].columns
                                                           ],)
+                sample_data_dict[sample].columns = column_index
             # sort by row number
             sample_data_dict[sample].sort_index(level=1, inplace=True)
         return list(sample_data_dict.values())
