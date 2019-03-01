@@ -227,7 +227,7 @@ class MetadataVCF(OrderedDict):
         self.parameter_separator_dict = OrderedDict({
                                                      "GT": "/"})
         self.pandas_int_type_correspondence = OrderedDict({
-                                                           "Int8": np.float8,
+                                                           "Int8": np.float16,
                                                            "Int16": np.float16,
                                                            "Int32": np.float32,
                                                            "Int64": np.float64,
@@ -548,7 +548,6 @@ class CollectionVCF():
         if self.parsing_mode == "all":
             #col = column.apply(self.metadata.converters["INFO"][param])
             if self.metadata.converters["INFO"][param] in self.metadata.pandas_int_type_correspondence:
-                # TODO adjust type usage based on correspondence between pandas and numpy types
                 col = column.apply(self.metadata.pandas_int_type_correspondence[self.metadata.converters["INFO"][param]]).astype(self.metadata.converters["INFO"][param])
             else:
                 col = column.apply(self.metadata.converters["INFO"][param])
