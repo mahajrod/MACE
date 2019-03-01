@@ -547,10 +547,13 @@ class CollectionVCF():
         for param in self.metadata.info_flag_list + self.metadata.info_nonflag_list:
             temp_list = []
             for dataframe in tmp_info_list:
+                kkkkk = dataframe[dataframe[0] == param][1]
+                if kkkkk.empty:
+                    continue
                 if self.parsing_mode == "all":
-                    kkkkk = dataframe[dataframe[0] == param][1].apply(self.metadata.converters["INFO"][param])
+                    kkkkk = kkkkk.apply(self.metadata.converters["INFO"][param])
                 elif self.parsing_mode == "complete":
-                    kkkkk = dataframe[dataframe[0] == param][1].str.split(",", expand=True)
+                    kkkkk = kkkkk.str.split(",", expand=True)
                     shape = np.shape(kkkkk)
                     column_number = 1 if len(shape) == 1 else shape[1]
                     if column_number == 1:
@@ -563,8 +566,7 @@ class CollectionVCF():
                             kkkkk.append(kkkkk[column][kkkkk[column].notna()].apply(self.metadata.converters["INFO"][param]))
                         kkkkk = pd.concat(kkkkk_list, axis=1)
                         del kkkkk_list
-                if not kkkkk.empty:
-                    temp_list.append(kkkkk)
+                temp_list.append(kkkkk)
             if not temp_list:
                 continue
             tmp = pd.concat(temp_list)
