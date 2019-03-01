@@ -673,6 +673,7 @@ class CollectionVCF():
             sample_data_dict[sample] = OrderedDict()
             for format_entry in uniq_format_dict:
                 sample_data_dict[sample][format_entry] = list()
+                print self.records
                 tmp = self.records[self.records['FORMAT'] == format_entry][sample].str.split(":", expand=True)
                 #print self.records[sample]
                 #print self.records[self.records['FORMAT'] == format_entry][sample]
