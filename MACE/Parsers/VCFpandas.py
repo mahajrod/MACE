@@ -251,7 +251,7 @@ class MetadataVCF(OrderedDict):
                 else:
                     if a == 1:
                         if self[field][entry]["Type"] == "Integer":
-                            self.converters[field][entry] = "Int16"
+                            self.converters[field][entry] = "Int32"
                         elif self[field][entry]["Type"] == "Float":
                             self.converters[field][entry] = np.float32
                         elif self[field][entry]["Type"] == "String":
