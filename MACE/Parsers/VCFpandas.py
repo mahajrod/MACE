@@ -624,7 +624,8 @@ class CollectionVCF():
             for format_entry in uniq_format_dict:
                 sample_data_dict[sample][format_entry] = list()
                 tmp = self.records[self.records['FORMAT'] == format_entry][sample].str.split([":"], expand=True)
-                print tmp
+                print self.records[sample]
+                print self.records[self.records['FORMAT'] == format_entry][sample]
                 tmp.columns = uniq_format_dict[format_entry]
                 
                 sample_data_dict[sample][format_entry] = [self.parse_column(tmp[parameter], parameter)
