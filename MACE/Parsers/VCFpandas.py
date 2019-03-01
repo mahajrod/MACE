@@ -952,9 +952,51 @@ class CollectionVCF():
             plt.savefig("%s/%s_log_scale.%s" % (plot_dir, plot_name, extension))
         plt.close()
 
-    def count_zygoty(self):
-        if self.parsing_mode == "complete":
-            self.records.xs('GT', axis=1, level=1, drop_level=False).apply()
+    def count_zygoty(self,):
+        # suitable onl for diploid genomes
+        if self.parsing_mode in ("complete", "genotypes", "coordinates_and_genotypes"):
+            zygoty_counts = OrderedDict()
+            variant_number = np.shape(self.records)[0]
+            for sample in self.samples:
+                zygoty_counts[sample] = OrderedDict({
+                                                     "homo": 0,
+                                                     "hetero": 0,
+                                                     "absent": 0
+                                                     })
+                zygoty_counts[sample]["absent"] = np.sum(self.records[sample]["GT"][0].isna() or self.records[sample]["GT"][1].isna())
+                zygoty_counts[sample]["homo"] = np.sum(self.records[sample]["GT"][0] == self.records[sample]["GT"][1])
+                zygoty_counts[sample]["hetero"] = variant_number - zygoty_counts[sample]["absent"] - zygoty_counts[sample]["homo"]
+                #self.records.xs('GT', axis=1, level=1, drop_level=False).apply()
+
+            return pd.DataFrame(zygoty_counts)
+        else:
+            raise ValueError("ERROR!!! Zygoty can't be counted for this parsing mode: %s."
+                             "Use 'coordinates_and_genotypes', 'genotypes' or 'complete modes'" % self.parsing_mode)
+
+    def zygoty_bar_plot(self, output_prefix, extension_list=("png",), figsize=(5,5), dpi=200, title=None):
+
+        zygoty_counts = self.count_zygoty()
+        df_shape = np.shape(zygoty_counts)
+        fig = plt.figure(1, figsize=figsize, dpi=dpi)
+
+        bar_width = 1.0 / (df_shape[0] + 1)
+        bin_coord = np.arange(df_shape[1])
+
+        for i in range(0, df_shape[0]):
+            plt.bar(bin_coord + i * bar_width,
+                    zygoty_counts.loc[zygoty_counts.index[i]],
+                    width=bar_width, edgecolor='white',
+                    label=zygoty_counts.index[i])
+
+        plt.ylabel('Variants')
+        plt.xlabel('Sample')
+        plt.xticks([coord + bar_width for coord in range(len(bin_coord))], zygoty_counts.columns)
+        if title:
+            plt.title(title)
+        plt.legend()
+        for extension in extension_list:
+            plt.savefig("%s.%s" % (output_prefix, extension))
+        plt.close()
 
     # methods below were not yet rewritten for compatibility with VCFpandas
     def no_reference_allel_and_multiallel(self, record, sample_index=None, max_allels=None):
