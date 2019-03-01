@@ -232,6 +232,9 @@ class MetadataVCF(OrderedDict):
                                                           ".": None,
                                                           }
                                                    })
+        self.default_replace_dict = OrderedDict({
+                                                 ".": None
+                                                 })
         self.pandas_int_type_correspondence = OrderedDict({
                                                            "Int8": np.float16,
                                                            "Int16": np.float16,
@@ -553,18 +556,18 @@ class CollectionVCF():
         if self.parsing_mode == "all":
             if self.metadata.converters[param_group][param] == str:
                 return column
-            #col = column.apply(self.metadata.converters["INFO"][param])
+            col = column.replace(self.metadata.default_replace_dict)
             if self.metadata.converters[param_group][param] in self.metadata.pandas_int_type_correspondence:
-                col = column.apply(self.metadata.pandas_int_type_correspondence[self.metadata.converters[param_group][param]]).astype(self.metadata.converters[param_group][param])
+                col = col.apply(self.metadata.pandas_int_type_correspondence[self.metadata.converters[param_group][param]]).astype(self.metadata.converters[param_group][param])
             else:
-                col = column.apply(self.metadata.converters["INFO"][param])
+                col = col.apply(self.metadata.converters["INFO"][param])
         elif self.parsing_mode == "complete":
             col = column.str.split(self.metadata.parameter_separator_dict[param] if param in self.metadata.parameter_separator_dict else ",",
                                    expand=True)
-            if param in self.metadata.parameter_replace_dict:
-                print "aaaaa"
-                col.replace(self.metadata.parameter_replace_dict[param], inplace=True)
-                #print col
+            #if param in self.metadata.parameter_replace_dict:
+            #    #print "aaaaa"
+            col.replace(self.metadata.default_replace_dict, inplace=True)
+                ##print col
             if self.metadata.converters[param_group][param] == str:
                 return col
             if self.metadata.converters[param_group][param] in self.metadata.pandas_int_type_correspondence:
