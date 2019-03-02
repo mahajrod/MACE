@@ -15,7 +15,7 @@ parser.add_argument("-o", "--output_file_prefix", action="store", dest="output_p
                     help="Prefix of output file with rainfall plot")
 parser.add_argument("-d", "--dpi", action="store", dest="dpi", type=int, default=300,
                     help="Dpi of figure")
-parser.add_argument("-f", "--size_of_figure", action="store", dest="size_of_figure",
+parser.add_argument("-f", "--figsize", action="store", dest="figsize",
                     type=lambda s: map(int, s.split(",")),
                     default=(20, 20),
                     help="Size of figure in inches. X and Y values should be separated "
@@ -76,7 +76,7 @@ if args.ref_genome:
 else:
     reference_genome = None
 
-mutations.rainfall_plot(args.output_prefix, dpi=args.dpi, figsize=args.size_of_figure,
+mutations.rainfall_plot(args.output_prefix, dpi=args.dpi, figsize=args.figsize,
                         facecolor="#D6D6D6",
                         ref_genome=reference_genome,
                         min_masking_length=args.min_masking_length,
