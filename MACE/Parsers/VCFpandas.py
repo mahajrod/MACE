@@ -993,8 +993,8 @@ class CollectionVCF():
         plt.xticks([coord + bar_width for coord in range(len(bin_coord))], zygoty_counts.columns,
                    rotation=45)
         if title:
-            plt.title(title)
-        plt.legend(fontweight='bold')
+            plt.title(title, fontweight='bold')
+        plt.legend()
         for extension in extension_list:
             plt.savefig("%s.%s" % (output_prefix, extension), bbox_inches='tight')
         plt.close()
