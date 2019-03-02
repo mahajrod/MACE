@@ -952,7 +952,7 @@ class CollectionVCF():
             plt.savefig("%s/%s_log_scale.%s" % (plot_dir, plot_name, extension))
         plt.close()
 
-    def count_zygoty(self):
+    def count_zygoty(self, output_file=None):
         # suitable onl for diploid genomes
         if self.parsing_mode in ("complete", "genotypes", "coordinates_and_genotypes"):
             zygoty_counts = OrderedDict()
@@ -964,11 +964,13 @@ class CollectionVCF():
                                                      "absent": 0
                                                      })
                 zygoty_counts[sample]["absent"] = np.sum(self.records[sample]["GT"][0].isna() | self.records[sample]["GT"][1].isna())
-                zygoty_counts[sample]["homo"] = np.sum(self.records[sample]["GT"][0] == self.records[sample]["GT"][1])
-                zygoty_counts[sample]["hetero"] = variant_number - zygoty_counts[sample]["absent"] - zygoty_counts[sample]["homo"]
+                zygoty_counts[sample]["hetero"] = np.sum(self.records[sample]["GT"][0] != self.records[sample]["GT"][1]) - zygoty_counts[sample]["absent"]
+                zygoty_counts[sample]["homo"] = variant_number - zygoty_counts[sample]["hetero"] - zygoty_counts[sample]["absent"]
                 #self.records.xs('GT', axis=1, level=1, drop_level=False).apply()
-
-            return pd.DataFrame(zygoty_counts)
+            zygoty_counts  = pd.DataFrame(zygoty_counts)
+            if output_file:
+                zygoty_counts.to_csv(output_file, sep="\t", header=True, index=True)
+            return
         else:
             raise ValueError("ERROR!!! Zygoty can't be counted for this parsing mode: %s."
                              "Use 'coordinates_and_genotypes', 'genotypes' or 'complete modes'" % self.parsing_mode)
