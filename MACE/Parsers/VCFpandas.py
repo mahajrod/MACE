@@ -952,7 +952,7 @@ class CollectionVCF():
             plt.savefig("%s/%s_log_scale.%s" % (plot_dir, plot_name, extension))
         plt.close()
 
-    def count_zygoty(self, output_file=None):
+    def count_zygoty(self, outfile=None):
         # suitable onl for diploid genomes
         if self.parsing_mode in ("complete", "genotypes", "coordinates_and_genotypes"):
             zygoty_counts = OrderedDict()
@@ -968,16 +968,16 @@ class CollectionVCF():
                 zygoty_counts[sample]["homo"] = variant_number - zygoty_counts[sample]["hetero"] - zygoty_counts[sample]["absent"]
                 #self.records.xs('GT', axis=1, level=1, drop_level=False).apply()
             zygoty_counts  = pd.DataFrame(zygoty_counts)
-            if output_file:
-                zygoty_counts.to_csv(output_file, sep="\t", header=True, index=True)
-            return
+            if outfile:
+                zygoty_counts.to_csv(outfile, sep="\t", header=True, index=True)
+            return zygoty_counts
         else:
             raise ValueError("ERROR!!! Zygoty can't be counted for this parsing mode: %s."
                              "Use 'coordinates_and_genotypes', 'genotypes' or 'complete modes'" % self.parsing_mode)
 
     def zygoty_bar_plot(self, output_prefix, extension_list=("png",), figsize=(5, 5), dpi=200, title=None):
 
-        zygoty_counts = self.count_zygoty()
+        zygoty_counts = self.count_zygoty(outfile="%s.counts" % output_prefix)
         df_shape = np.shape(zygoty_counts)
         fig = plt.figure(1, figsize=figsize, dpi=dpi)
 
