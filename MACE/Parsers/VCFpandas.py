@@ -961,11 +961,13 @@ class CollectionVCF():
                 zygoty_counts[sample] = OrderedDict({
                                                      "homo": 0,
                                                      "hetero": 0,
-                                                     "absent": 0
+                                                     "ref": 0,
+                                                     "absent": 0,
                                                      })
                 zygoty_counts[sample]["absent"] = np.sum(self.records[sample]["GT"][0].isna() | self.records[sample]["GT"][1].isna())
                 zygoty_counts[sample]["hetero"] = np.sum(self.records[sample]["GT"][0] != self.records[sample]["GT"][1]) - zygoty_counts[sample]["absent"]
-                zygoty_counts[sample]["homo"] = variant_number - zygoty_counts[sample]["hetero"] - zygoty_counts[sample]["absent"]
+                zygoty_counts[sample]["ref"] = np.sum((self.records[sample]["GT"][0] == 0) & (self.records[sample]["GT"][1] == 0))
+                zygoty_counts[sample]["homo"] = variant_number - zygoty_counts[sample]["hetero"] - zygoty_counts[sample]["absent"] - zygoty_counts[sample]["ref"]
                 #self.records.xs('GT', axis=1, level=1, drop_level=False).apply()
             zygoty_counts  = pd.DataFrame(zygoty_counts)
             if outfile:
