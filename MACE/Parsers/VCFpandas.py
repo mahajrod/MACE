@@ -1149,6 +1149,7 @@ class CollectionVCF():
                 if sample_index >= self.sample_number:
                     continue
                 sample_id = self.samples[sample_index]
+                print param[sample_id]
                 subplot_array[row][col].hist(param[sample_id], bins=bins, label=sample_id)
                 if show_median:
                     subplot_array[row][col].axvline(x=param_median[sample_id], label="median", color="green")
