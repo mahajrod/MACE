@@ -576,6 +576,11 @@ class CollectionVCF():
                                    names=self.parsing_parameters[self.parsing_mode]["col_names"],
                                    index_col=self.VCF_COLS["CHROM"])
         fd.close()
+
+        # convert to 0-based representation
+
+        self.records['POS'] = self.records['POS'] - 1
+
         self.records.index = pd.MultiIndex.from_arrays([self.records.index, np.arange(0, len(self.records))],
                                                        names=("CHROM", "ROW"))
         if self.parsing_mode in ("genotypes", "coordinates_and_genotypes"):
@@ -758,6 +763,16 @@ class CollectionVCF():
             else:
                 sample_data_dict.pop(sample, None)
         return list(sample_data_dict.values())
+
+    def write(self, outfile, format='simple_bed', type="0-based"):
+        if format == 'simple_bed':
+            if type == "0-based":
+                self.records[["POS"]].reset_index(level='CHROM').to_csv(outfile, sep='\t', index=False, header=False)
+            elif type == '1-based':
+                df = self.records[["POS"]].reset_index(level='CHROM')
+                df["POS"] += 1
+                df.to_csv(outfile, sep='\t', index=False, header=False)
+
 
     @staticmethod
     def _split_by_equal_sign(string):
@@ -1150,7 +1165,8 @@ class CollectionVCF():
                     continue
                 sample_id = self.samples[sample_index]
                 print param[sample_id]
-                subplot_array[row][col].hist(param[sample_id], bins=bins, label=sample_id)
+                # TODO: adjust function to deal not only with the first column inside parameter
+                subplot_array[row][col].hist(param[sample_id][parameter][0], bins=bins, label=sample_id)
                 if show_median:
                     subplot_array[row][col].axvline(x=param_median[sample_id], label="median", color="green")
                 if show_mean:
