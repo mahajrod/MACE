@@ -693,12 +693,12 @@ class CollectionVCF():
         present_parameter_dict = OrderedDict()
 
         for format_entry in uniq_format_dict:
-            present_parameter_dict[format_entry] = []
+            #present_parameter_dict[format_entry] = []
             for parameter in parameter_list:
                 if parameter in uniq_format_dict[format_entry]:
-                    print parameter, uniq_format_dict[format_entry]
+                    #print parameter, uniq_format_dict[format_entry]
                     present_parameter_dict[format_entry].append(parameter)
-        print present_parameter_dict
+        #print present_parameter_dict
         for sample in self.samples:
             sample_data_dict[sample] = OrderedDict()
             for format_entry in uniq_format_dict:
@@ -711,7 +711,7 @@ class CollectionVCF():
                 sample_data_dict[sample][format_entry] = []
 
                 for parameter in present_parameter_dict[format_entry] if parameter_list else uniq_format_dict[format_entry]:
-                    print parameter
+                    #print parameter
                     #print self.metadata.converters["FORMAT"][parameter]
                     parameter_col = self.parse_column(tmp[parameter], parameter, "FORMAT")
                     #print parameter_col
