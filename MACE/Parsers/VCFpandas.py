@@ -772,7 +772,13 @@ class CollectionVCF():
                 df = self.records[["POS"]].reset_index(level='CHROM')
                 df["POS"] += 1
                 df.to_csv(outfile, sep='\t', index=False, header=False)
-
+        elif format == 'bed':
+            if type == "0-based":
+                self.records.reset_index(level='CHROM').to_csv(outfile, sep='\t', index=False, header=False)
+            elif type == '1-based':
+                df = self.records.reset_index(level='CHROM')
+                df["POS"] += 1
+                df.to_csv(outfile, sep='\t', index=False, header=False)
 
     @staticmethod
     def _split_by_equal_sign(string):
@@ -1168,9 +1174,9 @@ class CollectionVCF():
                 # TODO: adjust function to deal not only with the first column inside parameter
                 subplot_array[row][col].hist(param[sample_id][parameter][0], bins=bins, label=sample_id)
                 if show_median:
-                    subplot_array[row][col].axvline(x=param_median[sample_id], label="median", color="green")
+                    subplot_array[row][col].axvline(x=float(param_median[sample_id]), label="median", color="green")
                 if show_mean:
-                    subplot_array[row][col].axvline(x=param_mean[sample_id], label="mean", color="blue")
+                    subplot_array[row][col].axvline(x=float(param_mean[sample_id]), label="mean", color="blue")
 
                 subplot_array[row][col].title(sample_id)
         if suptitle:
