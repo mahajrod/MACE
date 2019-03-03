@@ -725,10 +725,16 @@ class CollectionVCF():
                                                                   [sample] * column_number,
                                                                   [uniq_format_dict[format_entry][i]] * column_number
                                                                   ],)
-                    elif self.parsing_mode in ("complete", "genotypes", "coordinates_and_genotypes", "pos_gt_dp"):
+                    elif self.parsing_mode in ("complete",):
                         column_index = pd.MultiIndex.from_arrays([
                                                                   [sample] * column_number,
-                                                                  [uniq_format_dict[format_entry][i]] * column_number,
+                                                                  [present_parameter_dict[format_entry][i]] * column_number,
+                                                                  np.arange(0, column_number)
+                                                                  ],)
+                    elif self.parsing_mode in ("genotypes", "coordinates_and_genotypes", "pos_gt_dp"):
+                        column_index = pd.MultiIndex.from_arrays([
+                                                                  [sample] * column_number,
+                                                                  [present_parameter_dict[format_entry][i]] * column_number,
                                                                   np.arange(0, column_number)
                                                                   ],)
 
