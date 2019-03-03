@@ -246,6 +246,10 @@ class MetadataVCF(OrderedDict):
         if parsing_mode in ("genotypes", "coordinates_and_genotypes"):
             self.converters["FORMAT"] = OrderedDict()
             self.converters["FORMAT"]["GT"] = "Int8"
+        elif parsing_mode == "pos_gt_dp":
+            self.converters["FORMAT"] = OrderedDict()
+            self.converters["FORMAT"]["GT"] = "Int8"
+            self.converters["FORMAT"]["DP"] = "Int32"
         elif parsing_mode in ("all", "complete"):
             for field in "INFO", "FORMAT":
                 self.converters[field] = OrderedDict()
@@ -420,7 +424,7 @@ class CollectionVCF():
                                      "FILTER": 6,
                                      "INFO":   7,
                                      "FORMAT": 8})
-        self.parsing_modes_with_genotypes = ["complete", "genotypes", "coordinates_and_genotypes"]
+        self.parsing_modes_with_genotypes = ["complete", "genotypes", "coordinates_and_genotypes", "pos_gt_dp"]
         self.parsing_parameters = {
                                    "only_coordinates": {
                                                         "col_names": ["CHROM", "POS"],
@@ -718,7 +722,7 @@ class CollectionVCF():
                                                                   [sample] * column_number,
                                                                   [uniq_format_dict[format_entry][i]] * column_number
                                                                   ],)
-                    elif self.parsing_mode in ("complete", "genotypes", "coordinates_and_genotypes"):
+                    elif self.parsing_mode in ("complete", "genotypes", "coordinates_and_genotypes", "pos_gt_dp"):
                         column_index = pd.MultiIndex.from_arrays([
                                                                   [sample] * column_number,
                                                                   [uniq_format_dict[format_entry][i]] * column_number,
