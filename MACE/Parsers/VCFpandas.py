@@ -691,9 +691,10 @@ class CollectionVCF():
         print parameter_list
 
         present_parameter_dict = OrderedDict()
-        for parameter in parameter_list:
-            for format_entry in uniq_format_dict:
-                present_parameter_dict[format_entry] = []
+
+        for format_entry in uniq_format_dict:
+            present_parameter_dict[format_entry] = []
+            for parameter in parameter_list:
                 if parameter in uniq_format_dict[format_entry]:
                     print parameter, uniq_format_dict[format_entry]
                     present_parameter_dict[format_entry].append(parameter)
