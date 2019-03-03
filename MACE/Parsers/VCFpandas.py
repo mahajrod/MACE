@@ -688,14 +688,16 @@ class CollectionVCF():
         uniq_format_set = self.records['FORMAT'].drop_duplicates()
         uniq_format_dict = OrderedDict([(format_entry, format_entry.split(":")) for format_entry in uniq_format_set])
         sample_data_dict = {}
+        print parameter_list
 
         present_parameter_dict = OrderedDict()
         for parameter in parameter_list:
             for format_entry in uniq_format_dict:
                 present_parameter_dict[format_entry] = []
                 if parameter in uniq_format_dict[format_entry]:
+                    print parameter, uniq_format_dict[format_entry]
                     present_parameter_dict[format_entry].append(parameter)
-
+        print present_parameter_dict
         for sample in self.samples:
             sample_data_dict[sample] = OrderedDict()
             for format_entry in uniq_format_dict:
