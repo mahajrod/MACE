@@ -27,7 +27,7 @@ parser.add_argument("-u", "--min_samples", action="store", dest="min_samples",
 parser.add_argument("-x", "--max_coverage", action="store", dest="max_coverage",
                     default=2.5, type=float,
                     help="Maximum coverage(relative to median) to retain variant. Default: 2.5")
-parser.add_argument("-u", "--min_coverage", action="store", dest="min_coverage",
+parser.add_argument("-n", "--min_coverage", action="store", dest="min_coverage",
                     default=None, type=float,
                     help="Minimum coverage(relative to median) to retain variant. Default: not set")
 
