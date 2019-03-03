@@ -12,7 +12,7 @@ parser.add_argument("-i", "--input_file", action="store", dest="input", required
                     help="Input vcf file with mutations.")
 parser.add_argument("-o", "--output_file_prefix", action="store", dest="output_prefix",
                     required=True,
-                    help="Prefix of output file with rainfall plot")
+                    help="Prefix of output files")
 parser.add_argument("-d", "--dpi", action="store", dest="dpi", type=int, default=200,
                     help="Dpi of figure")
 parser.add_argument("-f", "--figsize", action="store", dest="figsize",
