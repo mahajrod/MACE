@@ -1143,7 +1143,7 @@ class CollectionVCF():
 
         # selection of figure size
         n = int(np.sqrt(self.sample_number))
-        if n * (n + 1) <= self.sample_number:
+        if n * (n + 1) >= self.sample_number:
             m = n + 1
         else:
             n = n +1
@@ -1159,7 +1159,7 @@ class CollectionVCF():
         for row in range(0, n):
             for col in range(0, m):
                 print row, col
-                sample_index = m * n
+                sample_index = row * m + col
                 if ylabel and col == 0:
                     subplot_array[row][col].ylabel = ylabel
                 if xlabel and row == n - 1:
@@ -1187,7 +1187,7 @@ class CollectionVCF():
             supt = "%s distribution(Median relative)" % parameter
         else:
             supt = "%s distribution" % parameter
-
+        plt.xlim(xmin=0)
         plt.suptitle(supt)
 
         if output_prefix:
@@ -1195,7 +1195,7 @@ class CollectionVCF():
                 plt.savefig("%s.%s" % (output_prefix, extension), bbox_inches='tight')
 
         xlim = xlimit if xlimit else np.max(param_median)*3
-        plt.xlim(xmax=xlim)
+        plt.xlim(xmax=xlim, xmin=0)
         if output_prefix:
             for extension in extension_list:
                 plt.savefig("%s.xlim%i.%s" % (output_prefix, xlim, extension), bbox_inches='tight')
@@ -1232,8 +1232,16 @@ class CollectionVCF():
                           min_coverage=None):
         if self.parsing_mode in self.parsing_modes_with_sample_coverage:
             samples_to_use = samples if samples else self.samples
-            coverage = self.records.xs("DP", axis=1, level=1, drop_level=False)
+            coverage = self.records[samples_to_use].xs("DP", axis=1, level=1, drop_level=False)
             coverage_median = coverage.apply(np.median)
+            coverage = coverage / coverage_median
+
+            boolean_array = coverage <= (coverage_median * max_coverage)
+            if min_coverage:
+                boolean_array &= coverage >= (coverage_median * min_coverage)
+
+
+
         else:
             raise ValueError("ERROR!!! Masking can't be counted for this parsing mode: %s."
                              "Use 'pos_gt_dp' or other method parsing DP column from samples fields" % self.parsing_mode)
