@@ -441,6 +441,16 @@ class CollectionVCF():
                                                                        "FORMAT": str
                                                                        },
                                                                 },
+                                   "pos_gt_dp": {
+                                                 "col_names": ["CHROM", "POS", "FORMAT"],
+                                                 "cols": [0, 1, 8],
+                                                 "index_cols": "CHROM",
+                                                 "converters": {
+                                                                "CHROM":  str,
+                                                                "POS":    np.int32,
+                                                                "FORMAT": str
+                                                                },
+                                                 },
                                    "except_data":      {
                                                         "col_names": ["CHROM", "POS", "ID", "REF", "ALT", "QUAL", "FILTER"],
                                                         "cols":   [0, 1, 2, 3, 4, 5, 6],
@@ -542,12 +552,12 @@ class CollectionVCF():
                 self.samples = self.header[9:]
                 break
             self.metadata.add_metadata(line)
-        if self.parsing_mode in ("all", "complete", "genotypes", "coordinates_and_genotypes"):
+        if self.parsing_mode in ("all", "complete", "genotypes", "coordinates_and_genotypes", "pos_gt_dp"):
             self.metadata.create_converters(parsing_mode=self.parsing_mode)
             self.parsing_parameters[self.parsing_mode]["col_names"] = self.header
             for sample_col in range(9, 9 + len(self.samples)):
                 self.parsing_parameters[self.parsing_mode]["converters"][self.header[sample_col]] = str # self.parse_sample_field_simple
-            if self.parsing_mode in ("genotypes", "coordinates_and_genotypes"):
+            if self.parsing_mode in ("genotypes", "coordinates_and_genotypes", "pos_gt_dp"):
                 self.parsing_parameters[self.parsing_mode]["cols"] += [i for i in range(9, 9 + len(self.samples))]
 
         #print self.parsing_parameters[self.parsing_mode]["cols"]
@@ -576,6 +586,15 @@ class CollectionVCF():
             else:
                 self.records = pd.concat([self.records[["POS", "ID", "REF", "ALT", "QUAL", "FILTER"]],
                                           ] + sample_genotypes, axis=1)
+        elif parsing_mode == "pos_gt_dp":
+            sample_data = self.parse_samples(["GT", "DP"])
+            self.records.columns = pd.MultiIndex.from_arrays([
+                                                              self.records.columns,
+                                                              self.records.columns,
+                                                              self.records.columns
+                                                              ])
+            self.records = pd.concat([self.records[["POS"]],
+                                          ] + sample_data, axis=1)
 
         elif self.parsing_mode in ("all", "complete"):
             info = self.parse_info()
@@ -1048,8 +1067,7 @@ class CollectionVCF():
             bar_width = 0.5
             bin_coord = np.arange(len(self.samples))
 
-            plt.bar(bin_coord, uniq_variant_counts, width=bar_width, edgecolor='white',
-                        color='blue',)
+            plt.bar(bin_coord, uniq_variant_counts, width=bar_width, edgecolor='white', color='blue',)
 
             plt.ylabel('Variants', fontweight='bold')
             plt.xlabel('Sample', fontweight='bold')
