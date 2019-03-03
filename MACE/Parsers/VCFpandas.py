@@ -1140,6 +1140,8 @@ class CollectionVCF():
                     subplot_array[n][m].ylabel = ylabel
                 if xlabel and row == n - 1:
                     subplot_array[n][m].xlabel = xlabel
+                if row == 0 and col == m - 1:
+                    plt.legend()
 
                 if sample_index >= self.sample_number:
                     continue
@@ -1161,7 +1163,7 @@ class CollectionVCF():
             supt = "%s distribution" % parameter
 
         plt.suptitle(supt)
-        plt.legend()
+
         if output_prefix:
             for extension in extension_list:
                 plt.savefig("%s.%s" % (output_prefix, extension), bbox_inches='tight')
