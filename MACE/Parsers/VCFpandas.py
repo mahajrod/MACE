@@ -1179,7 +1179,7 @@ class CollectionVCF():
                 if show_mean:
                     subplot_array[row][col].axvline(x=float(param_mean[sample_id]), label="mean", color="red")
                 if row == 0 and col == m - 1:
-                    plt.legend()
+                    subplot_array[row][col].legend()
                 subplot_array[row][col].set_title(sample_id)
         if suptitle:
             supt = suptitle
@@ -1211,7 +1211,7 @@ class CollectionVCF():
             print("Drawing coverage distribution...")
             self.draw_sample_parameter_distribution("DP", bin_width, output_prefix=output_prefix,
                                                     extension_list=extension_list,
-                                                    suptitle="Covarage distribution",
+                                                    suptitle="Coverage distribution",
                                                     xlabel="Coverage", ylabel="Variants", show_median=True,
                                                     show_mean=True, median_relative=False, mean_relative=False,
                                                     dpi=dpi, subplot_size=subplot_size)
@@ -1233,7 +1233,7 @@ class CollectionVCF():
             raise ValueError("ERROR!!! Coverage distribution can't be counted for this parsing mode: %s."
                              "Use 'pos_gt_dp' or other method parsing DP column from samples fields" % self.parsing_mode)
 
-    def calculate_masking(self, outfile, samples=None, min_sample_number=1, max_coverage=2.5, min_coverage=None):
+    def calculate_masking(self, outfile, samples=None, min_samples=1, max_coverage=2.5, min_coverage=None):
         if self.parsing_mode in self.parsing_modes_with_sample_coverage:
             samples_to_use = samples if samples else self.samples
             coverage = self.records[samples_to_use].xs("DP", axis=1, level=1, drop_level=False)
@@ -1245,10 +1245,12 @@ class CollectionVCF():
                 boolean_array &= coverage <= min_coverage
 
             outliers = boolean_array.apply(np.sum, axis=1)
-            outliers = outliers[outliers >= min_sample_number]
+            outliers = outliers[outliers >= min_samples]
             outliers = pd.concat([self.records[self.records.index.isin(outliers.index)]["POS"], outliers], axis=1)
 
+            print("%i variants were masked" % np.shape(outliers)[1])
 
+            outliers.write(outfile, format="simple_bed", type="1-based")
 
         else:
             raise ValueError("ERROR!!! Masking can't be counted for this parsing mode: %s."
