@@ -10,12 +10,12 @@ parser = argparse.ArgumentParser()
 
 parser.add_argument("-i", "--input_file", action="store", dest="input", required=True,
                     help="Input vcf file with mutations.")
-parser.add_argument("-o", "--output_file_prefix", action="store", dest="output_prefix",
+parser.add_argument("-o", "--output_prefix", action="store", dest="output_prefix",
                     required=True,
                     help="Prefix of output files")
 parser.add_argument("-d", "--dpi", action="store", dest="dpi", type=int, default=200,
                     help="Dpi of figure")
-parser.add_argument("-s", "--subplot_size", action="store", dest="subplot_gsize",
+parser.add_argument("-s", "--subplot_size", action="store", dest="subplot_size",
                     type=int, default=3,
                     help="Size of figure per sample subplot in inches. Default: 3")
 parser.add_argument("-e", "--output_formats", action="store", dest="output_formats",

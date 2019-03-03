@@ -10,7 +10,7 @@ parser = argparse.ArgumentParser()
 
 parser.add_argument("-i", "--input_file", action="store", dest="input", required=True,
                     help="Input vcf file with mutations.")
-parser.add_argument("-o", "--output_file_prefix", action="store", dest="output_prefix",
+parser.add_argument("-o", "--output_prefix", action="store", dest="output_prefix",
                     required=True,
                     help="Prefix of output files")
 parser.add_argument("-d", "--dpi", action="store", dest="dpi", type=int, default=200,
