@@ -1172,7 +1172,7 @@ class CollectionVCF():
                 sample_id = self.samples[sample_index]
                 print param[sample_id]
                 # TODO: adjust function to deal not only with the first column inside parameter
-                subplot_array[row][col].hist(param[sample_id][parameter][0], bins=bins, label=sample_id)
+                subplot_array[row][col].hist(param[sample_id][parameter][0].dropna(), bins=bins, label=sample_id)
                 if show_median:
                     subplot_array[row][col].axvline(x=float(param_median[sample_id]), label="median", color="green")
                 if show_mean:
@@ -1228,11 +1228,12 @@ class CollectionVCF():
             raise ValueError("ERROR!!! Coverage distribution can't be counted for this parsing mode: %s."
                              "Use 'pos_gt_dp' or other method parsing DP column from samples fields" % self.parsing_mode)
 
-    def calculate_masking(self, samples=None, min_sample_number=1):
+    def calculate_masking(self, samples=None, min_sample_number=1, max_coverage=2.5,
+                          min_coverage=None):
         if self.parsing_mode in self.parsing_modes_with_sample_coverage:
             samples_to_use = samples if samples else self.samples
-            param = self.records.xs("DP", axis=1, level=1, drop_level=False)
-            pass
+            coverage = self.records.xs("DP", axis=1, level=1, drop_level=False)
+            coverage_median = coverage.apply(np.median)
         else:
             raise ValueError("ERROR!!! Masking can't be counted for this parsing mode: %s."
                              "Use 'pos_gt_dp' or other method parsing DP column from samples fields" % self.parsing_mode)
