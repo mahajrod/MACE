@@ -425,6 +425,7 @@ class CollectionVCF():
                                      "INFO":   7,
                                      "FORMAT": 8})
         self.parsing_modes_with_genotypes = ["complete", "genotypes", "coordinates_and_genotypes", "pos_gt_dp"]
+        self.parsing_modes_with_sample_coverage = ["complete", "pos_gt_dp"]
         self.parsing_parameters = {
                                    "only_coordinates": {
                                                         "col_names": ["CHROM", "POS"],
@@ -530,6 +531,7 @@ class CollectionVCF():
             self.header = header
             self.samples = samples
         self.record_number = len(self.records)
+        self.sample_number = len(self.samples)
         self.per_scaffold_record_number = self.records.groupby(self.records.index).size() # pandas Series with scaffold ids as index
         self.scaffold_list = self.records.index.unique().to_list()
         self.number_of_scaffolds = len(self.scaffold_list)
@@ -688,7 +690,7 @@ class CollectionVCF():
         uniq_format_set = self.records['FORMAT'].drop_duplicates()
         uniq_format_dict = OrderedDict([(format_entry, format_entry.split(":")) for format_entry in uniq_format_set])
         sample_data_dict = {}
-        print parameter_list
+        #print parameter_list
 
         present_parameter_dict = OrderedDict()
 
@@ -1096,6 +1098,107 @@ class CollectionVCF():
             raise ValueError("ERROR!!! Variant presence can't be counted for this parsing mode: %s."
                              "Use 'coordinates_and_genotypes', 'genotypes' or 'complete modes'" % self.parsing_mode)
 
+    def draw_sample_parameter_distribution(self, parameter, bin_width, output_prefix=None,
+                                           extension_list=("png",), suptitle=None,
+                                           xlabel=None, ylabel=None, show_median=True,
+                                           show_mean=True, median_relative=False, mean_relative=False, dpi=200,
+                                           subplot_size=3):
+
+        param = self.records.xs(parameter, axis=1, level=1, drop_level=False)
+        param_mean = param.apply(np.mean)
+        param_median = param.apply(np.median)
+
+        if median_relative:
+            param = param / param_median
+            param_mean = param_mean / param_median
+            param_median = param_median / param_median
+        elif mean_relative:
+            param = param / param_mean
+            param_mean = param_mean / param_mean
+            param_median = param_median / param_mean
+
+        param_max = param.apply(np.max)
+        param_min = param.apply(np.min)
+
+        # selection of figure size
+        n = int(np.sqrt(self.sample_number))
+        if n * (n + 1) <= self.sample_number:
+            m = n + 1
+        else:
+            n = n +1
+            m = n
+
+        bins = np.arange(1, max(param_max), bin_width)
+        bins = np.concatenate((bins, [bins[-1] + bin_width, bins[-1] + 2 * bin_width]))
+        figure, subplot_array = plt.subplots(nrows=n, ncols=m, sharex=True, sharey=True,
+                                             figsize=(n*subplot_size, m*subplot_size), dpi=dpi)
+
+        for row in range(0, n):
+            for col in range(0, m):
+                sample_index = m * n
+                if ylabel and col == 0:
+                    subplot_array[n][m].ylabel = ylabel
+                if xlabel and row == n - 1:
+                    subplot_array[n][m].xlabel = xlabel
+
+                if sample_index >= self.sample_number:
+                    continue
+                sample_id = self.samples[sample_index]
+                subplot_array[n][m].hist(param, bins=bins, label=sample_id)
+                if show_median:
+                    subplot_array[n][m].axvline(x=param_median[sample_id], label="median", color="green")
+                if show_mean:
+                    subplot_array[n][m].axvline(x=param_mean[sample_id], label="mean", color="blue")
+
+                subplot_array[n][m].title(sample_id)
+        if suptitle:
+            supt = suptitle
+        elif mean_relative:
+            supt = "%s distribution(Mean relative)" % parameter
+        elif median_relative:
+            supt = "%s distribution(Median relative)" % parameter
+        else:
+            supt = "%s distribution" % parameter
+
+        plt.suptitle(supt)
+        plt.legend()
+        if output_prefix:
+            for extension in extension_list:
+                plt.savefig("%s.%s" % (output_prefix, extension), bbox_inches='tight')
+
+        xlimit = max(param_median)*3
+        plt.xlim(xmax=xlimit)
+        if output_prefix:
+            for extension in extension_list:
+                plt.savefig("%s.xlim%i.%s" % (output_prefix, xlimit, extension), bbox_inches='tight')
+
+        plt.close()
+
+        return param
+
+    def get_coverage_distribution(self, output_prefix, bin_width=5, dpi=200, subplot_size=3, extension_list=("png",)):
+        if self.parsing_mode in self.parsing_modes_with_sample_coverage:
+            self.draw_sample_parameter_distribution("DP", bin_width, output_prefix=output_prefix,
+                                                    extension_list=extension_list,
+                                                    suptitle="Covarage distribution",
+                                                    xlabel="Coverage", ylabel="Variants", show_median=True,
+                                                    show_mean=True, median_relative=False, mean_relative=False,
+                                                    dpi=dpi, subplot_size=subplot_size)
+            self.draw_sample_parameter_distribution("DP", bin_width, output_prefix="%s.median_relative" % output_prefix,
+                                                    extension_list=extension_list,
+                                                    suptitle="Coverage distribution(Median relative)",
+                                                    xlabel="Coverage", ylabel="Variants", show_median=True,
+                                                    show_mean=True, median_relative=True, mean_relative=False,
+                                                    dpi=dpi, subplot_size=subplot_size)
+            self.draw_sample_parameter_distribution("DP", bin_width, output_prefix="%s.mean_relative" % output_prefix,
+                                                    extension_list=extension_list,
+                                                    suptitle="Coverage distribution(Mean relative)",
+                                                    xlabel="Coverage", ylabel="Variants", show_median=True,
+                                                    show_mean=True, median_relative=False, mean_relative=True,
+                                                    dpi=dpi, subplot_size=subplot_size)
+        else:
+            raise ValueError("ERROR!!! Coverage distribution can't be counted for this parsing mode: %s."
+                             "Use 'pos_gt_dp' or other method parsing DP column from samples fields" % self.parsing_mode)
 
     # methods below were not yet rewritten for compatibility with VCFpandas
     def no_reference_allel_and_multiallel(self, record, sample_index=None, max_allels=None):
