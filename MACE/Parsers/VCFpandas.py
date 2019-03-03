@@ -1148,8 +1148,10 @@ class CollectionVCF():
         else:
             n = n +1
             m = n
-
-        bins = np.arange(1, max(param_max), bin_width)
+        if median_relative or mean_relative:
+            bins = np.arange(1, max(param_max), 0.1)
+        else:
+            bins = np.arange(1, max(param_max), bin_width)
         bins = np.concatenate((bins, [bins[-1] + bin_width, bins[-1] + 2 * bin_width]))
         figure, subplot_array = plt.subplots(nrows=n, ncols=m, sharex=True, sharey=True,
                                              figsize=(n*subplot_size, m*subplot_size), dpi=dpi)
@@ -1174,9 +1176,9 @@ class CollectionVCF():
                 # TODO: adjust function to deal not only with the first column inside parameter
                 subplot_array[row][col].hist(param[sample_id][parameter][0].dropna(), bins=bins, label=sample_id)
                 if show_median:
-                    subplot_array[row][col].axvline(x=float(param_median[sample_id]), label="median", color="green")
+                    subplot_array[row][col].axvline(x=float(param_median[sample_id]), label="median", color="orange")
                 if show_mean:
-                    subplot_array[row][col].axvline(x=float(param_mean[sample_id]), label="mean", color="blue")
+                    subplot_array[row][col].axvline(x=float(param_mean[sample_id]), label="mean", color="red")
 
                 subplot_array[row][col].set_title(sample_id)
         if suptitle:
@@ -1193,6 +1195,7 @@ class CollectionVCF():
         if output_prefix:
             for extension in extension_list:
                 plt.savefig("%s.%s" % (output_prefix, extension), bbox_inches='tight')
+        plt.close()
 
         xlim = xlimit if xlimit else np.max(param_median)*3
         plt.xlim(xmax=xlim, xmin=0)
@@ -1228,8 +1231,7 @@ class CollectionVCF():
             raise ValueError("ERROR!!! Coverage distribution can't be counted for this parsing mode: %s."
                              "Use 'pos_gt_dp' or other method parsing DP column from samples fields" % self.parsing_mode)
 
-    def calculate_masking(self, samples=None, min_sample_number=1, max_coverage=2.5,
-                          min_coverage=None):
+    def calculate_masking(self, outfile, samples=None, min_sample_number=1, max_coverage=2.5, min_coverage=None):
         if self.parsing_mode in self.parsing_modes_with_sample_coverage:
             samples_to_use = samples if samples else self.samples
             coverage = self.records[samples_to_use].xs("DP", axis=1, level=1, drop_level=False)
@@ -1239,6 +1241,10 @@ class CollectionVCF():
             boolean_array = coverage <= (coverage_median * max_coverage)
             if min_coverage:
                 boolean_array &= coverage >= (coverage_median * min_coverage)
+
+            outliers = boolean_array.apply(np.sum, axis=1)
+            outliers = outliers[outliers > min_sample_number]
+            outliers = pd.concat([self.records[self.records.index.isin(outliers.index)]["POS"], outliers], axis=1)
 
 
 
