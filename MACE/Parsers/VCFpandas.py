@@ -977,7 +977,16 @@ class CollectionVCF():
             raise ValueError("ERROR!!! Zygoty can't be counted for this parsing mode: %s."
                              "Use 'coordinates_and_genotypes', 'genotypes' or 'complete modes'" % self.parsing_mode)
 
-    def zygoty_bar_plot(self, output_prefix, extension_list=("png",), figsize=(5, 5), dpi=200, title=None):
+    def zygoty_bar_plot(self, output_prefix, extension_list=("png",), figsize=(5, 5), dpi=200, title=None, color_dict=None):
+
+        default_color_dict = OrderedDict({
+                                          "homo": "orange",
+                                          "hetero": "blue",
+                                          "ref": "green",
+                                          "absent": "red",
+                                          })
+
+        colors = color_dict if color_dict else default_color_dict
 
         zygoty_counts = self.count_zygoty(outfile="%s.counts" % output_prefix)
         df_shape = np.shape(zygoty_counts)
@@ -990,6 +999,7 @@ class CollectionVCF():
             plt.bar(bin_coord + i * bar_width,
                     zygoty_counts.loc[zygoty_counts.index[i]],
                     width=bar_width, edgecolor='white',
+                    color=default_color_dict[zygoty_counts.index[i]],
                     label=zygoty_counts.index[i])
 
         plt.ylabel('Variants', fontweight='bold')
@@ -1188,8 +1198,6 @@ class CollectionVCF():
         if record.ref in nucleotides:
             return record.ref
         return "INDEL"
-
-
 
     def count_variants_in_windows(self, window_size, window_step, reference_scaffold_length_dict,
                                   ignore_scaffolds_shorter_than_window=True, output_prefix=None,
