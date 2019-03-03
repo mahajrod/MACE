@@ -1239,7 +1239,9 @@ class CollectionVCF():
             coverage = self.records[samples_to_use].xs("DP", axis=1, level=1, drop_level=False)
             if sample_coverage:
                 sp_coverage = pd.Series(sample_coverage, dtype=np.float32)
-                sp_coverage.index = pd.Index(samples_to_use)
+                sp_coverage.index = pd.MultiIndex.from_arrays([samples_to_use,
+                                                               ["DP"] * len(samples_to_use),
+                                                               [0] * len(samples_to_use)])
             else:
                 sp_coverage = coverage.apply(np.median)
             #coverage = coverage / coverage_median
