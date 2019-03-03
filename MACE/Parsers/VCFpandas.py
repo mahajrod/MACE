@@ -1134,8 +1134,8 @@ class CollectionVCF():
                                              figsize=(n*subplot_size, m*subplot_size), dpi=dpi)
         print subplot_array
         print n, m
-        for row in range(0, n):
-            for col in range(0, m):
+        for row in range(0, m):
+            for col in range(0, n):
                 sample_index = m * n
                 if ylabel and col == 0:
                     subplot_array[n][m].ylabel = ylabel
@@ -1169,7 +1169,7 @@ class CollectionVCF():
             for extension in extension_list:
                 plt.savefig("%s.%s" % (output_prefix, extension), bbox_inches='tight')
 
-        xlim = xlimit if xlimit else xmax(param_median)*3
+        xlim = xlimit if xlimit else np.max(param_median)*3
         plt.xlim(xmax=xlim)
         if output_prefix:
             for extension in extension_list:
