@@ -437,14 +437,14 @@ class CollectionVCF():
                                                         },
                                    "coordinates_and_genotypes": {
                                                                  "col_names": ["CHROM", "POS", "FORMAT"],
-                                                        "cols": [0, 1, 8],
-                                                        "index_cols": "CHROM",
-                                                        "converters": {
-                                                                       "CHROM":  str,
-                                                                       "POS":    np.int32,
-                                                                       "FORMAT": str
-                                                                       },
-                                                                },
+                                                                 "cols": [0, 1, 8],
+                                                                 "index_cols": "CHROM",
+                                                                 "converters": {
+                                                                                "CHROM":  str,
+                                                                                "POS":    np.int32,
+                                                                                "FORMAT": str
+                                                                                 },
+                                                                 },
                                    "pos_gt_dp": {
                                                  "col_names": ["CHROM", "POS", "FORMAT"],
                                                  "cols": [0, 1, 8],
@@ -708,7 +708,7 @@ class CollectionVCF():
                 sample_data_dict[sample][format_entry] = []
 
                 for parameter in present_parameter_dict[format_entry] if parameter_list else uniq_format_dict[format_entry]:
-                    #print parameter
+                    print parameter
                     #print self.metadata.converters["FORMAT"][parameter]
                     parameter_col = self.parse_column(tmp[parameter], parameter, "FORMAT")
                     #print parameter_col
