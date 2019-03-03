@@ -1102,7 +1102,7 @@ class CollectionVCF():
                                            extension_list=("png",), suptitle=None,
                                            xlabel=None, ylabel=None, show_median=True,
                                            show_mean=True, median_relative=False, mean_relative=False, dpi=200,
-                                           subplot_size=3):
+                                           subplot_size=3, xlimit=None):
 
         param = self.records.xs(parameter, axis=1, level=1, drop_level=False)
         param_mean = param.apply(np.mean)
@@ -1166,11 +1166,11 @@ class CollectionVCF():
             for extension in extension_list:
                 plt.savefig("%s.%s" % (output_prefix, extension), bbox_inches='tight')
 
-        xlimit = max(param_median)*3
-        plt.xlim(xmax=xlimit)
+        xlim = xlimit if xlimit else xmax(param_median)*3
+        plt.xlim(xmax=xlim)
         if output_prefix:
             for extension in extension_list:
-                plt.savefig("%s.xlim%i.%s" % (output_prefix, xlimit, extension), bbox_inches='tight')
+                plt.savefig("%s.xlim%i.%s" % (output_prefix, xlim, extension), bbox_inches='tight')
 
         plt.close()
 
