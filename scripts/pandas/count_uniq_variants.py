@@ -26,8 +26,8 @@ parser.add_argument("-e", "--output_formats", action="store", dest="output_forma
                     help="Comma-separated list of formats (supported by matlotlib) "
                          "of output figure.Default: png")
 parser.add_argument("-l", "--title", action="store", dest="title",
-                    default=None,
-                    help="Title of figure. Default: not set")
+                    default="Unique variants",
+                    help="Title of figure. Default: Unique variants")
 
 """
 parser.add_argument("-a", "--scaffold_white_list", action="store", dest="scaffold_white_list", default=[],
