@@ -1233,11 +1233,15 @@ class CollectionVCF():
             raise ValueError("ERROR!!! Coverage distribution can't be counted for this parsing mode: %s."
                              "Use 'pos_gt_dp' or other method parsing DP column from samples fields" % self.parsing_mode)
 
-    def calculate_masking(self, outfile, samples=None, min_samples=1, max_coverage=2.5, min_coverage=None):
+    def calculate_masking(self, outfile, samples=None, sample_coverage=None, min_samples=1, max_coverage=2.5, min_coverage=None):
         if self.parsing_mode in self.parsing_modes_with_sample_coverage:
             samples_to_use = samples if samples else self.samples
             coverage = self.records[samples_to_use].xs("DP", axis=1, level=1, drop_level=False)
-            coverage_median = coverage.apply(np.median)
+            if sample_coverage:
+                coverage_median = pd.Series(sample_coverage)
+                coverage_median.index = pd.Index(samples_to_use)
+            else:
+                coverage_median = coverage.apply(np.median)
             coverage = coverage / coverage_median
 
             boolean_array = coverage >= max_coverage
@@ -1256,7 +1260,131 @@ class CollectionVCF():
             raise ValueError("ERROR!!! Masking can't be counted for this parsing mode: %s."
                              "Use 'pos_gt_dp' or other method parsing DP column from samples fields" % self.parsing_mode)
 
-    # methods below were not yet rewritten for compatibility with VCFpandas
+    #########################################################################
+    #                        In progress                                    #
+    #########################################################################
+
+
+    def count_variants_in_windows(self, window_size, window_step, reference_scaffold_length_dict,
+                                  ignore_scaffolds_shorter_than_window=True, output_prefix=None,
+                                  skip_empty_windows=False, expression=None, per_sample_output=False):
+
+        window_stepppp = window_size if window_step is None else window_step
+
+        if window_stepppp > window_size:
+            raise ValueError("ERROR!!! Window step can't be larger then window size")
+        elif (window_size % window_stepppp) != 0:
+            raise ValueError("ERROR!!! Window size is not a multiple of window step...")
+
+        steps_in_window = window_size / window_stepppp
+
+        short_scaffolds_ids = IdList()
+
+        vcf_scaffolds = set(self.scaffold_list)
+        reference_scaffolds = set(reference_scaffold_length_dict.keys())
+
+        scaffolds_absent_in_reference = IdSet(vcf_scaffolds - reference_scaffolds)
+        scaffolds_absent_in_vcf = IdSet(reference_scaffolds - vcf_scaffolds)
+
+        if per_sample_output:
+            count_dict = TwoLvlDict()
+            for sample in self.samples:
+                count_dict[sample] = SynDict()
+        else:
+            count_dict = SynDict()
+
+        uncounted_tail_variants_number_dict = SynDict()
+
+        if scaffolds_absent_in_reference:
+            raise ValueError("ERROR!!! Some scaffolds from vcf file are absent in reference...")
+
+        for scaffold_id in self.scaffold_list + list(scaffolds_absent_in_vcf):
+            number_of_windows = self.count_number_of_windows(reference_scaffold_length_dict[scaffold_id],
+                                                             window_size,
+                                                             window_stepppp)
+            if scaffold_id not in self.records:
+                continue
+            if number_of_windows == 0:
+                short_scaffolds_ids.append(scaffold_id)
+                if ignore_scaffolds_shorter_than_window:
+                    continue
+
+            if scaffold_id in scaffolds_absent_in_vcf:
+                if skip_empty_windows:
+                    continue
+            if per_sample_output:
+                for sample in self.samples:
+                    #print scaffold_id
+                    count_dict[sample][scaffold_id] = np.zeros(number_of_windows, dtype=np.int64)
+                    #print count_dict[sample][scaffold_id]
+            else:
+                count_dict[scaffold_id] = np.zeros(number_of_windows, dtype=np.int64)
+
+            uncounted_tail_variants_number_dict[scaffold_id] = 0
+
+            variant_index = 0
+            #print list(count_dict.keys())
+            for variant in self.records[scaffold_id]:
+                step_size_number = ((variant.pos - 1)/window_stepppp)
+
+                if step_size_number - steps_in_window + 1 >= number_of_windows:
+                    #print scaffold_id
+                    #print self.scaffold_length[scaffold_id]
+                    #print variant_index
+                    #print("\n")
+                    uncounted_tail_variants_number_dict[scaffold_id] = self.scaffold_length[scaffold_id] - variant_index
+                    break
+                if per_sample_output:
+
+                    for i in range(max(step_size_number - steps_in_window + 1, 0),
+                                    step_size_number + 1 if step_size_number < number_of_windows else number_of_windows):
+                        #print step_size_number, steps_in_window
+                        for sample_index in range(0, len(self.samples)):
+                            sample_id = self.samples[sample_index]
+                            #print sample_id, scaffold_id
+                            if "GT" not in variant.samples_list[sample_index]:
+                                print("WARNING: no genotype for sample %s for variant %s!!! Skipping..." % (sample_id, str(variant)))
+                                continue
+                            else:
+                                if (variant.samples_list[sample_index]["GT"][0] == "0/0") or (variant.samples_list[sample_index]["GT"][0] == "./."):
+                                    continue
+                            if expression:
+                                #print("AAAAAAAAAAAAAAAAAAAAAAAAA")
+                                count_dict[sample_id][scaffold_id][i] += (1 if expression(variant, sample_index) else 0)
+                                #if expression(variant, sample_index):
+                                #print sample_id, sample_index, scaffold_id, i, count_dict[sample_id][scaffold_id][i]
+                                #print "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBb"
+                            else:
+                                 count_dict[sample_id][scaffold_id][i] += 1
+
+                else:
+                    for i in range(max(step_size_number - steps_in_window + 1, 0),
+                                   step_size_number + 1 if step_size_number < number_of_windows else number_of_windows):
+                        if expression:
+                            count_dict[scaffold_id][i] += 1 if expression(variant) else 0
+                        else:
+                            count_dict[scaffold_id][i] += 1
+
+                variant_index += 1
+        #print count_dict[self.samples[0]][list(count_dict[self.samples[0]].keys())[5]]
+        #print "BBBBBBBBBBBBBB"
+        #print count_dict[self.samples[0]]
+        if output_prefix:
+            scaffolds_absent_in_reference.write("%s.scaffolds_absent_in_reference.ids" % output_prefix)
+            scaffolds_absent_in_vcf.write("%s.scaffolds_absent_in_vcf.ids" % output_prefix)
+            uncounted_tail_variants_number_dict.write("%s.uncounted_tail_variant_number.tsv" % output_prefix)
+            if per_sample_output:
+                for sample in count_dict:
+                    count_dict[sample].write("%s.%s.variant_number.tsv" % (output_prefix, sample), splited_values=True)
+            else:
+                count_dict.write("%s.variant_number.tsv" % output_prefix, splited_values=True)
+
+        return count_dict
+
+    #########################################################################
+    # methods below were not yet rewritten for compatibility with VCFpandas #
+    #########################################################################
+
     def no_reference_allel_and_multiallel(self, record, sample_index=None, max_allels=None):
         return record.no_reference_allel_and_multiallel(sample_index=sample_index, max_allels=max_allels)
 
@@ -1441,121 +1569,6 @@ class CollectionVCF():
         if record.ref in nucleotides:
             return record.ref
         return "INDEL"
-
-    def count_variants_in_windows(self, window_size, window_step, reference_scaffold_length_dict,
-                                  ignore_scaffolds_shorter_than_window=True, output_prefix=None,
-                                  skip_empty_windows=False, expression=None, per_sample_output=False):
-
-        window_stepppp = window_size if window_step is None else window_step
-
-        if window_stepppp > window_size:
-            raise ValueError("ERROR!!! Window step can't be larger then window size")
-        elif (window_size % window_stepppp) != 0:
-            raise ValueError("ERROR!!! Window size is not a multiple of window step...")
-
-        steps_in_window = window_size / window_stepppp
-
-        short_scaffolds_ids = IdList()
-
-        vcf_scaffolds = set(self.scaffold_list)
-        reference_scaffolds = set(reference_scaffold_length_dict.keys())
-
-        scaffolds_absent_in_reference = IdSet(vcf_scaffolds - reference_scaffolds)
-        scaffolds_absent_in_vcf = IdSet(reference_scaffolds - vcf_scaffolds)
-        if per_sample_output:
-            count_dict = TwoLvlDict()
-            for sample in self.samples:
-                count_dict[sample] = SynDict()
-        else:
-            count_dict = SynDict()
-
-        uncounted_tail_variants_number_dict = SynDict()
-
-        if scaffolds_absent_in_reference:
-            raise ValueError("ERROR!!! Some scaffolds from vcf file are absent in reference...")
-
-        for scaffold_id in self.scaffold_list + list(scaffolds_absent_in_vcf):
-            number_of_windows = self.count_number_of_windows(reference_scaffold_length_dict[scaffold_id],
-                                                             window_size,
-                                                             window_stepppp)
-            if scaffold_id not in self.records:
-                continue
-            if number_of_windows == 0:
-                short_scaffolds_ids.append(scaffold_id)
-                if ignore_scaffolds_shorter_than_window:
-                    continue
-
-            if scaffold_id in scaffolds_absent_in_vcf:
-                if skip_empty_windows:
-                    continue
-            if per_sample_output:
-                for sample in self.samples:
-                    #print scaffold_id
-                    count_dict[sample][scaffold_id] = np.zeros(number_of_windows, dtype=np.int64)
-                    #print count_dict[sample][scaffold_id]
-            else:
-                count_dict[scaffold_id] = np.zeros(number_of_windows, dtype=np.int64)
-
-            uncounted_tail_variants_number_dict[scaffold_id] = 0
-
-            variant_index = 0
-            #print list(count_dict.keys())
-            for variant in self.records[scaffold_id]:
-                step_size_number = ((variant.pos - 1)/window_stepppp)
-
-                if step_size_number - steps_in_window + 1 >= number_of_windows:
-                    #print scaffold_id
-                    #print self.scaffold_length[scaffold_id]
-                    #print variant_index
-                    #print("\n")
-                    uncounted_tail_variants_number_dict[scaffold_id] = self.scaffold_length[scaffold_id] - variant_index
-                    break
-                if per_sample_output:
-
-                    for i in range(max(step_size_number - steps_in_window + 1, 0),
-                                    step_size_number + 1 if step_size_number < number_of_windows else number_of_windows):
-                        #print step_size_number, steps_in_window
-                        for sample_index in range(0, len(self.samples)):
-                            sample_id = self.samples[sample_index]
-                            #print sample_id, scaffold_id
-                            if "GT" not in variant.samples_list[sample_index]:
-                                print("WARNING: no genotype for sample %s for variant %s!!! Skipping..." % (sample_id, str(variant)))
-                                continue
-                            else:
-                                if (variant.samples_list[sample_index]["GT"][0] == "0/0") or (variant.samples_list[sample_index]["GT"][0] == "./."):
-                                    continue
-                            if expression:
-                                #print("AAAAAAAAAAAAAAAAAAAAAAAAA")
-                                count_dict[sample_id][scaffold_id][i] += (1 if expression(variant, sample_index) else 0)
-                                #if expression(variant, sample_index):
-                                #print sample_id, sample_index, scaffold_id, i, count_dict[sample_id][scaffold_id][i]
-                                #print "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBb"
-                            else:
-                                 count_dict[sample_id][scaffold_id][i] += 1
-
-                else:
-                    for i in range(max(step_size_number - steps_in_window + 1, 0),
-                                   step_size_number + 1 if step_size_number < number_of_windows else number_of_windows):
-                        if expression:
-                            count_dict[scaffold_id][i] += 1 if expression(variant) else 0
-                        else:
-                            count_dict[scaffold_id][i] += 1
-
-                variant_index += 1
-        #print count_dict[self.samples[0]][list(count_dict[self.samples[0]].keys())[5]]
-        #print "BBBBBBBBBBBBBB"
-        #print count_dict[self.samples[0]]
-        if output_prefix:
-            scaffolds_absent_in_reference.write("%s.scaffolds_absent_in_reference.ids" % output_prefix)
-            scaffolds_absent_in_vcf.write("%s.scaffolds_absent_in_vcf.ids" % output_prefix)
-            uncounted_tail_variants_number_dict.write("%s.uncounted_tail_variant_number.tsv" % output_prefix)
-            if per_sample_output:
-                for sample in count_dict:
-                    count_dict[sample].write("%s.%s.variant_number.tsv" % (output_prefix, sample), splited_values=True)
-            else:
-                count_dict.write("%s.variant_number.tsv" % output_prefix, splited_values=True)
-
-        return count_dict
 
     def count_heterozygous_snps(self, window_size, window_step, reference_scaffold_length_dict,
                                 ignore_scaffolds_shorter_than_window=True, output_prefix=None,
