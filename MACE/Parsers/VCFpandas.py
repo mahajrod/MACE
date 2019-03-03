@@ -1140,22 +1140,22 @@ class CollectionVCF():
                 print row, col
                 sample_index = m * n
                 if ylabel and col == 0:
-                    subplot_array[n][m].ylabel = ylabel
+                    subplot_array[row][col].ylabel = ylabel
                 if xlabel and row == n - 1:
-                    subplot_array[n][m].xlabel = xlabel
+                    subplot_array[row][col].xlabel = xlabel
                 if row == 0 and col == m - 1:
                     plt.legend()
 
                 if sample_index >= self.sample_number:
                     continue
                 sample_id = self.samples[sample_index]
-                subplot_array[n][m].hist(param, bins=bins, label=sample_id)
+                subplot_array[row][col].hist(param, bins=bins, label=sample_id)
                 if show_median:
-                    subplot_array[n][m].axvline(x=param_median[sample_id], label="median", color="green")
+                    subplot_array[row][col].axvline(x=param_median[sample_id], label="median", color="green")
                 if show_mean:
-                    subplot_array[n][m].axvline(x=param_mean[sample_id], label="mean", color="blue")
+                    subplot_array[row][col].axvline(x=param_mean[sample_id], label="mean", color="blue")
 
-                subplot_array[n][m].title(sample_id)
+                subplot_array[row][col].title(sample_id)
         if suptitle:
             supt = suptitle
         elif mean_relative:
