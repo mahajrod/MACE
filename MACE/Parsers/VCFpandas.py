@@ -420,7 +420,7 @@ class CollectionVCF():
                                      "FILTER": 6,
                                      "INFO":   7,
                                      "FORMAT": 8})
-
+        self.parsing_modes_with_genotypes = ["complete", "genotypes", "coordinates_and_genotypes"]
         self.parsing_parameters = {
                                    "only_coordinates": {
                                                         "col_names": ["CHROM", "POS"],
@@ -954,7 +954,7 @@ class CollectionVCF():
 
     def count_zygoty(self, outfile=None):
         # suitable onl for diploid genomes
-        if self.parsing_mode in ("complete", "genotypes", "coordinates_and_genotypes"):
+        if self.parsing_mode in self.parsing_modes_with_genotypes:
             zygoty_counts = OrderedDict()
             variant_number = np.shape(self.records)[0]
             for sample in self.samples:
@@ -1012,6 +1012,59 @@ class CollectionVCF():
         for extension in extension_list:
             plt.savefig("%s.%s" % (output_prefix, extension), bbox_inches='tight')
         plt.close()
+
+        return zygoty_counts
+
+    def check_variant_presence(self, outfile=None):
+        if self.parsing_mode in self.parsing_modes_with_genotypes:
+
+            variant_presence = pd.concat([((self.records[sample]["GT"][0].notna()) & (self.records[sample]["GT"][0] != 0)) | ((self.records[sample]["GT"][1].notna()) & (self.records[sample]["GT"][1] != 0)) for sample in self.samples], axis=1)
+            if outfile:
+                variant_presence.to_csv(outfile, sep="\t", header=True, index=True)
+            return variant_presence
+        else:
+            raise ValueError("ERROR!!! Variant presence can't be counted for this parsing mode: %s."
+                             "Use 'coordinates_and_genotypes', 'genotypes' or 'complete modes'" % self.parsing_mode)
+
+    def get_uniq_variants(self, output_prefix):
+        variant_presence = self.check_variant_presence(outfile="%s.variant_presence" % output_prefix)
+        return variant_presence[variant_presence.apply(lambda s: True if np.sum(s) == 1 else False, axis=1)]
+
+    def count_uniq_variants(self, output_prefix, extension_list=("png",), figsize=(5, 5), dpi=200, title="Unique variants"):
+        if self.parsing_mode in self.parsing_modes_with_genotypes:
+
+            variant_presence = pd.concat([((self.records[sample]["GT"][0].notna()) & (self.records[sample]["GT"][0] != 0)) | ((self.records[sample]["GT"][1].notna()) & (self.records[sample]["GT"][1] != 0)) for sample in self.samples], axis=1)
+            variant_presence.columns = self.samples
+            uniq_variants = variant_presence[variant_presence.apply(lambda s: True if np.sum(s) == 1 else False, axis=1)]
+            uniq_variant_counts = uniq_variants.apply(np.sum)
+
+            if output_prefix:
+                variant_presence.to_csv("%s.variant_presence" % output_prefix, sep="\t", header=True, index=True)
+                uniq_variants.to_csv("%s.uniq_variants" % output_prefix, sep="\t", header=True, index=True)
+                uniq_variant_counts.to_csv("%s.uniq_variants.counts" % output_prefix, sep="\t", header=True, index=True)
+
+            fig = plt.figure(1, figsize=figsize, dpi=dpi)
+
+            bar_width = 0.5
+            bin_coord = np.arange(len(self.samples))
+
+            plt.bar(bin_coord, uniq_variant_counts, width=bar_width, edgecolor='white',
+                        color='blue',)
+
+            plt.ylabel('Variants', fontweight='bold')
+            plt.xlabel('Sample', fontweight='bold')
+            plt.xticks(bin_coord, self.samples, rotation=45)
+            plt.title(title, fontweight='bold')
+
+            for extension in extension_list:
+                plt.savefig("%s.%s" % (output_prefix, extension), bbox_inches='tight')
+            plt.close()
+
+            return uniq_variant_counts
+        else:
+            raise ValueError("ERROR!!! Variant presence can't be counted for this parsing mode: %s."
+                             "Use 'coordinates_and_genotypes', 'genotypes' or 'complete modes'" % self.parsing_mode)
+
 
     # methods below were not yet rewritten for compatibility with VCFpandas
     def no_reference_allel_and_multiallel(self, record, sample_index=None, max_allels=None):
