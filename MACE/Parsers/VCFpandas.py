@@ -1135,8 +1135,9 @@ class CollectionVCF():
         print subplot_array
         print np.shape(subplot_array)
         print n, m
-        for row in range(0, m):
-            for col in range(0, n):
+        for row in range(0, n):
+            for col in range(0, m):
+                print row, col
                 sample_index = m * n
                 if ylabel and col == 0:
                     subplot_array[n][m].ylabel = ylabel
