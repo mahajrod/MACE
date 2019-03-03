@@ -1132,7 +1132,8 @@ class CollectionVCF():
         bins = np.concatenate((bins, [bins[-1] + bin_width, bins[-1] + 2 * bin_width]))
         figure, subplot_array = plt.subplots(nrows=n, ncols=m, sharex=True, sharey=True,
                                              figsize=(n*subplot_size, m*subplot_size), dpi=dpi)
-
+        print subplot_array
+        print n, print m
         for row in range(0, n):
             for col in range(0, m):
                 sample_index = m * n
