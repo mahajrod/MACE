@@ -16,7 +16,7 @@ parser.add_argument("-o", "--output", action="store", dest="output",
 parser.add_argument("-c", "--sample_coverage", action="store", dest="sample_coverage",
                     default=None, type=lambda s: map(float, s.split(",")),
                     help="Comma-separated list of sample coverage to use, if not set median coverage"
-                         "calculated from vcf file will be used. Must have the same length as samples list"
+                         " calculated from vcf file will be used. Must have the same length as samples list"
                          ". Default: not set")
 parser.add_argument("-s", "--sample_list", action="store", dest="sample_list",
                     default=None, type=lambda s: s.split(","),
