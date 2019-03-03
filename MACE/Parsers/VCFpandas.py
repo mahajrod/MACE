@@ -1166,8 +1166,7 @@ class CollectionVCF():
                     subplot_array[row][col].ylabel = ylabel
                 if xlabel and row == n - 1:
                     subplot_array[row][col].xlabel = xlabel
-                if row == 0 and col == m - 1:
-                    plt.legend()
+
 
                 if sample_index >= self.sample_number:
                     continue
@@ -1179,7 +1178,8 @@ class CollectionVCF():
                     subplot_array[row][col].axvline(x=float(param_median[sample_id]), label="median", color="orange")
                 if show_mean:
                     subplot_array[row][col].axvline(x=float(param_mean[sample_id]), label="mean", color="red")
-
+                if row == 0 and col == m - 1:
+                    plt.legend()
                 subplot_array[row][col].set_title(sample_id)
         if suptitle:
             supt = suptitle
@@ -1195,7 +1195,6 @@ class CollectionVCF():
         if output_prefix:
             for extension in extension_list:
                 plt.savefig("%s.%s" % (output_prefix, extension), bbox_inches='tight')
-        plt.close()
 
         xlim = xlimit if xlimit else np.max(param_median)*3
         plt.xlim(xmax=xlim, xmin=0)
@@ -1241,12 +1240,12 @@ class CollectionVCF():
             coverage_median = coverage.apply(np.median)
             coverage = coverage / coverage_median
 
-            boolean_array = coverage <= (coverage_median * max_coverage)
+            boolean_array = coverage >= max_coverage
             if min_coverage:
-                boolean_array &= coverage >= (coverage_median * min_coverage)
+                boolean_array &= coverage <= min_coverage
 
             outliers = boolean_array.apply(np.sum, axis=1)
-            outliers = outliers[outliers > min_sample_number]
+            outliers = outliers[outliers >= min_sample_number]
             outliers = pd.concat([self.records[self.records.index.isin(outliers.index)]["POS"], outliers], axis=1)
 
 
