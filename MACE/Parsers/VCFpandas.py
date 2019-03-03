@@ -1155,9 +1155,9 @@ class CollectionVCF():
         bins = np.concatenate((bins, [bins[-1] + bin_width, bins[-1] + 2 * bin_width]))
         figure, subplot_array = plt.subplots(nrows=n, ncols=m, sharex=True, sharey=True,
                                              figsize=(n*subplot_size, m*subplot_size), dpi=dpi)
-        print subplot_array
-        print np.shape(subplot_array)
-        print n, m
+        #print subplot_array
+        #print np.shape(subplot_array)
+        #print n, m
         for row in range(0, n):
             for col in range(0, m):
                 print row, col
@@ -1172,7 +1172,7 @@ class CollectionVCF():
                 if sample_index >= self.sample_number:
                     continue
                 sample_id = self.samples[sample_index]
-                print param[sample_id]
+                #print param[sample_id]
                 # TODO: adjust function to deal not only with the first column inside parameter
                 subplot_array[row][col].hist(param[sample_id][parameter][0].dropna(), bins=bins, label=sample_id)
                 if show_median:
@@ -1209,18 +1209,21 @@ class CollectionVCF():
 
     def get_coverage_distribution(self, output_prefix, bin_width=5, dpi=200, subplot_size=3, extension_list=("png",)):
         if self.parsing_mode in self.parsing_modes_with_sample_coverage:
+            print("Drawing coverage distribution...")
             self.draw_sample_parameter_distribution("DP", bin_width, output_prefix=output_prefix,
                                                     extension_list=extension_list,
                                                     suptitle="Covarage distribution",
                                                     xlabel="Coverage", ylabel="Variants", show_median=True,
                                                     show_mean=True, median_relative=False, mean_relative=False,
                                                     dpi=dpi, subplot_size=subplot_size)
+            print("Drawing coverage distribution relative to median...")
             self.draw_sample_parameter_distribution("DP", bin_width, output_prefix="%s.median_relative" % output_prefix,
                                                     extension_list=extension_list,
                                                     suptitle="Coverage distribution(Median relative)",
                                                     xlabel="Coverage", ylabel="Variants", show_median=True,
                                                     show_mean=True, median_relative=True, mean_relative=False,
                                                     dpi=dpi, subplot_size=subplot_size)
+            print("Drawing coverage distribution relative to mean...")
             self.draw_sample_parameter_distribution("DP", bin_width, output_prefix="%s.mean_relative" % output_prefix,
                                                     extension_list=extension_list,
                                                     suptitle="Coverage distribution(Mean relative)",
