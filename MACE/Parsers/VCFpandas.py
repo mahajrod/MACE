@@ -1178,7 +1178,7 @@ class CollectionVCF():
                 if show_mean:
                     subplot_array[row][col].axvline(x=float(param_mean[sample_id]), label="mean", color="blue")
 
-                subplot_array[row][col].title(sample_id)
+                subplot_array[row][col].set_title(sample_id)
         if suptitle:
             supt = suptitle
         elif mean_relative:
@@ -1226,6 +1226,15 @@ class CollectionVCF():
                                                     dpi=dpi, subplot_size=subplot_size)
         else:
             raise ValueError("ERROR!!! Coverage distribution can't be counted for this parsing mode: %s."
+                             "Use 'pos_gt_dp' or other method parsing DP column from samples fields" % self.parsing_mode)
+
+    def calculate_masking(self, samples=None, min_sample_number=1):
+        if self.parsing_mode in self.parsing_modes_with_sample_coverage:
+            samples_to_use = samples if samples else self.samples
+            param = self.records.xs("DP", axis=1, level=1, drop_level=False)
+            pass
+        else:
+            raise ValueError("ERROR!!! Masking can't be counted for this parsing mode: %s."
                              "Use 'pos_gt_dp' or other method parsing DP column from samples fields" % self.parsing_mode)
 
     # methods below were not yet rewritten for compatibility with VCFpandas
