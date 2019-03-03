@@ -1133,6 +1133,7 @@ class CollectionVCF():
         figure, subplot_array = plt.subplots(nrows=n, ncols=m, sharex=True, sharey=True,
                                              figsize=(n*subplot_size, m*subplot_size), dpi=dpi)
         print subplot_array
+        print np.shape(subplot_array)
         print n, m
         for row in range(0, m):
             for col in range(0, n):
