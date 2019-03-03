@@ -19,7 +19,6 @@ parser.add_argument("-s", "--sample_list", action="store", dest="sample_list",
 parser.add_argument("-u", "--min_samples", action="store", dest="min_samples",
                     default=1, type=int,
                     help="Minimum number of samples to mask variant. Default: 1")
-
 parser.add_argument("-x", "--max_coverage", action="store", dest="max_coverage",
                     default=2.5, type=float,
                     help="Maximum coverage(relative to median) to retain variant. Default: 2.5")
