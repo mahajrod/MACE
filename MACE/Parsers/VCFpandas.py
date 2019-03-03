@@ -1238,15 +1238,15 @@ class CollectionVCF():
             samples_to_use = samples if samples else self.samples
             coverage = self.records[samples_to_use].xs("DP", axis=1, level=1, drop_level=False)
             if sample_coverage:
-                coverage_median = pd.Series(sample_coverage)
+                coverage_median = pd.Series(sample_coverage, dtype=np.float32)
                 coverage_median.index = pd.Index(samples_to_use)
             else:
                 coverage_median = coverage.apply(np.median)
-            coverage = coverage / coverage_median
-
-            boolean_array = coverage >= max_coverage
+            #coverage = coverage / coverage_median
+            print coverage_median
+            boolean_array = coverage >= (max_coverage * coverage_median)
             if min_coverage:
-                boolean_array &= coverage <= min_coverage
+                boolean_array &= coverage <= (min_coverage * coverage_median)
 
             outliers = boolean_array.apply(np.sum, axis=1)
             outliers = outliers[outliers >= min_samples]
