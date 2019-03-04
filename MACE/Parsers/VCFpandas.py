@@ -1191,7 +1191,6 @@ class CollectionVCF():
                 if xlabel and row == n - 1:
                     subplot_array[row][col].xlabel = xlabel
 
-
                 if sample_index >= self.sample_number:
                     continue
                 sample_id = self.samples[sample_index]
@@ -1330,6 +1329,7 @@ class CollectionVCF():
 
         scaffolds_absent_in_reference = IdSet(vcf_scaffolds - reference_scaffolds)
         if scaffolds_absent_in_reference:
+            print (scaffolds_absent_in_reference)
             raise ValueError("ERROR!!! Some scaffolds from vcf file are absent in reference...")
         scaffolds_absent_in_vcf = IdSet(reference_scaffolds - vcf_scaffolds)
 
