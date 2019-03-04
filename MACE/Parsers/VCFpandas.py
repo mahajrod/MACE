@@ -1339,11 +1339,7 @@ class CollectionVCF():
         for scaffold in number_of_windows_non_zero_df.index:
             count_index[0] += [scaffold] * number_of_windows_non_zero_df.loc[scaffold]
             count_index[1] += list(np.arange(number_of_windows_non_zero_df.loc[scaffold]))
-
         count_index = pd.MultiIndex.from_arrays(count_index, names=("CHROM", "WINDOW"))
-        count_df = pd.DataFrame(0, index=count_index,
-                                columns=self.samples if per_sample_output else ["All"],
-                                dtype=np.int64)
 
         def get_overlapping_window_indexes(step_index):
             # this function is used if windows have overlapps
@@ -1361,13 +1357,34 @@ class CollectionVCF():
         step_index_df.columns = ["WINDOWSTEP"]
 
         if per_sample_output:
-            variant_presence = self.check_variant_presence()
-            # string below is temoraly remove beforer git pull
-            variant_presence.columns = self.samples
-        else:
+            count_df = []
             if window_stepppp == window_size:
-                # code for staking windows
+                variant_presence = self.check_variant_presence()
+                # string below is temporaly remove beforer git pull
+                variant_presence.columns = self.samples
+
+                for sample in self.samples:
+                    tmp_count_df = pd.DataFrame(0, index=count_index,
+                                                columns=[sample],
+                                                dtype=np.int64)
+                    variant_counts = step_index_df[variant_presence[sample]].reset_index(level=1).set_index(['WINDOWSTEP'], append=True).groupby(["CHROM", "WINDOWSTEP"]).count()
+                    tmp_count_df[tmp_count_df.index.isin(variant_counts.index)] = variant_counts
+                    count_df.append(tmp_count_df)
+                count_df = pd.concat(count_df, axis=1)
+            else:
+                # TODO add code for sliding windows
+                #window_index_df = step_index_df.applymap(get_overlapping_window_indexes)
                 pass
+        else:
+            count_df = pd.DataFrame(0, index=count_index,
+                                    columns=["All"],
+                                    dtype=np.int64)
+
+            if window_stepppp == window_size:
+                # code for staking windows: in this case window step index  is equal to window index
+                variant_counts = step_index_df.reset_index(level=1).set_index(['WINDOWSTEP'], append=True).groupby(["CHROM", "WINDOWSTEP"]).count()
+                count_df[count_df.index.isin(variant_counts.index)] = variant_counts
+                #bbb[bbb.index.get_level_values('CHROM').isin(number_of_windows_non_zero_df.index)]
             else:
                 # TODO add code for sliding windows
                 #window_index_df = step_index_df.applymap(get_overlapping_window_indexes)
@@ -1376,68 +1393,17 @@ class CollectionVCF():
         # TODO: add storing of variants in uncounted tails
         #uncounted_tail_variants_number_dict = SynDict()
         #uncounted_tail_variant_number = step_size_number_df[step_size_number_df > ref_scaf_len_df].groupby(self.records.index(level=0)).size()
-
-
-        for scaffold_id in self.scaffold_list + list(scaffolds_absent_in_vcf):
-
-            variant_index = 0
-            #print list(count_dict.keys())
-            for variant in self.records[scaffold_id]:
-                step_size_number = ((variant.pos - 1)/window_stepppp)
-
-                if step_size_number - steps_in_window + 1 >= number_of_windows:
-                    #print scaffold_id
-                    #print self.scaffold_length[scaffold_id]
-                    #print variant_index
-                    #print("\n")
-                    uncounted_tail_variants_number_dict[scaffold_id] = self.scaffold_length[scaffold_id] - variant_index
-                    break
-                if per_sample_output:
-
-                    for i in range(max(step_size_number - steps_in_window + 1, 0),
-                                    step_size_number + 1 if step_size_number < number_of_windows else number_of_windows):
-                        #print step_size_number, steps_in_window
-                        for sample_index in range(0, len(self.samples)):
-                            sample_id = self.samples[sample_index]
-                            #print sample_id, scaffold_id
-                            if "GT" not in variant.samples_list[sample_index]:
-                                print("WARNING: no genotype for sample %s for variant %s!!! Skipping..." % (sample_id, str(variant)))
-                                continue
-                            else:
-                                if (variant.samples_list[sample_index]["GT"][0] == "0/0") or (variant.samples_list[sample_index]["GT"][0] == "./."):
-                                    continue
-                            if expression:
-                                #print("AAAAAAAAAAAAAAAAAAAAAAAAA")
-                                count_dict[sample_id][scaffold_id][i] += (1 if expression(variant, sample_index) else 0)
-                                #if expression(variant, sample_index):
-                                #print sample_id, sample_index, scaffold_id, i, count_dict[sample_id][scaffold_id][i]
-                                #print "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBb"
-                            else:
-                                 count_dict[sample_id][scaffold_id][i] += 1
-
-                else:
-                    for i in range(max(step_size_number - steps_in_window + 1, 0),
-                                   step_size_number + 1 if step_size_number < number_of_windows else number_of_windows):
-                        if expression:
-                            count_dict[scaffold_id][i] += 1 if expression(variant) else 0
-                        else:
-                            count_dict[scaffold_id][i] += 1
-
-                variant_index += 1
         #print count_dict[self.samples[0]][list(count_dict[self.samples[0]].keys())[5]]
         #print "BBBBBBBBBBBBBB"
         #print count_dict[self.samples[0]]
         if output_prefix:
             scaffolds_absent_in_reference.write("%s.scaffolds_absent_in_reference.ids" % output_prefix)
             scaffolds_absent_in_vcf.write("%s.scaffolds_absent_in_vcf.ids" % output_prefix)
-            uncounted_tail_variants_number_dict.write("%s.uncounted_tail_variant_number.tsv" % output_prefix)
-            if per_sample_output:
-                for sample in count_dict:
-                    count_dict[sample].write("%s.%s.variant_number.tsv" % (output_prefix, sample), splited_values=True)
-            else:
-                count_dict.write("%s.variant_number.tsv" % output_prefix, splited_values=True)
+            #uncounted_tail_variants_number_dict.write("%s.uncounted_tail_variant_number.tsv" % output_prefix)
 
-        return count_dict
+            count_df.to_csv("%s.variant_counts.tsv" % output_prefix, sep='\t', header=True, index=True)
+
+        return count_df
 
     #########################################################################
     # methods below were not yet rewritten for compatibility with VCFpandas #
