@@ -1154,13 +1154,13 @@ class CollectionVCF():
             print(param_mean)
 
         if median_relative:
-            param = param / param_median
-            param_mean = param_mean / param_median
-            param_median = param_median / param_median
+            param = param.astype(np.float32) / param_median
+            param_mean = param_mean.astype(np.float32) / param_median
+            param_median = param_median.astype(np.float32) / param_median
         elif mean_relative:
-            param = param / param_mean
-            param_mean = param_mean / param_mean
-            param_median = param_median / param_mean
+            param = param.astype(np.float32) / param_mean
+            param_mean = param_mean.astype(np.float32) / param_mean
+            param_median = param_median.astype(np.float32) / param_mean
 
         param_max = param.apply(np.max)
         param_min = param.apply(np.min)
@@ -1173,12 +1173,20 @@ class CollectionVCF():
             n = n +1
             m = n
         if median_relative or mean_relative:
-            bins = np.arange(1, max(param_max), 0.1)
+            if param_max > np.max(param_median) * 10:
+                bins = np.arange(0, np.max(param_median)[0] * 10, bin_width)
+                bins = np.concat(bins, [max(param_max)])
+            else:
+                bins = np.arange(0, max(param_max), 0.1)
         else:
-            bins = np.arange(1, max(param_max), bin_width)
+            if param_max > np.max(param_median) * 10:
+                bins = np.arange(1, np.max(param_median)[0] * 10, bin_width)
+                bins = np.concat(bins, [max(param_max)])
+            else:
+                bins = np.arange(1, max(param_max), bin_width)
         bins = np.concatenate((bins, [bins[-1] + bin_width, bins[-1] + 2 * bin_width]))
         figure, subplot_array = plt.subplots(nrows=n, ncols=m, sharex=True, sharey=True,
-                                             figsize=(n*subplot_size, m*subplot_size), dpi=dpi)
+                                             figsize=(m*subplot_size, n*subplot_size), dpi=dpi)
         #print subplot_array
         #print np.shape(subplot_array)
         #print n, m
