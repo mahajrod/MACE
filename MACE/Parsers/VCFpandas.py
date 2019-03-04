@@ -533,7 +533,7 @@ class CollectionVCF():
         self.record_number = len(self.records)
         self.sample_number = len(self.samples)
         self.per_scaffold_record_number = self.records.groupby(self.records.index).size() # pandas Series with scaffold ids as index
-        self.scaffold_list = self.records.index.unique().to_list()
+        self.scaffold_list = self.records.index.get_level_values('CHROM').unique().to_list()
         self.number_of_scaffolds = len(self.scaffold_list)
         self.threads = threads
 
