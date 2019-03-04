@@ -1287,8 +1287,13 @@ class CollectionVCF():
     #                        In progress                                    #
     #########################################################################
 
+    @staticmethod
+    def count_window_number_in_scaffold(scaffold_length, window_size, window_step):
+        if scaffold_length < window_size:
+            return 0
+        return int((scaffold_length - window_size)/window_step) + 1
 
-    def count_variants_in_windows(self, window_size, window_step, reference_scaffold_length_dict,
+    def count_variants_in_windows(self, window_size, window_step, reference_scaffold_lengths,
                                   ignore_scaffolds_shorter_than_window=True, output_prefix=None,
                                   skip_empty_windows=False, expression=None, per_sample_output=False):
 
@@ -1301,10 +1306,17 @@ class CollectionVCF():
 
         steps_in_window = window_size / window_stepppp
 
-        short_scaffolds_ids = IdList()
+        ref_scaf_len_sr = reference_scaffold_lengths if isinstance(reference_scaffold_lengths, pd.DataFrame) else pd.DataFrame(reference_scaffold_lengths)
+
+        def count_windows(scaffold_length):
+            return self.count_window_number_in_scaffold(scaffold_length, window_size, window_step)
+
+        number_of_windows_sr = ref_scaf_len_sr.apply(count_windows)
+
+        short_scaffolds_ids = number_of_windows_sr[number_of_windows_sr == 0].index.unique().to_list()
 
         vcf_scaffolds = set(self.scaffold_list)
-        reference_scaffolds = set(reference_scaffold_length_dict.keys())
+        reference_scaffolds = set(ref_scaf_len_sr.index.unique().to_list())
 
         scaffolds_absent_in_reference = IdSet(vcf_scaffolds - reference_scaffolds)
         scaffolds_absent_in_vcf = IdSet(reference_scaffolds - vcf_scaffolds)
@@ -1321,10 +1333,16 @@ class CollectionVCF():
         if scaffolds_absent_in_reference:
             raise ValueError("ERROR!!! Some scaffolds from vcf file are absent in reference...")
 
+        step_size_number_df = self.records[['POS']] / window_stepppp
+        step_size_number_df.columns = "WindowStep"
+
+        # pseudocode
+        uncounted_tail_variant_number = step_size_number_df[step_size_number_df > ref_scaf_len_df].groupby(self.records.index(level=0)).size()
+
+        count_df = pd.DataFrame(0, index=np.arange(len(data)), columns=self.samples if per_sample_output else "All", dtype=np.int64)
+
         for scaffold_id in self.scaffold_list + list(scaffolds_absent_in_vcf):
-            number_of_windows = self.count_number_of_windows(reference_scaffold_length_dict[scaffold_id],
-                                                             window_size,
-                                                             window_stepppp)
+
             if scaffold_id not in self.records:
                 continue
             if number_of_windows == 0:
