@@ -1102,7 +1102,8 @@ class CollectionVCF():
         variant_presence = self.check_variant_presence(outfile="%s.variant_presence" % output_prefix)
         return variant_presence[variant_presence.apply(lambda s: True if np.sum(s) == 1 else False, axis=1)]
 
-    def count_uniq_variants(self, output_prefix, extension_list=("png",), figsize=(5, 5), dpi=200, title="Unique variants"):
+    def count_uniq_variants(self, output_prefix, extension_list=("png",), figsize=(5, 5), dpi=200,
+                            title="Unique variants"):
         if self.parsing_mode in self.parsing_modes_with_genotypes:
 
             variant_presence = pd.concat([((self.records[sample]["GT"][0].notna()) & (self.records[sample]["GT"][0] != 0)) | ((self.records[sample]["GT"][1].notna()) & (self.records[sample]["GT"][1] != 0)) for sample in self.samples], axis=1)
@@ -1271,7 +1272,8 @@ class CollectionVCF():
 
             outliers = boolean_array.apply(np.sum, axis=1)
             outliers = outliers[outliers >= min_samples]
-            outliers = pd.concat([self.records[self.records.index.isin(outliers.index)]["POS"], outliers], axis=1)
+            #outliers = pd.concat([self.records[self.records.index.isin(outliers.index)]["POS"], outliers], axis=1)
+            outliers = self.records[self.records.index.isin(outliers.index)]["POS"]
 
             print("%i variants were masked" % np.shape(outliers)[0])
 
