@@ -1091,6 +1091,7 @@ class CollectionVCF():
         if self.parsing_mode in self.parsing_modes_with_genotypes:
 
             variant_presence = pd.concat([((self.records[sample]["GT"][0].notna()) & (self.records[sample]["GT"][0] != 0)) | ((self.records[sample]["GT"][1].notna()) & (self.records[sample]["GT"][1] != 0)) for sample in self.samples], axis=1)
+            variant_presence.columns = self.samples
             if outfile:
                 variant_presence.to_csv(outfile, sep="\t", header=True, index=True)
             return variant_presence
@@ -1141,11 +1142,16 @@ class CollectionVCF():
                                            extension_list=("png",), suptitle=None,
                                            xlabel=None, ylabel=None, show_median=True,
                                            show_mean=True, median_relative=False, mean_relative=False, dpi=200,
-                                           subplot_size=3, xlimit=None):
+                                           subplot_size=3, xlimit=None, verbose=False):
 
         param = self.records.xs(parameter, axis=1, level=1, drop_level=False)
         param_mean = param.apply(np.mean)
         param_median = param.apply(np.median)
+        if verbose:
+            print("Median:")
+            print(param_median)
+            print("Mean:")
+            print(param_mean)
 
         if median_relative:
             param = param / param_median
@@ -1224,7 +1230,8 @@ class CollectionVCF():
 
         return param
 
-    def get_coverage_distribution(self, output_prefix, bin_width=5, dpi=200, subplot_size=3, extension_list=("png",)):
+    def get_coverage_distribution(self, output_prefix, bin_width=5, dpi=200, subplot_size=3, extension_list=("png",),
+                                  verbose=False):
         if self.parsing_mode in self.parsing_modes_with_sample_coverage:
             print("Drawing coverage distribution...")
             self.draw_sample_parameter_distribution("DP", bin_width, output_prefix=output_prefix,
@@ -1232,7 +1239,8 @@ class CollectionVCF():
                                                     suptitle="Coverage distribution",
                                                     xlabel="Coverage", ylabel="Variants", show_median=True,
                                                     show_mean=True, median_relative=False, mean_relative=False,
-                                                    dpi=dpi, subplot_size=subplot_size)
+                                                    dpi=dpi, subplot_size=subplot_size,
+                                                    verbose=verbose)
             print("Drawing coverage distribution relative to median...")
             self.draw_sample_parameter_distribution("DP", bin_width, output_prefix="%s.median_relative" % output_prefix,
                                                     extension_list=extension_list,
@@ -1306,62 +1314,71 @@ class CollectionVCF():
 
         steps_in_window = window_size / window_stepppp
 
-        ref_scaf_len_sr = reference_scaffold_lengths if isinstance(reference_scaffold_lengths, pd.DataFrame) else pd.DataFrame(reference_scaffold_lengths)
+        ref_scaf_len_df = reference_scaffold_lengths if isinstance(reference_scaffold_lengths, pd.DataFrame) else pd.DataFrame(reference_scaffold_lengths)
 
         def count_windows(scaffold_length):
             return self.count_window_number_in_scaffold(scaffold_length, window_size, window_step)
 
-        number_of_windows_sr = ref_scaf_len_sr.apply(count_windows)
+        number_of_windows_df = ref_scaf_len_df.applymap(count_windows)
+        number_of_windows_df.columns = ["WINDOW"]
 
-        short_scaffolds_ids = number_of_windows_sr[number_of_windows_sr == 0].index.unique().to_list()
+        short_scaffolds_ids = number_of_windows_df[number_of_windows_df['WINDOW'] == 0]
+        short_scaffolds_ids = IdSet(short_scaffolds_ids.index.unique().to_list())
 
         vcf_scaffolds = set(self.scaffold_list)
-        reference_scaffolds = set(ref_scaf_len_sr.index.unique().to_list())
+        reference_scaffolds = set(ref_scaf_len_df.index.unique().to_list())
 
         scaffolds_absent_in_reference = IdSet(vcf_scaffolds - reference_scaffolds)
-        scaffolds_absent_in_vcf = IdSet(reference_scaffolds - vcf_scaffolds)
-
-        if per_sample_output:
-            count_dict = TwoLvlDict()
-            for sample in self.samples:
-                count_dict[sample] = SynDict()
-        else:
-            count_dict = SynDict()
-
-        uncounted_tail_variants_number_dict = SynDict()
-
         if scaffolds_absent_in_reference:
             raise ValueError("ERROR!!! Some scaffolds from vcf file are absent in reference...")
+        scaffolds_absent_in_vcf = IdSet(reference_scaffolds - vcf_scaffolds)
 
-        step_size_number_df = self.records[['POS']] / window_stepppp
-        step_size_number_df.columns = "WindowStep"
+        number_of_windows_non_zero_df = number_of_windows_df[number_of_windows_df['WINDOW'] > 0]
 
-        # pseudocode
-        uncounted_tail_variant_number = step_size_number_df[step_size_number_df > ref_scaf_len_df].groupby(self.records.index(level=0)).size()
+        count_index = [[], []]
+        for scaffold in number_of_windows_non_zero_df.index:
+            count_index[0] += [scaffold] * number_of_windows_non_zero_df.loc[scaffold]
+            count_index[1] += list(np.arange(number_of_windows_non_zero_df.loc[scaffold]))
 
-        count_df = pd.DataFrame(0, index=np.arange(len(data)), columns=self.samples if per_sample_output else "All", dtype=np.int64)
+        count_index = pd.MultiIndex.from_arrays(count_index, names=("CHROM", "WINDOW"))
+        count_df = pd.DataFrame(0, index=count_index,
+                                columns=self.samples if per_sample_output else ["All"],
+                                dtype=np.int64)
+
+        def get_overlapping_window_indexes(step_index):
+            # this function is used if windows have overlapps
+            # DO NOT FORGET TO REPLACE WINDOW INDEXES EQUAL OR LARGE TO WINDOW NUMBER
+            return [window_index for window_index in range(max(step_index - steps_in_window + 1, 0),
+                                                           step_index + 1)]
+
+
+            #if step_index < window_number else window_number)]
+
+        if expression:
+            step_index_df = self.records[self.records.apply(expression, axis=1)][['POS']] / window_stepppp
+        else:
+            step_index_df = self.records[['POS']] // window_stepppp
+        step_index_df.columns = ["WINDOWSTEP"]
+
+        if per_sample_output:
+            variant_presence = self.check_variant_presence()
+            # string below is temoraly remove beforer git pull
+            variant_presence.columns = self.samples
+        else:
+            if window_stepppp == window_size:
+                # code for staking windows
+
+            else:
+                # TODO add code for sliding windows
+                #window_index_df = step_index_df.applymap(get_overlapping_window_indexes)
+                pass
+
+        # TODO: add storing of variants in uncounted tails
+        #uncounted_tail_variants_number_dict = SynDict()
+        #uncounted_tail_variant_number = step_size_number_df[step_size_number_df > ref_scaf_len_df].groupby(self.records.index(level=0)).size()
+
 
         for scaffold_id in self.scaffold_list + list(scaffolds_absent_in_vcf):
-
-            if scaffold_id not in self.records:
-                continue
-            if number_of_windows == 0:
-                short_scaffolds_ids.append(scaffold_id)
-                if ignore_scaffolds_shorter_than_window:
-                    continue
-
-            if scaffold_id in scaffolds_absent_in_vcf:
-                if skip_empty_windows:
-                    continue
-            if per_sample_output:
-                for sample in self.samples:
-                    #print scaffold_id
-                    count_dict[sample][scaffold_id] = np.zeros(number_of_windows, dtype=np.int64)
-                    #print count_dict[sample][scaffold_id]
-            else:
-                count_dict[scaffold_id] = np.zeros(number_of_windows, dtype=np.int64)
-
-            uncounted_tail_variants_number_dict[scaffold_id] = 0
 
             variant_index = 0
             #print list(count_dict.keys())
