@@ -1173,14 +1173,17 @@ class CollectionVCF():
             n = n +1
             m = n
         if median_relative or mean_relative:
-            if param_max > np.max(param_median)[0] * 10:
-                bins = np.arange(0, np.max(param_median)[0] * 10, bin_width)
+            if param_max > max(param_median) * 10:
+                bins = np.arange(0, max(param_median) * 10, bin_width)
                 bins = np.concat(bins, [max(param_max)])
             else:
                 bins = np.arange(0, max(param_max), 0.1)
         else:
-            if param_max > np.max(param_median[0]) * 10:
-                bins = np.arange(1, np.max(param_median)[0] * 10, bin_width)
+            print np.max(param_median)
+            print np.max(param_median)[0]
+            print max(param_median)
+            if param_max > max(param_median) * 10:
+                bins = np.arange(1, max(param_median) * 10, bin_width)
                 bins = np.concat(bins, [max(param_max)])
             else:
                 bins = np.arange(1, max(param_max), bin_width)
