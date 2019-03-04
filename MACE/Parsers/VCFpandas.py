@@ -1367,7 +1367,7 @@ class CollectionVCF():
         else:
             if window_stepppp == window_size:
                 # code for staking windows
-
+                pass
             else:
                 # TODO add code for sliding windows
                 #window_index_df = step_index_df.applymap(get_overlapping_window_indexes)
