@@ -43,8 +43,8 @@ class CollectionSequence:
         else:
             self.masking = masking
 
-        self.seq_lengths = None
-        self.length = 0        # None or pandas dataframe with seq_id as index
+        self.seq_lengths = None # None or pandas dataframe with seq_id as index
+        self.length = 0
         self.scaffolds = None
         self.gaps = None          # None or pandas dataframe with seq_id as index
 
@@ -167,3 +167,16 @@ class CollectionSequence:
             return self.gaps
         else:
             return None
+
+    @staticmethod
+    def count_window_number_in_scaffold(scaffold_length, window_size, window_step):
+        if scaffold_length < window_size:
+            return 0
+        return int((scaffold_length - window_size)/window_step) + 1
+
+    def count_window_number(self, window_size, window_step):
+
+        def count(scaffold_length):
+            return self.count_window_number_in_scaffold(scaffold_length, window_size, window_step)
+
+        return self.length.apply(count)
