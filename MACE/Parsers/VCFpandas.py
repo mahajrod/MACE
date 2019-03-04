@@ -1337,8 +1337,8 @@ class CollectionVCF():
 
         count_index = [[], []]
         for scaffold in number_of_windows_non_zero_df.index:
-            count_index[0] += [scaffold] * number_of_windows_non_zero_df.loc[scaffold]
-            count_index[1] += list(np.arange(number_of_windows_non_zero_df.loc[scaffold]))
+            count_index[0] += [scaffold] * number_of_windows_non_zero_df.loc[scaffold][0]
+            count_index[1] += list(np.arange(number_of_windows_non_zero_df.loc[scaffold][0]))
         count_index = pd.MultiIndex.from_arrays(count_index, names=("CHROM", "WINDOW"))
 
         def get_overlapping_window_indexes(step_index):
