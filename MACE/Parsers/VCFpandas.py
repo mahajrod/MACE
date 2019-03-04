@@ -781,6 +781,23 @@ class CollectionVCF():
                 df.to_csv(outfile, sep='\t', index=False, header=False)
 
     @staticmethod
+    def write_df(dataframe, outfile, format='simple_bed', type="0-based"):
+        if format == 'simple_bed':
+            if type == "0-based":
+                dataframe[["POS"]].reset_index(level='CHROM').to_csv(outfile, sep='\t', index=False, header=False)
+            elif type == '1-based':
+                df = dataframe[["POS"]].reset_index(level='CHROM')
+                df["POS"] += 1
+                df.to_csv(outfile, sep='\t', index=False, header=False)
+        elif format == 'bed':
+            if type == "0-based":
+                dataframe.reset_index(level='CHROM').to_csv(outfile, sep='\t', index=False, header=False)
+            elif type == '1-based':
+                df = dataframe.reset_index(level='CHROM')
+                df["POS"] += 1
+                df.to_csv(outfile, sep='\t', index=False, header=False)
+
+    @staticmethod
     def _split_by_equal_sign(string):
         try:
             index = string.index("=")
@@ -1256,9 +1273,9 @@ class CollectionVCF():
             outliers = outliers[outliers >= min_samples]
             outliers = pd.concat([self.records[self.records.index.isin(outliers.index)]["POS"], outliers], axis=1)
 
-            print("%i variants were masked" % np.shape(outliers)[1])
+            print("%i variants were masked" % np.shape(outliers)[0])
 
-            outliers.write(outfile, format="simple_bed", type="1-based")
+            self.write_df(outliers, outfile, format="simple_bed", type="1-based")
 
         else:
             raise ValueError("ERROR!!! Masking can't be counted for this parsing mode: %s."
