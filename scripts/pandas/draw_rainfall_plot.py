@@ -19,7 +19,7 @@ parser.add_argument("-f", "--figsize", action="store", dest="figsize",
                     type=lambda s: map(int, s.split(",")),
                     default=(20, 20),
                     help="Size of figure in inches. X and Y values should be separated "
-                         "by comma. Default: 40,40")
+                         "by comma. Default: 20,20")
 parser.add_argument("-e", "--output_formats", action="store", dest="output_formats",
                     type=lambda s: s.split(","),
                     default=["png"],
