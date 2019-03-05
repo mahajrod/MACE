@@ -1113,8 +1113,8 @@ class CollectionVCF():
             uniq_variant_counts = uniq_variants.apply(np.sum)
 
             if output_prefix:
-                variant_presence.to_csv("%s.variant_presence" % output_prefix, sep="\t", header=True, index=True)
-                uniq_variants.to_csv("%s.uniq_variants" % output_prefix, sep="\t", header=True, index=True)
+                #variant_presence.to_csv("%s.variant_presence" % output_prefix, sep="\t", header=True, index=True)
+                #uniq_variants.to_csv("%s.uniq_variants" % output_prefix, sep="\t", header=True, index=True)
                 uniq_variant_counts.to_csv("%s.uniq_variants.counts" % output_prefix, sep="\t", header=True, index=True)
 
             fig = plt.figure(1, figsize=figsize, dpi=dpi)
