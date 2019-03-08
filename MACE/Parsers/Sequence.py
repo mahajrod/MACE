@@ -33,6 +33,8 @@ class CollectionSequence:
         if in_file:
             self.read(in_file, format=format, parsing_mode=parsing_mode,
                       black_list=black_list,  white_list=white_list, verbose=verbose)
+        elif records is None:
+            self.records = OrderedDict()
         else:
             self.records = records
 
@@ -167,6 +169,26 @@ class CollectionSequence:
             return self.gaps
         else:
             return None
+
+    def write(self, outfile, expression=None, max_symbols_per_line=60):
+        if self.parsing_mode == "parse":
+            with FileRoutines.metaopen(outfile, "w") as out_fd:
+                for seq_id in self.records:
+                    if expression:
+                        if not expression(seq_id, self.records[seq_id]):
+                            continue
+                    out_fd.write(">%s\n" % seq_id)
+                    length = self.seq_lengths[seq_id][0] if self.seq_lengths else len(self.records[seq_id])
+                    line_number = length // max_symbols_per_line
+                    index = 0
+                    while index < line_number:
+                        out_fd.write(self.records[seq_id][index*max_symbols_per_line:(index+1)*max_symbols_per_line] + "\n")
+                        index += 1
+                    if line_number * max_symbols_per_line < length:
+                        out_fd.write(self.records[seq_id][index*max_symbols_per_line:-1])
+
+        else:
+            raise ValueError("ERROR!!! Writing was implemented only for parsing mode yet!")
 
     @staticmethod
     def count_window_number_in_scaffold(scaffold_length, window_size, window_step):
