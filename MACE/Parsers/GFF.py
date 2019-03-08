@@ -51,20 +51,20 @@ class CollectionGFF:
                                                                                      },
                                                                 },
                                            "coordinates_and_type": {
-                                                                    "col_names": ["scaffold", "source", "start", "end"],
-                                                                    "cols":      [0, 1, 3, 4],
-                                                                    "index_cols": ["scaffold", "source"],
+                                                                    "col_names": ["scaffold", "featuretype", "start", "end"],
+                                                                    "cols":      [0, 2, 3, 4],
+                                                                    "index_cols": ["scaffold", "featuretype"],
                                                                     "converters": {
-                                                                                   "scaffold":  str,
-                                                                                   "source":    str,
-                                                                                   "start":     lambda x: np.int32(x) - 1,
-                                                                                   "end":       np.int32,
+                                                                                   "scaffold":       str,
+                                                                                   "featuretype":    str,
+                                                                                   "start":          lambda x: np.int32(x) - 1,
+                                                                                   "end":            np.int32,
                                                                                    },
                                                                     "col_name_indexes": {
-                                                                                         "scaffold": 0,
-                                                                                         "source":   1,
-                                                                                         "start":    2,
-                                                                                         "end":      3
+                                                                                         "scaffold":      0,
+                                                                                         "featuretype":   1,
+                                                                                         "start":         2,
+                                                                                         "end":           3
                                                                                          },
                                                                     },
                                            },
@@ -87,13 +87,16 @@ class CollectionGFF:
                                            }
                                    }
         self.parsing_mode = parsing_mode
+        self.type_parsing_modes = ["coordinates_and_type"]
         self.format = format
         self.black_list = black_list
         self.white_list = white_list
 
         # init aliases
+        self.record_id_col = self.parsing_parameters[self.format][self.parsing_mode]["col_name_indexes"]["scaffold"]
         self.record_start_col = self.parsing_parameters[self.format][self.parsing_mode]["col_name_indexes"]["start"]
         self.record_end_col = self.parsing_parameters[self.format][self.parsing_mode]["col_name_indexes"]["end"]
+
         self.col_names = self.parsing_parameters[self.format][self.parsing_mode]["col_names"]
         self.index_cols = self.parsing_parameters[self.format][self.parsing_mode]["index_cols"]
 
@@ -189,3 +192,60 @@ class CollectionGFF:
         new_gff_record.records = new_gff_record.records.sort_values(by=["scaffold", "start", "end"])
 
         return new_gff_record
+
+
+    @staticmethod
+    def get_filtered_entry_list(entry_list,
+                                entry_black_list=[],
+                                sort_entries=False,
+                                entry_ordered_list=None,
+                                entry_white_list=[]):
+        white_set = set(entry_white_list)
+        black_set = set(entry_black_list)
+        entry_set = set(entry_list)
+
+        if white_set:
+            entry_set = entry_set & white_set
+        if black_set:
+            entry_set = entry_set - black_set
+
+        filtered_entry_list = list(entry_set)
+        if sort_entries:
+            filtered_entry_list.sort()
+
+        final_entry_list = []
+
+        if entry_ordered_list:
+            for entry in entry_ordered_list:
+                if entry in filtered_entry_list:
+                    final_entry_list.append(entry)
+                    filtered_entry_list.remove(entry)
+                else:
+                    print("WARNING!!!Entry(%s) from order list is absent in list of entries!" % entry)
+            return final_entry_list + filtered_entry_list
+        else:
+            return filtered_entry_list
+
+    def sequence_generator(self, records, sequence_collection, expression=None):
+        for entry in records.itertuples():
+            if expression:
+                if not expression(entry):
+                    continue
+            yield  entry[self.record_id_col], sequence_collection[entry[self.record_id_col]][entry[self.record_start_col]:entry[self.record_end_col]]
+
+    def extract_sequences_by_type(self, sequence_collection, record_type_black_list=[], record_type_white_list=[],
+                                  return_type="collection", records_parsing_type="parse"):
+
+        if self.parsing_mode in self.type_parsing_modes:
+            if return_type == "collection":
+                selected_records = self.records[self.records.index.isin(record_type_white_list, level=1) & (~self.records.index.isin(record_type_black_list, level=1))]
+
+                from MACE.Parsers.Sequence import CollectionSequence
+
+                extracted_records = CollectionSequence()
+
+
+
+
+        else:
+            pass
