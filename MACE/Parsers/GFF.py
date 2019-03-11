@@ -128,7 +128,7 @@ class CollectionGFF:
                                                                   "featuretype":    str,
                                                                   "start":          lambda x: np.int32(x) - 1,
                                                                   "end":            np.int32,
-                                                                  "score":          float,
+                                                                  "score":          np.int32,
                                                                   "strand":         str,
                                                                   "phase":          np.int8,
                                                                   "attributes":     str,
@@ -178,7 +178,7 @@ class CollectionGFF:
                                                  })
         self.converters = OrderedDict()
         self.pandas_int_type_correspondence = OrderedDict({
-                                                           "Int8": np.float16,
+                                                           "Int8":  np.float16,
                                                            "Int16": np.float16,
                                                            "Int32": np.float32,
                                                            "Int64": np.float64,
