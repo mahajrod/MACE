@@ -100,9 +100,9 @@ class CollectionGFF:
                                                                   "featuretype":    str,
                                                                   "start":          lambda x: np.int32(x) - 1,
                                                                   "end":            np.int32,
-                                                                  "score":          float,
+                                                                  "score":          str,
                                                                   "strand":         str,
-                                                                  "phase":          np.int8,
+                                                                  "phase":          str
                                                                   "attributes":     str,
                                                                   },
                                                    "col_name_indexes": {
