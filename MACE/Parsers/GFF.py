@@ -256,6 +256,14 @@ class CollectionGFF:
         tmp_attr = map(lambda s: OrderedDict(map(lambda b: b.split("="), s.split(";"))), list(self.records["attributes"]))
         tmp_attr = pd.DataFrame(tmp_attr)
 
+        shape = np.shape(tmp_attr)
+        column_number = 1 if len(shape) == 1 else shape[1]
+
+        tmp_attr.columns = pd.MultiIndex.from_arrays([
+                                                      tmp_attr.columns
+                                                      ["attributes"] * column_number,
+                                                     ])
+
         return tmp_attr
         """
         print("\t%s\tSplitting parameters from attribute field..." % str(datetime.datetime.now()))
