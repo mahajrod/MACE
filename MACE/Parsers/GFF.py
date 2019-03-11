@@ -102,7 +102,7 @@ class CollectionGFF:
                                                                   "end":            np.int32,
                                                                   "score":          str,
                                                                   "strand":         str,
-                                                                  "phase":          str
+                                                                  "phase":          str,
                                                                   "attributes":     str,
                                                                   },
                                                    "col_name_indexes": {
