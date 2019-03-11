@@ -252,8 +252,19 @@ class CollectionGFF:
 
     def parse_attributes(self):
         print("%s\tParsing attribute field..." % str(datetime.datetime.now()))
+
+        tmp_attr = map(lambda s: OrderedDict(map(lambda b: b.split("="), s.split(";"))), list(self.records["attributes"]))
+        tmp_attr = pd.DataFrame(tmp_attr)
+
+        return tmp_attr
+        """
+        print("\t%s\tSplitting parameters from attribute field..." % str(datetime.datetime.now()))
         tmp_attr = self.records["attributes"].str.split(";", expand=True)
+
+        print("\t%s\tSplitting parameters from attribute field finished..." % str(datetime.datetime.now()))
+        print("\t%s\tSplitting parameter and value..." % str(datetime.datetime.now()))
         tmp_attr_list = [tmp_attr[column].str.split("=", expand=True) for column in tmp_attr.columns]
+        print("\t%s\tSplitting parameter and value finished..." % str(datetime.datetime.now()))
 
         del tmp_attr
         attr_df_list = []
@@ -296,7 +307,7 @@ class CollectionGFF:
         attr.sort_index(level=1, inplace=True)
         print("%s\tParsing attribute finished." % str(datetime.datetime.now()))
         return attr
-
+        """
     def total_length(self):
         return np.sum(self.records['end'] - self.records['start'])
 
