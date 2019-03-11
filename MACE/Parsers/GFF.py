@@ -226,6 +226,9 @@ class CollectionGFF:
             retained_columns = deepcopy(self.parsing_parameters[self.format][self.parsing_mode]["col_names"])
             for entry in "attributes", "scaffold":
                 retained_columns.remove(entry)
+            print self.records
+            print "AAAA"
+            print attributes
             self.records = pd.concat([self.records[retained_columns],
                                           ] + attributes, axis=1)
         if sort:
@@ -279,7 +282,7 @@ class CollectionGFF:
                                                      ])
 
             attr_df_list.append(tmp)
-        print attr_df_list
+        #print attr_df_list
         attr = pd.concat(attr_df_list, axis=1)
         attr.sort_index(level=1, inplace=True)
         return attr
