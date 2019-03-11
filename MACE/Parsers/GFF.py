@@ -247,7 +247,7 @@ class CollectionGFF:
         return col
 
     def parse_attributes(self):
-        print "Parsing attributes field..."
+        print("Parsing attribute field...")
         tmp_attr = self.records["attributes"].str.split(";", expand=True)
         tmp_attr_list = [tmp_attr[column].str.split("=", expand=True) for column in tmp_attr.columns]
 
@@ -259,31 +259,38 @@ class CollectionGFF:
             parameter_set |= set(dataframe[0].unique())
 
         for param in parameter_set:
+            print ("\tParsing %s..." % param)
             temp_list = []
             for dataframe in tmp_attr_list:
+                print("\t\tParsing fragments...")
                 column = dataframe[dataframe[0] == param][1]
                 if column.empty:
                     continue
+
                 column = self.parse_column(column, param)
                 temp_list.append(column)
             if not temp_list:
                 continue
+            print("\t\tMerging fragments...")
             tmp = pd.concat(temp_list)
-
+            print("\t\tMerging finished...")
             del temp_list
             # TODO: check if 3 lines below are redundant in all possible cases
             shape = np.shape(tmp)
             column_number = 1 if len(shape) == 1 else shape[1]
             tmp = tmp.to_frame(param) if isinstance(tmp, pd.Series) else tmp
             tmp.columns = pd.MultiIndex.from_arrays([
-                                                     ["Attributes"] * column_number,
+                                                     ["attributes"] * column_number,
                                                      [param] * column_number
                                                      ])
 
             attr_df_list.append(tmp)
         #print attr_df_list
+        print("Merging parameters...")
         attr = pd.concat(attr_df_list, axis=1)
+        print("Merging finished.")
         attr.sort_index(level=1, inplace=True)
+        print("Parsing attribute finished.")
         return attr
 
     def total_length(self):
