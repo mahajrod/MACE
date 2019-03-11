@@ -215,6 +215,8 @@ class CollectionGFF:
                                    names=self.parsing_parameters[format][parsing_mode]["col_names"],
                                    index_col=self.parsing_parameters[format][parsing_mode]["index_cols"])
 
+        self.records.index = pd.MultiIndex.from_arrays([self.records.index, np.arange(0, len(self.records))],
+                                                       names=("scaffold", "row"))
         if parsing_mode in self.attributes_parsing_modes:
             attributes = self.parse_attributes()
             self.records.columns = pd.MultiIndex.from_arrays([
