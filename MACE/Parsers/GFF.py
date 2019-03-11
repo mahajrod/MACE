@@ -244,10 +244,10 @@ class CollectionGFF:
     def parse_attributes(self):
         print "Parsing attributes field..."
         tmp_attr = self.records["attributes"].str.split(";", expand=True)
-        tmp_attr_list = [tmp_attr[column].str.split("=", expand=True) for column in tmp_info.columns]
+        tmp_attr_list = [tmp_attr[column].str.split("=", expand=True) for column in tmp_attr.columns]
 
         del tmp_attr
-        info_df_list = []
+        attr_df_list = []
 
         parameter_set = set()
         for dataframe in tmp_attr_list:
@@ -275,12 +275,10 @@ class CollectionGFF:
                                                      [param] * column_number
                                                      ])
 
-            info_df_list.append(tmp)
-                #print(info_df_list[-1])
-        info = pd.concat(info_df_list, axis=1)
-        info.sort_index(level=1, inplace=True)
-        return info
-
+            attr_df_list.append(tmp)
+        attr = pd.concat(attr_df_list, axis=1)
+        attr.sort_index(level=1, inplace=True)
+        return attr
 
     def total_length(self):
         return np.sum(self.records['end'] - self.records['start'])
