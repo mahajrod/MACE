@@ -209,6 +209,7 @@ class CollectionGFF:
             raise ValueError("ERROR!!! This format(%s) was not implemented yet for parsing in this mode(%s)!" % (format, parsing_mode))
 
         self.records = pd.read_csv(in_file, sep='\t', header=None, na_values=".",
+                                   comment="#",
                                    usecols=self.parsing_parameters[format][parsing_mode]["cols"],
                                    converters=self.parsing_parameters[format][parsing_mode]["converters"],
                                    names=self.parsing_parameters[format][parsing_mode]["col_names"],
