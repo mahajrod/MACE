@@ -3,6 +3,7 @@
 GFF Parser Module based on pandas
 """
 __author__ = 'Sergei F. Kliver'
+import datetime
 from copy import deepcopy
 from collections import OrderedDict, Iterable
 
@@ -226,9 +227,9 @@ class CollectionGFF:
             retained_columns = deepcopy(self.parsing_parameters[self.format][self.parsing_mode]["col_names"])
             for entry in "attributes", "scaffold":
                 retained_columns.remove(entry)
-            print self.records
-            print "AAAA"
-            print attributes
+            # self.records
+            #print "AAAA"
+            #print attributes
             self.records = pd.concat([self.records[retained_columns], attributes], axis=1)
         if sort:
             self.records.sort_values(by=["scaffold", "start", "end"])
@@ -247,7 +248,7 @@ class CollectionGFF:
         return col
 
     def parse_attributes(self):
-        print("Parsing attribute field...")
+        print("%s\tParsing attribute field..." % str(datetime.datetime.now()))
         tmp_attr = self.records["attributes"].str.split(";", expand=True)
         tmp_attr_list = [tmp_attr[column].str.split("=", expand=True) for column in tmp_attr.columns]
 
@@ -259,10 +260,10 @@ class CollectionGFF:
             parameter_set |= set(dataframe[0].unique())
 
         for param in parameter_set:
-            print ("\tParsing %s..." % param)
+            print ("\t%s\tParsing %s..." % (str(datetime.datetime.now()), param))
             temp_list = []
             for dataframe in tmp_attr_list:
-                print("\t\tParsing fragments...")
+                print("\t\t%s\tParsing fragments..." % str(datetime.datetime.now()))
                 column = dataframe[dataframe[0] == param][1]
                 if column.empty:
                     continue
@@ -271,9 +272,9 @@ class CollectionGFF:
                 temp_list.append(column)
             if not temp_list:
                 continue
-            print("\t\tMerging fragments...")
+            print("\t\t%s\tMerging fragments..." % str(datetime.datetime.now()))
             tmp = pd.concat(temp_list)
-            print("\t\tMerging finished...")
+            print("\t\t%s\tMerging finished..." % str(datetime.datetime.now()))
             del temp_list
             # TODO: check if 3 lines below are redundant in all possible cases
             shape = np.shape(tmp)
@@ -286,11 +287,11 @@ class CollectionGFF:
 
             attr_df_list.append(tmp)
         #print attr_df_list
-        print("Merging parameters...")
+        print("%s\tMerging parameters..." % str(datetime.datetime.now()))
         attr = pd.concat(attr_df_list, axis=1)
-        print("Merging finished.")
+        print("%s\tMerging finished." % str(datetime.datetime.now()))
         attr.sort_index(level=1, inplace=True)
-        print("Parsing attribute finished.")
+        print("%s\tParsing attribute finished." % str(datetime.datetime.now()))
         return attr
 
     def total_length(self):
