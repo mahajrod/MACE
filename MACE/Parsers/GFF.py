@@ -259,9 +259,10 @@ class CollectionGFF:
         shape = np.shape(tmp_attr)
         column_number = 1 if len(shape) == 1 else shape[1]
 
+        print tmp_attr.columns
         tmp_attr.columns = pd.MultiIndex.from_arrays([
-                                                      tmp_attr.columns
                                                       ["attributes"] * column_number,
+                                                      tmp_attr.columns
                                                      ])
 
         return tmp_attr
