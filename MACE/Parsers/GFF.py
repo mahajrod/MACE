@@ -276,6 +276,7 @@ class CollectionGFF:
                                                      ])
 
             attr_df_list.append(tmp)
+        print attr_df_list
         attr = pd.concat(attr_df_list, axis=1)
         attr.sort_index(level=1, inplace=True)
         return attr
