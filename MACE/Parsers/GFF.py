@@ -264,7 +264,8 @@ class CollectionGFF:
                                                       ["attributes"] * column_number,
                                                       tmp_attr.columns
                                                      ])
-
+        tmp_attr.index = self.records.index
+        print tmp_attr
         return tmp_attr
         """
         print("\t%s\tSplitting parameters from attribute field..." % str(datetime.datetime.now()))
