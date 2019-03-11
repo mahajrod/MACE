@@ -3,7 +3,7 @@
 GFF Parser Module based on pandas
 """
 __author__ = 'Sergei F. Kliver'
-
+from copy import deepcopy
 from collections import OrderedDict, Iterable
 
 import numpy as np
@@ -67,6 +67,84 @@ class CollectionGFF:
                                                                                          "end":           3
                                                                                          },
                                                                     },
+                                           "coord_and_attr": {
+                                                              "col_names": ["scaffold", "featuretype", "start", "end",
+                                                                            "strand", "attributes"],
+                                                              "cols":      [0, 2, 3, 4, 6, 8],
+                                                              "index_cols": ["scaffold", "featuretype"],
+                                                              "converters": {
+                                                                             "scaffold":       str,
+                                                                             "featuretype":    str,
+                                                                             "start":          lambda x: np.int32(x) - 1,
+                                                                             "end":            np.int32,
+                                                                             "strand":         str,
+                                                                             "attributes":     str,
+                                                                             },
+                                                              "col_name_indexes": {
+                                                                                   "scaffold":      0,
+                                                                                   "featuretype":   1,
+                                                                                   "start":         2,
+                                                                                   "end":           3,
+                                                                                   "strand":        6,
+                                                                                   "attributes":    8,
+                                                                                   },
+                                                              },
+                                           "all": {
+                                                   "col_names": ["scaffold", "source", "featuretype", "start", "end",
+                                                                 "score", "strand", "phase", "attributes"],
+                                                   "cols":      [0, 1, 2, 3, 4, 5, 6, 7, 8],
+                                                   "index_cols": ["scaffold", "featuretype"],
+                                                   "converters": {
+                                                                  "scaffold":       str,
+                                                                  "source":         str,
+                                                                  "featuretype":    str,
+                                                                  "start":          lambda x: np.int32(x) - 1,
+                                                                  "end":            np.int32,
+                                                                  "score":          float,
+                                                                  "strand":         str,
+                                                                  "phase":          np.int8,
+                                                                  "attributes":     str,
+                                                                  },
+                                                   "col_name_indexes": {
+                                                                        "scaffold":     0,
+                                                                        "source":       1,
+                                                                        "featuretype":  2,
+                                                                        "start":        3,
+                                                                        "end":          4,
+                                                                        "score":        5,
+                                                                        "strand":       6,
+                                                                        "phase":        7,
+                                                                        "attributes":   8
+                                                                        },
+                                                   },
+                                           "complete": {
+                                                   "col_names": ["scaffold", "source", "featuretype", "start", "end",
+                                                                 "score", "strand", "phase", "attributes"],
+                                                   "cols":      [0, 1, 2, 3, 4, 5, 6, 7, 8],
+                                                   "index_cols": ["scaffold", "featuretype"],
+                                                   "converters": {
+                                                                  "scaffold":       str,
+                                                                  "source":         str,
+                                                                  "featuretype":    str,
+                                                                  "start":          lambda x: np.int32(x) - 1,
+                                                                  "end":            np.int32,
+                                                                  "score":          float,
+                                                                  "strand":         str,
+                                                                  "phase":          np.int8,
+                                                                  "attributes":     str,
+                                                                  },
+                                                   "col_name_indexes": {
+                                                                        "scaffold":     0,
+                                                                        "source":       1,
+                                                                        "featuretype":  2,
+                                                                        "start":        3,
+                                                                        "end":          4,
+                                                                        "score":        5,
+                                                                        "strand":       6,
+                                                                        "phase":        7,
+                                                                        "attributes":   8
+                                                                        },
+                                                   },
                                            },
                                    "bed": {
                                            "only_coordinates": {
@@ -87,10 +165,24 @@ class CollectionGFF:
                                            }
                                    }
         self.parsing_mode = parsing_mode
-        self.type_parsing_modes = ["coordinates_and_type"]
+        self.type_parsing_modes = ["coordinates_and_type", "all", "coord_and_attr"]
+        self.attributes_parsing_modes = ["complete", "coord_and_attr"]
         self.format = format
         self.black_list = black_list
         self.white_list = white_list
+
+        # attributes type conversion parameters
+        self.parameter_separator_dict = OrderedDict()
+        self.default_replace_dict = OrderedDict({
+                                                 ".": None
+                                                 })
+        self.converters = OrderedDict()
+        self.pandas_int_type_correspondence = OrderedDict({
+                                                           "Int8": np.float16,
+                                                           "Int16": np.float16,
+                                                           "Int32": np.float32,
+                                                           "Int64": np.float64,
+                                                           })
 
         # init aliases
         self.record_id_col = self.parsing_parameters[self.format][self.parsing_mode]["col_name_indexes"]["scaffold"]
@@ -122,13 +214,83 @@ class CollectionGFF:
                                    names=self.parsing_parameters[format][parsing_mode]["col_names"],
                                    index_col=self.parsing_parameters[format][parsing_mode]["index_cols"])
 
+        if parsing_mode in self.attributes_parsing_modes:
+            attributes = self.parse_attributes()
+            self.records.columns = pd.MultiIndex.from_arrays([
+                                                              self.records.columns,
+                                                              self.records.columns,
+                                                              ])
+            retained_columns = deepcopy(self.parsing_parameters[self.format][self.parsing_mode]["col_names"])
+            retained_columns.remove("attributes")
+            self.records = pd.concat([self.records[retained_columns],
+                                          ] + attributes, axis=1)
         if sort:
             self.records.sort_values(by=["scaffold", "start", "end"])
+
+    def parse_column(self, column, param):
+        #col.replace(self.default_replace_dict, inplace=True)
+        if param not in self.converters:
+            return column
+        elif self.converters[param] == str:
+            return column
+        if self.converters[param] in self.pandas_int_type_correspondence:
+            col = column.apply(self.pandas_int_type_correspondence[self.converters[param]]).astype(self.converters[param])
+        else:
+            col = column.apply(self.converters[param])
+
+        return col
+
+    def parse_attributes(self):
+        print "Parsing attributes field..."
+        tmp_attr = self.records["attributes"].str.split(";", expand=True)
+        tmp_attr_list = [tmp_attr[column].str.split("=", expand=True) for column in tmp_info.columns]
+
+        del tmp_attr
+        info_df_list = []
+
+        parameter_set = set()
+        for dataframe in tmp_attr_list:
+            parameter_set |= set(dataframe[0].unique())
+
+        for param in parameter_set:
+            temp_list = []
+            for dataframe in tmp_attr_list:
+                column = dataframe[dataframe[0] == param][1]
+                if column.empty:
+                    continue
+                column = self.parse_column(column, param)
+                temp_list.append(column)
+            if not temp_list:
+                continue
+            tmp = pd.concat(temp_list)
+
+            del temp_list
+            # TODO: check if 3 lines below are redundant in all possible cases
+            shape = np.shape(tmp)
+            column_number = 1 if len(shape) == 1 else shape[1]
+            tmp = tmp.to_frame(param) if isinstance(tmp, pd.Series) else tmp
+            tmp.columns = pd.MultiIndex.from_arrays([
+                                                     ["Attributes"] * column_number,
+                                                     [param] * column_number
+                                                     ])
+
+            info_df_list.append(tmp)
+                #print(info_df_list[-1])
+        info = pd.concat(info_df_list, axis=1)
+        info.sort_index(level=1, inplace=True)
+        return info
+
 
     def total_length(self):
         return np.sum(self.records['end'] - self.records['start'])
 
     def collapse_records(self, sort=True, verbose=True):
+        """
+        strand-independent collapse
+        :param sort:
+        :param verbose:
+        :return:
+        """
         records_before_collapse = len(self.records)
 
         if sort:
