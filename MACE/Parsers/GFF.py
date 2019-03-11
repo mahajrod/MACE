@@ -229,8 +229,7 @@ class CollectionGFF:
             print self.records
             print "AAAA"
             print attributes
-            self.records = pd.concat([self.records[retained_columns],
-                                          ] + attributes, axis=1)
+            self.records = pd.concat([self.records[retained_columns], attributes], axis=1)
         if sort:
             self.records.sort_values(by=["scaffold", "start", "end"])
 
