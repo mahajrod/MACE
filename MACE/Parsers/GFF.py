@@ -128,7 +128,7 @@ class CollectionGFF:
                                                                   "featuretype":    str,
                                                                   "start":          lambda x: np.int32(x) - 1,
                                                                   "end":            np.int32,
-                                                                  #"score":          np.int32,
+                                                                  "score":          str,
                                                                   "strand":         str,
                                                                   "phase":          np.int8,
                                                                   "attributes":     str,
