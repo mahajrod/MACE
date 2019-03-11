@@ -224,7 +224,8 @@ class CollectionGFF:
                                                               self.records.columns,
                                                               ])
             retained_columns = deepcopy(self.parsing_parameters[self.format][self.parsing_mode]["col_names"])
-            retained_columns.remove("attributes")
+            for entry in "attributes", "scaffold":
+                retained_columns.remove(entry)
             self.records = pd.concat([self.records[retained_columns],
                                           ] + attributes, axis=1)
         if sort:
