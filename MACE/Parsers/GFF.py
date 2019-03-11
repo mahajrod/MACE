@@ -53,7 +53,7 @@ class CollectionGFF:
                                            "coordinates_and_type": {
                                                                     "col_names": ["scaffold", "featuretype", "start", "end"],
                                                                     "cols":      [0, 2, 3, 4],
-                                                                    "index_cols": ["scaffold", "featuretype"],
+                                                                    "index_cols": ["scaffold"],
                                                                     "converters": {
                                                                                    "scaffold":       str,
                                                                                    "featuretype":    str,
@@ -93,7 +93,7 @@ class CollectionGFF:
                                                    "col_names": ["scaffold", "source", "featuretype", "start", "end",
                                                                  "score", "strand", "phase", "attributes"],
                                                    "cols":      [0, 1, 2, 3, 4, 5, 6, 7, 8],
-                                                   "index_cols": ["scaffold", "featuretype"],
+                                                   "index_cols": ["scaffold"],
                                                    "converters": {
                                                                   "scaffold":       str,
                                                                   "source":         str,
@@ -121,7 +121,7 @@ class CollectionGFF:
                                                    "col_names": ["scaffold", "source", "featuretype", "start", "end",
                                                                  "score", "strand", "phase", "attributes"],
                                                    "cols":      [0, 1, 2, 3, 4, 5, 6, 7, 8],
-                                                   "index_cols": ["scaffold", "featuretype"],
+                                                   "index_cols": ["scaffold"],
                                                    "converters": {
                                                                   "scaffold":       str,
                                                                   "source":         str,
