@@ -209,6 +209,7 @@ class CollectionGFF:
         elif parsing_mode not in self.parsing_parameters[format]:
             raise ValueError("ERROR!!! This format(%s) was not implemented yet for parsing in this mode(%s)!" % (format, parsing_mode))
 
+        print("%s\tReading input..." % str(datetime.datetime.now()))
         self.records = pd.read_csv(in_file, sep='\t', header=None, na_values=".",
                                    comment="#",
                                    usecols=self.parsing_parameters[format][parsing_mode]["cols"],
@@ -218,6 +219,8 @@ class CollectionGFF:
 
         self.records.index = pd.MultiIndex.from_arrays([self.records.index, np.arange(0, len(self.records))],
                                                        names=("scaffold", "row"))
+        print("%s\tReading input finished..." % str(datetime.datetime.now()))
+
         if parsing_mode in self.attributes_parsing_modes:
             attributes = self.parse_attributes()
             self.records.columns = pd.MultiIndex.from_arrays([
