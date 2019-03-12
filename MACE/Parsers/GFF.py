@@ -198,7 +198,8 @@ class CollectionGFF:
 
         # load records
         if in_file:
-            self.read(in_file, format=format, parsing_mode=parsing_mode, black_list=black_list, white_list=white_list)
+            self.read(in_file, format=format, parsing_mode=parsing_mode, black_list=black_list, white_list=white_list,
+                      featuretype_separation=featuretype_separation)
 
         else:
             self.records = records
@@ -230,19 +231,28 @@ class CollectionGFF:
         print("%s\tReading input finished..." % str(datetime.datetime.now()))
         if parsing_mode in self.featuretype_parsing_modes:
             self.featuretype_list = list(self.records[["featuretype"]].iloc[:, 0].unique())
-        
-        if parsing_mode in self.attributes_parsing_modes:
             if featuretype_separation:
-                pass
+                self.records = OrderedDict([(featuretype, self.records[self.records["featuretype"] == featuretype]) for featuretype in self.featuretype_list])
+
+        if parsing_mode in self.attributes_parsing_modes:
+            retained_columns = deepcopy(self.parsing_parameters[self.format][self.parsing_mode]["col_names"])
+            for entry in "attributes", "scaffold":
+                retained_columns.remove(entry)
+
+            if featuretype_separation and (parsing_mode in self.featuretype_parsing_modes):
+                attributes_dict = self.parse_attributes()
+                for featuretype in self.featuretype_list:
+                    self.records[featuretype].columns = pd.MultiIndex.from_arrays([
+                                                                                   self.records.columns,
+                                                                                   self.records.columns,
+                                                                                   ])
+                    self.records[featuretype] = pd.concat([self.records[featuretype][retained_columns], attributes_dict[featuretype]], axis=1)
             else:
                 attributes = self.parse_attributes()
                 self.records.columns = pd.MultiIndex.from_arrays([
                                                                   self.records.columns,
                                                                   self.records.columns,
                                                                   ])
-                retained_columns = deepcopy(self.parsing_parameters[self.format][self.parsing_mode]["col_names"])
-                for entry in "attributes", "scaffold":
-                    retained_columns.remove(entry)
 
                 self.records = pd.concat([self.records[retained_columns], attributes], axis=1)
         if sort:
@@ -263,20 +273,42 @@ class CollectionGFF:
 
     def parse_attributes(self):
         print("%s\tParsing attribute field..." % str(datetime.datetime.now()))
+        if isinstance(self.records, (OrderedDict, dict)):
+            tmp_attr_dict = OrderedDict()
+            for entry in self.records:
+                tmp_attr = map(lambda s: OrderedDict(map(lambda b: b.split("="), s.split(";"))), list(self.records[entry]["attributes"]))
+                tmp_attr = pd.DataFrame(tmp_attr)
 
-        tmp_attr = map(lambda s: OrderedDict(map(lambda b: b.split("="), s.split(";"))), list(self.records["attributes"]))
-        tmp_attr = pd.DataFrame(tmp_attr)
+                shape = np.shape(tmp_attr)
+                column_number = 1 if len(shape) == 1 else shape[1]
 
-        shape = np.shape(tmp_attr)
-        column_number = 1 if len(shape) == 1 else shape[1]
+                tmp_attr.columns = pd.MultiIndex.from_arrays([
+                                                              ["attributes"] * column_number,
+                                                              tmp_attr.columns
+                                                             ])
+                tmp_attr.index = self.records[entry].index
+                tmp_attr_dict[entry] = tmp_attr
+            print("%s\tParsing attribute field finished..." % str(datetime.datetime.now()))
+            return tmp_attr_dict
 
-        tmp_attr.columns = pd.MultiIndex.from_arrays([
-                                                      ["attributes"] * column_number,
-                                                      tmp_attr.columns
-                                                     ])
-        tmp_attr.index = self.records.index
-        print("%s\tParsing attribute field finished..." % str(datetime.datetime.now()))
-        return tmp_attr
+        elif isinstance(self.records, (pd.DataFrame,)):
+
+            tmp_attr = map(lambda s: OrderedDict(map(lambda b: b.split("="), s.split(";"))), list(self.records["attributes"]))
+            tmp_attr = pd.DataFrame(tmp_attr)
+
+            shape = np.shape(tmp_attr)
+            column_number = 1 if len(shape) == 1 else shape[1]
+
+            tmp_attr.columns = pd.MultiIndex.from_arrays([
+                                                          ["attributes"] * column_number,
+                                                          tmp_attr.columns
+                                                         ])
+            tmp_attr.index = self.records.index
+            print("%s\tParsing attribute field finished..." % str(datetime.datetime.now()))
+            return tmp_attr
+        else:
+            raise ValueError("ERROR!!! Unknown format of the records!")
+
         """
         print("\t%s\tSplitting parameters from attribute field..." % str(datetime.datetime.now()))
         tmp_attr = self.records["attributes"].str.split(";", expand=True)
