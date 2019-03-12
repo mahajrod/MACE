@@ -243,8 +243,8 @@ class CollectionGFF:
                 attributes_dict = self.parse_attributes()
                 for featuretype in self.featuretype_list:
                     self.records[featuretype].columns = pd.MultiIndex.from_arrays([
-                                                                                   self.records.columns,
-                                                                                   self.records.columns,
+                                                                                   self.records[featuretype].columns,
+                                                                                   self.records[featuretype].columns,
                                                                                    ])
                     self.records[featuretype] = pd.concat([self.records[featuretype][retained_columns], attributes_dict[featuretype]], axis=1)
             else:
