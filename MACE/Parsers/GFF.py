@@ -167,7 +167,7 @@ class CollectionGFF:
                                    }
         self.parsing_mode = parsing_mode
         self.featuretype_separation = featuretype_separation
-        self.featuretype_parsing_modes = ["coordinates_and_type", "all", "coord_and_attr"]
+        self.featuretype_parsing_modes = ["coordinates_and_type", "all", "coord_and_attr", "complete"]
         self.attributes_parsing_modes = ["complete", "coord_and_attr"]
         self.format = format
         self.black_list = black_list
