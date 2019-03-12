@@ -197,6 +197,7 @@ class CollectionGFF:
         self.index_cols = self.parsing_parameters[self.format][self.parsing_mode]["index_cols"]
 
         # load records
+        self.featuretype_list = None
         if in_file:
             self.read(in_file, format=format, parsing_mode=parsing_mode, black_list=black_list, white_list=white_list,
                       featuretype_separation=featuretype_separation)
@@ -204,7 +205,12 @@ class CollectionGFF:
         else:
             self.records = records
 
-        self.scaffold_list = self.records.index.get_level_values('scaffold').unique().to_list()
+        if featuretype_separation and (self.parsing_mode in self.featuretype_parsing_modes):
+            self.scaffold_dict = OrderedDict([(featuretype, self.records[featuretype].index.get_level_values('scaffold').unique().to_list()) for featuretype in self.featuretype_list])
+            self.scaffold_list = list(self.scaffold_dict.values())
+        else:
+            self.scaffold_list = self.records.index.get_level_values('scaffold').unique().to_list()
+            self.scaffold_dict = None
 
     def read(self, in_file, format="gff", parsing_mode="only_coordinates", featuretype_separation=False,
              sort=False, black_list=(), white_list=()):
