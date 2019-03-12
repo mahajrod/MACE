@@ -14,7 +14,7 @@ import pandas as pd
 class CollectionGFF:
 
     def __init__(self, in_file=None, records=None, format="gff", parsing_mode="only_coordinates",
-                 black_list=(), white_list=()):
+                 black_list=(), white_list=(), featuretype_separation=False):
 
         self.formats = ["gff", "gtf", "bed"]
         self.GFF_COLS = OrderedDict({
@@ -166,11 +166,14 @@ class CollectionGFF:
                                            }
                                    }
         self.parsing_mode = parsing_mode
-        self.type_parsing_modes = ["coordinates_and_type", "all", "coord_and_attr"]
+        self.featuretype_separation = featuretype_separation
+        self.featuretype_parsing_modes = ["coordinates_and_type", "all", "coord_and_attr"]
         self.attributes_parsing_modes = ["complete", "coord_and_attr"]
         self.format = format
         self.black_list = black_list
         self.white_list = white_list
+        
+        self.featuretype_list = []
 
         # attributes type conversion parameters
         self.parameter_separator_dict = OrderedDict()
@@ -200,10 +203,10 @@ class CollectionGFF:
         else:
             self.records = records
 
-        self.scaffold_list = self.records.index.unique().to_list()
+        self.scaffold_list = self.records.index.get_level_values('scaffold').unique().to_list()
 
-    def read(self, in_file, format="gff", parsing_mode="only_coordinates", sort=False,
-             black_list=(), white_list=()):
+    def read(self, in_file, format="gff", parsing_mode="only_coordinates", featuretype_separation=False,
+             sort=False, black_list=(), white_list=()):
         if format not in self.parsing_parameters:
             raise ValueError("ERROR!!! This format(%s) was not implemented yet for parsing!" % parsing_mode)
         elif parsing_mode not in self.parsing_parameters[format]:
@@ -217,23 +220,31 @@ class CollectionGFF:
                                    names=self.parsing_parameters[format][parsing_mode]["col_names"],
                                    index_col=self.parsing_parameters[format][parsing_mode]["index_cols"])
 
+        if white_list or black_list:
+            scaffolds_to_keep = self.get_filtered_entry_list(self.records.index, entry_black_list=black_list,
+                                                             entry_white_list=white_list)
+            self.records = self.records[self.records.index.get_level_values('scaffold').isin(scaffolds_to_keep)]
+
         self.records.index = pd.MultiIndex.from_arrays([self.records.index, np.arange(0, len(self.records))],
                                                        names=("scaffold", "row"))
         print("%s\tReading input finished..." % str(datetime.datetime.now()))
-
+        if parsing_mode in self.featuretype_parsing_modes:
+            self.featuretype_list = list(self.records[["featuretype"]].iloc[:, 0].unique())
+        
         if parsing_mode in self.attributes_parsing_modes:
-            attributes = self.parse_attributes()
-            self.records.columns = pd.MultiIndex.from_arrays([
-                                                              self.records.columns,
-                                                              self.records.columns,
-                                                              ])
-            retained_columns = deepcopy(self.parsing_parameters[self.format][self.parsing_mode]["col_names"])
-            for entry in "attributes", "scaffold":
-                retained_columns.remove(entry)
-            # self.records
-            #print "AAAA"
-            #print attributes
-            self.records = pd.concat([self.records[retained_columns], attributes], axis=1)
+            if featuretype_separation:
+                pass
+            else:
+                attributes = self.parse_attributes()
+                self.records.columns = pd.MultiIndex.from_arrays([
+                                                                  self.records.columns,
+                                                                  self.records.columns,
+                                                                  ])
+                retained_columns = deepcopy(self.parsing_parameters[self.format][self.parsing_mode]["col_names"])
+                for entry in "attributes", "scaffold":
+                    retained_columns.remove(entry)
+
+                self.records = pd.concat([self.records[retained_columns], attributes], axis=1)
         if sort:
             self.records.sort_values(by=["scaffold", "start", "end"])
 
@@ -434,7 +445,7 @@ class CollectionGFF:
     def extract_sequences_by_type(self, sequence_collection, record_type_black_list=[], record_type_white_list=[],
                                   return_type="collection", records_parsing_type="parse"):
 
-        if self.parsing_mode in self.type_parsing_modes:
+        if self.parsing_mode in self.featuretype_parsing_modes:
             if return_type == "collection":
                 selected_records = self.records[self.records.index.isin(record_type_white_list, level=1) & (~self.records.index.isin(record_type_black_list, level=1))]
 
