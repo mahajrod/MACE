@@ -377,51 +377,58 @@ class CollectionGFF:
         :param verbose:
         :return:
         """
-        records_before_collapse = len(self.records)
+        if self.featuretype_separation:
+            raise ValueError("ERROR!!! Record collapse for parsing with feature separation was not implemented yet!")
+        else:
+            records_before_collapse = len(self.records)
 
-        if sort:
-            self.records.sort_values(by=["scaffold", "start", "end"])
-        row_list = []
-        for scaffold in self.scaffold_list:
-            #print scaffold
-            # check if there is only one record per scaffold, necessary as pandas will return interger instead of Series
-            if len(self.records.loc[[scaffold]]) == 1:
-                for row in self.records.loc[[scaffold]].itertuples(index=True):
-                    row_list.append(list(row))
-                continue
-            #print self.records.loc[scaffold]
-            # remove nested records
-            end_diff = self.records.loc[[scaffold]]['end'].diff()
-            #print len(end_diff)
-            end_diff[0] = 1
-            no_nested_records_df = self.records.loc[[scaffold]][end_diff > 0]
-            #print len(no_nested_records_df)
-            # collapse overlapping records
+            if sort:
+                self.records.sort_values(by=["scaffold", "start", "end"])
+            row_list = []
+            for scaffold in self.scaffold_list:
+                #print scaffold
+                # check if there is only one record per scaffold, necessary as pandas will return interger instead of Series
+                if len(self.records.loc[[scaffold]]) == 1:
+                    for row in self.records.loc[[scaffold]].itertuples(index=True):
+                        row_list.append(list(row))
+                    continue
+                #print self.records.loc[scaffold]
+                # remove nested records
+                end_diff = self.records.loc[[scaffold]]['end'].diff()
+                #print len(end_diff)
+                end_diff[0] = 1
+                no_nested_records_df = self.records.loc[[scaffold]][end_diff > 0]
+                #print len(no_nested_records_df)
+                # collapse overlapping records
 
-            row_iterator = no_nested_records_df.itertuples(index=True)
+                row_iterator = no_nested_records_df.itertuples(index=True)
 
-            prev_row = list(row_iterator.next())
+                prev_row = list(row_iterator.next())
 
-            for row in row_iterator:
-                row_l = list(row)
-                if row_l[self.record_start_col] > prev_row[self.record_end_col]:
-                    row_list.append(prev_row)
-                    prev_row = row_l
-                else:
-                    prev_row[self.record_end_col] = row_l[self.record_end_col]
+                for row in row_iterator:
+                    row_l = list(row)
+                    if row_l[self.record_start_col] > prev_row[self.record_end_col]:
+                        row_list.append(prev_row)
+                        prev_row = row_l
+                    else:
+                        prev_row[self.record_end_col] = row_l[self.record_end_col]
 
-            row_list.append(prev_row)
-        self.records = pd.DataFrame.from_records(row_list, columns=self.col_names, index=self.index_cols)
+                row_list.append(prev_row)
+            self.records = pd.DataFrame.from_records(row_list, columns=self.col_names, index=self.index_cols)
 
-        if verbose:
-            print("Records before collapsing: %i\nRecords after collapsing: %i" % (records_before_collapse,
-                                                                                   len(self.records)))
+            if verbose:
+                print("Records before collapsing: %i\nRecords after collapsing: %i" % (records_before_collapse,
+                                                                                       len(self.records)))
 
     def remove_small_records(self, min_record_length):
-        records_before_collapse = len(self.records)
-        self.records = self.records[(self.records['end'] - self.records['start']) >= min_record_length]
-        print("Records before filtering: %i\nRecords afterfiltering: %i" % (records_before_collapse,
-                                                                                   len(self.records)))
+        if self.featuretype_separation:
+            raise ValueError("ERROR!!! Removal of small records for parsing with feature separation "
+                             "was not implemented yet!")
+        else:
+            records_before_collapse = len(self.records)
+            self.records = self.records[(self.records['end'] - self.records['start']) >= min_record_length]
+            print("Records before filtering: %i\nRecords afterfiltering: %i" % (records_before_collapse,
+                                                                                       len(self.records)))
 
     def __add__(self, other):
         new_gff_record = CollectionGFF(records=pd.concat([self.records, other.records]),
@@ -440,7 +447,6 @@ class CollectionGFF:
         new_gff_record.records = new_gff_record.records.sort_values(by=["scaffold", "start", "end"])
 
         return new_gff_record
-
 
     @staticmethod
     def get_filtered_entry_list(entry_list,
@@ -479,7 +485,7 @@ class CollectionGFF:
             if expression:
                 if not expression(entry):
                     continue
-            yield  entry[self.record_id_col], sequence_collection[entry[self.record_id_col]][entry[self.record_start_col]:entry[self.record_end_col]]
+            yield entry[self.record_id_col], sequence_collection[entry[self.record_id_col]][entry[self.record_start_col]:entry[self.record_end_col]]
 
     def extract_sequences_by_type(self, sequence_collection, record_type_black_list=[], record_type_white_list=[],
                                   return_type="collection", records_parsing_type="parse"):
