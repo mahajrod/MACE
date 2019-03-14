@@ -248,17 +248,17 @@ class CollectionGFF:
             if featuretype_separation and (parsing_mode in self.featuretype_parsing_modes):
                 attributes_dict = self.parse_attributes()
                 for featuretype in self.featuretype_list:
-                    self.records[featuretype].columns = pd.MultiIndex.from_arrays([
-                                                                                   self.records[featuretype].columns,
-                                                                                   self.records[featuretype].columns,
-                                                                                   ])
+                    #self.records[featuretype].columns = pd.MultiIndex.from_arrays([
+                    #                                                               self.records[featuretype].columns,
+                    #                                                               self.records[featuretype].columns,
+                    #                                                               ])
                     self.records[featuretype] = pd.concat([self.records[featuretype][retained_columns], attributes_dict[featuretype]], axis=1)
             else:
                 attributes = self.parse_attributes()
-                self.records.columns = pd.MultiIndex.from_arrays([
-                                                                  self.records.columns,
-                                                                  self.records.columns,
-                                                                  ])
+                #self.records.columns = pd.MultiIndex.from_arrays([
+                #                                                  self.records.columns,
+                #                                                  self.records.columns,
+                #                                                  ])
 
                 self.records = pd.concat([self.records[retained_columns], attributes], axis=1)
         if sort:
@@ -288,10 +288,11 @@ class CollectionGFF:
                 shape = np.shape(tmp_attr)
                 column_number = 1 if len(shape) == 1 else shape[1]
 
-                tmp_attr.columns = pd.MultiIndex.from_arrays([
-                                                              ["attributes"] * column_number,
-                                                              tmp_attr.columns
-                                                             ])
+                #tmp_attr.columns = pd.MultiIndex.from_arrays([
+                #                                              ["attributes"] * column_number,
+                #                                              tmp_attr.columns
+                #                                             ])
+
                 tmp_attr.index = self.records[entry].index
                 tmp_attr_dict[entry] = tmp_attr
             print("%s\tParsing attribute field finished..." % str(datetime.datetime.now()))
