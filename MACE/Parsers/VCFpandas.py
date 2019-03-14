@@ -217,7 +217,7 @@ class MetadataVCF(OrderedDict):
             self.read(in_file)
         else:
             self.metadata = metadata
-        self.converters  = OrderedDict()
+        self.converters = OrderedDict()
         self.info_flag_list = []
         self.info_nonflag_list = []
         self.format_flag_list = []
