@@ -2,8 +2,8 @@
 __author__ = 'Sergei F. Kliver'
 import argparse
 
-from MACE.General.GeneralCollections import SynDict
-from MACE.Parsers.SNPeff import CollectionSNPeff
+from RouToolPa.Collections.General import SynDict
+from RouToolPa.Parsers.SNPeff import CollectionSNPeff
 
 
 parser = argparse.ArgumentParser()

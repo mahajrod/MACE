@@ -1,9 +1,8 @@
 #!/usr/bin/env python
 __author__ = 'Sergei F. Kliver'
-import sys
+
 import argparse
 
-from BCBio import GFF
 from MACE.Parsers.VCF import CollectionVCF, ReferenceGenome
 
 parser = argparse.ArgumentParser()

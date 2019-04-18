@@ -24,7 +24,7 @@ from MACE.Functions.Generators import recursive_generator
 from MACE.General.GeneralCollections import TwoLvlDict
 
 
-class DrawingRoutines:
+class DrawingRoutinesPandas:
 
     @staticmethod
     def millions(x, pos):
@@ -89,7 +89,7 @@ class DrawingRoutines:
 
         return final_scaffold_list
 
-    def draw_variant_window_densities(self, count_dict, scaffold_length_dict, window_size, window_step, output_prefix,
+    def draw_variant_window_densities(self, count_df, scaffold_length_dict, window_size, window_step, output_prefix,
                                       masking_dict=None,
                                       gap_fraction_threshold=0.4,
                                       record_style=None, ext_list=("svg", "png"),
@@ -113,7 +113,7 @@ class DrawingRoutines:
         if dist_between_scaffolds_scaling_factor < 1:
             raise ValueError("Scaling factor for distance between scaffolds have to be >=1.0")
 
-        final_scaffold_list = self.get_filtered_scaffold_list(count_dict,
+        final_scaffold_list = self.get_filtered_scaffold_list(count_df.index.get_level_values('CHROM').unique().to_list(),
                                                               scaffold_black_list=scaffold_black_list,
                                                               sort_scaffolds=sort_scaffolds,
                                                               scaffold_ordered_list=scaffold_ordered_list,
@@ -121,9 +121,9 @@ class DrawingRoutines:
         scaffold_number = len(final_scaffold_list)
         max_scaffold_length = max([scaffold_length_dict[scaf] for scaf in final_scaffold_list])
         #max_scaffold_length = max(scaffold_length_dict.values())
-
+        window_number, sample_number = np.shape(count_df)
         figure = plt.figure(figsize=(figure_width,
-                                     int(figure_height_scale_factor * scaffold_number * len(count_dict))))
+                                     int(figure_height_scale_factor * scaffold_number * sample_number)))
         subplot = plt.subplot(1, 1, 1)
 
         subplot.get_yaxis().set_visible(False)
@@ -153,7 +153,7 @@ class DrawingRoutines:
         masked_windows_count_dict = TwoLvlDict()
         no_snps_windows_count_dict = TwoLvlDict()
 
-        for sample in count_dict:
+        for sample in count_df:
             masked_windows_count_dict[sample] = OrderedDict()
             no_snps_windows_count_dict[sample] = OrderedDict()
 
@@ -165,7 +165,7 @@ class DrawingRoutines:
         for scaffold in final_scaffold_list:
 
             sample_index = 0
-            for sample in count_dict:
+            for sample in count_df:
                 masked_windows_count_dict[sample][scaffold] = 0
                 no_snps_windows_count_dict[sample][scaffold] = 0
                 #if scaffold in scaffold_black_list:
@@ -213,8 +213,8 @@ class DrawingRoutines:
                                  xy=(0, label_y_start), xycoords='data', fontsize=16,
                                  xytext=(-15, 1.5 * label_line_y_shift), textcoords='offset points',
                                  ha='right', va='top')
-                if scaffold in count_dict[sample]:
-                    for window_index in range(0, len(count_dict[sample][scaffold])):
+                if scaffold in count_df[sample]:
+                    for window_index in count_df.loc[scaffold].index:
 
                         window_start = window_index * window_step
                         window_end = window_start + window_size - 1  # TODO: check end coordinate
@@ -222,11 +222,11 @@ class DrawingRoutines:
                             if scaffold in masking_dict:
                                 unmasked_length = window_size - masking_dict[scaffold][window_index]
                                 if unmasked_length > 0:
-                                    variant_density = float(count_dict[sample][scaffold][window_index] * density_multiplicator) / float(unmasked_length)
+                                    variant_density = float(count_df[sample].loc[scaffold, window_index] * density_multiplicator) / float(unmasked_length)
                                 else:
                                     variant_density = None
                         else:
-                            variant_density = float(count_dict[sample][scaffold][window_index] * density_multiplicator) / float(window_size)
+                            variant_density = float(count_df[sample].loc[scaffold, window_index] * density_multiplicator) / float(window_size)
 
                         if variant_density is None:
                             window_color = masked_color

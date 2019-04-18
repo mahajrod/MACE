@@ -6,7 +6,7 @@ from collections import OrderedDict
 from BCBio import GFF
 
 from MACE.Parsers.VCF import ReferenceGenome, CollectionVCF, ref_alt_variants
-from CustomCollections.GeneralCollections import TwoLvlDict
+from RouToolPa.Collections.General import TwoLvlDict
 
 
 def check_location(feature, pos):

@@ -4,10 +4,8 @@ import sys
 import argparse
 
 from collections import OrderedDict
-from BCBio import GFF
 from MACE.Parsers.VCF import CollectionVCF, ReferenceGenome
-from MACE.Routines import DrawingRoutines
-from MACE.General.GeneralCollections import IdList
+from RouToolPa.Collections.General import IdList
 
 parser = argparse.ArgumentParser()
 

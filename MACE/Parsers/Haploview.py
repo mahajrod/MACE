@@ -119,8 +119,6 @@ class HaploviewCollection(Collection):
                 for record in self.records[scaffold]:
                     out_fd.write("%s\t%s\n" % (scaffold, "\t".join(map(str, record))))
 
-    def
-
 """
     def filter_records(self, expression):
         # expression should be a function with one argument - record entry

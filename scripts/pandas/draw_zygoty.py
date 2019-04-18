@@ -1,10 +1,7 @@
 #!/usr/bin/env python
 __author__ = 'Sergei F. Kliver'
-import sys
 import argparse
-
-from MACE.Parsers.VCFpandas import CollectionVCF
-from MACE.Parsers.Sequence import CollectionSequence
+from RouToolPa.Parsers.VCF import CollectionVCF
 
 parser = argparse.ArgumentParser()
 
