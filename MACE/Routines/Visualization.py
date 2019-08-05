@@ -1,14 +1,8 @@
 #!/usr/bin/env python
-
-import os
 import math
 from collections import Iterable, OrderedDict
 
 import numpy as np
-
-import matplotlib
-matplotlib.use('Agg')
-os.environ['MPLCONFIGDIR'] = '/tmp/'
 
 import matplotlib.pyplot as plt
 plt.ioff()
@@ -18,77 +12,66 @@ from matplotlib import cm
 from matplotlib import colors
 from matplotlib import text
 
-from RouToolPa.Routines import FileRoutines
+#from RouToolPa.Routines import FileRoutines
+from RouToolPa.Routines.Sequence import SequenceRoutines
+from RouToolPa.Routines.Drawing import DrawingRoutines
 from MACE.Functions.Generators import recursive_generator
-
 from RouToolPa.Collections.General import TwoLvlDict
 
 
-class DrawingRoutinesPandas:
+class Visualization(DrawingRoutines):
 
     @staticmethod
-    def millions(x, pos):
-        return '%1.1fMbp' % (x*1e-6)
+    def zygoty_bar_plot(zygoty_counts, output_prefix, extension_list=("png",),
+                        figsize=(5, 5), dpi=200, title=None, color_dict=None):
 
-    @staticmethod
-    def billions(x, pos):
-        return '%1.1fGbp' % (x*1e-9)
+        default_color_dict = OrderedDict({
+                                          "homo": "orange",
+                                          "hetero": "blue",
+                                          "ref": "green",
+                                          "absent": "red",
+                                          })
 
-    @staticmethod
-    def get_filtered_scaffold_list(count_dict,
-                                   scaffold_black_list=[],
-                                   sort_scaffolds=False,
-                                   scaffold_ordered_list=None,
-                                   scaffold_white_list=[],
-                                   sample_level=True):
-        white_set = set(scaffold_white_list)
-        black_set = set(scaffold_black_list)
+        colors = color_dict if color_dict else default_color_dict
 
-        scaffold_set = set()
-        if sample_level:
-            for sample in count_dict:
-                scaffold_set |= set(count_dict[sample])
-        else:
-            scaffold_set |= set(count_dict)
+        #zygoty_counts = self.count_zygoty(outfile="%s.counts" % output_prefix)
+        df_shape = np.shape(zygoty_counts)
+        fig = plt.figure(1, figsize=figsize, dpi=dpi)
 
-        if white_set:
-            #print "XXXXXXXXXXXXXX"
-            #print scaffold_set
-            #print "YYYYYYYYYYYYYYYY"
-            #print white_set
-            scaffold_set = scaffold_set & white_set
-            #print "ZZZZZZZZZZZZZZZZ"
-            #print scaffold_set
-        if black_set:
-            #print "WWWWWWWWWWWW"
-            #print black_set
-            scaffold_set = scaffold_set - black_set
-            #print "QQQQQQQQQQQQQQQQ"
-            #print black_set
+        bar_width = 1.0 / (df_shape[0] + 1)
+        bin_coord = np.arange(df_shape[1])
 
-        #print "RRRRRRRRRRRRRRRRRR"
-        #print scaffold_set
-        scaffold_list = list(scaffold_set)
-        #print "PPPPPPPPPPP"
-        #print scaffold_list
-        if sort_scaffolds:
-            scaffold_list.sort()
+        for i in range(0, df_shape[0]):
+            plt.bar(bin_coord + i * bar_width,
+                    zygoty_counts.loc[zygoty_counts.index[i]],
+                    width=bar_width, edgecolor='white',
+                    color=default_color_dict[zygoty_counts.index[i]],
+                    label=zygoty_counts.index[i])
 
-        final_scaffold_list = []
+        plt.ylabel('Variants', fontweight='bold')
+        plt.xlabel('Sample', fontweight='bold')
+        plt.xticks([coord + bar_width for coord in range(len(bin_coord))], zygoty_counts.columns,
+                   rotation=45)
+        if title:
+            plt.title(title, fontweight='bold')
+        plt.legend()
+        for extension in extension_list:
+            plt.savefig("%s.%s" % (output_prefix, extension), bbox_inches='tight')
+        plt.close()
 
-        if scaffold_ordered_list:
-            for entry in scaffold_ordered_list:
-                if entry in scaffold_list:
-                    final_scaffold_list.append(entry)
-                    scaffold_list.remove(entry)
-                else:
-                    print("WARNING!!!Entry(%s) from order list is absent in list of scaffolds!" % entry)
-            final_scaffold_list = final_scaffold_list + scaffold_list
-        else:
-            final_scaffold_list = scaffold_list
+        return zygoty_counts
 
-        return final_scaffold_list
+    # ----------------------- In progress ------------------------------
 
+    # ------------------ Not rewritten yet --------------------------------
+
+    """
+    self.get_filtered_scaffold_list(last_collection.target_scaffold_list,
+                                                               scaffold_black_list=target_black_list,
+                                                               sort_scaffolds=False,
+                                                               scaffold_ordered_list=target_ordered_list,
+                                                               scaffold_white_list=target_white_list)
+    """
     def draw_variant_window_densities(self, count_df, scaffold_length_dict, window_size, window_step, output_prefix,
                                       masking_dict=None,
                                       gap_fraction_threshold=0.4,

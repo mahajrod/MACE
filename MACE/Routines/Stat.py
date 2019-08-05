@@ -20,7 +20,7 @@ from scipy.spatial.distance import pdist
 from scipy.cluster.hierarchy import linkage, dendrogram, inconsistent, cophenet, fcluster
 
 import matplotlib
-matplotlib.use('Agg')
+#matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from matplotlib.ticker import FuncFormatter
 
@@ -97,13 +97,16 @@ class StatsVCF(FileRoutines):
 
         steps_in_window = window_size / window_stepppp
 
-        if reference_scaffold_lengths:
-            ref_scaf_len_df = reference_scaffold_lengths if isinstance(reference_scaffold_lengths, pd.DataFrame) else pd.DataFrame(reference_scaffold_lengths)
+        tmp_len_df = reference_scaffold_lengths if reference_scaffold_lengths else collection_vcf.metadata["contig"]
+
+        if isinstance(tmp_len_df, pd.DataFrame):
+            ref_scaf_len_df = tmp_len_df
         else:
-            ref_scaf_len_df = collection_vcf.metadata["contig"] if isinstance(collection_vcf.metadata["contig"], pd.DataFrame) else pd.DataFrame(collection_vcf.metadata["contig"])
+            ref_scaf_len_df = pd.DataFrame.from_dict(tmp_len_df, orient="index")
+            ref_scaf_len_df.columns = ["length"]
 
         def count_windows(scaffold_length):
-            return self.count_window_number_in_scaffold(scaffold_length, window_size, window_step)
+            return self.count_window_number_in_scaffold(scaffold_length, window_size, window_stepppp)
 
         number_of_windows_df = ref_scaf_len_df.applymap(count_windows)
         number_of_windows_df.columns = ["WINDOW"]
@@ -588,116 +591,6 @@ class StatsVCF(FileRoutines):
     #                        In progress                                    #
     #########################################################################
 
-    @staticmethod
-    def count_window_number_in_scaffold(scaffold_length, window_size, window_step):
-        if scaffold_length < window_size:
-            return 0
-        return int((scaffold_length - window_size)/window_step) + 1
-
-    def count_variants_in_windows(self, window_size, window_step, reference_scaffold_lengths,
-                                  ignore_scaffolds_shorter_than_window=True, output_prefix=None,
-                                  skip_empty_windows=False, expression=None, per_sample_output=False):
-
-        window_stepppp = window_size if window_step is None else window_step
-
-        if window_stepppp > window_size:
-            raise ValueError("ERROR!!! Window step can't be larger then window size")
-        elif (window_size % window_stepppp) != 0:
-            raise ValueError("ERROR!!! Window size is not a multiple of window step...")
-
-        steps_in_window = window_size / window_stepppp
-
-        ref_scaf_len_df = reference_scaffold_lengths if isinstance(reference_scaffold_lengths, pd.DataFrame) else pd.DataFrame(reference_scaffold_lengths)
-
-        def count_windows(scaffold_length):
-            return self.count_window_number_in_scaffold(scaffold_length, window_size, window_step)
-
-        number_of_windows_df = ref_scaf_len_df.applymap(count_windows)
-        number_of_windows_df.columns = ["WINDOW"]
-
-        short_scaffolds_ids = number_of_windows_df[number_of_windows_df['WINDOW'] == 0]
-        short_scaffolds_ids = IdSet(short_scaffolds_ids.index.unique().to_list())
-
-        vcf_scaffolds = set(self.scaffold_list)
-        reference_scaffolds = set(ref_scaf_len_df.index.unique().to_list())
-
-        scaffolds_absent_in_reference = IdSet(vcf_scaffolds - reference_scaffolds)
-        if scaffolds_absent_in_reference:
-            print (scaffolds_absent_in_reference)
-            raise ValueError("ERROR!!! Some scaffolds from vcf file are absent in reference...")
-        scaffolds_absent_in_vcf = IdSet(reference_scaffolds - vcf_scaffolds)
-
-        number_of_windows_non_zero_df = number_of_windows_df[number_of_windows_df['WINDOW'] > 0]
-
-        count_index = [[], []]
-        for scaffold in number_of_windows_non_zero_df.index:
-            count_index[0] += [scaffold] * number_of_windows_non_zero_df.loc[scaffold][0]
-            count_index[1] += list(np.arange(number_of_windows_non_zero_df.loc[scaffold][0]))
-        count_index = pd.MultiIndex.from_arrays(count_index, names=("CHROM", "WINDOW"))
-
-        def get_overlapping_window_indexes(step_index):
-            # this function is used if windows have overlapps
-            # DO NOT FORGET TO REPLACE WINDOW INDEXES EQUAL OR LARGE TO WINDOW NUMBER
-            return [window_index for window_index in range(max(step_index - steps_in_window + 1, 0),
-                                                           step_index + 1)]
-
-
-            #if step_index < window_number else window_number)]
-
-        if expression:
-            step_index_df = self.records[self.records.apply(expression, axis=1)][['POS']] / window_stepppp
-        else:
-            step_index_df = self.records[['POS']] // window_stepppp
-        step_index_df.columns = ["WINDOWSTEP"]
-
-        if per_sample_output:
-            count_df = []
-            if window_stepppp == window_size:
-                variant_presence = self.check_variant_presence()
-                # string below is temporaly remove beforer git pull
-                variant_presence.columns = self.samples
-
-                for sample in self.samples:
-                    tmp_count_df = pd.DataFrame(0, index=count_index,
-                                                columns=[sample],
-                                                dtype=np.int64)
-                    variant_counts = step_index_df[variant_presence[sample]].reset_index(level=1).set_index(['WINDOWSTEP'], append=True).groupby(["CHROM", "WINDOWSTEP"]).count()
-                    tmp_count_df[tmp_count_df.index.isin(variant_counts.index)] = variant_counts
-                    count_df.append(tmp_count_df)
-                count_df = pd.concat(count_df, axis=1)
-            else:
-                # TODO add code for sliding windows
-                #window_index_df = step_index_df.applymap(get_overlapping_window_indexes)
-                pass
-        else:
-            count_df = pd.DataFrame(0, index=count_index,
-                                    columns=["All"],
-                                    dtype=np.int64)
-
-            if window_stepppp == window_size:
-                # code for staking windows: in this case window step index  is equal to window index
-                variant_counts = step_index_df.reset_index(level=1).set_index(['WINDOWSTEP'], append=True).groupby(["CHROM", "WINDOWSTEP"]).count()
-                count_df[count_df.index.isin(variant_counts.index)] = variant_counts
-                #bbb[bbb.index.get_level_values('CHROM').isin(number_of_windows_non_zero_df.index)]
-            else:
-                # TODO add code for sliding windows
-                #window_index_df = step_index_df.applymap(get_overlapping_window_indexes)
-                pass
-
-        # TODO: add storing of variants in uncounted tails
-        #uncounted_tail_variants_number_dict = SynDict()
-        #uncounted_tail_variant_number = step_size_number_df[step_size_number_df > ref_scaf_len_df].groupby(self.records.index(level=0)).size()
-        #print count_dict[self.samples[0]][list(count_dict[self.samples[0]].keys())[5]]
-        #print "BBBBBBBBBBBBBB"
-        #print count_dict[self.samples[0]]
-        if output_prefix:
-            scaffolds_absent_in_reference.write("%s.scaffolds_absent_in_reference.ids" % output_prefix)
-            scaffolds_absent_in_vcf.write("%s.scaffolds_absent_in_vcf.ids" % output_prefix)
-            #uncounted_tail_variants_number_dict.write("%s.uncounted_tail_variant_number.tsv" % output_prefix)
-
-            count_df.to_csv("%s.variant_counts.tsv" % output_prefix, sep='\t', header=True, index=True)
-
-        return count_df
 
     #########################################################################
     # methods below were not yet rewritten for compatibility with VCFpandas #

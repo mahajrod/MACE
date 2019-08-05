@@ -1,5 +1,5 @@
-from MACE.Routines.Drawing import DrawingRoutines
-from MACE.Routines.DrawingPandas import DrawingRoutinesPandas
+from MACE.Routines.Stat import StatsVCF
+from MACE.Routines.Visualization import Visualization
 
-DrawingRoutines = DrawingRoutines()
-DrawingRoutinesPandas = DrawingRoutinesPandas()
+StatsVCF = StatsVCF()
+Visualization = Visualization()
