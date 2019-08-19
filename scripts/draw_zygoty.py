@@ -2,6 +2,7 @@
 __author__ = 'Sergei F. Kliver'
 import argparse
 from RouToolPa.Parsers.VCF import CollectionVCF
+from MACE.Routines import StatsVCF, Visualization
 
 parser = argparse.ArgumentParser()
 
@@ -37,7 +38,9 @@ parser.add_argument("-b", "--scaffold_black_list", action="store", dest="scaffol
 args = parser.parse_args()
 
 mutations = CollectionVCF(args.input, parsing_mode="coordinates_and_genotypes")
-mutations.zygoty_bar_plot(args.output_prefix, extension_list=args.output_formats,
-                          figsize=args.figsize,
-                          dpi=args.dpi,
-                          title=args.title)
+
+Visualization.zygoty_bar_plot(StatsVCF.count_zygoty(mutations, outfile="%s.counts"),
+                              args.output_prefix, extension_list=args.output_formats,
+                              figsize=args.figsize,
+                              dpi=args.dpi,
+                              title=args.title)

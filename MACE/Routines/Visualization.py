@@ -6,6 +6,7 @@ import numpy as np
 
 import matplotlib.pyplot as plt
 plt.ioff()
+from matplotlib.collections import PatchCollection
 from matplotlib.patches import Rectangle
 from matplotlib.colors import LinearSegmentedColormap
 from matplotlib import cm
@@ -62,16 +63,6 @@ class Visualization(DrawingRoutines):
         return zygoty_counts
 
     # ----------------------- In progress ------------------------------
-
-    # ------------------ Not rewritten yet --------------------------------
-
-    """
-    self.get_filtered_scaffold_list(last_collection.target_scaffold_list,
-                                                               scaffold_black_list=target_black_list,
-                                                               sort_scaffolds=False,
-                                                               scaffold_ordered_list=target_ordered_list,
-                                                               scaffold_white_list=target_white_list)
-    """
     def draw_variant_window_densities(self, count_df, scaffold_length_dict, window_size, window_step, output_prefix,
                                       masking_dict=None,
                                       gap_fraction_threshold=0.4,
@@ -145,10 +136,12 @@ class Visualization(DrawingRoutines):
 
         masked_regions_fd = open("%s.masked_regions" % output_prefix, "w")
         masked_regions_fd.write("#scaffold\twindow\tmasked_position\tmasked_position,fraction\n")
+
         for scaffold in final_scaffold_list:
 
             sample_index = 0
             for sample in count_df:
+                rectangle_list = []
                 masked_windows_count_dict[sample][scaffold] = 0
                 no_snps_windows_count_dict[sample][scaffold] = 0
                 #if scaffold in scaffold_black_list:
@@ -251,12 +244,12 @@ class Visualization(DrawingRoutines):
                         elif window_color == no_snp_color:
                             no_snps_windows_count_dict[sample][scaffold] += 1
 
-                        window = Rectangle((window_start, start_y), window_size, scaffold_height, fill=True,
-                                           edgecolor=None, facecolor=window_color, linewidth=0.0000000000001)
+                        rectangle_list.append(Rectangle((window_start, start_y), window_size, scaffold_height, fill=True,
+                                              edgecolor=None, facecolor=window_color, linewidth=0.0000000000001))
                         #print prev_x
                         #print gap_coords[0] - prev_x
 
-                        subplot.add_patch(window)
+                subplot.add_collection(PatchCollection(rectangle_list))
 
                 # draw_chromosome
 
@@ -329,6 +322,16 @@ class Visualization(DrawingRoutines):
         masked_windows_count_dict.write("%s.masked.windows.count" % output_prefix)
         masked_regions_fd.close()
 
+    # ------------------ Not rewritten yet --------------------------------
+
+    """
+    self.get_filtered_scaffold_list(last_collection.target_scaffold_list,
+                                                               scaffold_black_list=target_black_list,
+                                                               sort_scaffolds=False,
+                                                               scaffold_ordered_list=target_ordered_list,
+                                                               scaffold_white_list=target_white_list)
+    """
+
     def draw_window_density_distribution(self, count_dict, window_size, output_prefix=None, suptitle="SNP density distribution",
                                          density_multiplicator=1000,
                                          number_of_bins=None, width_of_bins=None,
@@ -350,7 +353,7 @@ class Visualization(DrawingRoutines):
 
         scaffold_number = len(final_scaffold_list)
 
-        FileRoutines.safe_mkdir(per_scaffold_histo_dir)
+        self.safe_mkdir(per_scaffold_histo_dir)
 
         xlabel = "Number of SNPs"
         ylabel = "Number of windows"

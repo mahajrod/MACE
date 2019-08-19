@@ -364,8 +364,6 @@ class StatsVCF(FileRoutines):
             plt.savefig("%s/%s_log_scale.%s" % (plot_dir, plot_name, extension))
         plt.close()
 
-
-
     def check_variant_presence(self, outfile=None):
         if self.parsing_mode in self.parsing_modes_with_genotypes:
 
