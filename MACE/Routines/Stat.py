@@ -86,7 +86,10 @@ class StatsVCF(FileRoutines):
 
     def count_variants_in_windows(self, collection_vcf, window_size, window_step, reference_scaffold_lengths=None,
                                   ignore_scaffolds_shorter_than_window=True, output_prefix=None,
-                                  skip_empty_windows=False, expression=None, per_sample_output=False):
+                                  skip_empty_windows=False, expression=None, per_sample_output=False,
+                                  scaffold_black_list=(), scaffold_white_list=(),
+                                  scaffold_syn_dict=None
+                                  ):
 
         window_stepppp = window_size if window_step is None else window_step
 
@@ -181,6 +184,16 @@ class StatsVCF(FileRoutines):
                 # TODO add code for sliding windows
                 #window_index_df = step_index_df.applymap(get_overlapping_window_indexes)
                 pass
+
+        if scaffold_black_list or scaffold_white_list:
+            scaffold_to_keep = self.get_filtered_entry_list(count_df.index.get_level_values(level=0).unique().to_list(),
+                                                            entry_black_list=scaffold_black_list,
+                                                            entry_white_list=scaffold_white_list)
+            count_df = count_df[count_df.index.isin(scaffold_to_keep, level=0)]
+
+        if scaffold_syn_dict:
+            count_df.rename(index=scaffold_syn_dict, inplace=True)
+
 
         # TODO: add storing of variants in uncounted tails
         #uncounted_tail_variants_number_dict = SynDict()

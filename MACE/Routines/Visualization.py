@@ -8,17 +8,17 @@ import matplotlib.pyplot as plt
 plt.ioff()
 from matplotlib.collections import PatchCollection
 from matplotlib.patches import Rectangle
-from matplotlib.colors import LinearSegmentedColormap
-from matplotlib import cm
-from matplotlib import colors
-from matplotlib import text
 
 #from RouToolPa.Routines import FileRoutines
-from RouToolPa.Routines.Sequence import SequenceRoutines
-from RouToolPa.Routines.Drawing import DrawingRoutines
-from MACE.Functions.Generators import recursive_generator
 from RouToolPa.Collections.General import TwoLvlDict
+from RouToolPa.Routines.Drawing import DrawingRoutines
 
+from MACE.Visualization.Tracks import WindowTrack
+from MACE.Visualization.TrackGroups import TrackGroup
+from MACE.Visualization.Subplots import Subplot
+from MACE.Visualization.Legends import DensityLegend
+from MACE.Functions.Generators import recursive_generator
+from MACE.Visualization.Styles.Subplot import chromosome_subplot_style
 
 class Visualization(DrawingRoutines):
 
@@ -63,10 +63,66 @@ class Visualization(DrawingRoutines):
         return zygoty_counts
 
     # ----------------------- In progress ------------------------------
+
+    def draw_gff(self, collection_gff, scaffold_length_dict, output_prefix, feature_type=None,
+                 density_multiplicator=1000,
+                 scaffold_black_list=[], sort_scaffolds=False, scaffold_ordered_list=None,
+                 scaffold_white_list=[], add_sample_name_to_labels=False,
+                 dist_between_scaffolds_scaling_factor=1,
+                 figure_width=12,
+                 figure_height_scale_factor=0.5,
+                 subplot_style=None
+                 ):
+
+        gff_records = collection_gff.records[feature_type] if feature_type else collection_gff.records
+        final_scaffold_list = self.get_filtered_scaffold_list(collection_gff.scaffold_list,
+                                                              scaffold_black_list=scaffold_black_list,
+                                                              sort_scaffolds=sort_scaffolds,
+                                                              scaffold_ordered_list=scaffold_ordered_list,
+                                                              scaffold_white_list=scaffold_white_list)
+
+        figure = plt.figure(figsize=(figure_width,
+                                     int(figure_height_scale_factor * scaffold_number * sample_number)))
+        subplot = plt.subplot(1, 1, 1)
+
+        sub_style = subplot_style if subplot_style else chrSubplotStyle
+
+        sub_style.apply(subplot)
+
+        # TODO: Finish this
+
+    def draw_variant_window_densities(self, count_df, window_size, window_step, scaffold_length_dict,
+                                      output_prefix,
+                                      figsize=(15, 10),
+                                      dpi=300,
+                                      colormap='jet', title=None,
+                                      extensions=("png", ),
+                                      scaffold_order_list=None):
+
+        track_group_dict = OrderedDict()
+
+        for chr in scaffold_order_list[::-1] if scaffold_order_list else count_df.index.get_level_values(level=0).unique().to_list(): # count_df.index.get_level_values(level=0).unique():
+            track_group_dict[chr] = TrackGroup(
+                {chr: WindowTrack(count_df.xs(chr), window_size, window_step, x_end=scaffold_length_dict[chr],
+                                  multiplier=1000, label=chr, colormap=colormap)})
+            track_group_dict[chr][chr].add_color()
+        # track_group_dict
+        # track_group_dict["chr13"]
+        chromosome_subplot = Subplot(track_group_dict, title=title, style=chromosome_subplot_style,
+                                     legend=DensityLegend(colormap='jet'))
+
+        plt.figure(1, figsize=figsize, dpi=dpi)
+
+        chromosome_subplot.draw()
+
+        for ext in extensions:
+            plt.savefig("%s.%s" % (output_prefix, ext))
+
+    """
     def draw_variant_window_densities(self, count_df, scaffold_length_dict, window_size, window_step, output_prefix,
                                       masking_dict=None,
                                       gap_fraction_threshold=0.4,
-                                      record_style=None, ext_list=("svg", "png"),
+                                      subplot_style=None, ext_list=("svg", "png"),
                                       label_fontsize=13, left_offset=0.2, figure_width=12,
                                       figure_height_scale_factor=0.5, scaffold_synonym_dict=None,
                                       id_replacement_mode="partial", suptitle=None, density_multiplicator=1000,
@@ -82,7 +138,7 @@ class Visualization(DrawingRoutines):
                                       colormap_tuple_list=((0.0, "#333a97"), (0.1, "#3d3795"), (0.5, "#5d3393"),
                                                            (0.75, "#813193"), (1.0, "#9d2d7f"), (1.25, "#b82861"),
                                                            (1.5, "#d33845"), (2.0, "#ea2e2e"), (2.5, "#f5ae27"))):
-        """ cont_dict = {sample: {scaffold: }}"""
+
 
         if dist_between_scaffolds_scaling_factor < 1:
             raise ValueError("Scaling factor for distance between scaffolds have to be >=1.0")
@@ -92,6 +148,7 @@ class Visualization(DrawingRoutines):
                                                               sort_scaffolds=sort_scaffolds,
                                                               scaffold_ordered_list=scaffold_ordered_list,
                                                               scaffold_white_list=scaffold_white_list)
+
         scaffold_number = len(final_scaffold_list)
         max_scaffold_length = max([scaffold_length_dict[scaf] for scaf in final_scaffold_list])
         #max_scaffold_length = max(scaffold_length_dict.values())
@@ -100,20 +157,10 @@ class Visualization(DrawingRoutines):
                                      int(figure_height_scale_factor * scaffold_number * sample_number)))
         subplot = plt.subplot(1, 1, 1)
 
-        subplot.get_yaxis().set_visible(False)
-        #subplot.get_xaxis().set_visible(False)
-        #axes.xaxis.set_major_formatter(x_formatter)
+        sub_style = subplot_style if subplot_style else chrSubplotStyle
 
-        #subplot.spines['bottom'].set_color('none')
-        subplot.spines['right'].set_color('none')
-        subplot.spines['left'].set_color('none')
-        subplot.spines['top'].set_color('none')
+        sub_style.apply(subplot)
 
-        scaffold_height = 10
-
-        dist_between_scaffolds = 5
-        start_x = 0
-        start_y = - dist_between_scaffolds
 
         label_line_y_shift = int(scaffold_height/2)
         label_line_y_jump = int(scaffold_height/2)
@@ -312,6 +359,7 @@ class Visualization(DrawingRoutines):
         #plt.tight_layout()
 
         plt.subplots_adjust(left=left_offset, right=0.95)#bottom=0.1, right=0.8, top=0.9)
+
         if suptitle:
             plt.suptitle(suptitle)
         for extension in ext_list:
@@ -321,7 +369,8 @@ class Visualization(DrawingRoutines):
         no_snps_windows_count_dict.write("%s.no_snps.windows.count" % output_prefix)
         masked_windows_count_dict.write("%s.masked.windows.count" % output_prefix)
         masked_regions_fd.close()
-
+        
+    """
     # ------------------ Not rewritten yet --------------------------------
 
     """
