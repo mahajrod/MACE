@@ -16,4 +16,5 @@ args = parser.parse_args()
 
 mutations = CollectionVCF(args.input, parsing_mode="read")
 
+
 mutations.write(args.output_prefix, format='vcf', samples=None, split_samples=True)
