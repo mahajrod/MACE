@@ -14,6 +14,6 @@ parser.add_argument("-o", "--output_prefix", action="store", dest="output_prefix
 
 args = parser.parse_args()
 
-mutations = CollectionVCF(args.input, parsing_mode="all_no_parsing")
+mutations = CollectionVCF(args.input, parsing_mode="read")
 
 mutations.write(args.output_prefix, format='vcf', samples=None, split_samples=True)
