@@ -122,7 +122,7 @@ class StatsVCF(FileRoutines):
 
         scaffolds_absent_in_reference = IdSet(vcf_scaffolds - reference_scaffolds)
         if scaffolds_absent_in_reference:
-            print (scaffolds_absent_in_reference)
+            #print (scaffolds_absent_in_reference)
             #print("BBBBBBBBB")
             #print (reference_scaffolds)
             #print("VVVVVVVVVV")
