@@ -100,7 +100,7 @@ args = parser.parse_args()
 
 variants = CollectionVCF(args.input, parsing_mode="only_coordinates")
 
-chr_len_df = pd.DataFrame.from_csv(args.scaffold_length_file, sep='\t') if args.scaffold_length_file else variants.scaffold_length
+chr_len_df = pd.DataFrame.read_csv(args.scaffold_length_file, sep='\t') if args.scaffold_length_file else variants.scaffold_length
 
 chr_syn_dict = SynDict(filename=args.scaffold_syn_file,
                        key_index=args.syn_file_key_column,
@@ -108,6 +108,8 @@ chr_syn_dict = SynDict(filename=args.scaffold_syn_file,
 
 if args.scaffold_syn_file:
     chr_len_df.rename(index=chr_syn_dict, inplace=True)
+
+print chr_len_df
 """
 if chr_syn_dict:
     for scaffold in raw_len_dict:
