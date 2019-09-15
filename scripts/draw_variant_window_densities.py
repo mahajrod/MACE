@@ -126,7 +126,8 @@ count_df = StatsVCF.count_variants_in_windows(variants, args.window_size, args.w
                                               skip_empty_windows=False, expression=None, per_sample_output=False,
                                               scaffold_white_list=args.scaffold_white_list,
                                               scaffold_syn_dict=chr_syn_dict)
-
+print count_df
+print chr_len_df
 Visualization.draw_variant_window_densities(count_df, args.window_size, args.window_step, chr_len_df,
                                             args.output_prefix,
                                             figure_width=15,
