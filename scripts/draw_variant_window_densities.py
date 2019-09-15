@@ -100,7 +100,7 @@ args = parser.parse_args()
 
 variants = CollectionVCF(args.input, parsing_mode="only_coordinates")
 
-chr_len_df = pd.DataFrame.read_csv(args.scaffold_length_file, sep='\t') if args.scaffold_length_file else variants.scaffold_length
+chr_len_df = pd.read_csv(args.scaffold_length_file, sep='\t') if args.scaffold_length_file else variants.scaffold_length
 
 chr_syn_dict = SynDict(filename=args.scaffold_syn_file,
                        key_index=args.syn_file_key_column,
