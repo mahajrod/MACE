@@ -93,7 +93,8 @@ class Visualization(DrawingRoutines):
 
     def draw_variant_window_densities(self, count_df, window_size, window_step, scaffold_length_df,
                                       output_prefix,
-                                      figsize=(15, 10),
+                                      figure_width=15,
+                                      figure_height_per_scaffold=0.5,
                                       dpi=300,
                                       colormap='jet', title=None,
                                       extensions=("png", ),
@@ -101,7 +102,10 @@ class Visualization(DrawingRoutines):
 
         track_group_dict = OrderedDict()
 
-        for chr in scaffold_order_list[::-1] if scaffold_order_list else count_df.index.get_level_values(level=0).unique().to_list(): # count_df.index.get_level_values(level=0).unique():
+        scaffolds = scaffold_order_list[::-1] if scaffold_order_list else count_df.index.get_level_values(level=0).unique().to_list()
+        scaffold_number = len(scaffolds)
+
+        for chr in scaffolds: # count_df.index.get_level_values(level=0).unique():
             track_group_dict[chr] = TrackGroup(
                 {chr: WindowTrack(count_df.xs(chr), window_size, window_step, x_end=scaffold_length_df.loc[chr][0],
                                   multiplier=1000, label=chr, colormap=colormap)})
@@ -111,7 +115,7 @@ class Visualization(DrawingRoutines):
         chromosome_subplot = Subplot(track_group_dict, title=title, style=chromosome_subplot_style,
                                      legend=DensityLegend(colormap='jet'))
 
-        plt.figure(1, figsize=figsize, dpi=dpi)
+        plt.figure(1, figsize=(figure_width, int(scaffold_number*figure_height_per_scaffold)), dpi=dpi)
 
         chromosome_subplot.draw()
 
