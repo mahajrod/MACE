@@ -3,6 +3,7 @@ __author__ = 'Sergei F. Kliver'
 import os
 import argparse
 
+import pandas as pd
 from BCBio import GFF
 from RouToolPa.Collections.General import SynDict, IdList
 from RouToolPa.Parsers.VCF import CollectionVCF
@@ -97,18 +98,24 @@ parser.add_argument("--density_thresholds", action="store", dest="density_thresh
 
 args = parser.parse_args()
 
+variants = CollectionVCF(args.input, parsing_mode="only_coordinates")
+
+chr_len_df = pd.DataFrame.from_csv(args.scaffold_length_file, sep='\t') if args.scaffold_length_file else variants.scaffold_length
+
 chr_syn_dict = SynDict(filename=args.scaffold_syn_file,
                        key_index=args.syn_file_key_column,
                        value_index=args.syn_file_value_column)
-variants = CollectionVCF(args.input, parsing_mode="only_coordinates")
 
-raw_len_dict = SynDict(filename=args.scaffold_length_file, expression=int)
-chr_len_dict = SynDict()
-
-for scaffold in raw_len_dict:
-    if scaffold in chr_syn_dict:
-        chr_len_dict[chr_syn_dict[scaffold]] = raw_len_dict[scaffold]
-
+if args.scaffold_syn_file:
+    chr_len_df.rename(index=chr_syn_dict, inplace=True)
+"""
+if chr_syn_dict:
+    for scaffold in raw_len_dict:
+        if scaffold in chr_syn_dict:
+            chr_len_df[chr_syn_dict[scaffold]] = raw_len_dict[scaffold]
+    
+    chr_len_df = pd.DataFrame.from_dict(chr_len_df,  orient="index")
+"""
 count_df = StatsVCF.count_variants_in_windows(variants, args.window_size, args.window_step,
                                               reference_scaffold_lengths=None,
                                               ignore_scaffolds_shorter_than_window=True, output_prefix=None,
@@ -116,7 +123,7 @@ count_df = StatsVCF.count_variants_in_windows(variants, args.window_size, args.w
                                               scaffold_white_list=args.scaffold_white_list,
                                               scaffold_syn_dict=chr_syn_dict)
 
-Visualization.draw_variant_window_densities(count_df, args.window_size, args.window_step, chr_len_dict,
+Visualization.draw_variant_window_densities(count_df, args.window_size, args.window_step, chr_len_df,
                                             args.output_prefix,
                                             figsize=(15, 10),
                                             dpi=300,
