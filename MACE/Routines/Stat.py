@@ -211,7 +211,81 @@ class StatsVCF(FileRoutines):
 
         return count_df
 
-    #----------------------------Not rewritten yet--------------------------
+    def count_feature_length_in_windows(self, collection_gff, window_size, window_step,
+                                        reference_scaffold_length_df,
+                                        ignore_scaffolds_shorter_than_window=True, output_prefix=None,
+                                        skip_empty_windows=False, expression=None, per_sample_output=False,
+                                        scaffold_black_list=(), scaffold_white_list=(),
+                                        scaffold_syn_dict=None):
+        window_stepppp = window_size if window_step is None else window_step
+
+        if window_stepppp > window_size:
+            raise ValueError(
+                "ERROR!!! Window step(%i) can't be larger then window size(%i)" % (window_stepppp, window_size))
+        elif (window_size % window_stepppp) != 0:
+            raise ValueError(
+                "ERROR!!! Window size(%i) is not a multiple of window step(%i)..." % (window_size, window_stepppp))
+
+        steps_in_window = window_size / window_stepppp
+
+        def count_windows(scaffold_length):
+            return self.count_window_number_in_scaffold(scaffold_length, window_size, window_stepppp)
+
+        number_of_windows_df = reference_scaffold_length_df.applymap(count_windows)
+        number_of_windows_df.columns = ["WINDOW"]
+
+        short_scaffolds_ids = number_of_windows_df[number_of_windows_df['WINDOW'] == 0]
+        short_scaffolds_ids = IdSet(short_scaffolds_ids.index.unique().to_list())
+
+        gff_scaffolds = set(reference_scaffold_length_df.scaffold_list)
+        reference_scaffolds = set(reference_scaffold_length_df.index.unique().to_list())
+
+        scaffolds_absent_in_reference = IdSet(gff_scaffolds - reference_scaffolds)
+        if scaffolds_absent_in_reference:
+            print (scaffolds_absent_in_reference)
+            raise ValueError("ERROR!!! Some scaffolds from gff file are absent in reference...")
+        scaffolds_absent_in_gff = IdSet(reference_scaffolds - gff_scaffolds)
+        number_of_windows_non_zero_df = number_of_windows_df[number_of_windows_df['WINDOW'] > 0]
+
+        count_index = [[], []]
+        for scaffold in number_of_windows_non_zero_df.index:
+            count_index[0] += [scaffold] * number_of_windows_non_zero_df.loc[scaffold][0]
+            count_index[1] += list(np.arange(number_of_windows_non_zero_df.loc[scaffold][0]))
+        count_index = pd.MultiIndex.from_arrays(count_index, names=("CHROM", "WINDOW"))
+
+        count_df = pd.DataFrame(0, index=count_index, columns="counts")
+
+        for scaffold_id in number_of_windows_non_zero_df.index: #self.region_length:
+            #uncounted_tail_variants_number_dict[scaffold_id] = 0
+            if scaffold_id not in collection_gff.scaffold_list:
+                continue
+
+            for (start, end) in collection_gff.records.loc[scaffold_id][["start", "end"]].itertuples(index=False):#masked_region_dict[scaffold_id]:
+                max_start_step = start / window_stepppp
+                min_start_step = max(max_start_step - steps_in_window + 1, 0)
+                max_end_step = (end - 1) / window_stepppp
+                min_end_step = max(max_end_step - steps_in_window + 1, 0)
+
+                if min_start_step >= number_of_windows_non_zero_df.loc[scaffold_id]: #number_of_windows:
+                    break
+
+                for i in range(min_start_step, min(max_start_step + 1, min_end_step, number_of_windows_non_zero_df.loc[scaffold_id])):
+                    count_df.loc[(scaffold_id, i), "counts"] += (i * window_step) + window_size - start
+
+                for i in range(min_end_step, min(max_start_step + 1,  number_of_windows_non_zero_df.loc[scaffold_id])):
+                    count_df.loc[(scaffold_id, i), "counts"] += end - start
+
+                for i in range(max_start_step + 1, min(min_end_step,  number_of_windows_non_zero_df.loc[scaffold_id])):
+                    count_df.loc[(scaffold_id, i), "counts"] += window_size
+
+                for i in range(max(max_start_step + 1, min_end_step), min(max_end_step + 1, number_of_windows_non_zero_df.loc[scaffold_id])):
+                    count_df.loc[(scaffold_id, i), "counts"] += end - (i * window_stepppp)
+
+        if output_prefix:
+            count_df.to_csv("%s.gapped_and_masked_site_counts.tsv" % output_prefix, index=True, sep="\t")
+
+        return count_df
+    # ----------------------------Not rewritten yet--------------------------
 
     def rainfall_plot(self, plot_name, dpi=300, figsize=(20, 20), facecolor="#D6D6D6",
                       ref_genome=None, min_masking_length=10, suptitle=None,
