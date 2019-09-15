@@ -51,7 +51,7 @@ class DensityLegend:
             print (self.x_start, square_y_pos), self.x_size, self.element_size, color
             fragment = Rectangle((self.x_start - 2 * self.x_size, square_y_pos), self.x_size, self.element_size,
                                  fill=True,
-                                 edgecolor="black", facecolor=color)
+                                 edgecolor="black", facecolor=color, linewidth=0.5)
 
             current_subplot.add_patch(fragment)
 
