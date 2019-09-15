@@ -100,7 +100,7 @@ args = parser.parse_args()
 
 variants = CollectionVCF(args.input, parsing_mode="only_coordinates")
 
-chr_len_df = pd.read_csv(args.scaffold_length_file, sep='\t') if args.scaffold_length_file else variants.scaffold_length
+chr_len_df = pd.read_csv(args.scaffold_length_file, sep='\t', header=False) if args.scaffold_length_file else variants.scaffold_length
 
 chr_syn_dict = SynDict(filename=args.scaffold_syn_file,
                        key_index=args.syn_file_key_column,
@@ -127,7 +127,8 @@ count_df = StatsVCF.count_variants_in_windows(variants, args.window_size, args.w
 
 Visualization.draw_variant_window_densities(count_df, args.window_size, args.window_step, chr_len_df,
                                             args.output_prefix,
-                                            figsize=(15, 10),
+                                            figure_width=15,
+                                            figure_height_per_scaffold=0.5,
                                             dpi=300,
                                             colormap=args.colormap, title=args.title,
                                             extensions=args.output_formats,
