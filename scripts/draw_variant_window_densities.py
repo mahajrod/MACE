@@ -109,7 +109,7 @@ chr_syn_dict = SynDict(filename=args.scaffold_syn_file,
 if args.scaffold_syn_file:
     chr_len_df.rename(index=chr_syn_dict, inplace=True)
 
-print chr_len_df
+#print chr_len_df
 """
 if chr_syn_dict:
     for scaffold in raw_len_dict:
