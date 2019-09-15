@@ -91,7 +91,7 @@ class Visualization(DrawingRoutines):
 
         # TODO: Finish this
 
-    def draw_variant_window_densities(self, count_df, window_size, window_step, scaffold_length_dict,
+    def draw_variant_window_densities(self, count_df, window_size, window_step, scaffold_length_df,
                                       output_prefix,
                                       figsize=(15, 10),
                                       dpi=300,
@@ -103,7 +103,7 @@ class Visualization(DrawingRoutines):
 
         for chr in scaffold_order_list[::-1] if scaffold_order_list else count_df.index.get_level_values(level=0).unique().to_list(): # count_df.index.get_level_values(level=0).unique():
             track_group_dict[chr] = TrackGroup(
-                {chr: WindowTrack(count_df.xs(chr), window_size, window_step, x_end=scaffold_length_dict[chr],
+                {chr: WindowTrack(count_df.xs(chr), window_size, window_step, x_end=scaffold_length_df.loc[chr],
                                   multiplier=1000, label=chr, colormap=colormap)})
             track_group_dict[chr][chr].add_color()
         # track_group_dict
