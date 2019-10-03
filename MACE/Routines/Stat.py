@@ -122,11 +122,6 @@ class StatsVCF(FileRoutines):
 
         scaffolds_absent_in_reference = IdSet(vcf_scaffolds - reference_scaffolds)
         if scaffolds_absent_in_reference:
-            #print (scaffolds_absent_in_reference)
-            #print("BBBBBBBBB")
-            #print (reference_scaffolds)
-            #print("VVVVVVVVVV")
-            #print vcf_scaffolds
             raise ValueError("ERROR!!! Some scaffolds from vcf file are absent in reference...")
         scaffolds_absent_in_vcf = IdSet(reference_scaffolds - vcf_scaffolds)
 
@@ -289,6 +284,193 @@ class StatsVCF(FileRoutines):
             count_df.to_csv("%s.gapped_and_masked_site_counts.tsv" % output_prefix, index=True, sep="\t")
 
         return count_df
+
+    # ------------------------- Distance based stats ------------------------
+    @staticmethod
+    def get_distances(collection_vcf):
+
+        distance_df = deepcopy(collection_vcf.records[["POS"]])
+
+        distance_df["distance"] = distance_df["POS"].diff()
+        for scaffold in distance_df.index.get_index_level_values(level=0):
+            distance_df.loc[scaffold]["distance"][0] = 0
+
+        distance_df["distance"].astype("Int64", copy=False)
+
+        return distance_df
+
+    @staticmethod
+    def get_linkage_for_hierarchical_clustering(vcf_df, method='average', output=None):
+        """
+        http://docs.scipy.org/doc/scipy/reference/generated/scipy.cluster.hierarchy.linkage.html#scipy.cluster.hierarchy.linkage
+        allowed methods(used to calculate distance between clusters):
+        'complete'    -   Farthest Point Algorithm
+        'single'      -   Nearest Point Algorithm
+        'average'     -   UPGMA algorithm, distance between clusters is calculated as average from pairwise
+                           distances between elements of clusters
+        'weighted     -   WPGMA algorithm
+        'centroid'    -   UPGMC algorithm
+        'median'      -   WPGMC algorithm
+        'ward'        -   incremental algorithm
+        """
+        per_scaffold_counts = vcf_df.groupby(level=0).count()
+        print per_scaffold_counts
+        print "AAAA"
+        print vcf_df.index.isin(per_scaffold_counts[per_scaffold_counts["POS"] > 1].index)
+        print "BBBBB"
+        vcf_df_filtered = vcf_df[["POS"]][vcf_df.index.isin(per_scaffold_counts[per_scaffold_counts["POS"] > 1].index)]
+
+        linkage_df = pd.DataFrame({"distance": vcf_df_filtered.groupby(level=0).apply(pdist)})
+        linkage_df["linkage"] = linkage_df["distance"].agg(linkage, method=method)
+        linkage_df["inconsistent"] = linkage_df["linkage"].agg(inconsistent, method=method)
+        # https://docs.scipy.org/doc/scipy-0.14.0/reference/generated/scipy.cluster.hierarchy.cophenet.html
+        linkage_df["cophenet"] = linkage_df.apply(lambda r: cophenet(r["linkage"], r["distance"])[0], axis=1)
+        
+        if output:
+            linkage_df.to_csv(output, sep="\t")
+        
+        return linkage_df
+
+    @staticmethod
+    def get_clusters(linkage_df, extracting_method="inconsistent", threshold=0.8):
+        clusters = linkage_df["linkage"].agg(fcluster, t=threshold, criterion=extracting_method)
+
+        cluster_df = []
+        index = []
+        for scaf in clusters.index:
+            cluster_df.append(clusters[scaf])
+            index += [scaf] * len(clusters[scaf])
+
+        cluster_df = np.concatenate(cluster_df)
+
+        return pd.DataFrame(cluster_df, index=index, columns=["clusters"])
+
+    def test_clustering_thresholds(self, linkage_df,
+                                   extracting_method="inconsistent",
+                                   threshold_tuple=None,
+                                   min_threshold=None,
+                                   max_threshold=None,
+                                   threshold_number=None,
+                                   threshold_step=None,
+                                   output_prefix=None):
+                                   #testing_dir="threshold_test",
+                                   #count_singletons=True,
+                                   #extensions=("svg", "png")):
+        # TODO: adjust parameters of figure
+        # threshold is tuple(list) of three variables: min, max, number
+
+        # extracting_method possible values
+        #   inconsistent
+        #   distance
+        #   maxclust
+        #   monocrit
+        #   monocrit
+        if threshold_tuple:
+            threshold_list = threshold_tuple
+        elif min_threshold and max_threshold:
+            if threshold_number:
+                threshold_list = np.linspace(min_threshold, max_threshold, threshold_number)  # best variant 0.5, 1.5, 21
+            elif threshold_step:
+                threshold_list = list(np.arange(min_threshold, max_threshold, threshold_step))
+                threshold_list.append(max_threshold)
+            else:
+                raise ValueError("ERROR!!! Neither threshold step nor threshold number was set!")
+        else:
+            raise ValueError("ERROR!!! Neither threshold tuple nor parameters for calculation of it were set!")
+
+        cluster_df = self.get_clusters(linkage_df, extracting_method=extracting_method,
+                                       threshold=threshold_list[0])
+        cluster_df.columns = [threshold_list[0]]
+
+        for threshold in threshold_list[1:]:
+            cluster_df[threshold] = self.get_clusters(linkage_df,
+                                                      extracting_method=extracting_method,
+                                                      threshold=threshold)["clusters"]
+        cluster_number_df = cluster_df.groupby(level=0).nunique()
+
+        singleton_count_df = cluster_df.groupby(level=0).agg(lambda s: sum(s == 1))
+        double_count_df = cluster_df.groupby(level=0).agg(lambda s: sum(s == 2))
+        triple_count_df = cluster_df.groupby(level=0).agg(lambda s: sum(s == 3))
+        multielement_count_df = cluster_df.groupby(level=0).agg(lambda s: sum(s > 2))
+
+        if output_prefix:
+            cluster_df.to_csv("%s.clusters" % output_prefix)
+            cluster_number_df.to_csv("%s.clusters.counts" % output_prefix)
+
+            singleton_count_df.to_csv("%s.singletons.counts" % output_prefix)
+            double_count_df.to_csv("%s.double.counts" % output_prefix)
+            triple_count_df.to_csv("%s.triple.counts" % output_prefix)
+            multielement_count_df.to_csv("%s.multielement.counts" % output_prefix)
+
+        return cluster_df
+
+
+
+        num_of_regions = len(list(linkage_dict.keys()))
+        side = int(sqrt(num_of_regions))
+        if side*side != num_of_regions:
+            side += 1
+        sub_plot_dict = OrderedDict({})
+        fig = plt.figure(2, dpi=150, figsize=(30, 30))
+        fig.suptitle("Relashionship between number of clusters and threshold of %s" % extracting_method, fontsize=20)
+
+        index = 1
+        for region in linkage_dict:
+            if linkage_dict[region] is None:
+                continue
+            # http://docs.scipy.org/doc/scipy/reference/generated/scipy.cluster.hierarchy.fcluster.html#scipy.cluster.hierarchy.fcluster
+            n_clusters_list = []
+            n_nonsingleton_clusters = []
+            n_multiclusters = []
+            n_five_plus_clusters = []
+
+            for i in coef_threshold_list:
+                clusters = fcluster(linkage_dict[region], i, criterion=extracting_method)
+                n_clusters_list.append(max(clusters))
+
+                # counting clusters with 2+ and 3+ clusters
+                ua, uind = np.unique(clusters, return_inverse=True)
+                counted = np.bincount(uind)
+                #j = 0
+                nonsingleton = 0
+                multicluster = 0  # 3+
+                five_plus_clusters = 0 # 5+
+                for k in counted:
+                    if k > 1:
+                        nonsingleton += 1
+                    if k > 2:
+                        multicluster += 1
+                    if k > 4:
+                        five_plus_clusters += 1
+                n_nonsingleton_clusters.append(nonsingleton)
+                n_multiclusters.append(multicluster)
+                n_five_plus_clusters.append(five_plus_clusters)
+            sub_plot_dict[region] = plt.subplot(side, side, index, axisbg="#D6D6D6")
+            #ax = plt.gca()
+            #ax.set_xticks(np.arange(0.5, 2.2, 0.1))
+
+            plt.grid()
+            if count_singletons:
+                plt.plot(coef_threshold_list, n_clusters_list, label="all")
+            plt.plot(coef_threshold_list, n_nonsingleton_clusters, "green", label="2+")
+            plt.plot(coef_threshold_list, n_multiclusters, "red", label="3+")
+            plt.plot(coef_threshold_list, n_five_plus_clusters, "black", label="5+")
+            plt.title("%s %s" % (scaffold_prefix, region))
+            plt.legend(loc='upper right')
+            plt.ylabel("Number of clusters")
+            plt.xlabel("Threshold")
+            #plt.axvline(x=0.8, color="purple")
+            #plt.axvline(x=1.1, color="purple")
+
+            plt.ylim(ymin=0)
+            index += 1
+        for ext in extensions:
+            plt.savefig("%s/clusters_%s.%s" % (testing_dir, extracting_method, ext))
+        plt.close()
+
+
+    # ----------------------- Distance based stats end ----------------------
+
     # ----------------------------Not rewritten yet--------------------------
 
     def rainfall_plot(self, plot_name, dpi=300, figsize=(20, 20), facecolor="#D6D6D6",
@@ -1103,234 +1285,7 @@ class StatsVCF(FileRoutines):
                                  figure_width=figure_width,
                                  multiplier=multiplier)
 
-    def draw_variant_window_densities(self, reference_fasta, output_prefix, window_size, window_step,
-                                      masking_gff=None,
-                                      gap_fraction_threshold=0.4,
-                                      parsing_mode="index_db", min_gap_length=10,
-                                      masked_region_color="grey", gap_color="grey",
-                                      no_snp_color="white",
-                                      ignore_scaffolds_shorter_than_window=True,
-                                      skip_empty_windows=False, reference_scaffold_black_list=(),
-                                      figure_extensions=("png", "svg"),
-                                      suptitle="Variant density",
-                                      density_multiplicator=1000,
-                                      scaffold_black_list=(),
-                                      sort_scaffolds=False, scaffold_ordered_list=None,
-                                      scaffold_white_list=[], add_sample_name_to_labels=False,
-                                      figure_width=8,
-                                      figure_height_scale_factor=0.5,
-                                      sample_label="SampleZZZ",
-                                      dist_between_scaffolds_scaling_factor=1,
-                                      colormap_tuple_list=((0.0, "#333a97"), (0.1, "#3d3795"), (0.5, "#5d3393"),
-                                                           (0.75, "#813193"), (1.0, "#9d2d7f"), (1.25, "#b82861"),
-                                                           (1.5, "#d33845"), (2.0, "#ea2e2e"), (2.5, "#f5ae27")),
-                                      colormap=None,
-                                      thresholds=(0.0, 0.1, 0.5, 0.75, 1.0, 1.25, 1.5, 2.0, 2.5),):
-        if window_step > window_size:
-            raise ValueError("ERROR!!! Window step can't be larger then window size")
 
-        print("Parsing reference...")
-        reference = ReferenceGenome(reference_fasta,
-                                    masked_regions=None,
-                                    index_file="refgen.idx",
-                                    filetype="fasta",
-                                    mode=parsing_mode,
-                                    black_list=reference_scaffold_black_list,
-                                    masking_gff_list=masking_gff)
-
-        print("Merging gaps with masking...")
-
-        gaps_and_masked_region_window_count_dict = reference.count_gaped_and_masked_positions_in_windows(window_size,
-                                                                                                         window_step,
-                                                                                                         ignore_scaffolds_shorter_than_window=True,
-                                                                                                         output_prefix=output_prefix,
-                                                                                                         min_gap_len=min_gap_length)
-
-        count_dict = {sample_label: self.count_variants_in_windows(window_size, window_step, reference.region_length,
-                                                                   ignore_scaffolds_shorter_than_window=ignore_scaffolds_shorter_than_window,
-                                                                   output_prefix=output_prefix,
-                                                                   skip_empty_windows=skip_empty_windows)}
-
-        DrawingRoutines.draw_variant_window_densities(count_dict, reference.region_length, window_size, window_step,
-                                                      output_prefix,
-                                                      masking_dict=gaps_and_masked_region_window_count_dict,
-                                                      gap_fraction_threshold=gap_fraction_threshold,
-                                                      colormap_tuple_list=colormap_tuple_list,
-                                                      record_style=None, ext_list=figure_extensions,
-                                                      label_fontsize=13, left_offset=0.2,
-                                                      figure_width=figure_width,
-                                                      figure_height_scale_factor=figure_height_scale_factor,
-                                                      scaffold_synonym_dict=None,
-                                                      id_replacement_mode="partial",
-                                                      suptitle=suptitle,
-                                                      density_multiplicator=density_multiplicator,
-                                                      scaffold_black_list=scaffold_black_list,
-                                                      sort_scaffolds=sort_scaffolds,
-                                                      scaffold_ordered_list=scaffold_ordered_list,
-                                                      scaffold_white_list=scaffold_white_list,
-                                                      gap_color=gap_color,
-                                                      masked_color=masked_region_color,
-                                                      no_snp_color=no_snp_color,
-                                                      add_sample_name_to_labels=add_sample_name_to_labels,
-                                                      dist_between_scaffolds_scaling_factor=dist_between_scaffolds_scaling_factor,
-                                                      colormap=colormap,
-                                                      thresholds=thresholds,)
-
-        DrawingRoutines.draw_window_density_distribution(count_dict, output_prefix=output_prefix,
-                                                         density_multiplicator=density_multiplicator,
-                                                         suptitle="SNP density distribution",
-                                                         number_of_bins=None, width_of_bins=None,
-                                                         max_threshold=None, min_threshold=None,
-                                                         scaffold_black_list=[], scaffold_white_list=[],
-                                                         sort_scaffolds=False, scaffold_ordered_list=None, subplot_size=2,
-                                                         per_scaffold_histo_dir="per_scaffold_histo_dir/",
-                                                         subplot_tuple=None, share_x_axis=True, share_y_axis=True,
-                                                         extensions=("png",))
-
-    def hierarchical_clustering(self, method='average', dendrogramm_max_y=2000,
-                                sample_name=None, save=False, clustering_dir="clustering",
-                                dendrogramm_color_threshold=1000,
-                                draw_dendrogramm=True,
-                                write_inconsistent=True,
-                                write_correlation=True):
-        """
-        http://docs.scipy.org/doc/scipy/reference/generated/scipy.cluster.hierarchy.linkage.html#scipy.cluster.hierarchy.linkage
-        allowed methods(used to calculate distance between clusters):
-        'complete'    -   Farthest Point Algorithm
-        'single'      -   Nearest Point Algorithm
-        'average'     -   UPGMA algorithm, distance between clusters is calculated as average from pairwise
-                           distances between elements of clusters
-        'weighted     -   WPGMA algorithm
-        'centroid'    -   UPGMC algorithm
-        'median'      -   WPGMC algorithm
-        'ward'        -   incremental algorithm
-        :param method:
-        :param dendrogramm_max_y:
-        :param sample_name:
-        :param save:
-        :param clustering_dir:
-        :param dendrogramm_color_threshold:
-        :param draw_dendrogramm:
-        :param write_inconsistent:
-        :param write_correlation:
-        :return:
-        """
-        positions_dict = self.get_positions()
-        correlation_dict = OrderedDict({})
-        linkage_dict = OrderedDict({})
-        inconsistent_dict = OrderedDict({})
-        clusters_dict = OrderedDict({})
-        if draw_dendrogramm or write_correlation or write_inconsistent:
-            os.system("mkdir -p %s" % clustering_dir)
-        for region in positions_dict:
-            #print positions_dict[region]
-            if len(positions_dict[region]) <= 1:
-                linkage_dict[region] = None
-                correlation_dict[region] = None
-                continue
-            else:
-                distance_matrix = pdist(positions_dict[region])
-            #print(distance_matrix)
-
-            linkage_dict[region] = linkage(distance_matrix, method=method)
-            if draw_dendrogramm:
-                plt.figure(1, dpi=150, figsize=(50, 20))
-                dendrogram(linkage_dict[region],
-                           color_threshold=dendrogramm_color_threshold,
-                           leaf_font_size=4,
-                           distance_sort=True)
-                plt.ylim(ymax=dendrogramm_max_y)
-                plt.axhline(y=500, color="purple")
-                plt.axhline(y=1000, color="black")
-                plt.savefig("%s/clustering_%s.svg" % (clustering_dir, region))
-                plt.close()
-
-            # http://docs.scipy.org/doc/scipy/reference/generated/scipy.cluster.hierarchy.cophenet.html#scipy.cluster.hierarchy.cophenet
-            # calculates cophenetic correlation coefficient to estimate accuracy of clustering
-            correlation_dict[region] = cophenet(linkage_dict[region], distance_matrix)[0]
-
-            # http://docs.scipy.org/doc/scipy/reference/generated/scipy.cluster.hierarchy.inconsistent.html#scipy.cluster.hierarchy.inconsistent
-            # calculates inconsistent coeff
-
-            inconsistent_dict[region] = inconsistent(linkage_dict[region])
-            if write_inconsistent:
-                np.savetxt("%s/inconsistent_coefficient_%s.t" % (clustering_dir, region), inconsistent_dict[region])
-
-            # clusters_dict[region] = fcluster(linkage_dict[region], 1)
-            # np.savetxt("clustering/clusters_%s.t" % region, clusters_dict[region], fmt="%i")
-        if write_correlation:
-            sample = sample_name
-            if not sample:
-                sample = self.samples[0]
-            with open("%s/correlation.t" % clustering_dir, "w") as cor_fd:
-                cor_fd.write("sample\t%s\n" % ("\t".join(positions_dict.keys())))
-                cor_fd.write("%s\t%s\n" % (sample,
-                                           "\t".join([str(correlation_dict[region]) for region in positions_dict])))
-
-        if save:
-            self.linkage_dict = linkage_dict
-
-        return linkage_dict
-
-    def get_clusters(self,
-                     extracting_method="inconsistent",
-                     threshold=0.8,
-                     cluster_distance='average',
-                     dendrogramm_max_y=2000,
-                     sample_name=None,
-                     save_clustering=False,
-                     clustering_dir="clustering",
-                     dendrogramm_color_threshold=1000,
-                     draw_dendrogramm=True,
-                     return_collection=True,
-                     write_inconsistent=True,
-                     write_correlation=True):
-
-        from MACE.Parsers.CCF import RecordCCF, CollectionCCF, MetadataCCF, HeaderCCF
-        if self.linkage_dict:
-            linkage_dict = self.linkage_dict
-        else:
-            linkage_dict = self.hierarchical_clustering(method=cluster_distance,
-                                                        dendrogramm_max_y=dendrogramm_max_y,
-                                                        sample_name=sample_name,
-                                                        save=save_clustering,
-                                                        clustering_dir=clustering_dir,
-                                                        dendrogramm_color_threshold=dendrogramm_color_threshold,
-                                                        draw_dendrogramm=draw_dendrogramm,
-                                                        write_correlation=write_correlation,
-                                                        write_inconsistent=write_inconsistent)
-        mut_clusters_dict = OrderedDict({})
-        clusters = OrderedDict()
-        for region in linkage_dict:
-            if linkage_dict[region] is None:
-                clusters[region] = None
-            else:
-                clusters[region] = fcluster(linkage_dict[region], threshold, criterion=extracting_method)
-
-        if return_collection:
-            record_ccf_dict = OrderedDict()
-            for region in self.records:
-                # http://docs.scipy.org/doc/scipy/reference/generated/scipy.cluster.hierarchy.fcluster.html#scipy.cluster.hierarchy.fcluster
-                clusters_dict = OrderedDict({})
-                if clusters[region] is None:
-                    continue
-                for i in range(0, len(clusters[region])):
-                    if clusters[region][i] not in clusters_dict:
-                        clusters_dict[clusters[region][i]] = [self.records[region][i]]
-                    else:
-                        clusters_dict[clusters[region][i]].append(self.records[region][i])
-
-
-
-                record_ccf_dict[region] = [RecordCCF(collection_vcf=CollectionVCF(records_dict=dict([(region, clusters_dict[cluster])]), from_file=False),
-                                                     from_records=True) for cluster in clusters_dict]
-
-            return CollectionCCF(records_dict=record_ccf_dict, metadata=MetadataCCF(self.samples,
-                                                                                    vcf_metadata=self.metadata,
-                                                                                    vcf_header=self.header),
-                                 header=HeaderCCF("CLUSTER_ID\tCHROM\tSTART\tEND\tDESCRIPTION".split("\t")))
-        else:
-            return clusters
 
     # methods for sum of two CollectionsVCF: no check for intersections(!!!!!!!!)
     def __add__(self, other):
@@ -1345,104 +1300,6 @@ class StatsVCF(FileRoutines):
 
     def __radd__(self, other):
         return self.__add__(other)
-
-    def test_thresholds(self,
-                        extracting_method="inconsistent",
-                        threshold=None,
-                        cluster_distance='average',
-                        dendrogramm_max_y=2000,
-                        sample_name=None,
-                        save_clustering=False,
-                        testing_dir="threshold_test",
-                        count_singletons=True,
-                        scaffold_prefix="Region",
-                        extensions=("svg", "png")):
-        # TODO: adjust parameters of figure
-        # threshold is tuple(list) of three variables: min, max, number
-
-        # extracting_method possible values
-        #   inconsistent
-        #   distance
-        #   maxclust
-        #   monocrit
-        #   monocrit
-
-        if self.linkage_dict:
-            linkage_dict = self.linkage_dict
-        else:
-            linkage_dict = self.hierarchical_clustering(method=cluster_distance,
-                                                        dendrogramm_max_y=dendrogramm_max_y,
-                                                        sample_name=sample_name,
-                                                        save=save_clustering,
-                                                        clustering_dir=testing_dir)
-
-        num_of_regions = len(list(linkage_dict.keys()))
-
-        side = int(sqrt(num_of_regions))
-        if side*side != num_of_regions:
-            side += 1
-        sub_plot_dict = OrderedDict({})
-        fig = plt.figure(2, dpi=150, figsize=(30, 30))
-        fig.suptitle("Relashionship between number of clusters and threshold of %s" % extracting_method, fontsize=20)
-
-        thresholds = threshold
-        if extracting_method == "inconsistent":
-            if not threshold:
-                thresholds = (0.5, 1.5, 21)
-
-        index = 1
-        for region in linkage_dict:
-            if linkage_dict[region] is None:
-                continue
-            # http://docs.scipy.org/doc/scipy/reference/generated/scipy.cluster.hierarchy.fcluster.html#scipy.cluster.hierarchy.fcluster
-            n_clusters_list = []
-            n_nonsingleton_clusters = []
-            n_multiclusters = []
-            n_five_plus_clusters = []
-            coef_threshold_list = np.linspace(*thresholds)  # best variant 0.5, 1.5, 21
-            for i in coef_threshold_list:
-                clusters = fcluster(linkage_dict[region], i, criterion=extracting_method)
-                n_clusters_list.append(max(clusters))
-
-                # counting clusters with 2+ and 3+ clusters
-                ua, uind = np.unique(clusters, return_inverse=True)
-                counted = np.bincount(uind)
-                #j = 0
-                nonsingleton = 0
-                multicluster = 0  # 3+
-                five_plus_clusters = 0 # 5+
-                for k in counted:
-                    if k > 1:
-                        nonsingleton += 1
-                    if k > 2:
-                        multicluster += 1
-                    if k > 4:
-                        five_plus_clusters += 1
-                n_nonsingleton_clusters.append(nonsingleton)
-                n_multiclusters.append(multicluster)
-                n_five_plus_clusters.append(five_plus_clusters)
-            sub_plot_dict[region] = plt.subplot(side, side, index, axisbg="#D6D6D6")
-            #ax = plt.gca()
-            #ax.set_xticks(np.arange(0.5, 2.2, 0.1))
-
-            plt.grid()
-            if count_singletons:
-                plt.plot(coef_threshold_list, n_clusters_list, label="all")
-            plt.plot(coef_threshold_list, n_nonsingleton_clusters, "green", label="2+")
-            plt.plot(coef_threshold_list, n_multiclusters, "red", label="3+")
-            plt.plot(coef_threshold_list, n_five_plus_clusters, "black", label="5+")
-            plt.title("%s %s" % (scaffold_prefix, region))
-            plt.legend(loc='upper right')
-            plt.ylabel("Number of clusters")
-            plt.xlabel("Threshold")
-            #plt.axvline(x=0.8, color="purple")
-            #plt.axvline(x=1.1, color="purple")
-
-            plt.ylim(ymin=0)
-            index += 1
-        for ext in extensions:
-            plt.savefig("%s/clusters_%s.%s" % (testing_dir, extracting_method, ext))
-        plt.close()
 
     def add_info(self, metadata_line, expression, info_name, info_value=None):
         self.metadata.add_metadata(metadata_line)
@@ -1697,274 +1554,6 @@ class StatsVCF(FileRoutines):
                     return True
             return False
         self.set_filter(expression, filter_name)
-
-
-class ReferenceGenome(object):
-    """
-    ReferenceGenome class
-    """
-    def __init__(self, ref_gen_file, masked_regions=None, index_file="refgen.idx", filetype="fasta", mode="index_db",
-                 black_list=(), masking_gff_list=None, feature_mask_list=None, sort_scaffolds_by_length=True):
-        """
-
-        :param ref_gen_file: file with sequences of genome.
-        :param masked_regions: dictionary with SeqRecords of masked regions.
-        :param index_file: index file (created if absent) of genome used for parsing in index_db mode. Ignored  in other modes.
-        :param filetype: format of file with sequences. Allowed formats - fasta, genbank.
-        :param mode: mode of parsing reference genome. Allowed variants - to_dict, index, index_db.
-        :param black_list: list of records to be not parsed.
-        :return: None
-        """
-        self.ref_gen_file = ref_gen_file
-        if mode == "index_db":
-            self.reference_genome = SeqIO.index_db(index_file, [ref_gen_file], filetype)
-        elif mode == "index":
-            self.reference_genome = SeqIO.index(ref_gen_file, filetype)
-        else:
-            self.reference_genome = SeqIO.to_dict(SeqIO.parse(ref_gen_file, filetype))
-
-        for record_id in self.reference_genome.keys():
-            if record_id in black_list:
-                self.reference_genome.pop(record_id, None)
-
-        self.region_list = list(self.reference_genome.keys())
-        self.length = 0
-        self.feature_dict = OrderedDict()
-        self.region_length = OrderedDict()
-
-        for region in self.reference_genome:
-            length = len(self.reference_genome[region])
-            self.length += length
-            self.region_length[region] = length
-
-        self.length_to_region_dict = OrderedDict()
-        for region in self.region_length:
-            if self.region_length[region] in self.length_to_region_dict:
-                self.length_to_region_dict[self.region_length[region]].append(region)
-            else:
-                self.length_to_region_dict[self.region_length[region]] = [region]
-        #print self.length_to_region_dict
-        lengths_list = sorted(list(self.length_to_region_dict.keys()), reverse=True)
-
-        self.region_sorted_by_length_list = []
-        #print self.length_to_region_dict
-        for length in lengths_list:
-            #print self.length_to_region_dict
-            #type(self.region_sorted_by_length_list)
-            #type(self.length_to_region_dict[length])
-            self.region_sorted_by_length_list += self.length_to_region_dict[length]
-
-        self.region_index = self.rec_index()
-        self.gaps_dict = OrderedDict()
-        self.masked_regions = masked_regions if masked_regions else OrderedDict()
-
-        if masking_gff_list:
-            masking_gffs = [masking_gff_list] if isinstance(masking_gff_list, str) else masking_gff_list
-            for gff in masking_gffs:
-                with open(gff, "r") as gff_fd:
-                    for line in gff_fd:
-                        if line[0] == "#":
-                            continue
-                        line_list = line.split("\t")
-                        if feature_mask_list:
-                            if line_list[2] not in feature_mask_list:
-                                continue
-                        if line_list[0] not in self.masked_regions:
-                            self.masked_regions[line_list[0]] = []
-
-                        self.masked_regions[line_list[0]].append(SeqFeature(FeatureLocation(int(line_list[3]) - 1,
-                                                                                            int(line_list[4])),
-                                                                            type="masked_region", strand=None))
-
-    def merge_features_by_coordinate(self, feature_dict_list, return_seq_fetures_dict=True, feature_type='masked_region'):
-
-        unified_dict = OrderedDict()
-        merged_dict = OrderedDict()
-
-        region_set = set()
-        #print feature_dict_list
-
-        for feature_dict in feature_dict_list:
-            region_set |= set(feature_dict.keys())
-
-        for region in region_set:
-            unified_dict[region] = []
-            merged_dict[region] = []
-
-        for feature_dict in feature_dict_list:
-            for region in feature_dict:
-                for feature in feature_dict[region]:
-                    unified_dict[region].append([feature.location.start, feature.location.end])
-
-        for region in unified_dict:
-            if unified_dict[region]:
-                unified_dict[region].sort()
-            if unified_dict[region] is None:
-                print region
-
-        for region in unified_dict:
-            number_of_records = len(unified_dict[region])
-            if number_of_records == 0:
-                continue
-
-            # [a, b) [c, d), a < b, c < d
-            # after sorting c >= a
-            i = 1
-
-            prev_coordinates = deepcopy(unified_dict[region][0])
-
-            while i < number_of_records:
-                if unified_dict[region][i][0] > prev_coordinates[1]: # c > b
-                    merged_dict[region].append(deepcopy(prev_coordinates))
-                    prev_coordinates = deepcopy(unified_dict[region][i])
-                elif unified_dict[region][i][1] > prev_coordinates[1]: # d > b; c<=b
-                    prev_coordinates[1] = deepcopy(unified_dict[region][i][1])
-                else: # d <= b
-                    pass
-                i += 1
-
-            if unified_dict[region]:
-                if prev_coordinates != unified_dict[region][-1]:
-                    merged_dict[region].append(prev_coordinates)
-            else:
-                merged_dict[region].append(prev_coordinates)
-
-        if return_seq_fetures_dict:
-            feature_dict = OrderedDict()
-            for region in merged_dict:
-                feature_dict[region] = []
-                for (start, stop) in merged_dict[region]:
-                    feature_dict[region].append(SeqFeature(FeatureLocation(start, stop),
-                                                           type=feature_type,
-                                                           strand=None))
-
-            return feature_dict
-        else:
-            return merged_dict
-
-    def write_feature_dict_as_gff(self, feature_dict, output_gff):
-        feature_id = 1
-        with open(output_gff, "w") as out_gff:
-            for region in feature_dict:
-                for feature in feature_dict[region]:
-                    out_gff.write("%s\tsource\t%s\t%i\t%i\t.\t%s\t.\t%s\n" % (region,
-                                                                              feature.type,
-                                                                              feature.location.start + 1,
-                                                                              feature.location.end,
-                                                                              "." if feature.location.strand == None else feature.location.strand,
-                                                                              "ID=%i" % feature_id))
-                    feature_id += 1
-
-    def write_coords_dict_as_gff(self, coords_dict, output_gff, feature_type="masked_region"):
-        feature_id = 1
-        with open(output_gff, "w") as out_gff:
-            for region in coords_dict:
-                for coords in coords_dict[region]:
-                    out_gff.write("%s\tsource\t%s\t%i\t%i\t.\t%s\t.\t%s\n" % (region,
-                                                                              feature_type,
-                                                                              coords[0] + 1,
-                                                                              coords[1],
-                                                                              ".",
-                                                                              "ID=%i" % feature_id))
-                    feature_id += 1
-
-    def rec_index(self):
-        """
-        Region order is based on descending region length
-        :return:
-        """
-        index_dict = OrderedDict({})
-        index_dict[self.region_sorted_by_length_list[0]] = [0, self.region_length[self.region_sorted_by_length_list[0]] - 1]
-        for index in range(1, self.number_of_regions()):
-            index_dict[self.region_sorted_by_length_list[index]] = [index_dict[self.region_sorted_by_length_list[index-1]][1] + 1,
-                                            index_dict[self.region_sorted_by_length_list[index-1]][1] + self.region_length[self.region_sorted_by_length_list[index]]]
-        return index_dict
-
-    def get_position(self, coordinate):
-        # coordinate should be 0-based
-        tmp_coordinate = self.region_index[self.region_list[-1]][1] + coordinate + 1 if coordinate < 0 else coordinate
-        if tmp_coordinate < 0:
-            raise ValueError("Coordinate %i is too small for this genome" % tmp_coordinate)
-        for region in self.region_list:
-            start, end = self.region_index[region]
-            if start <= tmp_coordinate <= end:
-                coordinate_region = region
-                break
-        else:
-            raise ValueError("Coordinate %i is too large for this genome" % tmp_coordinate)
-        shift = tmp_coordinate - start
-        return coordinate_region, shift
-
-    def count_gaped_and_masked_positions_in_windows(self, window_size, window_step,
-                                                    ignore_scaffolds_shorter_than_window=True,
-                                                    output_prefix=None,
-                                                    min_gap_len=1):
-
-        window_stepppp = window_size if window_step is None else window_step
-        if window_stepppp > window_size:
-            raise ValueError("ERROR!!! Window step can't be larger then window size")
-        elif (window_size % window_stepppp) != 0:
-            raise ValueError("ERROR!!! Window size is not a multiple of window step...")
-
-        if not self.gaps_dict:
-            self.find_gaps(min_gap_len)
-
-        steps_in_window = window_size / window_stepppp
-
-        short_scaffolds_ids = IdList()
-
-        count_dict = SynDict()
-
-        uncounted_tail_variants_number_dict = SynDict()
-
-        masked_region_dict = self.merge_features_by_coordinate([self.masked_regions,
-                                                                self.gaps_dict],
-                                                               return_seq_fetures_dict=False)
-
-        self.write_coords_dict_as_gff(masked_region_dict, "%s.merged_masked_regions.gff" % output_prefix,
-                                      feature_type="masked_region")
-        self.write_feature_dict_as_gff(self.gaps_dict, "%s.gaps.gff" % output_prefix)
-
-        for scaffold_id in self.region_length:
-            number_of_windows = self.count_number_of_windows(self.region_length[scaffold_id],
-                                                             window_size,
-                                                             window_stepppp)
-            if number_of_windows == 0:
-                short_scaffolds_ids.append(scaffold_id)
-                if ignore_scaffolds_shorter_than_window:
-                    continue
-
-            scaffold_windows_list = np.zeros(number_of_windows, dtype=np.int64) #[0 for i in range(0, number_of_windows)]
-
-            uncounted_tail_variants_number_dict[scaffold_id] = 0
-
-            for masked_region_location in masked_region_dict[scaffold_id]:
-                max_start_step = masked_region_location[0] / window_stepppp
-                min_start_step = max(max_start_step - steps_in_window + 1, 0)
-                max_end_step = (masked_region_location[1] - 1) / window_stepppp
-                min_end_step = max(max_end_step - steps_in_window + 1, 0)
-
-                if min_start_step >= number_of_windows:
-                    break
-
-                for i in range(min_start_step, min(max_start_step + 1, min_end_step, number_of_windows)):
-                    scaffold_windows_list[i] += (i * window_step) + window_size - masked_region_location[0]
-
-                for i in range(min_end_step, min(max_start_step + 1, number_of_windows)):
-                    scaffold_windows_list[i] += masked_region_location[1] - masked_region_location[0]
-
-                for i in range(max_start_step + 1, min(min_end_step, number_of_windows)):
-                    scaffold_windows_list[i] += window_size
-
-                for i in range(max(max_start_step + 1, min_end_step), min(max_end_step + 1, number_of_windows)):
-                    scaffold_windows_list[i] += masked_region_location[1] - (i * window_stepppp)
-
-            count_dict[scaffold_id] = scaffold_windows_list
-
-        if output_prefix:
-            count_dict.write("%s.gapped_and_masked_site_counts.tsv" % output_prefix, splited_values=True)
-
-        return count_dict
 
 
 if __name__ == "__main__":
