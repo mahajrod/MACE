@@ -314,25 +314,21 @@ class StatsVCF(FileRoutines):
         'ward'        -   incremental algorithm
         """
         per_scaffold_counts = vcf_df.groupby(level=0).count()
-        """
-        print per_scaffold_counts
-        print "AAAA"
-        print per_scaffold_counts["POS"]
-        print "CCCC"
-        print per_scaffold_counts[per_scaffold_counts["POS"] > 1]
-        print "DDDDD"
-        print per_scaffold_counts[per_scaffold_counts["POS"] > 1].index
-        print "LLLL"
-        print vcf_df.index.isin(per_scaffold_counts[per_scaffold_counts["POS"] > 1].index)
-        print "BBBBB"
-        """
+
         vcf_df_filtered = vcf_df[["POS"]][vcf_df.index.isin(per_scaffold_counts[per_scaffold_counts["POS"] > 1].index,
                                                             level=0)]
 
+        print("%s\tCalculating distances..." % str(datetime.datetime.now()))
         linkage_df = pd.DataFrame({"distance": vcf_df_filtered.groupby(level=0).apply(pdist)})
+
+        print("%s\tCalculating linkage..." % str(datetime.datetime.now()))
         linkage_df["linkage"] = linkage_df["distance"].agg(linkage, method=method)
+        
+        print("%s\tCalculating inconsistency..." % str(datetime.datetime.now()))
         linkage_df["inconsistent"] = linkage_df["linkage"].agg(inconsistent)
         # https://docs.scipy.org/doc/scipy-0.14.0/reference/generated/scipy.cluster.hierarchy.cophenet.html
+
+        print("%s\tCalculating cophenet coefficient..." % str(datetime.datetime.now()))
         linkage_df["cophenet"] = linkage_df.apply(lambda r: cophenet(r["linkage"], r["distance"])[0], axis=1)
         
         if output:
@@ -416,71 +412,6 @@ class StatsVCF(FileRoutines):
             multielement_count_df.to_csv("%s.multielement.counts" % output_prefix)
         """
         return cluster_df
-
-
-
-        num_of_regions = len(list(linkage_dict.keys()))
-        side = int(sqrt(num_of_regions))
-        if side*side != num_of_regions:
-            side += 1
-        sub_plot_dict = OrderedDict({})
-        fig = plt.figure(2, dpi=150, figsize=(30, 30))
-        fig.suptitle("Relashionship between number of clusters and threshold of %s" % extracting_method, fontsize=20)
-
-        index = 1
-        for region in linkage_dict:
-            if linkage_dict[region] is None:
-                continue
-            # http://docs.scipy.org/doc/scipy/reference/generated/scipy.cluster.hierarchy.fcluster.html#scipy.cluster.hierarchy.fcluster
-            n_clusters_list = []
-            n_nonsingleton_clusters = []
-            n_multiclusters = []
-            n_five_plus_clusters = []
-
-            for i in coef_threshold_list:
-                clusters = fcluster(linkage_dict[region], i, criterion=extracting_method)
-                n_clusters_list.append(max(clusters))
-
-                # counting clusters with 2+ and 3+ clusters
-                ua, uind = np.unique(clusters, return_inverse=True)
-                counted = np.bincount(uind)
-                #j = 0
-                nonsingleton = 0
-                multicluster = 0  # 3+
-                five_plus_clusters = 0 # 5+
-                for k in counted:
-                    if k > 1:
-                        nonsingleton += 1
-                    if k > 2:
-                        multicluster += 1
-                    if k > 4:
-                        five_plus_clusters += 1
-                n_nonsingleton_clusters.append(nonsingleton)
-                n_multiclusters.append(multicluster)
-                n_five_plus_clusters.append(five_plus_clusters)
-            sub_plot_dict[region] = plt.subplot(side, side, index, axisbg="#D6D6D6")
-            #ax = plt.gca()
-            #ax.set_xticks(np.arange(0.5, 2.2, 0.1))
-
-            plt.grid()
-            if count_singletons:
-                plt.plot(coef_threshold_list, n_clusters_list, label="all")
-            plt.plot(coef_threshold_list, n_nonsingleton_clusters, "green", label="2+")
-            plt.plot(coef_threshold_list, n_multiclusters, "red", label="3+")
-            plt.plot(coef_threshold_list, n_five_plus_clusters, "black", label="5+")
-            plt.title("%s %s" % (scaffold_prefix, region))
-            plt.legend(loc='upper right')
-            plt.ylabel("Number of clusters")
-            plt.xlabel("Threshold")
-            #plt.axvline(x=0.8, color="purple")
-            #plt.axvline(x=1.1, color="purple")
-
-            plt.ylim(ymin=0)
-            index += 1
-        for ext in extensions:
-            plt.savefig("%s/clusters_%s.%s" % (testing_dir, extracting_method, ext))
-        plt.close()
-
 
     # ----------------------- Distance based stats end ----------------------
 
