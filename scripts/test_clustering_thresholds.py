@@ -61,7 +61,7 @@ variants = CollectionVCF(in_file=args.input, parsing_mode="only_coordinates",
                          scaffold_black_list=args.scaffold_black_list,
                          scaffold_syn_dict=syn_dict)
 
-linkage_df = StatsVCF.get_linkage_for_hierarchical_clustering(variants, method=args.distance, output=None)
+linkage_df = StatsVCF.get_linkage_for_hierarchical_clustering(variants.records, method=args.distance, output=None)
 
 cluster_df = StatsVCF.test_clustering_thresholds(linkage_df,
                                                  extracting_method=args.method,
