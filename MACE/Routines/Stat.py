@@ -319,7 +319,7 @@ class StatsVCF(FileRoutines):
         vcf_df_filtered = vcf_df[["POS"]][vcf_df.index.isin(per_scaffold_counts[per_scaffold_counts["POS"] > 1].index,
                                                             level=0)]
         if memory_saving_mode:
-            for scaffold in vcf_df_filtered.index.unique():
+            for scaffold in vcf_df_filtered.index.get_level_values(level=0).unique():
                 print scaffold
 
                 print vcf_df_filtered.loc[[scaffold]]
