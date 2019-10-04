@@ -321,7 +321,9 @@ class StatsVCF(FileRoutines):
         if memory_saving_mode:
             for scaffold in vcf_df_filtered.index.unique():
                 print scaffold
-                pd.DataFrame({"linkage": linkage(pdist(vcf_df_filtered.loc[[scaffold]]))}, index=[scaffold])
+
+                print vcf_df_filtered.loc[[scaffold]]
+                pdist(vcf_df_filtered.loc[[scaffold]])
         else:
             print("%s\tCalculating distances..." % str(datetime.datetime.now()))
             linkage_df = pd.DataFrame({"distance": vcf_df_filtered.groupby(level=0).apply(pdist)})
