@@ -138,6 +138,7 @@ class Visualization(DrawingRoutines):
                     #print data.loc[scaffold]
                     axes.plot(data.columns, data.loc[scaffold], label=label,
                               color=color)
+                    axes.grid()
             if (subplot_hor_index == (figure.horizontal_subplot_number - 1)) and (subplot_vert_index == 0):
                 axes.legend()
 
