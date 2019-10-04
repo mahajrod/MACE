@@ -60,10 +60,7 @@ variants = CollectionVCF(in_file=args.input, parsing_mode="only_coordinates",
                          scaffold_white_list=args.scaffold_white_list,
                          scaffold_black_list=args.scaffold_black_list,
                          scaffold_syn_dict=syn_dict)
-print syn_dict
-print args.scaffold_white_list
-print variants.records
-print len(variants.records)
+
 print("Calculating linkage...")
 linkage_df = StatsVCF.get_linkage_for_hierarchical_clustering(variants.records, method=args.distance, output=None)
 print("Applying thresholds...")
