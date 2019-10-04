@@ -323,7 +323,7 @@ class StatsVCF(FileRoutines):
 
         print("%s\tCalculating linkage..." % str(datetime.datetime.now()))
         linkage_df["linkage"] = linkage_df["distance"].agg(linkage, method=method)
-        
+
         print("%s\tCalculating inconsistency..." % str(datetime.datetime.now()))
         linkage_df["inconsistent"] = linkage_df["linkage"].agg(inconsistent)
         # https://docs.scipy.org/doc/scipy-0.14.0/reference/generated/scipy.cluster.hierarchy.cophenet.html
