@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import math
+from copy import deepcopy
 from collections import Iterable, OrderedDict
 
 import numpy as np
@@ -100,8 +101,13 @@ class Visualization(DrawingRoutines):
     # ----------------------- In progress ------------------------------
     @staticmethod
     def plot_clustering_threshold_tests(cluster_df, output_prefix, scaffold_order_list=None,
-                                        extensions=("png", ), suptitle="Test of clustering thresholds"):
+                                        extensions=("png", ), suptitle="Test of clustering thresholds",
+                                        figure_width=16, figure_height=16):
         threshold_number = len(cluster_df.columns)
+
+        figure_style = deepcopy(plot_figure_style)
+        figure_style.width = figure_width
+        figure_style.height = figure_height
 
         cluster_number_df = cluster_df.groupby(level=0).nunique()
 
@@ -110,13 +116,13 @@ class Visualization(DrawingRoutines):
         triple_plus_count_df = cluster_df.groupby(level=0).agg(lambda s: sum(s.value_counts() > 2))
         five_plus_count_df = cluster_df.groupby(level=0).agg(lambda s: sum(s.value_counts() > 4))
 
-        scaffolds = scaffold_order_list[::-1] if scaffold_order_list else cluster_df.index.get_level_values(
+        scaffolds = scaffold_order_list if scaffold_order_list else cluster_df.index.get_level_values(
             level=0).unique().to_list()
         scaffold_number = len(scaffolds)
 
         subplot_dict = OrderedDict([(chr, None) for chr in scaffolds])
 
-        figure = Figure(subplots=subplot_dict, style=plot_figure_style, suptitle=suptitle)
+        figure = Figure(subplots=subplot_dict, style=figure_style, suptitle=suptitle)
         figure.draw()
         df_list = [cluster_number_df] + cluster_count_list + [triple_plus_count_df, five_plus_count_df]
         label_list = ["All", "1", "2", "3", "5", "3+", "5+"]
