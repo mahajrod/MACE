@@ -61,8 +61,11 @@ variants = CollectionVCF(in_file=args.input, parsing_mode="only_coordinates",
                          scaffold_black_list=args.scaffold_black_list,
                          scaffold_syn_dict=syn_dict)
 
+print variants.records
+print len(variants.records)
+print("Calculating linkage...")
 linkage_df = StatsVCF.get_linkage_for_hierarchical_clustering(variants.records, method=args.distance, output=None)
-
+print("Applying thresholds...")
 cluster_df = StatsVCF.test_clustering_thresholds(linkage_df,
                                                  extracting_method=args.method,
                                                  threshold_tuple=None,
@@ -71,7 +74,7 @@ cluster_df = StatsVCF.test_clustering_thresholds(linkage_df,
                                                  threshold_number=None,
                                                  threshold_step=args.threshold_step,
                                                  output_prefix=None)
-
+print("Drawing...")
 Visualization.plot_clustering_threshold_tests(cluster_df, args.output_prefix,
                                               scaffold_order_list=args.scaffold_ordered_list,
                                               extensions=("png", ), suptitle="Test of clustering thresholds")
