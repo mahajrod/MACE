@@ -63,7 +63,8 @@ variants = CollectionVCF(in_file=args.input, parsing_mode="only_coordinates",
 print("%s variant were retained..." % len(variants.records))
 
 print("Calculating linkage...")
-linkage_df = StatsVCF.get_linkage_for_hierarchical_clustering(variants.records, method=args.distance, output=None)
+linkage_df = StatsVCF.get_linkage_for_hierarchical_clustering(variants.records, method=args.distance, output=None,
+                                                              memory_saving_mode=True)
 print("Applying thresholds...")
 cluster_df = StatsVCF.test_clustering_thresholds(linkage_df,
                                                  extracting_method=args.method,
