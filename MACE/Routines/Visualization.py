@@ -16,9 +16,13 @@ from RouToolPa.Routines.Drawing import DrawingRoutines
 from MACE.Visualization.Tracks import WindowTrack
 from MACE.Visualization.TrackGroups import TrackGroup
 from MACE.Visualization.Subplots import Subplot
+from MACE.Visualization.Figures import Figure
+
 from MACE.Visualization.Legends import DensityLegend
 from MACE.Functions.Generators import recursive_generator
 from MACE.Visualization.Styles.Subplot import chromosome_subplot_style
+from MACE.Visualization.Styles.Figure import plot_figure_style, rainfall_figure_style, chromosome_figure_style
+
 
 class Visualization(DrawingRoutines):
 
@@ -62,7 +66,104 @@ class Visualization(DrawingRoutines):
 
         return zygoty_counts
 
+    def draw_variant_window_densities(self, count_df, window_size, window_step, scaffold_length_df,
+                                      output_prefix,
+                                      figure_width=15, figure_height_per_scaffold=0.5, dpi=300,
+                                      colormap=None, thresholds=None, colors=None, background=None, masked=None,
+                                      title=None,
+                                      extensions=("png", ),
+                                      scaffold_order_list=None):
+
+        track_group_dict = OrderedDict()
+
+        scaffolds = scaffold_order_list[::-1] if scaffold_order_list else count_df.index.get_level_values(level=0).unique().to_list()
+        scaffold_number = len(scaffolds)
+
+        for chr in scaffolds: # count_df.index.get_level_values(level=0).unique():
+            track_group_dict[chr] = TrackGroup(
+                {chr: WindowTrack(count_df.xs(chr), window_size, window_step, x_end=scaffold_length_df.loc[chr][0],
+                                  multiplier=1000, label=chr, colormap=colormap, thresholds=thresholds,
+                                  colors=colors, background=background, masked=masked)})
+            track_group_dict[chr][chr].add_color()
+        # track_group_dict
+        # track_group_dict["chr13"]
+        chromosome_subplot = Subplot(track_group_dict, title=title, style=chromosome_subplot_style,
+                                     legend=DensityLegend(colormap='jet'))
+
+        plt.figure(1, figsize=(figure_width, int(scaffold_number*figure_height_per_scaffold)), dpi=dpi)
+
+        chromosome_subplot.draw()
+
+        for ext in extensions:
+            plt.savefig("%s.%s" % (output_prefix, ext))
+
     # ----------------------- In progress ------------------------------
+    @staticmethod
+    def plot_clustering_threshold_tests(cluster_df, output_prefix, scaffold_order_list=None,
+                                        extensions=("png", ), suptitle="Test of clustering thresholds"):
+        threshold_number = len(cluster_df.columns)
+
+        cluster_number_df = cluster_df.groupby(level=0).nunique()
+
+        cluster_count_list = [cluster_df.groupby(level=0).agg(lambda s: sum(s.value_counts() == i)) for i in (1, 2, 3, 5)]
+
+        triple_plus_count_df = cluster_df.groupby(level=0).agg(lambda s: sum(s.value_counts() > 2))
+        five_plus_count_df = cluster_df.groupby(level=0).agg(lambda s: sum(s.value_counts() > 4))
+
+        scaffolds = scaffold_order_list[::-1] if scaffold_order_list else cluster_df.index.get_level_values(
+            level=0).unique().to_list()
+        scaffold_number = len(scaffolds)
+
+        subplot_dict = OrderedDict([(chr, None) for chr in scaffolds])
+
+        figure = Figure(subplots=subplot_dict, style=plot_figure_style, suptitle=suptitle)
+        figure.draw()
+        df_list = [cluster_number_df] + cluster_count_list + [triple_plus_count_df, five_plus_count_df]
+        label_list = ["All", "1", "2", "3", "5", "3+", "5+"]
+        color_list = ["blue", "red", "orange", "magenta", "green", "black", "brown"]
+        for (scaffold, subplot_index) in zip(subplot_dict.keys(), range(0, scaffold_number)):
+            subplot_hor_index = subplot_index % figure.horizontal_subplot_number
+            subplot_vert_index = subplot_index // figure.horizontal_subplot_number
+            axes = figure.axes_array[subplot_vert_index][subplot_hor_index]
+            for data, label, color in zip(df_list, label_list, color_list):
+                #print data
+                if scaffold in data.index:
+                    #print scaffold
+                    #print data.loc[scaffold]
+                    axes.plot(data.columns, data.loc[scaffold], label=label,
+                              color=color)
+            if (subplot_hor_index == (figure.horizontal_subplot_number - 1)) and (subplot_vert_index == 0):
+                axes.legend()
+
+            axes.set_title(scaffold)
+
+        if output_prefix:
+            for i, j in zip((0, 1, 2, 3), (1, 2, 3, 5)):
+                cluster_count_list[i].to_csv("%s.cluster.%i.counts" % (output_prefix, j), sep="\t", index_label="scaffold")
+            cluster_df.to_csv("%s.cluster" % output_prefix, sep="\t", index_label="scaffold")
+            cluster_number_df.to_csv("%s.cluster.all.counts" % output_prefix, sep="\t", index_label="scaffold")
+            triple_plus_count_df.to_csv("%s.cluster.3plus.counts" % output_prefix, sep="\t", index_label="scaffold")
+            five_plus_count_df.to_csv("%s.cluster.5plus.counts" % output_prefix, sep="\t", index_label="scaffold")
+
+        for ext in extensions:
+            plt.savefig("%s.%s" % (output_prefix, ext))
+
+    def rainfall_plot(self, distance_df, scaffold_length_df,
+                      output_prefix,
+                      figure_width=15,
+                      figure_height_per_scaffold=0.5,
+                      dpi=300,
+                      colormap='jet', title=None,
+                      extensions=("png",),
+                      scaffold_order_list=None
+                      ):
+        subplot_group_dict = OrderedDict()
+
+        scaffolds = scaffold_order_list[::-1] if scaffold_order_list else distance_df.index.get_level_values(
+            level=0).unique().to_list()
+        scaffold_number = len(scaffolds)
+
+        pass
 
     def draw_gff(self, collection_gff, scaffold_length_dict, output_prefix, feature_type=None,
                  density_multiplicator=1000,
@@ -91,290 +192,6 @@ class Visualization(DrawingRoutines):
 
         # TODO: Finish this
 
-    def draw_variant_window_densities(self, count_df, window_size, window_step, scaffold_length_df,
-                                      output_prefix,
-                                      figure_width=15,
-                                      figure_height_per_scaffold=0.5,
-                                      dpi=300,
-                                      colormap='jet', title=None,
-                                      extensions=("png", ),
-                                      scaffold_order_list=None):
-
-        track_group_dict = OrderedDict()
-
-        scaffolds = scaffold_order_list[::-1] if scaffold_order_list else count_df.index.get_level_values(level=0).unique().to_list()
-        scaffold_number = len(scaffolds)
-
-        for chr in scaffolds: # count_df.index.get_level_values(level=0).unique():
-            track_group_dict[chr] = TrackGroup(
-                {chr: WindowTrack(count_df.xs(chr), window_size, window_step, x_end=scaffold_length_df.loc[chr][0],
-                                  multiplier=1000, label=chr, colormap=colormap)})
-            track_group_dict[chr][chr].add_color()
-        # track_group_dict
-        # track_group_dict["chr13"]
-        chromosome_subplot = Subplot(track_group_dict, title=title, style=chromosome_subplot_style,
-                                     legend=DensityLegend(colormap='jet'))
-
-        plt.figure(1, figsize=(figure_width, int(scaffold_number*figure_height_per_scaffold)), dpi=dpi)
-
-        chromosome_subplot.draw()
-
-        for ext in extensions:
-            plt.savefig("%s.%s" % (output_prefix, ext))
-
-    """
-    def draw_variant_window_densities(self, count_df, scaffold_length_dict, window_size, window_step, output_prefix,
-                                      masking_dict=None,
-                                      gap_fraction_threshold=0.4,
-                                      subplot_style=None, ext_list=("svg", "png"),
-                                      label_fontsize=13, left_offset=0.2, figure_width=12,
-                                      figure_height_scale_factor=0.5, scaffold_synonym_dict=None,
-                                      id_replacement_mode="partial", suptitle=None, density_multiplicator=1000,
-                                      scaffold_black_list=[], sort_scaffolds=False, scaffold_ordered_list=None,
-                                      scaffold_white_list=[], add_sample_name_to_labels=False,
-                                      dist_between_scaffolds_scaling_factor=1,
-                                      gap_color="grey",
-                                      masked_color="grey", no_snp_color="white",
-                                      colormap=None,
-                                      colors=("#333a97", "#3d3795","#5d3393", "#813193", "#9d2d7f", "#b82861",
-                                                        "#d33845", "#ea2e2e", "#f5ae27"),
-                                      thresholds=(0.0, 0.1, 0.5, 0.75, 1.0, 1.25, 1.5, 2.0, 2.5),
-                                      colormap_tuple_list=((0.0, "#333a97"), (0.1, "#3d3795"), (0.5, "#5d3393"),
-                                                           (0.75, "#813193"), (1.0, "#9d2d7f"), (1.25, "#b82861"),
-                                                           (1.5, "#d33845"), (2.0, "#ea2e2e"), (2.5, "#f5ae27"))):
-
-
-        if dist_between_scaffolds_scaling_factor < 1:
-            raise ValueError("Scaling factor for distance between scaffolds have to be >=1.0")
-
-        final_scaffold_list = self.get_filtered_scaffold_list(count_df.index.get_level_values('CHROM').unique().to_list(),
-                                                              scaffold_black_list=scaffold_black_list,
-                                                              sort_scaffolds=sort_scaffolds,
-                                                              scaffold_ordered_list=scaffold_ordered_list,
-                                                              scaffold_white_list=scaffold_white_list)
-
-        scaffold_number = len(final_scaffold_list)
-        max_scaffold_length = max([scaffold_length_dict[scaf] for scaf in final_scaffold_list])
-        #max_scaffold_length = max(scaffold_length_dict.values())
-        window_number, sample_number = np.shape(count_df)
-        figure = plt.figure(figsize=(figure_width,
-                                     int(figure_height_scale_factor * scaffold_number * sample_number)))
-        subplot = plt.subplot(1, 1, 1)
-
-        sub_style = subplot_style if subplot_style else chrSubplotStyle
-
-        sub_style.apply(subplot)
-
-
-        label_line_y_shift = int(scaffold_height/2)
-        label_line_y_jump = int(scaffold_height/2)
-
-        #normalize_color_func = LinearSegmentedColormap.from_list("Densities_custom", colormap_tuple_list)
-        #plt.register_cmap(cmap=colormap)
-        #colormap = cm.get_cmap(name="plasma", lut=None)
-        #normalize_colors = colors.BoundaryNorm(boundaries_for_colormap, len(boundaries_for_colormap) - 1) * int(256/(len(boundaries_for_colormap) - 1))
-        #normalize_colors = colors.Normalize(vmin=boundaries_for_colormap[0], vmax=boundaries_for_colormap[-1])
-
-        masked_windows_count_dict = TwoLvlDict()
-        no_snps_windows_count_dict = TwoLvlDict()
-
-        for sample in count_df:
-            masked_windows_count_dict[sample] = OrderedDict()
-            no_snps_windows_count_dict[sample] = OrderedDict()
-
-        if colormap:
-            cmap = plt.get_cmap(colormap, len(thresholds))
-
-        masked_regions_fd = open("%s.masked_regions" % output_prefix, "w")
-        masked_regions_fd.write("#scaffold\twindow\tmasked_position\tmasked_position,fraction\n")
-
-        for scaffold in final_scaffold_list:
-
-            sample_index = 0
-            for sample in count_df:
-                rectangle_list = []
-                masked_windows_count_dict[sample][scaffold] = 0
-                no_snps_windows_count_dict[sample][scaffold] = 0
-                #if scaffold in scaffold_black_list:
-                #    continue
-                #print gap_coords_list, gap_len_list
-
-                start_y += scaffold_height + dist_between_scaffolds * (dist_between_scaffolds_scaling_factor if sample_index == 0 else 1)
-                label_y_start = label_line_y_shift + start_y
-                gap_y_jump = label_y_start + label_line_y_jump
-                prev_x = 0
-
-                #figure.text(0, start_y, scaffold, rotation=0, fontweight="bold", transform=subplot.transAxes, fontsize=9,
-                #             horizontalalignment='center',
-                #             verticalalignment='center')
-
-                if scaffold_synonym_dict:
-                    if id_replacement_mode == "exact":
-                        if scaffold in scaffold_synonym_dict:
-                            scaffold_label = scaffold_synonym_dict[scaffold]
-                        else:
-                            scaffold_label = scaffold
-                            print("WARNING!!! Synonym for %s was not found" % scaffold)
-                    elif id_replacement_mode == "partial":
-
-                        partial_syn_list = []
-                        for partial_syn in scaffold_synonym_dict:
-                            if partial_syn in scaffold:
-                                partial_syn_list.append(partial_syn)
-
-                        if len(partial_syn_list) > 1:
-                            print("WARNING!!! More than one possible replacement for %s was found: %s. No replacement then." % (scaffold, ",".join(partial_syn_list)))
-                            scaffold_label = scaffold
-                        elif not partial_syn_list:
-                            scaffold_label = scaffold
-                            print("WARNING!!! Synonym for %s was not found" % scaffold)
-                        else:
-                            scaffold_label = scaffold_synonym_dict[partial_syn_list[0]]
-                    else:
-                        raise ValueError("Unknown id replacement mode")
-
-                else:
-                    scaffold_label = scaffold
-
-                subplot.annotate(("%s (%s)" % (scaffold, sample))if add_sample_name_to_labels else scaffold_label,
-                                 xy=(0, label_y_start), xycoords='data', fontsize=16,
-                                 xytext=(-15, 1.5 * label_line_y_shift), textcoords='offset points',
-                                 ha='right', va='top')
-                if scaffold in count_df[sample]:
-                    for window_index in count_df.loc[scaffold].index:
-
-                        window_start = window_index * window_step
-                        window_end = window_start + window_size - 1  # TODO: check end coordinate
-                        if masking_dict:
-                            if scaffold in masking_dict:
-                                unmasked_length = window_size - masking_dict[scaffold][window_index]
-                                if unmasked_length > 0:
-                                    variant_density = float(count_df[sample].loc[scaffold, window_index] * density_multiplicator) / float(unmasked_length)
-                                else:
-                                    variant_density = None
-                        else:
-                            variant_density = float(count_df[sample].loc[scaffold, window_index] * density_multiplicator) / float(window_size)
-
-                        if variant_density is None:
-                            window_color = masked_color
-                        else:
-                            if colormap:
-                                if variant_density <= thresholds[0]:
-                                    window_color = no_snp_color
-                                else:
-                                    for threshold_index in range(0, len(thresholds) - 1):
-                                        if thresholds[threshold_index] < variant_density <= thresholds[threshold_index+1]:
-                                            window_color = cmap(threshold_index)
-                                            break
-                                    else:
-                                        window_color = cmap(threshold_index+1)
-
-                            else:
-                                if variant_density <= colormap_tuple_list[0][0]:
-                                    window_color = no_snp_color
-                                else:
-                                    for lower_boundary, color in colormap_tuple_list:
-                                        if variant_density <= lower_boundary:
-                                            break
-                                        if variant_density > lower_boundary:
-                                            prev_color = color
-                                    else:
-                                        prev_color = color
-                                    window_color = prev_color
-
-                        if masking_dict:
-                            if scaffold in masking_dict:
-                                if float(masking_dict[scaffold][window_index]) / float(window_size) > gap_fraction_threshold:
-                                    window_color = masked_color
-                        #print scaffold
-                        #print i, variant_density, window_color
-
-                        if window_color == masked_color:
-                            masked_windows_count_dict[sample][scaffold] += 1
-                            masked_regions_fd.write("%s\t%i\t%i\t%f\n" % (scaffold, window_index, masking_dict[scaffold][window_index], float(masking_dict[scaffold][window_index]) / float(window_size)))
-                        elif window_color == no_snp_color:
-                            no_snps_windows_count_dict[sample][scaffold] += 1
-
-                        rectangle_list.append(Rectangle((window_start, start_y), window_size, scaffold_height, fill=True,
-                                              edgecolor=None, facecolor=window_color, linewidth=0.0000000000001))
-                        #print prev_x
-                        #print gap_coords[0] - prev_x
-
-                subplot.add_collection(PatchCollection(rectangle_list))
-
-                # draw_chromosome
-
-                fragment = Rectangle((0, start_y), scaffold_length_dict[scaffold], scaffold_height, fill=False,
-                                     edgecolor="black", facecolor=None, linewidth=0.5)
-                subplot.add_patch(fragment)
-                sample_index += 1
-
-        legend_y_position = int(start_y/2)
-        legend_x_position = int(max_scaffold_length * 1.05)
-        legend_element_side = scaffold_height
-
-        square_y_pos = legend_y_position - legend_element_side
-
-        for color, legend_label in zip((masked_color, no_snp_color), ("masked", "no SNPs")):
-            square_y_pos += legend_element_side
-            fragment = Rectangle((legend_x_position, square_y_pos), max_scaffold_length/64, legend_element_side, fill=True,
-                                 edgecolor="black", facecolor=color, linewidth=0.5)
-
-            subplot.add_patch(fragment)
-            subplot.annotate(legend_label,
-                             xy=(legend_x_position + 2 * max_scaffold_length/64, square_y_pos), xycoords='data', fontsize=13,
-                             xytext=(legend_x_position + 2 * max_scaffold_length/64, square_y_pos),)
-        if colormap:
-            for i in range(0, len(thresholds)):
-                square_y_pos += legend_element_side
-                #print (colormap_tuple_list[i][1])
-                fragment = Rectangle((legend_x_position, square_y_pos), max_scaffold_length/64, legend_element_side, fill=True,
-                                     edgecolor="black", facecolor=cmap(i), linewidth=0.5)
-
-                subplot.add_patch(fragment)
-                if i == (len(thresholds) - 1):
-                    legend_element_label = "> %.2f" % thresholds[i]
-                else:
-                    legend_element_label = "%.2f - %.2f" % (thresholds[i], thresholds[i + 1])
-
-                subplot.annotate(legend_element_label,
-                                 xy=(legend_x_position + 2 * max_scaffold_length/64, square_y_pos), xycoords='data', fontsize=13,
-                                 xytext=(legend_x_position + 2 * max_scaffold_length/64, square_y_pos),)
-        else:
-            for i in range(0, len(colormap_tuple_list)):
-                square_y_pos += legend_element_side
-                #print (colormap_tuple_list[i][1])
-                fragment = Rectangle((legend_x_position, square_y_pos), max_scaffold_length/64, legend_element_side, fill=True,
-                                     edgecolor="black", facecolor=colormap_tuple_list[i][1], linewidth=0.5)
-
-                subplot.add_patch(fragment)
-                if i == (len(colormap_tuple_list) - 1):
-                    legend_element_label = "> %.2f" % colormap_tuple_list[i][0]
-                else:
-                    legend_element_label = "%.2f - %.2f" % (colormap_tuple_list[i][0], colormap_tuple_list[i + 1][0])
-
-                subplot.annotate(legend_element_label,
-                                 xy=(legend_x_position + 2 * max_scaffold_length/64, square_y_pos), xycoords='data', fontsize=13,
-                                 xytext=(legend_x_position + 2 * max_scaffold_length/64, square_y_pos),)
-
-        plt.xlim(xmin=0, xmax=int(1.2 * max_scaffold_length))
-        plt.ylim(ymin=0, ymax=start_y + 2 * scaffold_height)
-        #plt.colorbar(subplot)
-        #plt.tight_layout()
-
-        plt.subplots_adjust(left=left_offset, right=0.95)#bottom=0.1, right=0.8, top=0.9)
-
-        if suptitle:
-            plt.suptitle(suptitle)
-        for extension in ext_list:
-            plt.savefig("%s.%s" % (output_prefix, extension))
-        plt.close()
-
-        no_snps_windows_count_dict.write("%s.no_snps.windows.count" % output_prefix)
-        masked_windows_count_dict.write("%s.masked.windows.count" % output_prefix)
-        masked_regions_fd.close()
-        
-    """
     # ------------------ Not rewritten yet --------------------------------
 
     """
@@ -616,7 +433,6 @@ class Visualization(DrawingRoutines):
 
         return bins
 
-
     @staticmethod
     def draw_histogram(data_array, output_prefix=None, number_of_bins=None, width_of_bins=None, bin_array=None,
                        max_threshold=None, min_threshold=None, xlabel=None, ylabel=None,
@@ -806,190 +622,3 @@ class Visualization(DrawingRoutines):
                 plt.savefig("%s.%s" % (output_prefix, ext))
 
         return figure
-
-
-
-
-
-    """
-    @staticmethod
-    def draw_variant_window_densities(count_dict, scaffold_length_dict, window_size, window_step, output_prefix,
-                                      record_style=None, ext_list=("svg", "png"),
-                                      label_fontsize=13, left_offset=0.2, figure_width=8, scaffold_synonym_dict=None,
-                                      id_replacement_mode="partial", suptitle=None, density_multiplicator=1000,
-                                      scaffold_black_list=[], sort_scaffolds=False, scaffold_ordered_list=None,
-                                      scaffold_white_list=[],
-                                      gap_color="grey",
-                                      colormap_tuple_list=((0.0, "#333a97"), (0.1, "#3d3795"), (0.5, "#5d3393"),
-                                                           (0.75, "#813193"), (1.0, "#9d2d7f"), (1.25, "#b82861"),
-                                                           (1.5, "#d33845"), (2.0, "#ea2e2e"), (2.5, "#f5ae27"))):
-
-        white_set = set(scaffold_white_list)
-        black_set = set(scaffold_black_list)
-        scaffold_set = set(count_dict)
-
-        if white_set:
-            scaffold_set = scaffold_set & white_set
-
-        if black_set:
-            scaffold_set = scaffold_set - black_set
-
-        scaffold_list = list(scaffold_set)
-
-        if sort_scaffolds:
-            scaffold_list.sort()
-
-        final_scaffold_list = []
-        if scaffold_ordered_list:
-            for entry in scaffold_ordered_list:
-                final_scaffold_list.append(entry)
-                scaffold_list.remove(entry)
-            final_scaffold_list = final_scaffold_list + scaffold_list
-        else:
-            final_scaffold_list = scaffold_list
-
-        scaffold_number = len(final_scaffold_list)
-        max_scaffold_length = max([scaffold_length_dict[scaf] for scaf in final_scaffold_list])
-        #max_scaffold_length = max(scaffold_length_dict.values())
-
-        figure = plt.figure(figsize=(scaffold_number, figure_width))
-        subplot = plt.subplot(1, 1, 1)
-
-        subplot.get_yaxis().set_visible(False)
-        #subplot.get_xaxis().set_visible(False)
-        #axes.xaxis.set_major_formatter(x_formatter)
-
-        #subplot.spines['bottom'].set_color('none')
-        subplot.spines['right'].set_color('none')
-        subplot.spines['left'].set_color('none')
-        subplot.spines['top'].set_color('none')
-
-        scaffold_height = 10
-
-        dist_between_scaffolds = 5
-        start_x = 0
-        start_y = - dist_between_scaffolds
-
-        label_line_y_shift = int(scaffold_height/2)
-        label_line_y_jump = int(scaffold_height/2)
-
-        #normalize_color_func = LinearSegmentedColormap.from_list("Densities_custom", colormap_tuple_list)
-        #plt.register_cmap(cmap=colormap)
-        #colormap = cm.get_cmap(name="plasma", lut=None)
-        #normalize_colors = colors.BoundaryNorm(boundaries_for_colormap, len(boundaries_for_colormap) - 1) * int(256/(len(boundaries_for_colormap) - 1))
-        #normalize_colors = colors.Normalize(vmin=boundaries_for_colormap[0], vmax=boundaries_for_colormap[-1])
-
-        for scaffold in final_scaffold_list:
-            #if scaffold in scaffold_black_list:
-            #    continue
-            #print gap_coords_list, gap_len_list
-
-            start_y += scaffold_height + dist_between_scaffolds
-            label_y_start = label_line_y_shift + start_y
-            gap_y_jump = label_y_start + label_line_y_jump
-            prev_x = 0
-
-            #figure.text(0, start_y, scaffold, rotation=0, fontweight="bold", transform=subplot.transAxes, fontsize=9,
-            #             horizontalalignment='center',
-            #             verticalalignment='center')
-
-            if scaffold_synonym_dict:
-                if id_replacement_mode == "exact":
-                    if scaffold in scaffold_synonym_dict:
-                        scaffold_label = scaffold_synonym_dict[scaffold]
-                    else:
-                        scaffold_label = scaffold
-                        print("WARNING!!! Synonym for %s was not found" % scaffold)
-                elif id_replacement_mode == "partial":
-
-                    partial_syn_list = []
-                    for partial_syn in scaffold_synonym_dict:
-                        if partial_syn in scaffold:
-                            partial_syn_list.append(partial_syn)
-
-                    if len(partial_syn_list) > 1:
-                        print("WARNING!!! More than one possible replacement for %s was found: %s. No replacement then." % (scaffold, ",".join(partial_syn_list)))
-                        scaffold_label = scaffold
-                    elif not partial_syn_list:
-                        scaffold_label = scaffold
-                        print("WARNING!!! Synonym for %s was not found" % scaffold)
-                    else:
-                        scaffold_label = scaffold_synonym_dict[partial_syn_list[0]]
-                else:
-                    raise ValueError("Unknown id replacement mode")
-
-            else:
-                scaffold_label = scaffold
-
-            subplot.annotate(scaffold_label, xy=(0, label_y_start), xycoords='data', fontsize=16,
-                             xytext=(-15, 1.5 * label_line_y_shift), textcoords='offset points',
-                             ha='right', va='top')
-
-            for i in range(0, len(count_dict[scaffold])):
-
-                window_start = i * window_step
-                window_end = window_start + window_size - 1  # TODO: check end coordinate
-
-                variant_density = float(count_dict[scaffold][i] * density_multiplicator) / float(window_size)
-
-                if variant_density <= colormap_tuple_list[0][0]:
-                    window_color = "white"
-                else:
-                    for lower_boundary, color in colormap_tuple_list:
-                        if variant_density <= lower_boundary:
-                            break
-                        if variant_density > lower_boundary:
-                            prev_color = color
-                    else:
-                        prev_color = color
-                    window_color = prev_color
-
-                #print scaffold
-                #print i, variant_density, window_color
-
-                window = Rectangle((window_start, start_y), window_size, scaffold_height, fill=True,
-                                   edgecolor=None, facecolor=window_color, linewidth=0.0000000000001)
-                #print prev_x
-                #print gap_coords[0] - prev_x
-
-                subplot.add_patch(window)
-
-            # draw_chromosome
-
-            fragment = Rectangle((0, start_y), scaffold_length_dict[scaffold], scaffold_height, fill=False,
-                                 edgecolor="black", facecolor=None, linewidth=0.5)
-            subplot.add_patch(fragment)
-
-        legend_y_position = int(start_y/2)
-        legend_x_position = int(max_scaffold_length * 1.05)
-        legend_element_side = scaffold_height
-
-        square_y_pos = legend_y_position - legend_element_side
-
-        for i in range(0, len(colormap_tuple_list)):
-            square_y_pos = square_y_pos + legend_element_side
-            #print (colormap_tuple_list[i][1])
-            fragment = Rectangle((legend_x_position, square_y_pos), max_scaffold_length/64, legend_element_side, fill=True,
-                                 edgecolor="black", facecolor=colormap_tuple_list[i][1], linewidth=0.5)
-
-            subplot.add_patch(fragment)
-            if i == (len(colormap_tuple_list) - 1):
-                legend_element_label = "> %.2f" % colormap_tuple_list[i][0]
-            else:
-                legend_element_label = "%.2f - %.2f" % (colormap_tuple_list[i][0], colormap_tuple_list[i + 1][0])
-
-            subplot.annotate(legend_element_label,
-                             xy=(legend_x_position + 2 * max_scaffold_length/64, square_y_pos), xycoords='data', fontsize=13,
-                             xytext=(legend_x_position + 2 * max_scaffold_length/64, square_y_pos),)
-
-        plt.xlim(xmin=0, xmax=int(1.1 * max_scaffold_length))
-        plt.ylim(ymin=0, ymax=start_y + 2 * scaffold_height)
-        #plt.colorbar(subplot)
-        #plt.tight_layout()
-
-        plt.subplots_adjust(left=left_offset, right=0.95)#bottom=0.1, right=0.8, top=0.9)
-        if suptitle:
-            plt.suptitle(suptitle)
-        for extension in ext_list:
-            plt.savefig("%s.%s" % (output_prefix, extension))
-        """

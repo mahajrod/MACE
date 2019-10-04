@@ -22,10 +22,9 @@ class WindowTrack(Track):
 
     def __init__(self, windows_df, window_size, window_step, y_start=None, x_start=0, x_end=None,
                  style=default_track_style, label=None,
-                 window_type="stacking", feature_style=default_feature_style, color_expression=None,
-                 multiplier=1000, colormap=None, thresholds=np.array((0.0, 0.1, 0.25, 0.5, 1.0)),
-                 colors=("#333a97", "green", "yellow", "orange", "red"), background="white",
-                 masked="grey"):
+                 window_type="stacking", multiplier=1000, feature_style=default_feature_style, color_expression=None,
+                 colormap=None, thresholds=None,
+                 colors=None, background=None, masked=None):
         Track.__init__(self, style)
 
         self.track_type = "window"
@@ -44,17 +43,20 @@ class WindowTrack(Track):
 
         self.label = label
 
-        self.color_expression = color_expression
-        self.colormap = colormap
-        self.thresholds = thresholds
-        self.colors = colors
-
+        if color_expression:
+            self.style.color_expression = color_expression
+        if thresholds:
+            self.style.thresholds = thresholds
+        if colors:
+            self.style.colors = colors
+        if background:
+            self.style.background = background
+        if masked:
+            self.style.masked = masked
         if colormap:
-            self.cmap = plt.get_cmap(self.colormap, len(self.thresholds))
-            self.colors = [self.cmap(i) for i in range(0, len(thresholds))]
-
-        self.background = background
-        self.masked = masked
+            self.style.colormap = colormap
+            self.style.cmap = plt.get_cmap(self.style.colormap, len(self.style.thresholds))
+            self.style.colors = [self.style.cmap(i) for i in range(0, len(self.style.thresholds))]
 
     def set_color(self):
         self.windows["color"] = self.windows["value"].apply()
@@ -65,13 +67,13 @@ class WindowTrack(Track):
                                    #thresholds=np.array((0.0, 0.1, 0.5, 0.75, 1.0, 1.25, 1.5, 2.0, 2.5)),
                                    #colors=("white", "#333a97", "#3d3795", "#5d3393","#813193", "#9d2d7f", "#b82861",
                                   #         "#d33845", "#ea2e2e", "#f5ae27")):
-        if value <= self.thresholds[0]:
-            return self.background
-        if value > self.thresholds[-1]:
-            return self.colors[-1]
-        for i in range(0, len(self.thresholds) - 1):
-            if self.thresholds[i] < value <= self.thresholds[i+1]:
-                return self.colors[i]
+        if value <= self.style.thresholds[0]:
+            return self.style.background
+        if value > self.style.thresholds[-1]:
+            return self.style.colors[-1]
+        for i in range(0, len(self.style.thresholds) - 1):
+            if self.style.thresholds[i] < value <= self.style.thresholds[i+1]:
+                return self.style.colors[i]
 
     def add_color(self, expression=None):
 

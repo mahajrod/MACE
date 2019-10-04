@@ -1,10 +1,14 @@
+from numpy import array
 
+from matplotlib.pyplot import get_cmap
 
-class TrackStyle():
+class TrackStyle:
 
     def __init__(self, height, edge=True, fill=False, face_color=None, edge_color="black", edge_width=None,
                  show_label=True, label_fontsize=16, label_hor_aln='right', label_vert_aln='top',
-                 label_y_shift=None):
+                 label_y_shift=None, colormap=None, thresholds=array((0.0, 0.1, 0.25, 0.5, 1.0)),
+                 colors=("#333a97", "green", "yellow", "orange", "red"), background="white",
+                 masked="grey", color_expression=None):
         self.height = height
         self.fill = fill
         self.face_color = face_color
@@ -19,5 +23,18 @@ class TrackStyle():
 
         self.label_y_shift = label_y_shift if label_y_shift else height / 2
 
+        self.colormap = colormap
+        self.color_expression = color_expression
+        self.thresholds = thresholds
+        self.colors = colors
+        self.background = background
+        self.masked = masked
 
-default_track_style = TrackStyle(height=10)
+        if colormap:
+            self.cmap = get_cmap(self.colormap, len(self.thresholds))
+            self.colors = [self.cmap(i) for i in range(0, len(thresholds))]
+
+
+default_track_style = TrackStyle(height=10, colormap=None, thresholds=array((0.0, 0.1, 0.25, 0.5, 1.0)),
+                                 colors=("#333a97", "green", "yellow", "orange", "red"), background="white",
+                                 masked="grey")

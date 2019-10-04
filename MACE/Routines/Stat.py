@@ -314,15 +314,24 @@ class StatsVCF(FileRoutines):
         'ward'        -   incremental algorithm
         """
         per_scaffold_counts = vcf_df.groupby(level=0).count()
+        """
         print per_scaffold_counts
         print "AAAA"
+        print per_scaffold_counts["POS"]
+        print "CCCC"
+        print per_scaffold_counts[per_scaffold_counts["POS"] > 1]
+        print "DDDDD"
+        print per_scaffold_counts[per_scaffold_counts["POS"] > 1].index
+        print "LLLL"
         print vcf_df.index.isin(per_scaffold_counts[per_scaffold_counts["POS"] > 1].index)
         print "BBBBB"
-        vcf_df_filtered = vcf_df[["POS"]][vcf_df.index.isin(per_scaffold_counts[per_scaffold_counts["POS"] > 1].index)]
+        """
+        vcf_df_filtered = vcf_df[["POS"]][vcf_df.index.isin(per_scaffold_counts[per_scaffold_counts["POS"] > 1].index,
+                                                            level=0)]
 
         linkage_df = pd.DataFrame({"distance": vcf_df_filtered.groupby(level=0).apply(pdist)})
         linkage_df["linkage"] = linkage_df["distance"].agg(linkage, method=method)
-        linkage_df["inconsistent"] = linkage_df["linkage"].agg(inconsistent, method=method)
+        linkage_df["inconsistent"] = linkage_df["linkage"].agg(inconsistent)
         # https://docs.scipy.org/doc/scipy-0.14.0/reference/generated/scipy.cluster.hierarchy.cophenet.html
         linkage_df["cophenet"] = linkage_df.apply(lambda r: cophenet(r["linkage"], r["distance"])[0], axis=1)
         
@@ -388,20 +397,24 @@ class StatsVCF(FileRoutines):
                                                       threshold=threshold)["clusters"]
         cluster_number_df = cluster_df.groupby(level=0).nunique()
 
-        singleton_count_df = cluster_df.groupby(level=0).agg(lambda s: sum(s == 1))
-        double_count_df = cluster_df.groupby(level=0).agg(lambda s: sum(s == 2))
-        triple_count_df = cluster_df.groupby(level=0).agg(lambda s: sum(s == 3))
-        multielement_count_df = cluster_df.groupby(level=0).agg(lambda s: sum(s > 2))
+        if output_prefix:
+            cluster_df.to_csv("%s.cluster" % output_prefix, sep="\t", index_label="scaffold")
+            cluster_number_df.to_csv("%s.cluster.counts" % output_prefix, sep="\t", index_label="scaffold")
+        """
+        singleton_count_df = cluster_df.groupby(level=0).agg(lambda s: sum(s.value_counts() == 1))
+        double_count_df = cluster_df.groupby(level=0).agg(lambda s: sum(s.value_counts() == 2))
+        triple_count_df = cluster_df.groupby(level=0).agg(lambda s: sum(s.value_counts() == 3))
+        multielement_count_df = cluster_df.groupby(level=0).agg(lambda s: sum(s.value_counts() > 2))
 
         if output_prefix:
-            cluster_df.to_csv("%s.clusters" % output_prefix)
+            
             cluster_number_df.to_csv("%s.clusters.counts" % output_prefix)
 
             singleton_count_df.to_csv("%s.singletons.counts" % output_prefix)
             double_count_df.to_csv("%s.double.counts" % output_prefix)
             triple_count_df.to_csv("%s.triple.counts" % output_prefix)
             multielement_count_df.to_csv("%s.multielement.counts" % output_prefix)
-
+        """
         return cluster_df
 
 
