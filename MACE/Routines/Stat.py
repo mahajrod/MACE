@@ -300,7 +300,8 @@ class StatsVCF(FileRoutines):
         return distance_df
 
     @staticmethod
-    def get_linkage_for_hierarchical_clustering(vcf_df, method='average', output=None):
+    def get_linkage_for_hierarchical_clustering(vcf_df, method='average', output=None,
+                                                memory_saving_mode=False):
         """
         http://docs.scipy.org/doc/scipy/reference/generated/scipy.cluster.hierarchy.linkage.html#scipy.cluster.hierarchy.linkage
         allowed methods(used to calculate distance between clusters):
@@ -317,22 +318,26 @@ class StatsVCF(FileRoutines):
 
         vcf_df_filtered = vcf_df[["POS"]][vcf_df.index.isin(per_scaffold_counts[per_scaffold_counts["POS"] > 1].index,
                                                             level=0)]
+        if memory_saving_mode:
+            for scaffold in vcf_df_filtered.index.unique():
+                print scaffold
+                pd.DataFrame({"linkage": linkage(pdist(vcf_df_filtered.loc[scaffold]))}, index=[scaffold])
+        else:
+            print("%s\tCalculating distances..." % str(datetime.datetime.now()))
+            linkage_df = pd.DataFrame({"distance": vcf_df_filtered.groupby(level=0).apply(pdist)})
 
-        print("%s\tCalculating distances..." % str(datetime.datetime.now()))
-        linkage_df = pd.DataFrame({"distance": vcf_df_filtered.groupby(level=0).apply(pdist)})
+            print("%s\tCalculating linkage..." % str(datetime.datetime.now()))
+            linkage_df["linkage"] = linkage_df["distance"].agg(linkage, method=method)
 
-        print("%s\tCalculating linkage..." % str(datetime.datetime.now()))
-        linkage_df["linkage"] = linkage_df["distance"].agg(linkage, method=method)
+            print("%s\tCalculating inconsistency..." % str(datetime.datetime.now()))
+            linkage_df["inconsistent"] = linkage_df["linkage"].agg(inconsistent)
+            # https://docs.scipy.org/doc/scipy-0.14.0/reference/generated/scipy.cluster.hierarchy.cophenet.html
 
-        print("%s\tCalculating inconsistency..." % str(datetime.datetime.now()))
-        linkage_df["inconsistent"] = linkage_df["linkage"].agg(inconsistent)
-        # https://docs.scipy.org/doc/scipy-0.14.0/reference/generated/scipy.cluster.hierarchy.cophenet.html
+            print("%s\tCalculating cophenet coefficient..." % str(datetime.datetime.now()))
+            linkage_df["cophenet"] = linkage_df.apply(lambda r: cophenet(r["linkage"], r["distance"])[0], axis=1)
 
-        print("%s\tCalculating cophenet coefficient..." % str(datetime.datetime.now()))
-        linkage_df["cophenet"] = linkage_df.apply(lambda r: cophenet(r["linkage"], r["distance"])[0], axis=1)
-        
-        if output:
-            linkage_df.to_csv(output, sep="\t")
+            if output:
+                linkage_df.to_csv(output, sep="\t")
         
         return linkage_df
 
@@ -370,6 +375,7 @@ class StatsVCF(FileRoutines):
         #   maxclust
         #   monocrit
         #   monocrit
+
         if threshold_tuple:
             threshold_list = threshold_tuple
         elif min_threshold and max_threshold:
