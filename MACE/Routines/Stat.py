@@ -432,7 +432,7 @@ class StatsVCF(FileRoutines):
                                                             level=0)]
         cluster_df = pd.DataFrame(index=vcf_df_filtered.index, columns=threshold_list)
         cophenet_df = pd.DataFrame(index=vcf_df_filtered.index.get_level_values(level=0).unique(), columns=["cophenet"])
-        print cophenet_df
+
         for scaffold in cophenet_df.index:
             print("%s\tHandling %s.." %(str(datetime.datetime.now()), scaffold))
             print("%s\tCalculating distances..." % str(datetime.datetime.now()))
@@ -453,6 +453,7 @@ class StatsVCF(FileRoutines):
             cluster_df.to_csv("%s.cluster" % output_prefix, sep="\t", index_label="scaffold")
             cluster_number_df.to_csv("%s.cluster.counts" % output_prefix, sep="\t", index_label="scaffold")
             cophenet_df.to_csv("%s.cophenet" % output_prefix, sep="\t", index_label="scaffold")
+        print cluster_df
         return cluster_df
     # ----------------------- Distance based stats end ----------------------
 
