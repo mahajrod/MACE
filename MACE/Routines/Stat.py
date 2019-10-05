@@ -447,9 +447,9 @@ class StatsVCF(FileRoutines):
                 #print len(fcluster(scaffold_linkage, t=threshold, criterion=extracting_method))
                 cluster_df[threshold].loc[scaffold] = fcluster(scaffold_linkage, t=threshold,
                                                                criterion=extracting_method)
-
+        print "UUUU"
         cluster_number_df = cluster_df.groupby(level=0).nunique()
-
+        print "AAa"
         if output_prefix:
             cluster_df.to_csv("%s.cluster" % output_prefix, sep="\t", index_label=True)
             cluster_number_df.to_csv("%s.cluster.counts" % output_prefix, sep="\t", index_label="scaffold")
