@@ -300,8 +300,7 @@ class StatsVCF(FileRoutines):
         return distance_df
 
     @staticmethod
-    def get_linkage_for_hierarchical_clustering(vcf_df, method='average', output=None,
-                                                memory_saving_mode=False):
+    def get_linkage_for_hierarchical_clustering(vcf_df, method='average', output_prefix=None):
         """
         http://docs.scipy.org/doc/scipy/reference/generated/scipy.cluster.hierarchy.linkage.html#scipy.cluster.hierarchy.linkage
         allowed methods(used to calculate distance between clusters):
@@ -318,29 +317,22 @@ class StatsVCF(FileRoutines):
 
         vcf_df_filtered = vcf_df[["POS"]][vcf_df.index.isin(per_scaffold_counts[per_scaffold_counts["POS"] > 1].index,
                                                             level=0)]
-        if memory_saving_mode:
-            for scaffold in vcf_df_filtered.index.get_level_values(level=0).unique():
-                print scaffold
 
-                print vcf_df_filtered.loc[[scaffold]]
-                pdist(vcf_df_filtered.loc[[scaffold]])
+        print("%s\tCalculating distances..." % str(datetime.datetime.now()))
+        linkage_df = pd.DataFrame({"distance": vcf_df_filtered.groupby(level=0).apply(pdist)})
 
-        else:
-            print("%s\tCalculating distances..." % str(datetime.datetime.now()))
-            linkage_df = pd.DataFrame({"distance": vcf_df_filtered.groupby(level=0).apply(pdist)})
+        print("%s\tCalculating linkage..." % str(datetime.datetime.now()))
+        linkage_df["linkage"] = linkage_df["distance"].agg(linkage, method=method)
 
-            print("%s\tCalculating linkage..." % str(datetime.datetime.now()))
-            linkage_df["linkage"] = linkage_df["distance"].agg(linkage, method=method)
+        print("%s\tCalculating inconsistency..." % str(datetime.datetime.now()))
+        linkage_df["inconsistent"] = linkage_df["linkage"].agg(inconsistent)
+        # https://docs.scipy.org/doc/scipy-0.14.0/reference/generated/scipy.cluster.hierarchy.cophenet.html
 
-            print("%s\tCalculating inconsistency..." % str(datetime.datetime.now()))
-            linkage_df["inconsistent"] = linkage_df["linkage"].agg(inconsistent)
-            # https://docs.scipy.org/doc/scipy-0.14.0/reference/generated/scipy.cluster.hierarchy.cophenet.html
+        print("%s\tCalculating cophenet coefficient..." % str(datetime.datetime.now()))
+        linkage_df["cophenet"] = linkage_df.apply(lambda r: cophenet(r["linkage"], r["distance"])[0], axis=1)
 
-            print("%s\tCalculating cophenet coefficient..." % str(datetime.datetime.now()))
-            linkage_df["cophenet"] = linkage_df.apply(lambda r: cophenet(r["linkage"], r["distance"])[0], axis=1)
-
-            if output:
-                linkage_df.to_csv(output, sep="\t")
+        if output_prefix:
+            linkage_df.to_csv("%s.linkage_df.tab" % output_prefix, sep="\t", index_label="scaffold")
         
         return linkage_df
 
@@ -358,18 +350,14 @@ class StatsVCF(FileRoutines):
 
         return pd.DataFrame(cluster_df, index=index, columns=["clusters"])
 
-    def test_clustering_thresholds(self, linkage_df,
-                                   extracting_method="inconsistent",
-                                   threshold_tuple=None,
-                                   min_threshold=None,
-                                   max_threshold=None,
-                                   threshold_number=None,
-                                   threshold_step=None,
-                                   output_prefix=None):
-                                   #testing_dir="threshold_test",
-                                   #count_singletons=True,
-                                   #extensions=("svg", "png")):
-        # TODO: adjust parameters of figure
+    def test_clustering_thresholds_from_linkage(self, linkage_df,
+                                                extracting_method="inconsistent",
+                                                threshold_tuple=None,
+                                                min_threshold=None,
+                                                max_threshold=None,
+                                                threshold_number=None,
+                                                threshold_step=None,
+                                                output_prefix=None):
         # threshold is tuple(list) of three variables: min, max, number
 
         # extracting_method possible values
@@ -405,23 +393,64 @@ class StatsVCF(FileRoutines):
         if output_prefix:
             cluster_df.to_csv("%s.cluster" % output_prefix, sep="\t", index_label="scaffold")
             cluster_number_df.to_csv("%s.cluster.counts" % output_prefix, sep="\t", index_label="scaffold")
-        """
-        singleton_count_df = cluster_df.groupby(level=0).agg(lambda s: sum(s.value_counts() == 1))
-        double_count_df = cluster_df.groupby(level=0).agg(lambda s: sum(s.value_counts() == 2))
-        triple_count_df = cluster_df.groupby(level=0).agg(lambda s: sum(s.value_counts() == 3))
-        multielement_count_df = cluster_df.groupby(level=0).agg(lambda s: sum(s.value_counts() > 2))
-
-        if output_prefix:
-            
-            cluster_number_df.to_csv("%s.clusters.counts" % output_prefix)
-
-            singleton_count_df.to_csv("%s.singletons.counts" % output_prefix)
-            double_count_df.to_csv("%s.double.counts" % output_prefix)
-            triple_count_df.to_csv("%s.triple.counts" % output_prefix)
-            multielement_count_df.to_csv("%s.multielement.counts" % output_prefix)
-        """
         return cluster_df
 
+    @staticmethod
+    def test_clustering_thresholds(vcf_df, method='average', output_prefix=None,
+                                   extracting_method="inconsistent", threshold_tuple=None,
+                                   min_threshold=None,
+                                   max_threshold=None,
+                                   threshold_number=None,
+                                   threshold_step=None):
+        """
+        http://docs.scipy.org/doc/scipy/reference/generated/scipy.cluster.hierarchy.linkage.html#scipy.cluster.hierarchy.linkage
+        allowed methods(used to calculate distance between clusters):
+        'complete'    -   Farthest Point Algorithm
+        'single'      -   Nearest Point Algorithm
+        'average'     -   UPGMA algorithm, distance between clusters is calculated as average from pairwise
+                           distances between elements of clusters
+        'weighted     -   WPGMA algorithm
+        'centroid'    -   UPGMC algorithm
+        'median'      -   WPGMC algorithm
+        'ward'        -   incremental algorithm
+        """
+        if threshold_tuple:
+            threshold_list = threshold_tuple
+        elif min_threshold and max_threshold:
+            if threshold_number:
+                threshold_list = np.linspace(min_threshold, max_threshold, threshold_number)  # best variant 0.5, 1.5, 21
+            elif threshold_step:
+                threshold_list = list(np.arange(min_threshold, max_threshold, threshold_step))
+                threshold_list.append(max_threshold)
+            else:
+                raise ValueError("ERROR!!! Neither threshold step nor threshold number was set!")
+        else:
+            raise ValueError("ERROR!!! Neither threshold tuple nor parameters for calculation of it were set!")
+        per_scaffold_counts = vcf_df.groupby(level=0).count()
+
+        vcf_df_filtered = vcf_df[["POS"]][vcf_df.index.isin(per_scaffold_counts[per_scaffold_counts["POS"] > 1].index,
+                                                            level=0)]
+        cluster_df = pd.DataFrame(index=vcf_df_filtered.index, columns=threshold_list)
+        cophenet_df = pd.DataFrame(index=vcf_df_filtered.index.get_level_values(level=0).unique(), columns="cophenet")
+
+        for scaffold in cophenet_df:
+            print("%s\tHandling %s.." %(str(datetime.datetime.now()), scaffold))
+            print("%s\tCalculating distances..." % str(datetime.datetime.now()))
+            scaffold_distance = pdist(vcf_df_filtered.loc[[scaffold]])
+            print("%s\tCalculating linkage..." % str(datetime.datetime.now()))
+            scaffold_linkage = linkage(scaffold_distance, method=method)
+            print("%s\tCalculating cophenet coefficient..." % str(datetime.datetime.now()))
+            cophenet_df.loc[scaffold, "cophenet"] = cophenet(scaffold_linkage, scaffold_distance)[0]
+            for threshold in threshold_list:
+                cluster_df.loc[scaffold, threshold] = fcluster(scaffold_linkage, t=threshold,
+                                                               criterion=extracting_method)
+
+        cluster_number_df = cluster_df.groupby(level=0).nunique()
+
+        if output_prefix:
+            cluster_df.to_csv("%s.cluster" % output_prefix, sep="\t", index_label="scaffold")
+            cluster_number_df.to_csv("%s.cluster.counts" % output_prefix, sep="\t", index_label="scaffold")
+        return cluster_df
     # ----------------------- Distance based stats end ----------------------
 
     # ----------------------------Not rewritten yet--------------------------
