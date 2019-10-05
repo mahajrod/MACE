@@ -442,6 +442,9 @@ class StatsVCF(FileRoutines):
             print("%s\tCalculating cophenet coefficient..." % str(datetime.datetime.now()))
             cophenet_df.loc[scaffold, "cophenet"] = cophenet(scaffold_linkage, scaffold_distance)[0]
             for threshold in threshold_list:
+                print len(cluster_df.loc[scaffold, threshold])
+                print len(fcluster(scaffold_linkage, t=threshold,
+                                                               criterion=extracting_method))
                 cluster_df.loc[scaffold, threshold] = fcluster(scaffold_linkage, t=threshold,
                                                                criterion=extracting_method)
 
