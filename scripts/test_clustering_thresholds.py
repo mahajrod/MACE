@@ -61,9 +61,9 @@ variants = CollectionVCF(in_file=args.input, parsing_mode="only_coordinates",
                          scaffold_black_list=args.scaffold_black_list,
                          scaffold_syn_dict=syn_dict)
 print("%s variant were retained..." % len(variants.records))
-
-print("Calculating linkage...")
 """
+print("Calculating linkage...")
+
 linkage_df = StatsVCF.get_linkage_for_hierarchical_clustering(variants.records, method=args.distance)
 print("Applying thresholds...")
 cluster_df = StatsVCF.test_clustering_thresholds_from_linkage(linkage_df,
