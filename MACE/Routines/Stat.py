@@ -431,7 +431,7 @@ class StatsVCF(FileRoutines):
         vcf_df_filtered = vcf_df[["POS"]][vcf_df.index.isin(per_scaffold_counts[per_scaffold_counts["POS"] > 1].index,
                                                             level=0)]
         cluster_df = pd.DataFrame(index=vcf_df_filtered.index, columns=threshold_list)
-        cophenet_df = pd.DataFrame(index=vcf_df_filtered.index.get_level_values(level=0).unique(), columns="cophenet")
+        cophenet_df = pd.DataFrame(index=vcf_df_filtered.index.get_level_values(level=0).unique(), columns=["cophenet"])
 
         for scaffold in cophenet_df:
             print("%s\tHandling %s.." %(str(datetime.datetime.now()), scaffold))
