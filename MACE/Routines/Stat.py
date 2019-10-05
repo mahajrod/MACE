@@ -435,13 +435,13 @@ class StatsVCF(FileRoutines):
 
         for scaffold in cophenet_df.index:
             print("%s\tHandling %s.." %(str(datetime.datetime.now()), scaffold))
-            print("%s\tCalculating distances..." % str(datetime.datetime.now()))
+            print("%s\t\tCalculating distances..." % str(datetime.datetime.now()))
             scaffold_distance = pdist(vcf_df_filtered.loc[[scaffold]])
-            print("%s\tCalculating linkage..." % str(datetime.datetime.now()))
+            print("%s\t\tCalculating linkage..." % str(datetime.datetime.now()))
             scaffold_linkage = linkage(scaffold_distance, method=method)
-            print("%s\tCalculating cophenet coefficient..." % str(datetime.datetime.now()))
+            print("%s\t\tCalculating cophenet coefficient..." % str(datetime.datetime.now()))
             cophenet_df.loc[scaffold, "cophenet"] = cophenet(scaffold_linkage, scaffold_distance)[0]
-            print("%s\tCalculating clusters..." % str(datetime.datetime.now()))
+            print("%s\t\tCalculating clusters..." % str(datetime.datetime.now()))
             for threshold in threshold_list:
                 #print len(cluster_df.loc[scaffold, threshold])
                 #print len(fcluster(scaffold_linkage, t=threshold, criterion=extracting_method))
