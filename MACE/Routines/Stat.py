@@ -450,6 +450,7 @@ class StatsVCF(FileRoutines):
         if output_prefix:
             cluster_df.to_csv("%s.cluster" % output_prefix, sep="\t", index_label="scaffold")
             cluster_number_df.to_csv("%s.cluster.counts" % output_prefix, sep="\t", index_label="scaffold")
+            cophenet_df.to_csv("%s.cophenet" % output_prefix, sep="\t", index_label="scaffold")
         return cluster_df
     # ----------------------- Distance based stats end ----------------------
 
