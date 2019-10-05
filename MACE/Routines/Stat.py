@@ -443,9 +443,8 @@ class StatsVCF(FileRoutines):
             cophenet_df.loc[scaffold, "cophenet"] = cophenet(scaffold_linkage, scaffold_distance)[0]
             for threshold in threshold_list:
                 print len(cluster_df.loc[scaffold, threshold])
-                print len(fcluster(scaffold_linkage, t=threshold,
-                                                               criterion=extracting_method))
-                cluster_df.loc[scaffold, threshold] = fcluster(scaffold_linkage, t=threshold,
+                print len(fcluster(scaffold_linkage, t=threshold, criterion=extracting_method))
+                cluster_df[threshold].loc[scaffold] = fcluster(scaffold_linkage, t=threshold,
                                                                criterion=extracting_method)
 
         cluster_number_df = cluster_df.groupby(level=0).nunique()
