@@ -63,10 +63,10 @@ variants = CollectionVCF(in_file=args.input, parsing_mode="only_coordinates",
 print("%s variant were retained..." % len(variants.records))
 
 print("Calculating linkage...")
-linkage_df = StatsVCF.get_linkage_for_hierarchical_clustering(variants.records, method=args.distance, output=None,
-                                                              memory_saving_mode=True)
+"""
+linkage_df = StatsVCF.get_linkage_for_hierarchical_clustering(variants.records, method=args.distance)
 print("Applying thresholds...")
-cluster_df = StatsVCF.test_clustering_thresholds(linkage_df,
+cluster_df = StatsVCF.test_clustering_thresholds_from_linkage(linkage_df,
                                                  extracting_method=args.method,
                                                  threshold_tuple=None,
                                                  min_threshold=args.min_threshold,
@@ -74,6 +74,16 @@ cluster_df = StatsVCF.test_clustering_thresholds(linkage_df,
                                                  threshold_number=None,
                                                  threshold_step=args.threshold_step,
                                                  output_prefix=None)
+"""
+
+
+cluster_df = StatsVCF.test_clustering_thresholds(variants.records, method=args.distance,
+                                                 output_prefix=args.output_prefix,
+                                                 extracting_method=args.method, threshold_tuple=None,
+                                                 min_threshold=args.min_threshold,
+                                                 max_threshold=args.max_threshold,
+                                                 threshold_number=None,
+                                                 threshold_step=args.threshold_step,)
 print("Drawing...")
 Visualization.plot_clustering_threshold_tests(cluster_df, args.output_prefix,
                                               scaffold_order_list=args.scaffold_ordered_list,
