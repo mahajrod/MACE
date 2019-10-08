@@ -48,7 +48,7 @@ class DensityLegend:
 
         for color, legend_label in zip((self.masked, self.background), ("masked", "no SNPs")):
             square_y_pos += self.element_size
-            print (self.x_start, square_y_pos), self.x_size, self.element_size, color
+            #print (self.x_start, square_y_pos), self.x_size, self.element_size, color
             fragment = Rectangle((self.x_start - 2 * self.x_size, square_y_pos), self.x_size, self.element_size,
                                  fill=True,
                                  edgecolor="black", facecolor=color, linewidth=0.5)
