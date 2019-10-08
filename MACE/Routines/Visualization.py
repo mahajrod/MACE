@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 import math
+import datetime
+
 from copy import deepcopy
 from collections import Iterable, OrderedDict
 
@@ -106,7 +108,7 @@ class Visualization(DrawingRoutines):
         scaffold_number = len(scaffolds)
         if test_colormaps:
             for colormap_entry in self.colormap_list:
-                print("\tDrawing using %s colormap..." % colormap_entry)
+                print("%s\tDrawing using %s colormap..." % (str(datetime.datetime.now()), colormap_entry))
                 for chr in scaffolds: # count_df.index.get_level_values(level=0).unique():
                     track_group_dict[chr] = TrackGroup(
                         {chr: WindowTrack(count_df.xs(chr), window_size, window_step, x_end=scaffold_length_df.loc[chr][0],
