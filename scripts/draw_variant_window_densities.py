@@ -96,6 +96,8 @@ parser.add_argument("--density_thresholds", action="store", dest="density_thresh
                     help="Comma-separated list of thresholds(SNPs/kb) for SNP densities to use for window coloring. "
                          "Default: values from Hapmap article"
                          "(0.0, 0.1, 0.5, 0.75, 1.0, 1.25, 1.5, 2.0, 2.5)")
+parser.add_argument("--test_colormaps", action="store_true", dest="test_colormaps",
+                    help="Test colormaps. If set --colormap option will be ignored")
 
 args = parser.parse_args()
 
@@ -134,4 +136,5 @@ Visualization.draw_variant_window_densities(count_df, args.window_size, args.win
                                             dpi=300,
                                             colormap=args.colormap, title=args.title,
                                             extensions=args.output_formats,
-                                            scaffold_order_list=args.scaffold_ordered_list)
+                                            scaffold_order_list=args.scaffold_ordered_list,
+                                            test_colormaps=args.test_colomaps)
