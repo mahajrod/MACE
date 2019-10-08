@@ -113,7 +113,9 @@ class Visualization(DrawingRoutines):
                         track_group_dict[chr][chr].add_color()
                     # track_group_dict
                     # track_group_dict["chr13"]
-                    chromosome_subplot = Subplot(track_group_dict, title=title, style=chromosome_subplot_style,
+                    chromosome_subplot = Subplot(track_group_dict,
+                                                 title=(title + " (colormap %s)" % colormap_entry) if title else "Colormap %s" % colormap_entry,
+                                                 style=chromosome_subplot_style,
                                                  legend=DensityLegend(colormap=colormap))
 
                     plt.figure(1, figsize=(figure_width, int(scaffold_number*figure_height_per_scaffold)), dpi=dpi)
