@@ -29,7 +29,8 @@ class Visualization(DrawingRoutines):
 
     def __init__(self):
         DrawingRoutines.__init__(self)
-
+        self.colormap_list = plt.colormaps()
+        """
         self.colormap_dict = OrderedDict({'sequential_uniform': ['viridis', 'plasma', 'inferno', 'magma', 'cividis'],
 
                                           'sequential': ['Greys', 'Purples', 'Blues', 'Greens', 'Oranges', 'Reds',
@@ -48,6 +49,7 @@ class Visualization(DrawingRoutines):
                                                             'gist_stern', 'gnuplot', 'gnuplot2', 'CMRmap', 'cubehelix',
                                                             'brg', 'gist_rainbow', 'rainbow', 'jet', 'nipy_spectral',
                                                             'gist_ncar']})
+        """
 
     @staticmethod
     def zygoty_bar_plot(zygoty_counts, output_prefix, extension_list=("png",),
@@ -103,30 +105,28 @@ class Visualization(DrawingRoutines):
         scaffolds = scaffold_order_list[::-1] if scaffold_order_list else count_df.index.get_level_values(level=0).unique().to_list()
         scaffold_number = len(scaffolds)
         if test_colormaps:
-            for colormap_group in self.colormap_dict:
-                print("Drawing using %s colormap group..." % colormap_group)
-                for colormap_entry in self.colormap_dict[colormap_group]:
-                    print("\tDrawing using %s colormap..." % colormap_entry)
-                    for chr in scaffolds: # count_df.index.get_level_values(level=0).unique():
-                        track_group_dict[chr] = TrackGroup(
-                            {chr: WindowTrack(count_df.xs(chr), window_size, window_step, x_end=scaffold_length_df.loc[chr][0],
-                                              multiplier=1000, label=chr, colormap=colormap_entry, thresholds=thresholds,
-                                              colors=colors, background=background, masked=masked)})
-                        track_group_dict[chr][chr].add_color()
-                    # track_group_dict
-                    # track_group_dict["chr13"]
-                    chromosome_subplot = Subplot(track_group_dict,
-                                                 title=(title + " (colormap %s)" % colormap_entry) if title else "Colormap %s" % colormap_entry,
-                                                 style=chromosome_subplot_style,
-                                                 legend=DensityLegend(colormap=colormap))
+            for colormap_entry in self.colormap_list:
+                print("\tDrawing using %s colormap..." % colormap_entry)
+                for chr in scaffolds: # count_df.index.get_level_values(level=0).unique():
+                    track_group_dict[chr] = TrackGroup(
+                        {chr: WindowTrack(count_df.xs(chr), window_size, window_step, x_end=scaffold_length_df.loc[chr][0],
+                                          multiplier=1000, label=chr, colormap=colormap_entry, thresholds=thresholds,
+                                          colors=colors, background=background, masked=masked)})
+                    track_group_dict[chr][chr].add_color()
+                # track_group_dict
+                # track_group_dict["chr13"]
+                chromosome_subplot = Subplot(track_group_dict,
+                                             title=(title + " (colormap %s)" % colormap_entry) if title else "Colormap %s" % colormap_entry,
+                                             style=chromosome_subplot_style,
+                                             legend=DensityLegend(colormap=colormap))
 
-                    plt.figure(1, figsize=(figure_width, int(scaffold_number*figure_height_per_scaffold)), dpi=dpi)
+                plt.figure(1, figsize=(figure_width, int(scaffold_number*figure_height_per_scaffold)), dpi=dpi)
 
-                    chromosome_subplot.draw()
+                chromosome_subplot.draw()
 
-                    for ext in extensions:
-                        plt.savefig("%s.%s.%s.%s" % (output_prefix, colormap_group, colormap_entry, ext))
-                    plt.close(1)
+                for ext in extensions:
+                    plt.savefig("%s.%s.%s" % (output_prefix, colormap_entry, ext))
+                plt.close(1)
         else:
             for chr in scaffolds:  # count_df.index.get_level_values(level=0).unique():
                 track_group_dict[chr] = TrackGroup(
