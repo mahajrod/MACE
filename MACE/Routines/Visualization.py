@@ -27,6 +27,28 @@ from MACE.Visualization.Styles.Figure import plot_figure_style, rainfall_figure_
 
 class Visualization(DrawingRoutines):
 
+    def __init__(self):
+        DrawingRoutines.__init__(self)
+
+        self.colormap_dict = OrderedDict({'sequential_uniform': ['viridis', 'plasma', 'inferno', 'magma', 'cividis'],
+
+                                          'sequential': ['Greys', 'Purples', 'Blues', 'Greens', 'Oranges', 'Reds',
+                                                         'YlOrBr', 'YlOrRd', 'OrRd', 'PuRd', 'RdPu', 'BuPu',
+                                                         'GnBu', 'PuBu', 'YlGnBu', 'PuBuGn', 'BuGn', 'YlGn'],
+                                          'sequential_2': ['binary', 'gist_yarg', 'gist_gray', 'gray', 'bone', 'pink',
+                                                          'spring', 'summer', 'autumn', 'winter', 'cool', 'Wistia',
+                                                          'hot', 'afmhot', 'gist_heat', 'copper'],
+                                          'diverging': ['PiYG', 'PRGn', 'BrBG', 'PuOr', 'RdGy', 'RdBu',
+                                                        'RdYlBu', 'RdYlGn', 'Spectral', 'coolwarm', 'bwr', 'seismic'],
+                                          'cyclic': ['twilight', 'twilight_shifted', 'hsv'],
+                                          'qualitative': ['Pastel1', 'Pastel2', 'Paired', 'Accent',
+                                                          'Dark2', 'Set1', 'Set2', 'Set3',
+                                                          'tab10', 'tab20', 'tab20b', 'tab20c'],
+                                          'miscellaneous': ['flag', 'prism', 'ocean', 'gist_earth', 'terrain',
+                                                            'gist_stern', 'gnuplot', 'gnuplot2', 'CMRmap', 'cubehelix',
+                                                            'brg', 'gist_rainbow', 'rainbow', 'jet', 'nipy_spectral',
+                                                            'gist_ncar']})
+
     @staticmethod
     def zygoty_bar_plot(zygoty_counts, output_prefix, extension_list=("png",),
                         figsize=(5, 5), dpi=200, title=None, color_dict=None):
@@ -73,30 +95,52 @@ class Visualization(DrawingRoutines):
                                       colormap=None, thresholds=None, colors=None, background=None, masked=None,
                                       title=None,
                                       extensions=("png", ),
-                                      scaffold_order_list=None):
+                                      scaffold_order_list=None,
+                                      test_colormaps=False):
 
         track_group_dict = OrderedDict()
 
         scaffolds = scaffold_order_list[::-1] if scaffold_order_list else count_df.index.get_level_values(level=0).unique().to_list()
         scaffold_number = len(scaffolds)
+        if test_colormaps:
+            for colormap_group in self.colormap_dict:
+                for colormap_entry in self.colormap_dict[colormap_group]:
+                    for chr in scaffolds: # count_df.index.get_level_values(level=0).unique():
+                        track_group_dict[chr] = TrackGroup(
+                            {chr: WindowTrack(count_df.xs(chr), window_size, window_step, x_end=scaffold_length_df.loc[chr][0],
+                                              multiplier=1000, label=chr, colormap=colormap_entry, thresholds=thresholds,
+                                              colors=colors, background=background, masked=masked)})
+                        track_group_dict[chr][chr].add_color()
+                    # track_group_dict
+                    # track_group_dict["chr13"]
+                    chromosome_subplot = Subplot(track_group_dict, title=title, style=chromosome_subplot_style,
+                                                 legend=DensityLegend(colormap=colormap))
 
-        for chr in scaffolds: # count_df.index.get_level_values(level=0).unique():
-            track_group_dict[chr] = TrackGroup(
-                {chr: WindowTrack(count_df.xs(chr), window_size, window_step, x_end=scaffold_length_df.loc[chr][0],
-                                  multiplier=1000, label=chr, colormap=colormap, thresholds=thresholds,
-                                  colors=colors, background=background, masked=masked)})
-            track_group_dict[chr][chr].add_color()
-        # track_group_dict
-        # track_group_dict["chr13"]
-        chromosome_subplot = Subplot(track_group_dict, title=title, style=chromosome_subplot_style,
-                                     legend=DensityLegend(colormap='jet'))
+                    plt.figure(1, figsize=(figure_width, int(scaffold_number*figure_height_per_scaffold)), dpi=dpi)
 
-        plt.figure(1, figsize=(figure_width, int(scaffold_number*figure_height_per_scaffold)), dpi=dpi)
+                    chromosome_subplot.draw()
 
-        chromosome_subplot.draw()
+                    for ext in extensions:
+                        plt.savefig("%s.%s.%s.%s" % (output_prefix, colormap_group, colormap_entry, ext))
+                    plt.close(1)
+        else:
+            for chr in scaffolds:  # count_df.index.get_level_values(level=0).unique():
+                track_group_dict[chr] = TrackGroup(
+                    {chr: WindowTrack(count_df.xs(chr), window_size, window_step, x_end=scaffold_length_df.loc[chr][0],
+                                      multiplier=1000, label=chr, colormap=colormap, thresholds=thresholds,
+                                      colors=colors, background=background, masked=masked)})
+                track_group_dict[chr][chr].add_color()
+            # track_group_dict
+            # track_group_dict["chr13"]
+            chromosome_subplot = Subplot(track_group_dict, title=title, style=chromosome_subplot_style,
+                                         legend=DensityLegend(colormap=colormap))
 
-        for ext in extensions:
-            plt.savefig("%s.%s" % (output_prefix, ext))
+            plt.figure(1, figsize=(figure_width, int(scaffold_number * figure_height_per_scaffold)), dpi=dpi)
+
+            chromosome_subplot.draw()
+
+            for ext in extensions:
+                plt.savefig("%s.%s" % (output_prefix, ext))
 
     # ----------------------- In progress ------------------------------
     @staticmethod
