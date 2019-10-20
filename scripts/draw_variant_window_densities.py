@@ -137,4 +137,5 @@ Visualization.draw_variant_window_densities(count_df, args.window_size, args.win
                                             colormap=args.colormap, title=args.title,
                                             extensions=args.output_formats,
                                             scaffold_order_list=args.scaffold_ordered_list,
-                                            test_colormaps=args.test_colormaps)
+                                            test_colormaps=args.test_colormaps,
+                                            thresholds=args.density_thresholds)
