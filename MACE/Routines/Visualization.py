@@ -109,6 +109,7 @@ class Visualization(DrawingRoutines):
         if test_colormaps:
             for colormap_entry in self.colormap_list:
                 print("%s\tDrawing using %s colormap..." % (str(datetime.datetime.now()), colormap_entry))
+                # TODO: replace color recalculation for whole dataframe by replacenments in category
                 for chr in scaffolds: # count_df.index.get_level_values(level=0).unique():
                     track_group_dict[chr] = TrackGroup(
                         {chr: WindowTrack(count_df.xs(chr), window_size, window_step, x_end=scaffold_length_df.loc[chr][0],
@@ -120,7 +121,8 @@ class Visualization(DrawingRoutines):
                 chromosome_subplot = Subplot(track_group_dict,
                                              title=(title + " (colormap %s)" % colormap_entry) if title else "Colormap %s" % colormap_entry,
                                              style=chromosome_subplot_style,
-                                             legend=DensityLegend(colormap=colormap_entry))
+                                             legend=DensityLegend(colormap=colormap_entry,
+                                                                  thresholds=thresholds))
 
                 plt.figure(1, figsize=(figure_width, int(scaffold_number*figure_height_per_scaffold)), dpi=dpi)
 
@@ -139,7 +141,8 @@ class Visualization(DrawingRoutines):
             # track_group_dict
             # track_group_dict["chr13"]
             chromosome_subplot = Subplot(track_group_dict, title=title, style=chromosome_subplot_style,
-                                         legend=DensityLegend(colormap=colormap))
+                                         legend=DensityLegend(colormap=colormap,
+                                                              thresholds=thresholds))
 
             plt.figure(1, figsize=(figure_width, int(scaffold_number * figure_height_per_scaffold)), dpi=dpi)
 
