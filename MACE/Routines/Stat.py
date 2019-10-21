@@ -337,8 +337,8 @@ class StatsVCF(FileRoutines):
         return linkage_df
 
     @staticmethod
-    def get_clusters(linkage_df, extracting_method="inconsistent", threshold=0.8):
-        clusters = linkage_df["linkage"].agg(fcluster, t=threshold, criterion=extracting_method)
+    def get_clusters(linkage_df, extracting_method="inconsistent", threshold=0.8, depth=2):
+        clusters = linkage_df["linkage"].agg(fcluster, t=threshold, criterion=extracting_method, depth=depth)
 
         cluster_df = []
         index = []
@@ -357,7 +357,8 @@ class StatsVCF(FileRoutines):
                                                 max_threshold=None,
                                                 threshold_number=None,
                                                 threshold_step=None,
-                                                output_prefix=None):
+                                                output_prefix=None,
+                                                inconsistency_depth=2):
         # threshold is tuple(list) of three variables: min, max, number
 
         # extracting_method possible values
@@ -398,6 +399,7 @@ class StatsVCF(FileRoutines):
     @staticmethod
     def test_clustering_thresholds(vcf_df, method='average', output_prefix=None,
                                    extracting_method="inconsistent", threshold_tuple=None,
+                                   depth=2,
                                    min_threshold=None,
                                    max_threshold=None,
                                    threshold_number=None,
@@ -446,7 +448,8 @@ class StatsVCF(FileRoutines):
                 #print len(cluster_df.loc[scaffold, threshold])
                 #print len(fcluster(scaffold_linkage, t=threshold, criterion=extracting_method))
                 cluster_df[threshold].loc[scaffold] = fcluster(scaffold_linkage, t=threshold,
-                                                               criterion=extracting_method)
+                                                               criterion=extracting_method,
+                                                               depth=depth)
         cluster_number_df = cluster_df.groupby(level=0).nunique()
         if output_prefix:
             cluster_df.to_csv("%s.cluster" % output_prefix, sep="\t", index_label=True)
