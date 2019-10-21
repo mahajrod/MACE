@@ -77,9 +77,9 @@ cluster_df = StatsVCF.test_clustering_thresholds_from_linkage(linkage_df,
                                                  output_prefix=None)
 """
 
-
+output_prefix = "%s.D%s.M%s.depth%i" % (args.output_prefix, args.distance, args.method, args.depth)
 cluster_df = StatsVCF.test_clustering_thresholds(variants.records, method=args.distance,
-                                                 output_prefix=args.output_prefix,
+                                                 output_prefix=output_prefix,
                                                  extracting_method=args.method, threshold_tuple=None,
                                                  depth=args.depth,
                                                  min_threshold=args.min_threshold,
@@ -87,6 +87,6 @@ cluster_df = StatsVCF.test_clustering_thresholds(variants.records, method=args.d
                                                  threshold_number=None,
                                                  threshold_step=args.threshold_step,)
 print("Drawing...")
-Visualization.plot_clustering_threshold_tests(cluster_df, args.output_prefix,
+Visualization.plot_clustering_threshold_tests(cluster_df, output_prefix,
                                               scaffold_order_list=args.scaffold_ordered_list,
                                               extensions=("png", ), suptitle="Test of clustering thresholds")
