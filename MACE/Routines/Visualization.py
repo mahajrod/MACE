@@ -16,12 +16,12 @@ from matplotlib.patches import Rectangle
 from RouToolPa.Collections.General import TwoLvlDict
 from RouToolPa.Routines.Drawing import DrawingRoutines
 
-from MACE.Visualization.Tracks import WindowTrack
+from MACE.Visualization.Tracks import WindowTrack, FeatureTrack
 from MACE.Visualization.TrackGroups import TrackGroup
 from MACE.Visualization.Subplots import Subplot
 from MACE.Visualization.Figures import Figure
 
-from MACE.Visualization.Legends import DensityLegend
+from MACE.Visualization.Legends import DensityLegend, FeatureLegend
 from MACE.Functions.Generators import recursive_generator
 from MACE.Visualization.Styles.Subplot import chromosome_subplot_style
 from MACE.Visualization.Styles.Figure import plot_figure_style, rainfall_figure_style, chromosome_figure_style
@@ -155,7 +155,7 @@ class Visualization(DrawingRoutines):
     @staticmethod
     def plot_clustering_threshold_tests(cluster_df, output_prefix, scaffold_order_list=None,
                                         extensions=("png", ), suptitle="Test of clustering thresholds",
-                                        figure_width=16, figure_height=16):
+                                        figure_width=16, figure_height=16, y_logbase=10):
         threshold_number = len(cluster_df.columns)
 
         figure_style = deepcopy(plot_figure_style)
@@ -208,6 +208,10 @@ class Visualization(DrawingRoutines):
         for ext in extensions:
             plt.savefig("%s.%s" % (output_prefix, ext))
 
+        plt.yscale('log', basey=y_logbase)
+        for ext in extensions:
+            plt.savefig("%s.log%i.%s" % (output_prefix, y_logbase, ext))
+
     def rainfall_plot(self, distance_df, scaffold_length_df,
                       output_prefix,
                       figure_width=15,
@@ -225,32 +229,40 @@ class Visualization(DrawingRoutines):
 
         pass
 
-    def draw_gff(self, collection_gff, scaffold_length_dict, output_prefix, feature_type=None,
-                 density_multiplicator=1000,
-                 scaffold_black_list=[], sort_scaffolds=False, scaffold_ordered_list=None,
-                 scaffold_white_list=[], add_sample_name_to_labels=False,
-                 dist_between_scaffolds_scaling_factor=1,
-                 figure_width=12,
-                 figure_height_scale_factor=0.5,
-                 subplot_style=None
+    def draw_gff(self, collection_gff, scaffold_length_df,
+                 output_prefix,
+                 figure_width=15, figure_height_per_scaffold=0.5, dpi=300,
+                 colormap=None, thresholds=None, colors=None, background=None,
+                 title=None,
+                 extensions=("png", ),
+                 scaffold_order_list=None,
                  ):
 
-        gff_records = collection_gff.records[feature_type] if feature_type else collection_gff.records
-        final_scaffold_list = self.get_filtered_scaffold_list(collection_gff.scaffold_list,
-                                                              scaffold_black_list=scaffold_black_list,
-                                                              sort_scaffolds=sort_scaffolds,
-                                                              scaffold_ordered_list=scaffold_ordered_list,
-                                                              scaffold_white_list=scaffold_white_list)
+        track_group_dict = OrderedDict()
 
-        figure = plt.figure(figsize=(figure_width,
-                                     int(figure_height_scale_factor * scaffold_number * sample_number)))
-        subplot = plt.subplot(1, 1, 1)
+        scaffolds = scaffold_order_list[::-1] if scaffold_order_list else collection_gff.records.index.get_level_values(level=0).unique().to_list()
+        scaffold_number = len(scaffolds)
 
-        sub_style = subplot_style if subplot_style else chrSubplotStyle
+        for chr in scaffolds:  # count_df.index.get_level_values(level=0).unique():
+            track_group_dict[chr] = TrackGroup(
+                {chr: FeatureTrack(collection_gff.records.xs(chr), x_end=scaffold_length_df.loc[chr][0],
+                                   label=chr, colormap=colormap, thresholds=thresholds,
+                                   colors=colors, background=background)})
+            track_group_dict[chr][chr].add_color_by_dict()
+        # track_group_dict
+        # track_group_dict["chr13"]
+        chromosome_subplot = Subplot(track_group_dict, title=title, style=chromosome_subplot_style,
+                                     legend=FeatureLegend(colormap=colormap,
+                                                          thresholds=thresholds))
 
-        sub_style.apply(subplot)
+        plt.figure(1, figsize=(figure_width, int(scaffold_number * figure_height_per_scaffold)), dpi=dpi)
 
-        # TODO: Finish this
+        chromosome_subplot.draw()
+
+        for ext in extensions:
+            plt.savefig("%s.%s" % (output_prefix, ext))
+
+
 
     # ------------------ Not rewritten yet --------------------------------
 
