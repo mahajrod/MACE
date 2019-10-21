@@ -436,7 +436,8 @@ class StatsVCF(FileRoutines):
         cophenet_df = pd.DataFrame(index=vcf_df_filtered.index.get_level_values(level=0).unique(), columns=["cophenet"])
 
         for scaffold in cophenet_df.index:
-            print("%s\tHandling %s.." %(str(datetime.datetime.now()), scaffold))
+            print("%s\tHandling %s..." % (str(datetime.datetime.now()), scaffold))
+            print("%s\t\t%i variants" % (str(datetime.datetime.now()), len(vcf_df_filtered.loc[[scaffold]])))
             print("%s\t\tCalculating distances..." % str(datetime.datetime.now()))
             scaffold_distance = pdist(vcf_df_filtered.loc[[scaffold]])
             print("%s\t\tCalculating linkage..." % str(datetime.datetime.now()))
