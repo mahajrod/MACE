@@ -2,6 +2,7 @@ from numpy import array
 
 from matplotlib.pyplot import get_cmap
 
+
 class TrackStyle:
 
     def __init__(self, height, edge=True, fill=False, face_color=None, edge_color="black", edge_width=None,
