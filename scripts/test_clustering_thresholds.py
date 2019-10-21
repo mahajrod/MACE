@@ -26,7 +26,8 @@ parser.add_argument("-x", "--max_threshold", action="store", dest="max_threshold
                     help="Maximum threshold for extraction of clusters")
 parser.add_argument("-s", "--threshold_step", action="store", dest="threshold_step", type=float,
                     help="Threshold step for extraction of clusters")
-
+parser.add_argument("-e", "--depth", action="store", dest="depth", type=int, default=2,
+                    help="The maximum depth to perform extraction of cluster using inconsistent method. Default: 2")
 parser.add_argument("-a", "--scaffold_white_list", action="store", dest="scaffold_white_list", default=[],
                     type=lambda s: IdList(filename=s) if os.path.exists(s) else s.split(","),
                     help="Comma-separated list of the only scaffolds to draw. Default: all")
@@ -80,6 +81,7 @@ cluster_df = StatsVCF.test_clustering_thresholds_from_linkage(linkage_df,
 cluster_df = StatsVCF.test_clustering_thresholds(variants.records, method=args.distance,
                                                  output_prefix=args.output_prefix,
                                                  extracting_method=args.method, threshold_tuple=None,
+                                                 depth=args.depth,
                                                  min_threshold=args.min_threshold,
                                                  max_threshold=args.max_threshold,
                                                  threshold_number=None,
