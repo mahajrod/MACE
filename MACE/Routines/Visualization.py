@@ -24,7 +24,7 @@ from MACE.Visualization.Figures import Figure
 from MACE.Visualization.Legends import DensityLegend, FeatureLegend
 from MACE.Functions.Generators import recursive_generator
 from MACE.Visualization.Styles.Subplot import chromosome_subplot_style
-from MACE.Visualization.Styles.Figure import plot_figure_style, rainfall_figure_style, chromosome_figure_style
+from MACE.Visualization.Styles.Figure import plot_figure_style, rainfall_figure_style, chromosome_figure_style, one_plot_figure_style
 
 
 class Visualization(DrawingRoutines):
@@ -216,14 +216,14 @@ class Visualization(DrawingRoutines):
         plt.close()
 
         all_chr = map(lambda s: s.sum(), df_list)
-        figure = Figure(subplots={"all": []}, style=figure_style, suptitle=suptitle)
+        figure = Figure(subplots={"all": []}, style=one_plot_figure_style, suptitle=suptitle)
         figure.draw()
 
         axes = plt.gca()
 
         for data, label, color in zip(all_chr, label_list, color_list):
             # print data
-            axes.plot(data.columns, data, label=label,
+            axes.plot(data.index.tolist(), data, label=label,
                       color=color)
         axes.grid()
         axes.legend()

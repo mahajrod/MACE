@@ -78,7 +78,6 @@ class Figure(OrderedDict):
                     self.horizontal_subplot_number = sqr + 1
                     self.vertical_subplot_number = sqr + 1
 
-
         if dpi:
             self.style.dpi = dpi
 
@@ -86,6 +85,7 @@ class Figure(OrderedDict):
             self.axes_number = self.horizontal_subplot_number * self.vertical_subplot_number
 
         if self.style.width_per_subplot and horizontal_subplot_number:
+
             self.width = self.style.width_per_subplot * horizontal_subplot_number
 
         if self.style.height_per_subplot and vertical_subplot_number:
