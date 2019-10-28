@@ -209,8 +209,35 @@ class Visualization(DrawingRoutines):
             plt.savefig("%s.%s" % (output_prefix, ext))
 
         plt.yscale('log', basey=y_logbase)
+        plt.ylim(ymin=0.1)
         for ext in extensions:
             plt.savefig("%s.log%i.%s" % (output_prefix, y_logbase, ext))
+
+        plt.close()
+
+        all_chr = map(lambda s: s.sum(), df_list)
+        figure = Figure(subplots={"all": []}, style=figure_style, suptitle=suptitle)
+        figure.draw()
+
+        axes = plt.gca()
+
+        for data, label, color in zip(all_chr, label_list, color_list):
+            # print data
+            axes.plot(data.columns, data, label=label,
+                      color=color)
+        axes.grid()
+        axes.legend()
+
+        axes.set_title("All")
+
+        for ext in extensions:
+            plt.savefig("%s.all.%s" % (output_prefix, ext))
+
+        plt.yscale('log', basey=y_logbase)
+        plt.ylim(ymin=0.1)
+
+        for ext in extensions:
+            plt.savefig("%s.all.log.%i.%s" % (output_prefix, y_logbase, ext))
 
     def rainfall_plot(self, distance_df, scaffold_length_df,
                       output_prefix,
