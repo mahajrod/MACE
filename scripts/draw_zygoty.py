@@ -39,7 +39,7 @@ args = parser.parse_args()
 
 mutations = CollectionVCF(args.input, parsing_mode="coordinates_and_genotypes")
 
-Visualization.zygoty_bar_plot(StatsVCF.count_zygoty(mutations, outfile="%s.counts"),
+Visualization.zygoty_bar_plot(StatsVCF.count_zygoty(mutations, outfile="%s.counts" % args.output_prefix),
                               args.output_prefix, extension_list=args.output_formats,
                               figsize=args.figsize,
                               dpi=args.dpi,
