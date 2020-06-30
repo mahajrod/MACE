@@ -61,6 +61,9 @@ class Track:
             return self.style.colors[-1]
         for i in range(0, len(self.style.thresholds) - 1):
             if self.style.thresholds[i] < value <= self.style.thresholds[i+1]:
+                print(i)
+                print(self.style.colors)
+                print(self.style.thresholds)
                 return self.style.colors[i]
 
     #def set_color(self):
@@ -105,7 +108,7 @@ class Track:
         self.records["color"] = map(expression if expression else self.color_threshold_expression,
                                     self.records[value_column_name].to_list() if value_column_name else self.records.iloc[:, value_column_index].to_list())
         self.records["color"].astype('category', copy=False)
-        print self.records
+        print(self.records)
 
     def add_color_by_dict(self, value_column_name=None, value_column_index=None, default_color='black'):
         if (value_column_name is None) and (value_column_index is None):
