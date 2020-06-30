@@ -93,6 +93,35 @@ class Visualization(DrawingRoutines):
 
         return zygoty_counts
 
+    @staticmethod
+    def singleton_bar_plot(singleton_counts, output_prefix, extension_list=("png",),
+                           figsize=(5, 5), dpi=200, title=None, color="blue"):
+
+        fig = plt.figure(1, figsize=figsize, dpi=dpi)
+
+        bar_width = 0.5
+        bin_coord = np.arange(len(singleton_counts))
+
+        for i in range(0, df_shape[0]):
+            plt.bar(bin_coord + i * bar_width,
+                    zygoty_counts.loc[zygoty_counts.index[i]],
+                    width=bar_width, edgecolor='white',
+                    color=default_color_dict[zygoty_counts.index[i]],
+                    label=zygoty_counts.index[i])
+
+        plt.ylabel('Variants', fontweight='bold')
+        plt.xlabel('Sample', fontweight='bold')
+        plt.xticks([coord + bar_width for coord in range(len(bin_coord))], zygoty_counts.columns,
+                   rotation=45)
+        if title:
+            plt.title(title, fontweight='bold')
+        plt.legend()
+        for extension in extension_list:
+            plt.savefig("%s.%s" % (output_prefix, extension), bbox_inches='tight')
+        plt.close()
+
+        return zygoty_counts
+
     def draw_variant_window_densities(self, count_df, window_size, window_step, scaffold_length_df,
                                       output_prefix,
                                       figure_width=15, figure_height_per_scaffold=0.5, dpi=300,
@@ -103,7 +132,7 @@ class Visualization(DrawingRoutines):
                                       test_colormaps=False):
 
         track_group_dict = OrderedDict()
-
+        window_step_final = window_step if window_step else window_size
         scaffolds = scaffold_order_list[::-1] if scaffold_order_list else count_df.index.get_level_values(level=0).unique().to_list()
         scaffold_number = len(scaffolds)
         if test_colormaps:
@@ -112,7 +141,7 @@ class Visualization(DrawingRoutines):
                 # TODO: replace color recalculation for whole dataframe by replacenments in category
                 for chr in scaffolds: # count_df.index.get_level_values(level=0).unique():
                     track_group_dict[chr] = TrackGroup(
-                        {chr: WindowTrack(count_df.xs(chr), window_size, window_step, x_end=scaffold_length_df.loc[chr][0],
+                        {chr: WindowTrack(count_df.xs(chr), window_size, window_step_final, x_end=scaffold_length_df.loc[chr][0],
                                           multiplier=1000, label=chr, colormap=colormap_entry, thresholds=thresholds,
                                           colors=colors, background=background, masked=masked)})
                     track_group_dict[chr][chr].add_color()
@@ -134,7 +163,7 @@ class Visualization(DrawingRoutines):
         else:
             for chr in scaffolds:  # count_df.index.get_level_values(level=0).unique():
                 track_group_dict[chr] = TrackGroup(
-                    {chr: WindowTrack(count_df.xs(chr), window_size, window_step, x_end=scaffold_length_df.loc[chr][0],
+                    {chr: WindowTrack(count_df.xs(chr), window_size, window_step_final, x_end=scaffold_length_df.loc[chr][0],
                                       multiplier=1000, label=chr, colormap=colormap, thresholds=thresholds,
                                       colors=colors, background=background, masked=masked)})
                 track_group_dict[chr][chr].add_color()
