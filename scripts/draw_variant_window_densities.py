@@ -124,7 +124,8 @@ if chr_syn_dict:
 
 count_df = StatsVCF.count_variants_in_windows(variants, args.window_size, args.window_step,
                                               reference_scaffold_lengths=None,
-                                              ignore_scaffolds_shorter_than_window=True, output_prefix=None,
+                                              ignore_scaffolds_shorter_than_window=True,
+                                              output_prefix=args.output_prefix,
                                               skip_empty_windows=False, expression=None, per_sample_output=False,
                                               scaffold_white_list=args.scaffold_white_list,
                                               scaffold_syn_dict=chr_syn_dict)
