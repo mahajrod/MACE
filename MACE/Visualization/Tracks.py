@@ -61,9 +61,9 @@ class Track:
             return self.style.colors[-1]
         for i in range(0, len(self.style.thresholds) - 1):
             if self.style.thresholds[i] < value <= self.style.thresholds[i+1]:
-                print(i)
-                print(self.style.colors)
-                print(self.style.thresholds)
+                #print(i)
+                #print(self.style.colors)
+                #print(self.style.thresholds)
                 return self.style.colors[i]
 
     #def set_color(self):
