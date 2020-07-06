@@ -152,7 +152,7 @@ if args.coverage:
     print("aaaaaaaa")
     print(masking_df)
 
-    scaffold_to_keep = StatsVCF.get_filtered_entry_list(count_df.index.get_level_values(level=0).unique().to_list(),
+    scaffold_to_keep = StatsVCF.get_filtered_entry_list(masking_df.index.get_level_values(level=0).unique().to_list(),
                                                         entry_white_list=args.scaffold_white_list)
     print(scaffold_to_keep)
     masking_df = masking_df[masking_df.index.isin(scaffold_to_keep, level=0)]
