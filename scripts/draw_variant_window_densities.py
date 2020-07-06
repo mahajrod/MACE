@@ -153,7 +153,7 @@ if args.coverage:
     masking_df = masking_df[masking_df.index.isin(scaffold_to_keep, level=0)]
     if chr_syn_dict:
         masking_df.rename(index=chr_syn_dict, inplace=True)
-    count_df["masked"] = ~ (args.mean_coverage * args.min_coverage_threshold) <= masking_df[args.coverage_column_name] <= (args.mean_coverage * args.max_coverage_threshold)
+    count_df["masked"] = ~ ((args.mean_coverage * args.min_coverage_threshold) <= masking_df[args.coverage_column_name] <= (args.mean_coverage * args.max_coverage_threshold))
     count_df.to_csv("%s.variant_counts.with_masking.tsv" % args.output_prefix, sep='\t', header=True, index=True)
 
 Visualization.draw_variant_window_densities(count_df, args.window_size, args.window_step, chr_len_df,
