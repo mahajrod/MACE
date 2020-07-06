@@ -74,6 +74,27 @@ class StatsVCF(FileRoutines):
             raise ValueError("ERROR!!! Zygoty can't be counted for parsing mode used in CollectionVCF class: %s."
                              "Use 'coordinates_and_genotypes', 'genotypes' or 'complete modes'" % collection_vcf.parsing_mode)
 
+    @staticmethod
+    def count_singletons(collection_vcf, outfile=None):
+        if collection_vcf.parsing_mode in collection_vcf.parsing_modes_with_genotypes:
+            singleton_counts = OrderedDict()
+            variant_number = np.shape(collection_vcf.records)[0]
+
+            all_genotype_sum = (collection_vcf.records[collection_vcf.samples].xs('GT', axis=1, level=1, drop_level=False) != 0).sum(axis=1)
+            for sample in collection_vcf.samples:
+                singleton_counts[sample] = 0
+
+                sample_genotype_sum = (collection_vcf.records[[sample]].xs('GT', axis=1, level=1, drop_level=False) != 0).sum(axis=1)
+
+                singleton_counts[sample] = (all_genotype_sum == sample_genotype_sum).sum()
+            singleton_counts = pd.Series(singleton_counts)
+            if outfile:
+                singleton_counts.to_csv(outfile, sep="\t", header=True, index=True)
+            return singleton_counts
+        else:
+            raise ValueError("ERROR!!! Zygoty can't be counted for parsing mode used in CollectionVCF class: %s."
+                             "Use 'coordinates_and_genotypes', 'genotypes' or 'complete modes'" % collection_vcf.parsing_mode)
+
     # ------------------------------------ General stats end ------------------------------------------
 
     # ------------------------------------ Window-based stats -----------------------------------------
