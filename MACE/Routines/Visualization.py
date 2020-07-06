@@ -129,7 +129,8 @@ class Visualization(DrawingRoutines):
                                       title=None,
                                       extensions=("png", ),
                                       scaffold_order_list=None,
-                                      test_colormaps=False):
+                                      test_colormaps=False,
+                                      masking=True):
 
         track_group_dict = OrderedDict()
         window_step_final = window_step if window_step else window_size
@@ -144,7 +145,7 @@ class Visualization(DrawingRoutines):
                         {chr: WindowTrack(count_df.xs(chr), window_size, window_step_final, x_end=scaffold_length_df.loc[chr][0],
                                           multiplier=1000, label=chr, colormap=colormap_entry, thresholds=thresholds,
                                           colors=colors, background=background, masked=masked)})
-                    track_group_dict[chr][chr].add_color()
+                    track_group_dict[chr][chr].add_color(masking=masking)
                 # track_group_dict
                 # track_group_dict["chr13"]
                 chromosome_subplot = Subplot(track_group_dict,
@@ -166,7 +167,7 @@ class Visualization(DrawingRoutines):
                     {chr: WindowTrack(count_df.xs(chr), window_size, window_step_final, x_end=scaffold_length_df.loc[chr][0],
                                       multiplier=1000, label=chr, colormap=colormap, thresholds=thresholds,
                                       colors=colors, background=background, masked=masked)})
-                track_group_dict[chr][chr].add_color()
+                track_group_dict[chr][chr].add_color(masking=masking)
             # track_group_dict
             # track_group_dict["chr13"]
             chromosome_subplot = Subplot(track_group_dict, title=title, style=chromosome_subplot_style,

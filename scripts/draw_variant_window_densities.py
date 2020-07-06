@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 __author__ = 'Sergei F. Kliver'
 import os
+import pandas as pd
 import argparse
 from copy import deepcopy
 
@@ -34,13 +35,24 @@ parser.add_argument("-l", "--title", action="store", dest="title", default="Vari
 """
 parser.add_argument("-g", "--draw_gaps", action="store_true", dest="draw_gaps",
                     help="Draw gaps, ignored if reference genome is not set. Default: False")
-
-parser.add_argument("-r", "--reference_genome", action="store", dest="reference",
-                    help="Fasta file with reference genome, required to draw gaps and chromosomes")
-
-parser.add_argument("-m", "--masked_regions", action="store", dest="masked_regions",
-                    help="Gff file with masked regions")
 """
+parser.add_argument("-c", "--coverage", action="store", dest="coverage",
+                    help="File with precalculated mean/median coverage in windows")
+
+parser.add_argument("--scaffold_column_name", action="store", dest="scaffold_column_name", default="scaffold",
+                    help="Name of column in coverage file with scaffold ids per window. Default: median")
+parser.add_argument("--window_column_name", action="store", dest="window_column_name", default="window",
+                    help="Name of column in coverage file with window id. Default: window")
+parser.add_argument("--coverage_column_name", action="store", dest="coverage_column_name", default="median",
+                    help="Name of column in coverage file with mean/median coverage per window. Default: median")
+parser.add_argument("-m", "--mean_coverage", action="store", dest="mean_coverage",
+                    type=float, required=True,
+                    help="Comma-separated list of mean coverage.")
+parser.add_argument("-x", "--max_coverage_threshold", action="store", dest="max_coverage_threshold", type=float,
+                    help="Maximum coverage threshold to treat position as unmasked. Default: not set")
+parser.add_argument("-n", "--min_coverage_threshold", action="store", dest="min_coverage_threshold", type=float,
+                    help="Minimum coverage threshold to treat position as unmasked. Default: not set")
+
 parser.add_argument("-w", "--window_size", action="store", dest="window_size", default=100000, type=int,
                     help="Size of the windows Default: 100000")
 parser.add_argument("-s", "--window_step", action="store", dest="window_step", default=None, type=int,
@@ -129,6 +141,13 @@ count_df = StatsVCF.count_variants_in_windows(variants, args.window_size, args.w
                                               skip_empty_windows=False, expression=None, per_sample_output=False,
                                               scaffold_white_list=args.scaffold_white_list,
                                               scaffold_syn_dict=chr_syn_dict)
+if args.coverage:
+    masking_df = pd.read_csv(args.coverage, header=True, usecols=(args.scaffold_column_name,
+                                                                  args.window_column_name,
+                                                                  args.coverage_column_name),
+                             index_col=(args.scaffold_column_name, args.window_column_name))
+
+    count_df["masked"] = ~ (args.mean_coverage * args.min_coverage_threshold) <= masking_df[args.coverage_column_name] <= (args.mean_coverage * args.max_coverage_threshold)
 
 Visualization.draw_variant_window_densities(count_df, args.window_size, args.window_step, chr_len_df,
                                             args.output_prefix,
@@ -139,4 +158,5 @@ Visualization.draw_variant_window_densities(count_df, args.window_size, args.win
                                             extensions=args.output_formats,
                                             scaffold_order_list=args.scaffold_ordered_list,
                                             test_colormaps=args.test_colormaps,
-                                            thresholds=args.density_thresholds)
+                                            thresholds=args.density_thresholds,
+                                            masking=True if args.coverage else False)

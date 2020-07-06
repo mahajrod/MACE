@@ -103,11 +103,13 @@ class Track:
 
         return PatchCollection(self.records.apply(self.patch_function, axis=1), match_original=True,)
 
-    def add_color(self, expression=None, value_column_index=-1, value_column_name=None):
+    def add_color(self, expression=None, value_column_index=-1, value_column_name=None, masking=True):
 
         self.records["color"] = map(expression if expression else self.color_threshold_expression,
                                     self.records[value_column_name].to_list() if value_column_name else self.records.iloc[:, value_column_index].to_list())
         self.records["color"].astype('category', copy=False)
+        if masking and ("masked" in self.records.columns):
+            self.records.loc[self.records["masked"] == True, "color"] = self.style.masked
         print(self.records)
 
     def add_color_by_dict(self, value_column_name=None, value_column_index=None, default_color='black'):
