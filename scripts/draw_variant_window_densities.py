@@ -146,6 +146,10 @@ if args.coverage:
                                                                   args.window_column_name,
                                                                   args.coverage_column_name),
                              index_col=(args.scaffold_column_name, args.window_column_name))
+
+    scaffold_to_keep = StatsVCF.get_filtered_entry_list(count_df.index.get_level_values(level=0).unique().to_list(),
+                                                        entry_white_list=args.scaffold_white_list)
+    masking_df = masking_df[masking_df.index.isin(scaffold_to_keep, level=0)]
     if chr_syn_dict:
         masking_df.rename(index=chr_syn_dict, inplace=True)
     count_df["masked"] = ~ (args.mean_coverage * args.min_coverage_threshold) <= masking_df[args.coverage_column_name] <= (args.mean_coverage * args.max_coverage_threshold)
