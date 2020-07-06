@@ -111,7 +111,6 @@ class Track:
         if masking and ("masked" in self.records.columns):
             self.records.loc[self.records["masked"] == True, "color"] = self.style.masked
 
-
     def add_color_by_dict(self, value_column_name=None, value_column_index=None, default_color='black'):
         if (value_column_name is None) and (value_column_index is None):
             raise ValueError("ERROR!!! Both column name and column index were not set!")
@@ -188,7 +187,7 @@ class WindowTrack(Track):
         #print(self.records.columns.to_list().remove("masked"))
         count_columns = self.records.columns.to_list()
         count_columns.remove("masked")
-        self.records["density"] = self.records[count_columns] / window_size * multiplier
+        self.records["density"] = self.records.loc[:, count_columns] / window_size * multiplier
 
         self.window_size = window_size
         self.window_step = window_step
