@@ -48,10 +48,10 @@ parser.add_argument("--coverage_column_name", action="store", dest="coverage_col
 parser.add_argument("-m", "--mean_coverage", action="store", dest="mean_coverage",
                     type=float, required=True,
                     help="Comma-separated list of mean coverage.")
-parser.add_argument("-x", "--max_coverage_threshold", action="store", dest="max_coverage_threshold", type=float,
-                    help="Maximum coverage threshold to treat position as unmasked. Default: not set")
-parser.add_argument("-n", "--min_coverage_threshold", action="store", dest="min_coverage_threshold", type=float,
-                    help="Minimum coverage threshold to treat position as unmasked. Default: not set")
+parser.add_argument("-x", "--max_coverage_threshold", action="store", dest="max_coverage_threshold", type=float, default=2.5,
+                    help="Maximum coverage threshold to treat position as unmasked. Default: 2.5 * mean")
+parser.add_argument("-n", "--min_coverage_threshold", action="store", dest="min_coverage_threshold", type=float, default=0.5,
+                    help="Minimum coverage threshold to treat position as unmasked. Default: 0.5 * mean")
 
 parser.add_argument("-w", "--window_size", action="store", dest="window_size", default=100000, type=int,
                     help="Size of the windows Default: 100000")
