@@ -184,7 +184,7 @@ class WindowTrack(Track):
         self.track_type = "window"
         self.window_type = window_type
         print(self.records)
-        print(self.records.columns)
+        print(self.records.columns.to_list())
         print(self.records.columns.to_list().remove("masked"))
         self.records["density"] = self.records[self.records.columns.to_list().remove("masked")] / window_size * multiplier
 
