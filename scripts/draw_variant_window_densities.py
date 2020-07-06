@@ -147,6 +147,8 @@ if args.coverage:
                                                       args.coverage_column_name),
                              index_col=(args.scaffold_column_name, args.window_column_name),
                              sep="\t")
+    if chr_syn_dict:
+        masking_df.rename(index=chr_syn_dict, inplace=True)
     print("aaaaaaaa")
     print(masking_df)
 
@@ -154,8 +156,7 @@ if args.coverage:
                                                         entry_white_list=args.scaffold_white_list)
     print(scaffold_to_keep)
     masking_df = masking_df[masking_df.index.isin(scaffold_to_keep, level=0)]
-    if chr_syn_dict:
-        masking_df.rename(index=chr_syn_dict, inplace=True)
+
     min_threshold = args.mean_coverage * args.min_coverage_threshold
     max_threshold = args.mean_coverage * args.max_coverage_threshold
     count_df["masked"] = (masking_df[args.coverage_column_name] < min_threshold) | (masking_df[args.coverage_column_name] > max_threshold)
