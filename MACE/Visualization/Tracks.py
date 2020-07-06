@@ -195,7 +195,6 @@ class WindowTrack(Track):
         self.multiplier = multiplier
         self.preprocess_data()
 
-
     def preprocess_data(self):
         if self.window_type == "stacking":
             self.records.reset_index(level="WINDOW", inplace=True)
