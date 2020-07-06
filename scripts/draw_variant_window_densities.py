@@ -143,9 +143,10 @@ count_df = StatsVCF.count_variants_in_windows(variants, args.window_size, args.w
                                               scaffold_syn_dict=chr_syn_dict)
 if args.coverage:
     masking_df = pd.read_csv(args.coverage, usecols=(args.scaffold_column_name,
-                                                                  args.window_column_name,
-                                                                  args.coverage_column_name),
-                             index_col=(args.scaffold_column_name, args.window_column_name))
+                                                     args.window_column_name,
+                                                      args.coverage_column_name),
+                             index_col=(args.scaffold_column_name, args.window_column_name),
+                             sep="\t")
 
     scaffold_to_keep = StatsVCF.get_filtered_entry_list(count_df.index.get_level_values(level=0).unique().to_list(),
                                                         entry_white_list=args.scaffold_white_list)
