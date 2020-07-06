@@ -146,7 +146,8 @@ if args.coverage:
                                                                   args.window_column_name,
                                                                   args.coverage_column_name),
                              index_col=(args.scaffold_column_name, args.window_column_name))
-
+    if chr_syn_dict:
+        masking_df.rename(index=chr_syn_dict, inplace=True)
     count_df["masked"] = ~ (args.mean_coverage * args.min_coverage_threshold) <= masking_df[args.coverage_column_name] <= (args.mean_coverage * args.max_coverage_threshold)
     count_df.to_csv("%s.variant_counts.with_masking.tsv" % args.output_prefix, sep='\t', header=True, index=True)
 
