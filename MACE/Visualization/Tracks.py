@@ -110,7 +110,6 @@ class Track:
         self.records["color"].astype('category', copy=False)
         if masking and ("masked" in self.records.columns):
             self.records.loc[self.records["masked"] == True, "color"] = self.style.masked
-        print(self.records)
 
     def add_color_by_dict(self, value_column_name=None, value_column_index=None, default_color='black'):
         if (value_column_name is None) and (value_column_index is None):
