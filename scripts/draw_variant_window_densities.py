@@ -156,6 +156,7 @@ if args.coverage:
     min_threshold = args.mean_coverage * args.min_coverage_threshold
     max_threshold = args.mean_coverage * args.max_coverage_threshold
     count_df["masked"] = (masking_df[args.coverage_column_name] < min_threshold) | (masking_df[args.coverage_column_name] > max_threshold)
+    print(count_df)
     count_df.to_csv("%s.variant_counts.with_masking.tsv" % args.output_prefix, sep='\t', header=True, index=True)
 
 Visualization.draw_variant_window_densities(count_df, args.window_size, args.window_step, chr_len_df,
