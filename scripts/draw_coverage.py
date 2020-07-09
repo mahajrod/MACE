@@ -38,9 +38,6 @@ parser.add_argument("--window_column_name", action="store", dest="window_column_
                     help="Name of column in coverage file with window id. Default: window")
 parser.add_argument("--coverage_column_name", action="store", dest="coverage_column_name", default="median",
                     help="Name of column in coverage file with mean/median coverage per window. Default: median")
-parser.add_argument("-m", "--mean_coverage", action="store", dest="mean_coverage",
-                    type=float, required=True,
-                    help="Comma-separated list of mean coverage.")
 
 parser.add_argument("-w", "--window_size", action="store", dest="window_size", default=100000, type=int,
                     help="Size of the windows Default: 100000")
