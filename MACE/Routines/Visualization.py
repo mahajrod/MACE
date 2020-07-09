@@ -130,7 +130,60 @@ class Visualization(DrawingRoutines):
                                       extensions=("png", ),
                                       scaffold_order_list=None,
                                       test_colormaps=False,
-                                      masking=True):
+                                      masking=True,
+                                      multiplier=1000):
+
+        self.draw_windows(count_df, window_size, window_step, scaffold_length_df,
+                          output_prefix,
+                          figure_width=figure_width,
+                          figure_height_per_scaffold=figure_height_per_scaffold, dpi=dpi,
+                          colormap=colormap, thresholds=thresholds,
+                          colors=colors, background=background, masked=masked,
+                          title=title,
+                          extensions=extensions,
+                          scaffold_order_list=scaffold_order_list,
+                          test_colormaps=test_colormaps,
+                          masking=masking,
+                          multiplier=multiplier,
+                          norm=True)
+
+    def draw_coverage_windows(self, count_df, window_size, window_step, scaffold_length_df,
+                              mean_coverage,
+                              output_prefix,
+                              figure_width=15, figure_height_per_scaffold=0.5, dpi=300,
+                              colormap=None, thresholds=(0.0, 0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 2.0, 2.5),
+                              colors=None, background=None,
+                              title=None,
+                              extensions=("png", ),
+                              scaffold_order_list=None,
+                              test_colormaps=False,
+                              multiplier=None):
+
+        self.draw_windows(count_df, window_size, window_step, scaffold_length_df,
+                          output_prefix,
+                          figure_width=figure_width,
+                          figure_height_per_scaffold=figure_height_per_scaffold, dpi=dpi,
+                          colormap=colormap, thresholds=np.array(thresholds) * float(mean_coverage),
+                          colors=colors, background=background, masked=False,
+                          title=title,
+                          extensions=extensions,
+                          scaffold_order_list=scaffold_order_list,
+                          test_colormaps=test_colormaps,
+                          masking=False,
+                          multiplier=multiplier,
+                          norm=False)
+
+    def draw_windows(self, count_df, window_size, window_step, scaffold_length_df,
+                     output_prefix,
+                     figure_width=15, figure_height_per_scaffold=0.5, dpi=300,
+                     colormap=None, thresholds=None, colors=None, background=None, masked=None,
+                     title=None,
+                     extensions=("png", ),
+                     scaffold_order_list=None,
+                     test_colormaps=False,
+                     masking=True,
+                     multiplier=None,
+                     norm=False):
 
         track_group_dict = OrderedDict()
         window_step_final = window_step if window_step else window_size
@@ -143,8 +196,8 @@ class Visualization(DrawingRoutines):
                 for chr in scaffolds: # count_df.index.get_level_values(level=0).unique():
                     track_group_dict[chr] = TrackGroup(
                         {chr: WindowTrack(count_df.xs(chr), window_size, window_step_final, x_end=scaffold_length_df.loc[chr][0],
-                                          multiplier=1000, label=chr, colormap=colormap_entry, thresholds=thresholds,
-                                          colors=colors, background=background, masked=masked)})
+                                          multiplier=multiplier, label=chr, colormap=colormap_entry, thresholds=thresholds,
+                                          colors=colors, background=background, masked=masked, norm=norm)})
                     track_group_dict[chr][chr].add_color(masking=masking)
                 # track_group_dict
                 # track_group_dict["chr13"]
@@ -165,8 +218,8 @@ class Visualization(DrawingRoutines):
             for chr in scaffolds:  # count_df.index.get_level_values(level=0).unique():
                 track_group_dict[chr] = TrackGroup(
                     {chr: WindowTrack(count_df.xs(chr), window_size, window_step_final, x_end=scaffold_length_df.loc[chr][0],
-                                      multiplier=1000, label=chr, colormap=colormap, thresholds=thresholds,
-                                      colors=colors, background=background, masked=masked)})
+                                      multiplier=multiplier, label=chr, colormap=colormap, thresholds=thresholds,
+                                      colors=colors, background=background, masked=masked, norm=norm)})
                 track_group_dict[chr][chr].add_color(masking=masking)
             # track_group_dict
             # track_group_dict["chr13"]
