@@ -185,8 +185,10 @@ class WindowTrack(Track):
         #print(self.records)
         #print(self.records.columns.to_list())
         #print(self.records.columns.to_list().remove("masked"))
+
         count_columns = self.records.columns.to_list()
-        count_columns.remove("masked")
+        if "masked" in count_columns:
+            count_columns.remove("masked")
 
         if norm and multiplier:
             self.records["density"] = self.records.loc[:, count_columns] * (float(multiplier) / float(window_size))
