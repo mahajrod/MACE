@@ -234,7 +234,6 @@ class Visualization(DrawingRoutines):
             for ext in extensions:
                 plt.savefig("%s.%s" % (output_prefix, ext))
 
-
     # ----------------------- In progress ------------------------------
     @staticmethod
     def plot_clustering_threshold_tests(cluster_df, output_prefix, scaffold_order_list=None,
