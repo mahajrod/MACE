@@ -146,8 +146,8 @@ class Track:
 class WindowTrack(Track):
 
     def __init__(self, windows_df, window_size, window_step, y_start=None, x_start=0, x_end=None,
-                 style=default_track_style, label=None,
-                 window_type="stacking", multiplier=1000, feature_style=default_feature_style, color_expression=None,
+                 style=default_track_style, label=None, norm=False,
+                 window_type="stacking", multiplier=None, feature_style=default_feature_style, color_expression=None,
                  colormap=None, thresholds=None,
                  colors=None, background=None, masked=None):
         """
@@ -187,7 +187,15 @@ class WindowTrack(Track):
         #print(self.records.columns.to_list().remove("masked"))
         count_columns = self.records.columns.to_list()
         count_columns.remove("masked")
-        self.records["density"] = self.records.loc[:, count_columns] * (float(multiplier) / float(window_size))
+
+        if norm and multiplier:
+            self.records["density"] = self.records.loc[:, count_columns] * (float(multiplier) / float(window_size))
+        elif multiplier:
+            self.records["density"] = self.records.loc[:, count_columns] * float(multiplier)
+        elif norm:
+            self.records["density"] = self.records.loc[:, count_columns] / float(window_size)
+        else:
+            self.records["density"] = self.records.loc[:, count_columns]
 
         self.window_size = window_size
         self.window_step = window_step
