@@ -23,8 +23,8 @@ parser.add_argument("-e", "--output_formats", action="store", dest="output_forma
                     help="Comma-separated list of formats (supported by matlotlib) of "
                          "output figure.Default: svg,png")
 
-parser.add_argument("-l", "--title", action="store", dest="title", default="Variant density",
-                    help="Suptitle of figure. Default: 'Variant density'")
+parser.add_argument("-l", "--title", action="store", dest="title", default="Coverage",
+                    help="Suptitle of figure. Default: 'Coverage'")
 """
 parser.add_argument("-g", "--draw_gaps", action="store_true", dest="draw_gaps",
                     help="Draw gaps, ignored if reference genome is not set. Default: False")
@@ -97,22 +97,22 @@ coverage_df = pd.read_csv(args.input, sep="\t", usecols=(args.scaffold_column_na
 
 scaffold_to_keep = StatsVCF.get_filtered_entry_list(coverage_df.index.get_level_values(level=0).unique().to_list(),
                                                     entry_white_list=args.scaffold_white_list)
-print(scaffold_to_keep)
+#print(scaffold_to_keep)
 coverage_df = coverage_df[coverage_df.index.isin(scaffold_to_keep, level=0)]
 
 chr_len_df = pd.read_csv(args.scaffold_length_file, sep='\t', header=None, names=("scaffold", "length"), index_col=0)
 
 
-print(coverage_df)
+#print(coverage_df)
 
 if args.scaffold_syn_file:
     coverage_df.rename(index=chr_syn_dict, inplace=True)
     chr_len_df.rename(index=chr_syn_dict, inplace=True)
 
-print(chr_syn_dict)
-print(coverage_df)
-print(coverage_df.index)
-print(chr_len_df)
+#print(chr_syn_dict)
+#print(coverage_df)
+#print(coverage_df.index)
+#print(chr_len_df)
 Visualization.draw_coverage_windows(coverage_df, args.window_size, args.window_step, chr_len_df,
                                     args.mean_coverage,
                                     args.output_prefix,
