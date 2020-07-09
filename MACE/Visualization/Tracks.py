@@ -205,9 +205,10 @@ class WindowTrack(Track):
         self.preprocess_data()
 
     def preprocess_data(self):
+        window_index_name = self.records.index.names[0]
         if self.window_type == "stacking":
-            self.records.reset_index(level="WINDOW", inplace=True)
-            self.records["start"] = self.records["WINDOW"] * self.window_step
+            self.records.reset_index(level=window_index_name, inplace=True)
+            self.records["start"] = self.records[window_index_name] * self.window_step
             self.records = self.records[["start"] + list(self.records.columns[:-1])]
 
         elif self.window_type == "sliding":
