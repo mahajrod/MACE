@@ -85,17 +85,24 @@ parser.add_argument("--test_colormaps", action="store_true", dest="test_colormap
 
 args = parser.parse_args()
 
-coverage_df = pd.read_csv(args.input, sep="\t", usecols=(args.scaffold_column_name,
-                                                         args.window_column_name,
-                                                         args.coverage_column_name))
-
-chr_len_df = pd.read_csv(args.scaffold_length_file, sep='\t', header=None)
-
 chr_syn_dict = SynDict(filename=args.scaffold_syn_file,
                        key_index=args.syn_file_key_column,
                        value_index=args.syn_file_value_column)
 
+
+coverage_df = pd.read_csv(args.input, sep="\t", usecols=(args.scaffold_column_name,
+                                                         args.window_column_name,
+                                                         args.coverage_column_name),
+                          index_col=(args.scaffold_column_name, args.window_column_name))
+
+scaffold_to_keep = StatsVCF.get_filtered_entry_list(coverage_df.index.get_level_values(level=0).unique().to_list(),
+                                                    entry_white_list=args.scaffold_white_list)
+coverage_df = coverage_df[coverage_df.index.isin(scaffold_to_keep, level=0)]
+
+chr_len_df = pd.read_csv(args.scaffold_length_file, sep='\t', header=None)
+
 if args.scaffold_syn_file:
+    coverage_df.rename(index=chr_syn_dict, inplace=True)
     chr_len_df.rename(index=chr_syn_dict, inplace=True)
 
 Visualization.draw_coverage_windows(coverage_df, args.window_size, args.window_step, chr_len_df,
