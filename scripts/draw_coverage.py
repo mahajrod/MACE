@@ -111,7 +111,7 @@ if args.scaffold_syn_file:
 
 print(chr_syn_dict)
 print(coverage_df)
-
+print(coverage_df.index)
 Visualization.draw_coverage_windows(coverage_df, args.window_size, args.window_step, chr_len_df,
                                     args.mean_coverage,
                                     args.output_prefix,
