@@ -163,7 +163,7 @@ class Visualization(DrawingRoutines):
                           output_prefix,
                           figure_width=figure_width,
                           figure_height_per_scaffold=figure_height_per_scaffold, dpi=dpi,
-                          colormap=colormap, thresholds=np.array(thresholds) * float(mean_coverage),
+                          colormap=colormap, thresholds=list(np.array(thresholds) * float(mean_coverage)),
                           colors=colors, background=background, masked=False,
                           title=title,
                           extensions=extensions,
