@@ -100,7 +100,7 @@ scaffold_to_keep = StatsVCF.get_filtered_entry_list(coverage_df.index.get_level_
 print(scaffold_to_keep)
 coverage_df = coverage_df[coverage_df.index.isin(scaffold_to_keep, level=0)]
 
-chr_len_df = pd.read_csv(args.scaffold_length_file, sep='\t', header=None)
+chr_len_df = pd.read_csv(args.scaffold_length_file, sep='\t', header=None, names=("scaffold", "length"), index_col=0)
 
 
 print(coverage_df)
