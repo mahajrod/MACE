@@ -113,7 +113,7 @@ Visualization.draw_coverage_windows(coverage_df, args.window_size, args.window_s
                                     extensions=args.output_formats,
                                     scaffold_order_list=args.scaffold_ordered_list,
                                     test_colormaps=args.test_colormaps,
-                                    thresholds=args.density_thresholds)
+                                    thresholds=args.coverage_thresholds)
 
 
 
