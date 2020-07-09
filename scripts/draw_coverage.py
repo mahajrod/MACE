@@ -97,9 +97,13 @@ coverage_df = pd.read_csv(args.input, sep="\t", usecols=(args.scaffold_column_na
 
 scaffold_to_keep = StatsVCF.get_filtered_entry_list(coverage_df.index.get_level_values(level=0).unique().to_list(),
                                                     entry_white_list=args.scaffold_white_list)
+print(scaffold_to_keep)
 coverage_df = coverage_df[coverage_df.index.isin(scaffold_to_keep, level=0)]
 
 chr_len_df = pd.read_csv(args.scaffold_length_file, sep='\t', header=None)
+
+
+print(coverage_df)
 
 if args.scaffold_syn_file:
     coverage_df.rename(index=chr_syn_dict, inplace=True)
