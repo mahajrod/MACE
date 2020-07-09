@@ -109,6 +109,8 @@ if args.scaffold_syn_file:
     coverage_df.rename(index=chr_syn_dict, inplace=True)
     chr_len_df.rename(index=chr_syn_dict, inplace=True)
 
+print(coverage_df)
+
 Visualization.draw_coverage_windows(coverage_df, args.window_size, args.window_step, chr_len_df,
                                     args.mean_coverage,
                                     args.output_prefix,
