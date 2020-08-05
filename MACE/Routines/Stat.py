@@ -101,7 +101,7 @@ class StatsVCF(FileRoutines):
             for sample in collection_vcf.samples:
                 singleton_counts[sample] = 0
 
-                sample_genotype_sum = (collection_vcf.records[[sample]]["GT"] != 0).sum(axis=1)
+                sample_genotype_sum = (collection_vcf.records[sample]["GT"] != 0).sum(axis=1)
 
                 singleton_counts[sample] = (all_genotype_sum == sample_genotype_sum).sum()
             singleton_counts = pd.Series(singleton_counts)
