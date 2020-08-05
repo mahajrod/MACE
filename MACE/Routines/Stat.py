@@ -75,6 +75,23 @@ class StatsVCF(FileRoutines):
                              "Use 'coordinates_and_genotypes', 'genotypes' or 'complete modes'" % collection_vcf.parsing_mode)
 
     @staticmethod
+    def count_variants(collection_vcf, outfile=None):
+        if collection_vcf.parsing_mode in collection_vcf.parsing_modes_with_genotypes:
+            variant_counts = OrderedDict()
+            variant_number = np.shape(collection_vcf.records)[0]
+
+            for sample in collection_vcf.samples:
+                variant_counts[sample] = ((collection_vcf.records[[sample]].xs('GT', axis=1, level=1, drop_level=False) != 0).sum(axis=1) != 0).sum()
+
+            variant_counts = pd.Series(variant_counts)
+            if outfile:
+                variant_counts.to_csv(outfile, sep="\t", header=True, index=True)
+            return variant_counts
+        else:
+            raise ValueError("ERROR!!! Zygoty can't be counted for parsing mode used in CollectionVCF class: %s."
+                             "Use 'coordinates_and_genotypes', 'genotypes' or 'complete' modes" % collection_vcf.parsing_mode)
+
+    @staticmethod
     def count_singletons(collection_vcf, outfile=None):
         if collection_vcf.parsing_mode in collection_vcf.parsing_modes_with_genotypes:
             singleton_counts = OrderedDict()
@@ -93,8 +110,27 @@ class StatsVCF(FileRoutines):
             return singleton_counts
         else:
             raise ValueError("ERROR!!! Zygoty can't be counted for parsing mode used in CollectionVCF class: %s."
-                             "Use 'coordinates_and_genotypes', 'genotypes' or 'complete modes'" % collection_vcf.parsing_mode)
+                             "Use 'coordinates_and_genotypes', 'genotypes' or 'complete' modes" % collection_vcf.parsing_mode)
 
+    @staticmethod
+    def extract_singletons(collection_vcf, output_prefix=None):
+        if collection_vcf.parsing_mode in collection_vcf.parsing_modes_with_genotypes:
+            singleton_df_dict = OrderedDict()
+            variant_number = np.shape(collection_vcf.records)[0]
+
+            all_genotype_sum = (collection_vcf.records[collection_vcf.samples].xs('GT', axis=1, level=1, drop_level=False) != 0).sum(axis=1)
+            for sample in collection_vcf.samples:
+
+                sample_genotype_sum = (collection_vcf.records[[sample]].xs('GT', axis=1, level=1, drop_level=False) != 0).sum(axis=1)
+
+                singleton_df_dict[sample] = collection_vcf[(all_genotype_sum == sample_genotype_sum)]
+            if output_prefix:
+                for sample in collection_vcf.samples:
+                    singleton_df_dict[sample].to_csv("%s.singletons.%s.tsv".format(output_prefix, sample), sep="\t", header=True, index=True)
+            return singleton_df_dict
+        else:
+            raise ValueError("ERROR!!! Zygoty can't be counted for parsing mode used in CollectionVCF class: %s."
+                             "Use 'coordinates_and_genotypes', 'genotypes' or 'complete' modes" % collection_vcf.parsing_mode)
     # ------------------------------------ General stats end ------------------------------------------
 
     # ------------------------------------ Window-based stats -----------------------------------------
