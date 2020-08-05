@@ -81,7 +81,7 @@ class StatsVCF(FileRoutines):
             variant_number = np.shape(collection_vcf.records)[0]
 
             for sample in collection_vcf.samples:
-                variant_counts[sample] = ((collection_vcf.records[[sample]].xs('GT', axis=1, level=1, drop_level=False) != 0).sum(axis=1) != 0).sum()
+                variant_counts[sample] = (collection_vcf.records[sample]["GT"].sum(axis=1) != 0).sum()
 
             variant_counts = pd.Series(variant_counts)
             if outfile:
@@ -101,7 +101,7 @@ class StatsVCF(FileRoutines):
             for sample in collection_vcf.samples:
                 singleton_counts[sample] = 0
 
-                sample_genotype_sum = (collection_vcf.records[[sample]].xs('GT', axis=1, level=1, drop_level=False) != 0).sum(axis=1)
+                sample_genotype_sum = (collection_vcf.records[[sample]]["GT"] != 0).sum(axis=1)
 
                 singleton_counts[sample] = (all_genotype_sum == sample_genotype_sum).sum()
             singleton_counts = pd.Series(singleton_counts)
