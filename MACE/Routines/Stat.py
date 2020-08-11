@@ -127,6 +127,7 @@ class StatsVCF(FileRoutines):
 
             singleton_counts_df = pd.DataFrame(singleton_counts_df, index=["double", "hetero", "homo"]).transpose()
             singleton_counts_df["all"] = singleton_counts_df.apply(sum, axis=1)
+            singleton_counts.index.name = "sample"
 
             for index, typeeee in zip([0,1,2], ("dosi", "hesi", "hosi")):
                 df_list[index].columns = pd.MultiIndex.from_arrays([collection_vcf.samples,
