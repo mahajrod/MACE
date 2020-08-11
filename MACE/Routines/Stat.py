@@ -93,6 +93,12 @@ class StatsVCF(FileRoutines):
 
     @staticmethod
     def count_singletons(collection_vcf, output_prefix=None):
+        """
+        Works on diploid(!!!) genomes only
+        :param collection_vcf:
+        :param output_prefix:
+        :return:
+        """
         if collection_vcf.parsing_mode in collection_vcf.parsing_modes_with_genotypes:
             singleton_counts = OrderedDict()
 
@@ -116,11 +122,19 @@ class StatsVCF(FileRoutines):
             df_list = []
             singleton_counts_df = []
             for df in double_singleton_df, het_singleton_df, hom_singleton_df:#, singleton_df:
-                df_list.append(pd.DataFrame.from_records(df, columns=collection_vcf.samples))
+                df_list.append(pd.DataFrame.from_records(df, columns=collection_vcf.samples, index=collection_vcf.records.index))
                 singleton_counts_df.append(df_list[-1].sum())
 
             singleton_counts_df = pd.DataFrame(singleton_counts_df, index=["double", "hetero", "homo"]).transpose()
             singleton_counts_df["all"] = singleton_counts_df.apply(sum, axis=1)
+
+            for index, typeeee in zip([0,1,2], ("dosi", "hesi", "hosi")):
+                df_list[index].columns = pd.MultiIndex.from_arrays([collection_vcf.samples,
+                                                                   [typeeee] * len(collection_vcf.samples),
+                                                                   np.zeros(len(collection_vcf.samples), dtype=int)])
+
+            merged_df = pd.concat([collection_vcf.records] + df_list, axis = 1)
+
             """
             all_genotype_sum = (collection_vcf.records[collection_vcf.samples].xs('GT', axis=1, level=1, drop_level=False).fillna(0) != 0).sum(axis=1)
             for sample in collection_vcf.samples:
@@ -137,7 +151,10 @@ class StatsVCF(FileRoutines):
 
             if output_prefix:
                 singleton_counts_df.to_csv("%s.singletons.counts" % output_prefix, sep="\t", header=True, index=True)
-            return singleton_counts_df
+                merged_df["POS"] += 1
+                merged_df.reset_index(level=1, drop=True, inplace=True)
+                merged_df.to_csv("%s.singletons.df" % output_prefix, sep="\t", header=True, index=True)
+            return singleton_counts_df, merged_df
         else:
             raise ValueError("ERROR!!! Zygoty can't be counted for parsing mode used in CollectionVCF class: %s."
                              "Use 'coordinates_and_genotypes', 'genotypes' or 'complete' modes" % collection_vcf.parsing_mode)
