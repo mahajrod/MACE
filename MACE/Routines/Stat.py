@@ -92,22 +92,52 @@ class StatsVCF(FileRoutines):
                              "Use 'coordinates_and_genotypes', 'genotypes' or 'complete' modes" % collection_vcf.parsing_mode)
 
     @staticmethod
-    def count_singletons(collection_vcf, outfile=None):
+    def count_singletons(collection_vcf, output_prefix=None):
         if collection_vcf.parsing_mode in collection_vcf.parsing_modes_with_genotypes:
             singleton_counts = OrderedDict()
-            variant_number = np.shape(collection_vcf.records)[0]
 
-            all_genotype_sum = (collection_vcf.records[collection_vcf.samples].xs('GT', axis=1, level=1, drop_level=False) != 0).sum(axis=1)
+            double_singleton_df = []
+            het_singleton_df = []
+            hom_singleton_df = []
+            #singleton_df = []
+
+            for element in collection_vcf.records[collection_vcf.samples].fillna(0).itertuples(index=False, name=None):
+                # ele_dict = dict(numpy.unique(a, return_counts=True))
+                ele_arr = np.array(element)
+                count_dict = dict(zip(*np.unique(ele_arr, return_counts=True)))
+                counts = np.array([count_dict[entry] for entry in ele_arr])
+
+                unique_mask = counts == 1
+                double_singleton_df.append(unique_mask[::2] & unique_mask[1:][::2])
+                het_singleton_df.append(unique_mask[::2] != unique_mask[1:][::2])
+                hom_singleton_df.append((counts == 2)[::2] & (ele_arr[::2] == ele_arr[1:][::2]))  # check if allel is double and if it is homozygote
+                #singleton_df.append(double_singleton_df[-1] | het_singleton_df[-1] | hom_singleton_df[-1])
+
+            df_list = []
+            singleton_counts_df = []
+            for df in double_singleton_df, het_singleton_df, hom_singleton_df:#, singleton_df:
+                df_list.append(pd.DataFrame.from_records(df, columns=collection_vcf.samples))
+                singleton_counts_df.append(df_list[-1].sum())
+
+            singleton_counts_df = pd.DataFrame(singleton_counts_df, index=["double", "hetero", "homo"]).transpose()
+            singleton_counts_df["all"] = singleton_counts_df.apply(sum, axis=1)
+            """
+            all_genotype_sum = (collection_vcf.records[collection_vcf.samples].xs('GT', axis=1, level=1, drop_level=False).fillna(0) != 0).sum(axis=1)
             for sample in collection_vcf.samples:
                 singleton_counts[sample] = 0
 
-                sample_genotype_sum = (collection_vcf.records[sample]["GT"] != 0).sum(axis=1)
-
-                singleton_counts[sample] = (all_genotype_sum == sample_genotype_sum).sum()
+                sample_genotype_sum = (collection_vcf.records[sample]["GT"].fillna(0) != 0).sum(axis=1)
+                singleton_mask = (all_genotype_sum == sample_genotype_sum)
+                singleton_counts[sample] = singleton_mask.sum()
+                if output_prefix:
+                    pass
             singleton_counts = pd.Series(singleton_counts)
-            if outfile:
-                singleton_counts.to_csv(outfile, sep="\t", header=True, index=True)
-            return singleton_counts
+
+            """
+
+            if output_prefix:
+                singleton_counts_df.to_csv("%s.singletons.counts" % output_prefix, sep="\t", header=True, index=True)
+            return singleton_counts_df
         else:
             raise ValueError("ERROR!!! Zygoty can't be counted for parsing mode used in CollectionVCF class: %s."
                              "Use 'coordinates_and_genotypes', 'genotypes' or 'complete' modes" % collection_vcf.parsing_mode)
