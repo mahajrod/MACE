@@ -154,6 +154,8 @@ class StatsVCF(FileRoutines):
                 merged_df["POS"] += 1
                 merged_df.reset_index(level=1, drop=True, inplace=True)
                 merged_df.to_csv("%s.singletons.df" % output_prefix, sep="\t", header=True, index=True)
+            merged_df["POS"] -= 1
+
             return singleton_counts_df, merged_df
         else:
             raise ValueError("ERROR!!! Zygoty can't be counted for parsing mode used in CollectionVCF class: %s."
