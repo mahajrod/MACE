@@ -208,7 +208,8 @@ class Visualization(DrawingRoutines):
                     legend = DensityLegend(colormap=colormap_entry,
                                            thresholds=thresholds)
                 elif plot_type == "coverage":
-                    pass
+                    legend = CoverageLegend(colormap=colormap_entry,
+                                            thresholds=thresholds)
                 # TODO: replace color recalculation for whole dataframe by replacenments in category
                 for chr in scaffolds: # count_df.index.get_level_values(level=0).unique():
                     track_group_dict[chr] = TrackGroup(
@@ -232,10 +233,11 @@ class Visualization(DrawingRoutines):
                 plt.close(1)
         else:
             if plot_type == "densities":
+                legend = DensityLegend(colormap=colormap,
+                                       thresholds=thresholds)
+            elif plot_type == "coverage":
                 legend = CoverageLegend(colormap=colormap,
                                         thresholds=thresholds)
-            elif plot_type == "coverage":
-                pass
 
             for chr in scaffolds:  # count_df.index.get_level_values(level=0).unique():
                 track_group_dict[chr] = TrackGroup(
