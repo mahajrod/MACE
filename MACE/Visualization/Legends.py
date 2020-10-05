@@ -115,7 +115,7 @@ class CoverageLegend(Legend):
 
         square_y_pos = self.y_start - self.element_size
 
-        for color, legend_label in zip((self.masked, self.background), ("masked",)):
+        for color, legend_label in zip((self.masked, self.background), ("masked", "no coverage")):
             square_y_pos += self.element_size
             #print (self.x_start, square_y_pos), self.x_size, self.element_size, color
             fragment = Rectangle((self.x_start - 2 * self.x_size, square_y_pos), self.x_size, self.element_size,
