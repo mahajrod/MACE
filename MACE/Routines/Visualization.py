@@ -21,7 +21,7 @@ from MACE.Visualization.TrackGroups import TrackGroup
 from MACE.Visualization.Subplots import Subplot
 from MACE.Visualization.Figures import Figure
 
-from MACE.Visualization.Legends import DensityLegend, FeatureLegend
+from MACE.Visualization.Legends import DensityLegend, FeatureLegend, CoverageLegend
 from MACE.Functions.Generators import recursive_generator
 from MACE.Visualization.Styles.Subplot import chromosome_subplot_style
 from MACE.Visualization.Styles.Figure import plot_figure_style, rainfall_figure_style, chromosome_figure_style, one_plot_figure_style
@@ -171,6 +171,7 @@ class Visualization(DrawingRoutines):
         self.draw_windows(cov_df, window_size, window_step, scaffold_length_df,
                           output_prefix,
                           figure_width=figure_width,
+                          plot_type="coverage",
                           figure_height_per_scaffold=figure_height_per_scaffold, dpi=dpi,
                           colormap=colormap, thresholds=final_thresholds,
                           colors=colors, background=background, masked=False,
@@ -184,6 +185,7 @@ class Visualization(DrawingRoutines):
 
     def draw_windows(self, count_df, window_size, window_step, scaffold_length_df,
                      output_prefix,
+                     plot_type="densities",
                      figure_width=15, figure_height_per_scaffold=0.5, dpi=300,
                      colormap=None, thresholds=None, colors=None, background=None, masked=None,
                      title=None,
@@ -198,9 +200,15 @@ class Visualization(DrawingRoutines):
         window_step_final = window_step if window_step else window_size
         scaffolds = scaffold_order_list[::-1] if scaffold_order_list else count_df.index.get_level_values(level=0).unique().to_list()
         scaffold_number = len(scaffolds)
+
         if test_colormaps:
             for colormap_entry in self.colormap_list:
                 print("%s\tDrawing using %s colormap..." % (str(datetime.datetime.now()), colormap_entry))
+                if plot_type == "densities":
+                    legend = DensityLegend(colormap=colormap_entry,
+                                           thresholds=thresholds)
+                elif plot_type == "coverage":
+                    pass
                 # TODO: replace color recalculation for whole dataframe by replacenments in category
                 for chr in scaffolds: # count_df.index.get_level_values(level=0).unique():
                     track_group_dict[chr] = TrackGroup(
@@ -213,8 +221,7 @@ class Visualization(DrawingRoutines):
                 chromosome_subplot = Subplot(track_group_dict,
                                              title=(title + " (colormap %s)" % colormap_entry) if title else "Colormap %s" % colormap_entry,
                                              style=chromosome_subplot_style,
-                                             legend=DensityLegend(colormap=colormap_entry,
-                                                                  thresholds=thresholds))
+                                             legend=legend)
 
                 plt.figure(1, figsize=(figure_width, int(scaffold_number*figure_height_per_scaffold)), dpi=dpi)
 
@@ -224,6 +231,12 @@ class Visualization(DrawingRoutines):
                     plt.savefig("%s.%s.%s" % (output_prefix, colormap_entry, ext))
                 plt.close(1)
         else:
+            if plot_type == "densities":
+                legend = CoverageLegend(colormap=colormap,
+                                        thresholds=thresholds)
+            elif plot_type == "coverage":
+                pass
+
             for chr in scaffolds:  # count_df.index.get_level_values(level=0).unique():
                 track_group_dict[chr] = TrackGroup(
                     {chr: WindowTrack(count_df.xs(chr), window_size, window_step_final, x_end=scaffold_length_df.loc[chr][0],
@@ -233,8 +246,7 @@ class Visualization(DrawingRoutines):
             # track_group_dict
             # track_group_dict["chr13"]
             chromosome_subplot = Subplot(track_group_dict, title=title, style=chromosome_subplot_style,
-                                         legend=DensityLegend(colormap=colormap,
-                                                              thresholds=thresholds))
+                                         legend=legend)
 
             plt.figure(1, figsize=(figure_width, int(scaffold_number * figure_height_per_scaffold)), dpi=dpi)
 
