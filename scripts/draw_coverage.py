@@ -33,7 +33,7 @@ parser.add_argument("-m", "--mean_coverage", action="store", dest="mean_coverage
                     help="Mean/median coverage to use")
 
 parser.add_argument("--scaffold_column_name", action="store", dest="scaffold_column_name", default="scaffold",
-                    help="Name of column in coverage file with scaffold ids per window. Default: median")
+                    help="Name of column in coverage file with scaffold ids per window. Default: scaffold")
 parser.add_argument("--window_column_name", action="store", dest="window_column_name", default="window",
                     help="Name of column in coverage file with window id. Default: window")
 parser.add_argument("--coverage_column_name", action="store", dest="coverage_column_name", default="median",
