@@ -157,13 +157,22 @@ class Visualization(DrawingRoutines):
                               extensions=("png", ),
                               scaffold_order_list=None,
                               test_colormaps=False,
-                              multiplier=None):
+                              multiplier=None,
+                              absolute_coverage_values=False):
+        if absolute_coverage_values:
+            cov_df = count_df
+            final_thresholds = list(np.array(thresholds) * float(mean_coverage))
 
-        self.draw_windows(count_df, window_size, window_step, scaffold_length_df,
+        else:
+            cov_df = count_df.copy(deep=True)
+            cov_df = cov_df/ mean_coverage
+            final_thresholds = list(np.array(thresholds))
+
+        self.draw_windows(cov_df, window_size, window_step, scaffold_length_df,
                           output_prefix,
                           figure_width=figure_width,
                           figure_height_per_scaffold=figure_height_per_scaffold, dpi=dpi,
-                          colormap=colormap, thresholds=list(np.array(thresholds) * float(mean_coverage)),
+                          colormap=colormap, thresholds=final_thresholds,
                           colors=colors, background=background, masked=False,
                           title=title,
                           extensions=extensions,
