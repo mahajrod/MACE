@@ -159,6 +159,7 @@ class Visualization(DrawingRoutines):
                               test_colormaps=False,
                               multiplier=None,
                               absolute_coverage_values=False):
+        print (count_df)
         if absolute_coverage_values:
             cov_df = count_df
             final_thresholds = list(np.array(thresholds) * float(mean_coverage))
