@@ -104,8 +104,10 @@ coverage_df = coverage_df[coverage_df.index.isin(scaffold_to_keep, level=0)]
 
 chr_len_df = pd.read_csv(args.scaffold_length_file, sep='\t', header=None, names=("scaffold", "length"), index_col=0)
 
-
-#print(coverage_df)
+print(args.scaffold_column_name,
+                                                         args.window_column_name,
+                                                         args.coverage_column_name)
+print(coverage_df)
 
 if args.scaffold_syn_file:
     coverage_df.rename(index=chr_syn_dict, inplace=True)
