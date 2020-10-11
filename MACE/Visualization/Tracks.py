@@ -108,6 +108,7 @@ class Track:
         self.records["color"] = map(expression if expression else self.color_threshold_expression,
                                     self.records[value_column_name].to_list() if value_column_name else self.records.iloc[:, value_column_index].to_list())
         self.records["color"].astype('category', copy=False)
+        print(self.records["color"])
         if masking and ("masked" in self.records.columns):
             self.records.loc[self.records["masked"] == True, "color"] = self.style.masked
 
