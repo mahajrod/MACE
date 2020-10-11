@@ -105,8 +105,8 @@ class Track:
 
     def add_color(self, expression=None, value_column_index=-1, value_column_name=None, masking=True):
 
-        self.records["color"] = map(expression if expression else self.color_threshold_expression,
-                                    self.records[value_column_name].to_list() if value_column_name else self.records.iloc[:, value_column_index].to_list())
+        self.records["color"] = list(map(expression if expression else self.color_threshold_expression,
+                                    self.records[value_column_name].to_list() if value_column_name else self.records.iloc[:, value_column_index].to_list()))
         self.records["color"].astype('category', copy=False)
         print(self.records["color"])
         if masking and ("masked" in self.records.columns):
