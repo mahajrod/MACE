@@ -26,7 +26,9 @@ parser.add_argument("-e", "--output_formats", action="store", dest="output_forma
 parser.add_argument("-l", "--title", action="store", dest="title",
                     default=None,
                     help="Title of figure. Default: not set")
-
+parser.add_argument("-m", "--parsing_mode", action="store", dest="parsing_mode",
+                    default="genotypes",
+                    help="Parsing mode. Allowed: genotypes(default), 'coordinates_and_genotypes', 'complete'")
 """
 parser.add_argument("-a", "--scaffold_white_list", action="store", dest="scaffold_white_list", default=[],
                     type=lambda s: s.split(","),
@@ -37,7 +39,7 @@ parser.add_argument("-b", "--scaffold_black_list", action="store", dest="scaffol
 """
 args = parser.parse_args()
 
-mutations = CollectionVCF(args.input, parsing_mode="coordinates_and_genotypes")
+mutations = CollectionVCF(args.input, parsing_mode="genotypes")
 StatsVCF.count_singletons(collection_vcf=mutations, output_prefix=args.output_prefix)
 
 

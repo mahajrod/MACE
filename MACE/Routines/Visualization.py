@@ -158,14 +158,19 @@ class Visualization(DrawingRoutines):
                               scaffold_order_list=None,
                               test_colormaps=False,
                               multiplier=None,
-                              absolute_coverage_values=False):
+                              absolute_coverage_values=False,
+                              subplots_adjust_left=None,
+                              subplots_adjust_bottom=None,
+                              subplots_adjust_right=None,
+                              subplots_adjust_top=None,
+                              ):
         if absolute_coverage_values:
             cov_df = count_df
             final_thresholds = list(np.array(thresholds) * float(mean_coverage))
 
         else:
             cov_df = count_df.copy(deep=True)
-            cov_df = cov_df/ mean_coverage
+            cov_df = cov_df / mean_coverage
             final_thresholds = list(np.array(thresholds))
 
         self.draw_windows(cov_df, window_size, window_step, scaffold_length_df,
@@ -181,7 +186,12 @@ class Visualization(DrawingRoutines):
                           test_colormaps=test_colormaps,
                           masking=False,
                           multiplier=multiplier,
-                          norm=False)
+                          norm=False,
+                          subplots_adjust_left=subplots_adjust_left,
+                          subplots_adjust_bottom=subplots_adjust_bottom,
+                          subplots_adjust_right=subplots_adjust_right,
+                          subplots_adjust_top=subplots_adjust_top,
+                          )
 
     def draw_windows(self, count_df, window_size, window_step, scaffold_length_df,
                      output_prefix,
@@ -194,7 +204,11 @@ class Visualization(DrawingRoutines):
                      test_colormaps=False,
                      masking=True,
                      multiplier=None,
-                     norm=False):
+                     norm=False,
+                     subplots_adjust_left=None,
+                     subplots_adjust_bottom=None,
+                     subplots_adjust_right=None,
+                     subplots_adjust_top=None,):
 
         track_group_dict = OrderedDict()
         window_step_final = window_step if window_step else window_size
@@ -227,6 +241,8 @@ class Visualization(DrawingRoutines):
                 plt.figure(1, figsize=(figure_width, int(scaffold_number*figure_height_per_scaffold)), dpi=dpi)
 
                 chromosome_subplot.draw()
+                plt.subplots_adjust(left=subplots_adjust_left, right=subplots_adjust_right,
+                                    top=subplots_adjust_top, bottom=subplots_adjust_bottom)
 
                 for ext in extensions:
                     plt.savefig("%s.%s.%s" % (output_prefix, colormap_entry, ext))
@@ -253,7 +269,8 @@ class Visualization(DrawingRoutines):
             plt.figure(1, figsize=(figure_width, int(scaffold_number * figure_height_per_scaffold)), dpi=dpi)
 
             chromosome_subplot.draw()
-
+            plt.subplots_adjust(left=subplots_adjust_left, right=subplots_adjust_right,
+                                top=subplots_adjust_top, bottom=subplots_adjust_bottom)
             for ext in extensions:
                 plt.savefig("%s.%s" % (output_prefix, ext))
 
