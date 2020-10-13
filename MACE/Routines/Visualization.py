@@ -131,7 +131,12 @@ class Visualization(DrawingRoutines):
                                       scaffold_order_list=None,
                                       test_colormaps=False,
                                       masking=True,
-                                      multiplier=1000):
+                                      multiplier=1000,
+                                      subplots_adjust_left=None,
+                                      subplots_adjust_bottom=None,
+                                      subplots_adjust_right=None,
+                                      subplots_adjust_top=None,
+                                      ):
 
         self.draw_windows(count_df, window_size, window_step, scaffold_length_df,
                           output_prefix,
@@ -145,7 +150,12 @@ class Visualization(DrawingRoutines):
                           test_colormaps=test_colormaps,
                           masking=masking,
                           multiplier=multiplier,
-                          norm=True)
+                          norm=True,
+                          subplots_adjust_left=subplots_adjust_left,
+                          subplots_adjust_bottom=subplots_adjust_bottom,
+                          subplots_adjust_right=subplots_adjust_right,
+                          subplots_adjust_top=subplots_adjust_top,
+                          )
 
     def draw_coverage_windows(self, count_df, window_size, window_step, scaffold_length_df,
                               mean_coverage,
