@@ -111,6 +111,15 @@ parser.add_argument("--density_thresholds", action="store", dest="density_thresh
 parser.add_argument("--test_colormaps", action="store_true", dest="test_colormaps",
                     help="Test colormaps. If set --colormap option will be ignored")
 
+parser.add_argument("--subplots_adjust_left", action="store", dest="subplots_adjust_left", type=float,
+                    help="Adjust left border of subplots on the figure. Default: matplotlib defaults")
+parser.add_argument("--subplots_adjust_top", action="store", dest="subplots_adjust_top", type=float,
+                    help="Adjust top border of subplots on the figure. Default: matplotlib defaults")
+parser.add_argument("--subplots_adjust_right", action="store", dest="subplots_adjust_right", type=float,
+                    help="Adjust right border of subplots on the figure. Default: matplotlib defaults")
+parser.add_argument("--subplots_adjust_bottom", action="store", dest="subplots_adjust_bottom", type=float,
+                    help="Adjust bottom border of subplots on the figure. Default: matplotlib defaults")
+
 args = parser.parse_args()
 
 variants = CollectionVCF(args.input, parsing_mode="only_coordinates")
@@ -173,4 +182,9 @@ Visualization.draw_variant_window_densities(count_df, args.window_size, args.win
                                             scaffold_order_list=args.scaffold_ordered_list,
                                             test_colormaps=args.test_colormaps,
                                             thresholds=args.density_thresholds,
-                                            masking=True if args.coverage else False)
+                                            masking=True if args.coverage else False,
+                                            subplots_adjust_left=args.subplots_adjust_left,
+                                            subplots_adjust_bottom=args.subplots_adjust_bottom,
+                                            subplots_adjust_right=args.subplots_adjust_right,
+                                            subplots_adjust_top=args.subplots_adjust_top
+                                            )
