@@ -266,8 +266,9 @@ class Visualization(DrawingRoutines):
                                         thresholds=thresholds)
 
             for chr in scaffolds:  # count_df.index.get_level_values(level=0).unique():
+
                 track_group_dict[chr] = TrackGroup(
-                    {chr: WindowTrack(count_df.xs(chr), window_size, window_step_final, x_end=scaffold_length_df.loc[chr][0],
+                    {chr: WindowTrack(count_df.xs(chr), window_size, window_step_final, x_end=scaffold_length_df.loc[chr].iloc[0],
                                       multiplier=multiplier, label=chr, colormap=colormap, thresholds=thresholds,
                                       colors=colors, background=background, masked=masked, norm=norm)})
                 track_group_dict[chr][chr].add_color(masking=masking)
