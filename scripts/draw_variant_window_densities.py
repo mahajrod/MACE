@@ -46,7 +46,7 @@ parser.add_argument("--window_column_name", action="store", dest="window_column_
 parser.add_argument("--coverage_column_name", action="store", dest="coverage_column_name", default="median",
                     help="Name of column in coverage file with mean/median coverage per window. Default: median")
 parser.add_argument("-m", "--mean_coverage", action="store", dest="mean_coverage",
-                    type=float, required=True,
+                    type=float,
                     help="Comma-separated list of mean coverage.")
 parser.add_argument("-x", "--max_coverage_threshold", action="store", dest="max_coverage_threshold", type=float, default=2.5,
                     help="Maximum coverage threshold to treat position as unmasked. Default: 2.5 * mean")
