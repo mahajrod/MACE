@@ -119,6 +119,8 @@ parser.add_argument("--subplots_adjust_right", action="store", dest="subplots_ad
                     help="Adjust right border of subplots on the figure. Default: matplotlib defaults")
 parser.add_argument("--subplots_adjust_bottom", action="store", dest="subplots_adjust_bottom", type=float,
                     help="Adjust bottom border of subplots on the figure. Default: matplotlib defaults")
+parser.add_argument("--only_count", action="store_true", dest="only_count", default=False,
+                    help="Only count variants, do not draw them. Default: False")
 
 args = parser.parse_args()
 
@@ -150,42 +152,44 @@ count_df = StatsVCF.count_variants_in_windows(variants, args.window_size, args.w
                                               skip_empty_windows=False, expression=None, per_sample_output=False,
                                               scaffold_white_list=args.scaffold_white_list,
                                               scaffold_syn_dict=chr_syn_dict)
-if args.coverage:
-    masking_df = pd.read_csv(args.coverage, usecols=(args.scaffold_column_name,
-                                                     args.window_column_name,
-                                                      args.coverage_column_name),
-                             index_col=(args.scaffold_column_name, args.window_column_name),
-                             sep="\t")
-    scaffold_to_keep = StatsVCF.get_filtered_entry_list(masking_df.index.get_level_values(level=0).unique().to_list(),
-                                                        entry_white_list=args.scaffold_white_list)
-    masking_df = masking_df[masking_df.index.isin(scaffold_to_keep, level=0)]
-    #print(scaffold_to_keep)
-    if chr_syn_dict:
-        masking_df.rename(index=chr_syn_dict, inplace=True)
-    #print("aaaaaaaa")
-    #print(masking_df)
+if not args.only_count:
 
-    min_threshold = args.mean_coverage * args.min_coverage_threshold
-    max_threshold = args.mean_coverage * args.max_coverage_threshold
-    count_df["masked"] = (masking_df[args.coverage_column_name] < min_threshold) | (masking_df[args.coverage_column_name] > max_threshold)
-    #print(masking_df)
-    #print(count_df)
-    count_df.to_csv("%s.variant_counts.with_masking.tsv" % args.output_prefix, sep='\t', header=True, index=True)
+    if args.coverage:
+        masking_df = pd.read_csv(args.coverage, usecols=(args.scaffold_column_name,
+                                                         args.window_column_name,
+                                                          args.coverage_column_name),
+                                 index_col=(args.scaffold_column_name, args.window_column_name),
+                                 sep="\t")
+        scaffold_to_keep = StatsVCF.get_filtered_entry_list(masking_df.index.get_level_values(level=0).unique().to_list(),
+                                                            entry_white_list=args.scaffold_white_list)
+        masking_df = masking_df[masking_df.index.isin(scaffold_to_keep, level=0)]
+        #print(scaffold_to_keep)
+        if chr_syn_dict:
+            masking_df.rename(index=chr_syn_dict, inplace=True)
+        #print("aaaaaaaa")
+        #print(masking_df)
+
+        min_threshold = args.mean_coverage * args.min_coverage_threshold
+        max_threshold = args.mean_coverage * args.max_coverage_threshold
+        count_df["masked"] = (masking_df[args.coverage_column_name] < min_threshold) | (masking_df[args.coverage_column_name] > max_threshold)
+        #print(masking_df)
+        #print(count_df)
+        count_df.to_csv("%s.variant_counts.with_masking.tsv" % args.output_prefix, sep='\t', header=True, index=True)
 
 
-Visualization.draw_variant_window_densities(count_df, args.window_size, args.window_step, chr_len_df,
-                                            args.output_prefix,
-                                            figure_width=15,
-                                            figure_height_per_scaffold=0.5,
-                                            dpi=300,
-                                            colormap=args.colormap, title=args.title,
-                                            extensions=args.output_formats,
-                                            scaffold_order_list=args.scaffold_ordered_list,
-                                            test_colormaps=args.test_colormaps,
-                                            thresholds=args.density_thresholds,
-                                            masking=True if args.coverage else False,
-                                            subplots_adjust_left=args.subplots_adjust_left,
-                                            subplots_adjust_bottom=args.subplots_adjust_bottom,
-                                            subplots_adjust_right=args.subplots_adjust_right,
-                                            subplots_adjust_top=args.subplots_adjust_top
-                                            )
+    Visualization.draw_variant_window_densities(count_df, args.window_size, args.window_step, chr_len_df,
+                                                args.output_prefix,
+                                                figure_width=15,
+                                                figure_height_per_scaffold=0.5,
+                                                dpi=300,
+                                                colormap=args.colormap, title=args.title,
+                                                extensions=args.output_formats,
+                                                scaffold_order_list=args.scaffold_ordered_list,
+                                                test_colormaps=args.test_colormaps,
+                                                thresholds=args.density_thresholds,
+                                                masking=True if args.coverage else False,
+                                                subplots_adjust_left=args.subplots_adjust_left,
+                                                subplots_adjust_bottom=args.subplots_adjust_bottom,
+                                                subplots_adjust_right=args.subplots_adjust_right,
+                                                subplots_adjust_top=args.subplots_adjust_top
+                                                )
