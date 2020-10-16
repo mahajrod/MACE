@@ -83,12 +83,12 @@ fig, ax = plt.subplots(figsize=args.size_of_figure, dpi=args.dpi)
 plt.xticks(rotation=args.rotation)
 plt.boxplot([df_dict[entry]["density"] for entry in df_dict], labels=list(df_dict.keys()))
 
-plt.ylim(ymax=args.ymax, ymin=args.ymin)
+
 plt.yticks(args.yticklist)
 if args.horizontal_lines:
     for ycoord in args.horizontal_lines:
         plt.axhline(y=ycoord, color="red", linestyle="--", linewidth=0.5)
-
+plt.ylim(ymax=args.ymax, ymin=args.ymin)
 plt.subplots_adjust(left=args.subplots_adjust_left, right=args.subplots_adjust_right,
                     top=args.subplots_adjust_top, bottom=args.subplots_adjust_bottom)
 
