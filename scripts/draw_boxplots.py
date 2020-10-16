@@ -39,7 +39,7 @@ parser.add_argument("--ymin", action="store", dest="ymin", type=float, default=-
                     help="Minimum limit for Y axis . Default: -0.1")
 parser.add_argument("--ymax",  action="store", dest="ymax", type=float, default=None,
                     help="Maximum limit for Y axis. Default: not set")
-parser.add_argument("--yticklist",  action="store", dest="yticklist", type=lambda s: list(map(float, s.split())),
+parser.add_argument("--yticklist",  action="store", dest="yticklist", type=lambda s: list(map(float, s.split(","))),
                     default=[0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.25, 1.5, 2, 3, 4, 5],
                     help="Comma-separated tick list for Y axis. "
                          "Default: 0.05,0.0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0,1.25,1.5,2,3,4,5")
