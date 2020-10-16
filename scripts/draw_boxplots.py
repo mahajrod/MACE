@@ -17,9 +17,10 @@ parser.add_argument("-o", "--output_prefix", action="store", dest="output_prefix
 parser.add_argument("-d", "--dpi", action="store", dest="dpi", type=int, default=300,
                     help="Dpi of figure")
 
-parser.add_argument("-f", "--size_of_figure", action="store", dest="size_of_figure", type=lambda s: s.split(","),
-                    default=(6, 12),
-                    help="Size of figure in inches. X and Y values should be separated by comma. Default: 6,12")
+parser.add_argument("--figure_height", action="store", dest="figure_height", type=float, default=6.0,
+                    help="Height of figure in inches. Default: 6")
+parser.add_argument("--figure_width_per_sample", action="store", dest="figure_width_per_sample", type=float, default=1,
+                    help="Per sample width of figure in inches. Default: 1")
 
 parser.add_argument("-e", "--output_formats", action="store", dest="output_formats", type=lambda s: s.split(","),
                     default=("png", ),
@@ -80,7 +81,7 @@ for entry in file_dict:
     df_dict[entry] = pd.read_csv(file_dict[entry], sep="\t", index_col=["CHROM",])
     df_dict[entry]["density"] = df_dict[entry]["All"] / args.window_size * args.multiplicator
 
-fig, ax = plt.subplots(figsize=args.size_of_figure, dpi=args.dpi)
+fig, ax = plt.subplots(figsize=(args.figure_width_per_sample * len(file_dict), args.figure_height), dpi=args.dpi)
 plt.xticks(rotation=args.rotation)
 plt.boxplot([df_dict[entry]["density"] for entry in df_dict], labels=list(df_dict.keys()))
 
