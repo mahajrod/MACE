@@ -28,9 +28,10 @@ parser.add_argument("-e", "--output_formats", action="store", dest="output_forma
 
 parser.add_argument("-l", "--title", action="store", dest="title", default="Variant density",
                     help="Suptitle of figure. Default: 'Variant density'")
-
-parser.add_argument("--denominator", action="store", dest="denominator", default=1000, type=float,
-                    help="Denominator for variant counts. "
+parser.add_argument("-w", "--window_size", action="store", dest="window_size", required=True, type=float,
+                    help="Size of the windows use for counts.")
+parser.add_argument("-m", "--multiplicator", action="store", dest="multiplicator", default=1000, type=float,
+                    help="Multiplicator for variant counts. "
                          "Default: 1000, i.e variant counts will be scaled to per 1 kbp ")
 
 parser.add_argument("--ymin", action="store", dest="ymin", type=float, default=-0.1,
@@ -77,7 +78,7 @@ with open(args.input, "r") as in_fd:
 df_dict = OrderedDict({})
 for entry in file_dict:
     df_dict[entry] = pd.read_csv(file_dict[entry], sep="\t", index_col=["CHROM",])
-    df_dict[entry]["density"] = df_dict[entry]["All"] / args.denominator
+    df_dict[entry]["density"] = df_dict[entry]["All"] / arg.window_size * args.multiplicator
 
 fig, ax = plt.subplots(figsize=args.size_of_figure, dpi=args.dpi)
 plt.xticks(rotation=args.rotation)
