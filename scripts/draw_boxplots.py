@@ -72,7 +72,7 @@ parser.add_argument("--only_count", action="store_true", dest="only_count", defa
 args = parser.parse_args()
 
 with open(args.input, "r") as in_fd:
-    file_dict = OrderedDict([line.split("\t") for line in in_fd ])
+    file_dict = OrderedDict([line.strip().split("\t") for line in in_fd ])
 
 df_dict = OrderedDict({})
 for entry in file_dict:
