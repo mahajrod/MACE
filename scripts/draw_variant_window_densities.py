@@ -4,9 +4,6 @@ import os
 import pandas as pd
 import argparse
 from copy import deepcopy
-
-import pandas as pd
-from BCBio import GFF
 from RouToolPa.Collections.General import SynDict, IdList
 from RouToolPa.Parsers.VCF import CollectionVCF
 from MACE.Routines import Visualization, StatsVCF
