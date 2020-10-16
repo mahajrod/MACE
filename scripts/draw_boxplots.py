@@ -78,7 +78,7 @@ with open(args.input, "r") as in_fd:
 df_dict = OrderedDict({})
 for entry in file_dict:
     df_dict[entry] = pd.read_csv(file_dict[entry], sep="\t", index_col=["CHROM",])
-    df_dict[entry]["density"] = df_dict[entry]["All"] / arg.window_size * args.multiplicator
+    df_dict[entry]["density"] = df_dict[entry]["All"] / args.window_size * args.multiplicator
 
 fig, ax = plt.subplots(figsize=args.size_of_figure, dpi=args.dpi)
 plt.xticks(rotation=args.rotation)
