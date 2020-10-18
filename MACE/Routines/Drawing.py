@@ -18,10 +18,10 @@ from matplotlib import cm
 from matplotlib import colors
 from matplotlib import text
 
-from MACE.General import FileRoutines
+from RouToolPa.GeneralRoutines import FileRoutines
 from MACE.Functions.Generators import recursive_generator
 
-from MACE.General.GeneralCollections import TwoLvlDict
+from RouToolPa.Collections.General import TwoLvlDict
 
 
 class DrawingRoutines:

@@ -31,7 +31,7 @@ from RouToolPa.Collections.General import IdList, IdSet, SynDict
 from RouToolPa.Parsers.GFF import CollectionGFF
 from RouToolPa.Parsers.VCF import CollectionVCF
 from RouToolPa.Routines import DrawingRoutines
-from RouToolPa.Routines.File import FileRoutines
+from RouToolPa.GeneralRoutines.File import FileRoutines
 import RouToolPa.Formats.VariantFormats as VariantFormats
 
 ref_alt_variants = {"deaminases": [("C", ["T"]), ("G", ["A"])]

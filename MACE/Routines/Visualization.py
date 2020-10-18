@@ -12,7 +12,6 @@ plt.ioff()
 from matplotlib.collections import PatchCollection
 from matplotlib.patches import Rectangle
 
-#from RouToolPa.Routines import FileRoutines
 from RouToolPa.Collections.General import TwoLvlDict
 from RouToolPa.Routines.Drawing import DrawingRoutines
 
