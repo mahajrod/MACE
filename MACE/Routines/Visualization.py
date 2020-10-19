@@ -260,7 +260,7 @@ class Visualization(DrawingRoutines):
                                                                                 thresholds=thresholds,
                                                                                 colors=colors, background=background,
                                                                                 masked=masked, norm=norm)},
-                                                       label=chr)
+                                                       label=chr if show_trackgroup_label else None)
                     track_group_dict[chr][track_name].add_color(masking=masking)
 
             chromosome_subplot = Subplot(track_group_dict,
