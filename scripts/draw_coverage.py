@@ -33,6 +33,7 @@ parser.add_argument("-m", "--mean_coverage_list", action="store", dest="mean_cov
                     type=lambda s: list(map(float, s.split(","))),
                     help="Comma-separated list of mean/median coverage to use")
 
+
 parser.add_argument("--scaffold_column_name", action="store", dest="scaffold_column_name", default="scaffold",
                     help="Name of column in coverage file with scaffold ids per window. Default: scaffold")
 parser.add_argument("--window_column_name", action="store", dest="window_column_name", default="window",
