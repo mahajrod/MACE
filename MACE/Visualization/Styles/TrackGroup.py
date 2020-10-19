@@ -4,7 +4,7 @@ class TrackGroupStyle:
 
     def __init__(self, distance=5, internal_offset=2, x_multiplier=1.05, show_label=True,
                  label_fontsize=16, label_hor_aln='right', label_vert_aln='top',
-                 label_y_shift=None,
+                 label_y_shift=0,
                  label_x_shift=-15):
         self.distance = distance
         self.internal_offset = internal_offset
