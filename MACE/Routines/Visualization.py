@@ -255,6 +255,8 @@ class Visualization(DrawingRoutines):
 
             # TODO: replace color recalculation for whole dataframe by replacenments in category
             # TODO: switch to delivering masking as separate df
+
+            track_number = 0
             for chr in scaffolds: # count_df.index.get_level_values(level=0).unique():
                 track_group_dict[chr] = TrackGroup(label=chr if show_trackgroup_label else None)
                 for track_name in count_df.columns:
@@ -270,13 +272,13 @@ class Visualization(DrawingRoutines):
                                                                                 colors=colors, background=background,
                                                                                 masked=masked, norm=norm)
                     track_group_dict[chr][track_name].add_color(masking=masking)
-
+                    track_number += 1
             chromosome_subplot = Subplot(track_group_dict,
                                          title=fig_title,
                                          style=chromosome_subplot_style,
                                          legend=legend)
 
-            plt.figure(1, figsize=(figure_width, int(scaffold_number*figure_height_per_scaffold)), dpi=dpi)
+            plt.figure(1, figsize=(figure_width, int(track_number * figure_height_per_scaffold)), dpi=dpi)
 
             chromosome_subplot.draw()
             plt.subplots_adjust(left=subplots_adjust_left, right=subplots_adjust_right,
