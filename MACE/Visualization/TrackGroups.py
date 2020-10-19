@@ -42,7 +42,7 @@ class TrackGroup(OrderedDict):
         self.x_end = self.x_end * self.style.x_multiplier
         self.y_end = y + self.style.internal_offset
 
-    def draw(self, axes=None, style=None):
+    def draw(self, axes=None, style=None, label_shift=0):
         self.init_coordinates()
 
         used_style = style if style else self.style
@@ -54,11 +54,11 @@ class TrackGroup(OrderedDict):
         #x_text_offset = max(list(map(lambda s: s[0]*s[1], self.track_label_param_list)))
         # TODO: add automatic calculation for x axis
 
-        label_shift = -100 if max(list(map(lambda s: s[0]*s[1], self.track_label_param_list))) else 0
+        label_shift_full = (-100 if max(list(map(lambda s: s[0]*s[1], self.track_label_param_list))) else 0) + label_shift
         if self.label and used_style.show_label:
             current_subplot.annotate(self.label, xy=(0, (self.y_start + self.y_end)/2 + self.style.label_y_shift), xycoords='data',
                                      fontsize=self.style.label_fontsize,
-                                     xytext=(self.style.label_x_shift + label_shift,
-                                             1.5 * (self.y_end - self.y_start) / 2), textcoords='offset points',
+                                     xytext=(self.style.label_x_shift + label_shift_full,
+                                             (self.y_end - self.y_start) / 2), textcoords='offset points',
                                      ha=self.style.label_hor_aln, va=self.style.label_vert_aln)
 
