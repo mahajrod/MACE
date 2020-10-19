@@ -257,6 +257,8 @@ class Visualization(DrawingRoutines):
             # TODO: switch to delivering masking as separate df
             for chr in scaffolds: # count_df.index.get_level_values(level=0).unique():
                 for track_name in count_df.columns:
+                    print(chr)
+                    print(track_name)
                     track_group_dict[chr] = TrackGroup({track_name: WindowTrack(count_df.loc[chr, [track_name]],
                                                                                 window_size, window_step_final,
                                                                                 x_end=scaffold_length_df.loc[chr][0],
