@@ -260,8 +260,8 @@ class Visualization(DrawingRoutines):
             for chr in scaffolds: # count_df.index.get_level_values(level=0).unique():
                 track_group_dict[chr] = TrackGroup(label=chr if show_trackgroup_label else None)
                 for track_name in count_df.columns:
-                    print(chr)
-                    print(track_name)
+                    #print(chr)
+                    #print(track_name)
                     track_group_dict[chr][track_name] = WindowTrack(count_df.loc[chr, [track_name]],
                                                                                 window_size, window_step_final,
                                                                                 x_end=scaffold_length_df.loc[chr][0],
