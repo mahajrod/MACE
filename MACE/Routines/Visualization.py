@@ -223,39 +223,48 @@ class Visualization(DrawingRoutines):
         window_step_final = window_step if window_step else window_size
         scaffolds = scaffold_order_list[::-1] if scaffold_order_list else count_df.index.get_level_values(level=0).unique().to_list()
         scaffold_number = len(scaffolds)
+        # if test_colormaps:
+        print(count_df)
+        for colormap_entry in self.colormap_list if test_colormaps else [colormap]:
+            print("%s\tDrawing using %s colormap..." % (str(datetime.datetime.now()), colormap_entry))
+            if plot_type == "densities":
+                legend = DensityLegend(colormap=colormap_entry,
+                                       thresholds=thresholds)
+            elif plot_type == "coverage":
+                legend = CoverageLegend(colormap=colormap_entry,
+                                        thresholds=thresholds)
+            else:
+                legend = None
 
-        if test_colormaps:
-            for colormap_entry in self.colormap_list:
-                print("%s\tDrawing using %s colormap..." % (str(datetime.datetime.now()), colormap_entry))
-                if plot_type == "densities":
-                    legend = DensityLegend(colormap=colormap_entry,
-                                           thresholds=thresholds)
-                elif plot_type == "coverage":
-                    legend = CoverageLegend(colormap=colormap_entry,
-                                            thresholds=thresholds)
-                # TODO: replace color recalculation for whole dataframe by replacenments in category
-                for chr in scaffolds: # count_df.index.get_level_values(level=0).unique():
-                    track_group_dict[chr] = TrackGroup(
-                        {chr: WindowTrack(count_df.xs(chr), window_size, window_step_final, x_end=scaffold_length_df.loc[chr][0],
-                                          multiplier=multiplier, label=chr, colormap=colormap_entry, thresholds=thresholds,
-                                          colors=colors, background=background, masked=masked, norm=norm)})
-                    track_group_dict[chr][chr].add_color(masking=masking)
-                # track_group_dict
-                # track_group_dict["chr13"]
-                chromosome_subplot = Subplot(track_group_dict,
-                                             title=(title + " (colormap %s)" % colormap_entry) if title else "Colormap %s" % colormap_entry,
-                                             style=chromosome_subplot_style,
-                                             legend=legend)
+            if test_colormaps:
+                fig_title = (title + " (colormap %s)" % colormap_entry) if title else "Colormap %s" % colormap_entry
+            else:
+                fig_title = title
 
-                plt.figure(1, figsize=(figure_width, int(scaffold_number*figure_height_per_scaffold)), dpi=dpi)
+            # TODO: replace color recalculation for whole dataframe by replacenments in category
+            for chr in scaffolds: # count_df.index.get_level_values(level=0).unique():
+                track_group_dict[chr] = TrackGroup(
+                    {chr: WindowTrack(count_df.loc[chr], window_size, window_step_final, x_end=scaffold_length_df.loc[chr][0],
+                                      multiplier=multiplier, label=chr, colormap=colormap_entry, thresholds=thresholds,
+                                      colors=colors, background=background, masked=masked, norm=norm)})
+                track_group_dict[chr][chr].add_color(masking=masking)
 
-                chromosome_subplot.draw()
-                plt.subplots_adjust(left=subplots_adjust_left, right=subplots_adjust_right,
-                                    top=subplots_adjust_top, bottom=subplots_adjust_bottom)
+            chromosome_subplot = Subplot(track_group_dict,
+                                         title=fig_title,
+                                         style=chromosome_subplot_style,
+                                         legend=legend)
 
-                for ext in extensions:
-                    plt.savefig("%s.%s.%s" % (output_prefix, colormap_entry, ext))
+            plt.figure(1, figsize=(figure_width, int(scaffold_number*figure_height_per_scaffold)), dpi=dpi)
+
+            chromosome_subplot.draw()
+            plt.subplots_adjust(left=subplots_adjust_left, right=subplots_adjust_right,
+                                top=subplots_adjust_top, bottom=subplots_adjust_bottom)
+
+            for ext in extensions:
+                plt.savefig("%s.%s.%s" % (output_prefix, colormap_entry, ext))
+            if test_colormaps:
                 plt.close(1)
+        """
         else:
             if plot_type == "densities":
                 legend = DensityLegend(colormap=colormap,
@@ -267,7 +276,7 @@ class Visualization(DrawingRoutines):
             for chr in scaffolds:  # count_df.index.get_level_values(level=0).unique():
 
                 track_group_dict[chr] = TrackGroup(
-                    {chr: WindowTrack(count_df.xs(chr), window_size, window_step_final, x_end=scaffold_length_df.loc[chr].iloc[0],
+                    {chr: WindowTrack(count_df.xs[chr], window_size, window_step_final, x_end=scaffold_length_df.loc[chr].iloc[0],
                                       multiplier=multiplier, label=chr, colormap=colormap, thresholds=thresholds,
                                       colors=colors, background=background, masked=masked, norm=norm)})
                 track_group_dict[chr][chr].add_color(masking=masking)
@@ -283,7 +292,7 @@ class Visualization(DrawingRoutines):
                                 top=subplots_adjust_top, bottom=subplots_adjust_bottom)
             for ext in extensions:
                 plt.savefig("%s.%s" % (output_prefix, ext))
-
+        """
     # ----------------------- In progress ------------------------------
     @staticmethod
     def plot_clustering_threshold_tests(cluster_df, output_prefix, scaffold_order_list=None,
