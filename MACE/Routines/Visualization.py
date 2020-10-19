@@ -172,6 +172,8 @@ class Visualization(DrawingRoutines):
                               subplots_adjust_bottom=None,
                               subplots_adjust_right=None,
                               subplots_adjust_top=None,
+                              show_track_label=True,
+                              show_trackgroup_label=True
                               ):
         if absolute_coverage_values:
             cov_df = count_df
@@ -200,6 +202,8 @@ class Visualization(DrawingRoutines):
                           subplots_adjust_bottom=subplots_adjust_bottom,
                           subplots_adjust_right=subplots_adjust_right,
                           subplots_adjust_top=subplots_adjust_top,
+                          show_track_label=show_track_label,
+                          show_trackgroup_label=show_trackgroup_label
                           )
 
     def draw_windows(self, count_df, window_size, window_step, scaffold_length_df,
