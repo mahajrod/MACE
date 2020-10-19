@@ -19,4 +19,3 @@ class TrackGroupStyle:
         self.label_x_shift = label_x_shift
 
 default_track_group_style = TrackGroupStyle()
-
