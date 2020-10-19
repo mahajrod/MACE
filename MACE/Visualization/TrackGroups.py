@@ -56,7 +56,7 @@ class TrackGroup(OrderedDict):
 
         label_shift = 200 if max(list(map(lambda s: s[0]*s[1], self.track_label_param_list))) else 0
         if self.label and used_style.show_label:
-            current_subplot.annotate(self.label, xy=(0, self.y_start + self.style.label_y_shift), xycoords='data',
+            current_subplot.annotate(self.label, xy=(0, (self.y_start + self.y_end)/2 + self.style.label_y_shift), xycoords='data',
                                      fontsize=self.style.label_fontsize,
                                      xytext=(self.style.label_x_shift + label_shift,
                                              1.5 * self.style.label_y_shift), textcoords='offset points',
