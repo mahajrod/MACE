@@ -157,7 +157,7 @@ class Visualization(DrawingRoutines):
                           )
 
     def draw_coverage_windows(self, count_df, window_size, window_step, scaffold_length_df,
-                              mean_coverage,
+                              mean_coverage_dict,
                               output_prefix,
                               figure_width=15, figure_height_per_scaffold=0.5, dpi=300,
                               colormap=None, thresholds=(0.0, 0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 2.0, 2.5),
@@ -173,15 +173,19 @@ class Visualization(DrawingRoutines):
                               subplots_adjust_right=None,
                               subplots_adjust_top=None,
                               show_track_label=True,
-                              show_trackgroup_label=True
-                              ):
-        if absolute_coverage_values:
-            cov_df = count_df
-            final_thresholds = list(np.array(thresholds) * float(mean_coverage))
+                              show_trackgroup_label=True):
 
+        if absolute_coverage_values:
+            if len(mean_coverage_dict) == 1:
+                cov_df = count_df
+                final_thresholds = list(np.array(thresholds) * float(list(mean_coverage_dict.values())[0]))
+            else:
+                raise ValueError("ERROR!!! Drawing absolute values is not possible for more than 1 track yet")
         else:
             cov_df = count_df.copy(deep=True)
-            cov_df = cov_df / mean_coverage
+
+            for entry in mean_coverage_dict:
+                cov_df[entry] = cov_df[entry] / mean_coverage_dict[entry]
             final_thresholds = list(np.array(thresholds))
 
         self.draw_windows(cov_df, window_size, window_step, scaffold_length_df,
