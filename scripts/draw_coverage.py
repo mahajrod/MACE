@@ -33,7 +33,6 @@ parser.add_argument("-m", "--mean_coverage_list", action="store", dest="mean_cov
                     type=lambda s: list(map(float, s.split(","))),
                     help="Comma-separated list of mean/median coverage to use")
 
-
 parser.add_argument("--scaffold_column_name", action="store", dest="scaffold_column_name", default="scaffold",
                     help="Name of column in coverage file with scaffold ids per window. Default: scaffold")
 parser.add_argument("--window_column_name", action="store", dest="window_column_name", default="window",
@@ -103,9 +102,8 @@ chr_syn_dict = SynDict(filename=args.scaffold_syn_file,
                        value_index=args.syn_file_value_column)
 
 
-coverage_df = pd.read_csv(args.input, sep="\t", usecols=(args.scaffold_column_name,
-                                                         args.window_column_name,
-                                                         args.coverage_column_name),
+coverage_df = pd.read_csv(args.input, sep="\t", usecols=[args.scaffold_column_name,
+                                                         args.window_column_name] + args.coverage_column_name_list,
                           index_col=(args.scaffold_column_name, args.window_column_name))
 
 scaffold_to_keep = StatsVCF.get_filtered_entry_list(coverage_df.index.get_level_values(level=0).unique().to_list(),
@@ -119,7 +117,7 @@ if args.scaffold_syn_file:
     coverage_df.rename(index=chr_syn_dict, inplace=True)
     chr_len_df.rename(index=chr_syn_dict, inplace=True)
 
-average_coverage_dict = dict(zip(args.coverage_column_name, args.mean_coverage_list))
+average_coverage_dict = dict(zip(args.coverage_column_name_list, args.mean_coverage_list))
 
 Visualization.draw_coverage_windows(coverage_df, args.window_size, args.window_step, chr_len_df,
                                     average_coverage_dict,
