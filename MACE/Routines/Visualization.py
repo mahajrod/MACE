@@ -236,7 +236,7 @@ class Visualization(DrawingRoutines):
         scaffolds = scaffold_order_list[::-1] if scaffold_order_list else count_df.index.get_level_values(level=0).unique().to_list()
         scaffold_number = len(scaffolds)
         # if test_colormaps:
-        print(count_df)
+        #print(count_df)
         for colormap_entry in self.colormap_list if test_colormaps else [colormap]:
             print("%s\tDrawing using %s colormap..." % (str(datetime.datetime.now()), colormap_entry))
             if plot_type == "densities":
@@ -256,10 +256,11 @@ class Visualization(DrawingRoutines):
             # TODO: replace color recalculation for whole dataframe by replacenments in category
             # TODO: switch to delivering masking as separate df
             for chr in scaffolds: # count_df.index.get_level_values(level=0).unique():
+                track_group_dict[chr] = TrackGroup(label=chr if show_trackgroup_label else None)
                 for track_name in count_df.columns:
                     print(chr)
                     print(track_name)
-                    track_group_dict[chr] = TrackGroup({track_name: WindowTrack(count_df.loc[chr, [track_name]],
+                    track_group_dict[chr][track_name] = WindowTrack(count_df.loc[chr, [track_name]],
                                                                                 window_size, window_step_final,
                                                                                 x_end=scaffold_length_df.loc[chr][0],
                                                                                 multiplier=multiplier,
@@ -267,8 +268,7 @@ class Visualization(DrawingRoutines):
                                                                                 colormap=colormap_entry,
                                                                                 thresholds=thresholds,
                                                                                 colors=colors, background=background,
-                                                                                masked=masked, norm=norm)},
-                                                       label=chr if show_trackgroup_label else None)
+                                                                                masked=masked, norm=norm)
                     track_group_dict[chr][track_name].add_color(masking=masking)
 
             chromosome_subplot = Subplot(track_group_dict,
