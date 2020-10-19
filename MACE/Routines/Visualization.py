@@ -188,6 +188,8 @@ class Visualization(DrawingRoutines):
                 cov_df[entry] = cov_df[entry] / mean_coverage_dict[entry]
             final_thresholds = list(np.array(thresholds))
 
+        print(mean_coverage_dict)
+
         self.draw_windows(cov_df, window_size, window_step, scaffold_length_df,
                           output_prefix,
                           figure_width=figure_width,
