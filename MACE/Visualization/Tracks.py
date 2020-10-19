@@ -127,7 +127,7 @@ class Track:
         current_subplot = axes if axes else plt.gca()
 
         if used_style.edge:
-            print (self.x_start, self.y_start, self.x_end)
+            #print (self.x_start, self.y_start, self.x_end)
             current_subplot.add_patch(Rectangle((self.x_start, self.y_start), self.x_end,
                                       used_style.height,
                                       fill=used_style.fill,
