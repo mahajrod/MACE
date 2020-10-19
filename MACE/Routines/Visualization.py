@@ -217,7 +217,9 @@ class Visualization(DrawingRoutines):
                      subplots_adjust_left=None,
                      subplots_adjust_bottom=None,
                      subplots_adjust_right=None,
-                     subplots_adjust_top=None,):
+                     subplots_adjust_top=None,
+                     show_track_label=True,
+                     show_trackgroup_label=True):
 
         track_group_dict = OrderedDict()
         window_step_final = window_step if window_step else window_size
@@ -242,12 +244,19 @@ class Visualization(DrawingRoutines):
                 fig_title = title
 
             # TODO: replace color recalculation for whole dataframe by replacenments in category
+            # TODO: switch to delivering masking as separate df
             for chr in scaffolds: # count_df.index.get_level_values(level=0).unique():
-                track_group_dict[chr] = TrackGroup(
-                    {chr: WindowTrack(count_df.loc[chr], window_size, window_step_final, x_end=scaffold_length_df.loc[chr][0],
-                                      multiplier=multiplier, label=chr, colormap=colormap_entry, thresholds=thresholds,
-                                      colors=colors, background=background, masked=masked, norm=norm)})
-                track_group_dict[chr][chr].add_color(masking=masking)
+                for track_name in count_df.columns:
+                    track_group_dict[chr] = TrackGroup({track_name: WindowTrack(count_df.loc[chr, track_name],
+                                                                                window_size, window_step_final,
+                                                                                x_end=scaffold_length_df.loc[chr][0],
+                                                                                multiplier=multiplier, label=track_name,
+                                                                                colormap=colormap_entry,
+                                                                                thresholds=thresholds,
+                                                                                colors=colors, background=background,
+                                                                                masked=masked, norm=norm)},
+                                                       label=chr)
+                    track_group_dict[chr][track_name].add_color(masking=masking)
 
             chromosome_subplot = Subplot(track_group_dict,
                                          title=fig_title,
