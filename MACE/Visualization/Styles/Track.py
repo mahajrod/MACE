@@ -6,7 +6,7 @@ from matplotlib.pyplot import get_cmap
 class TrackStyle:
 
     def __init__(self, height, edge=True, fill=False, face_color=None, edge_color="black", edge_width=None,
-                 show_label=True, label_fontsize=16, label_hor_aln='right', label_vert_aln='top',
+                 show_label=True, label_fontsize=16, label_hor_aln='right', label_vert_aln='center',
                  label_y_shift=None, colormap=None, thresholds=array((0.0, 0.1, 0.25, 0.5, 1.0)),
                  colors=("#333a97", "green", "yellow", "orange", "red"), background="white",
                  masked="grey", color_expression=None):

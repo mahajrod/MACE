@@ -139,7 +139,7 @@ class Track:
         if self.label and self.style.show_label:
             current_subplot.annotate(self.label, xy=(0, self.y_start + self.style.label_y_shift), xycoords='data',
                                      fontsize=self.style.label_fontsize,
-                                     xytext=(-15, 1.5 * self.style.label_y_shift), textcoords='offset points',
+                                     xytext=(-15, 0 * self.style.label_y_shift), textcoords='offset points',
                                      ha=self.style.label_hor_aln, va=self.style.label_vert_aln)
 
 
