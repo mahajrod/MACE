@@ -29,8 +29,9 @@ parser.add_argument("-l", "--title", action="store", dest="title", default="Cove
 parser.add_argument("-g", "--draw_gaps", action="store_true", dest="draw_gaps",
                     help="Draw gaps, ignored if reference genome is not set. Default: False")
 """
-parser.add_argument("-m", "--mean_coverage", action="store", dest="mean_coverage", required=True, type=float,
-                    help="Mean/median coverage to use")
+parser.add_argument("-m", "--mean_coverage_list", action="store", dest="mean_coverage_list", required=True,
+                    type=lambda s: list(map(float, s.split(","))),
+                    help="Comma-separated list of mean/median coverage to use")
 
 parser.add_argument("--scaffold_column_name", action="store", dest="scaffold_column_name", default="scaffold",
                     help="Name of column in coverage file with scaffold ids per window. Default: scaffold")
@@ -108,7 +109,7 @@ coverage_df = pd.read_csv(args.input, sep="\t", usecols=(args.scaffold_column_na
 
 scaffold_to_keep = StatsVCF.get_filtered_entry_list(coverage_df.index.get_level_values(level=0).unique().to_list(),
                                                     entry_white_list=args.scaffold_white_list)
-#print(scaffold_to_keep)
+
 coverage_df = coverage_df[coverage_df.index.isin(scaffold_to_keep, level=0)]
 
 chr_len_df = pd.read_csv(args.scaffold_length_file, sep='\t', header=None, names=("scaffold", "length"), index_col=0)
@@ -117,12 +118,10 @@ if args.scaffold_syn_file:
     coverage_df.rename(index=chr_syn_dict, inplace=True)
     chr_len_df.rename(index=chr_syn_dict, inplace=True)
 
-#print(chr_syn_dict)
-#print(coverage_df)
-#print(coverage_df.index)
-#print(chr_len_df)
+average_coverage_dict = dict(zip(args.coverage_column_name, args.mean_coverage_list))
+
 Visualization.draw_coverage_windows(coverage_df, args.window_size, args.window_step, chr_len_df,
-                                    args.mean_coverage,
+                                    average_coverage_dict,
                                     args.output_prefix,
                                     figure_width=15, figure_height_per_scaffold=0.5, dpi=300,
                                     colormap=args.colormap, title=args.title,
