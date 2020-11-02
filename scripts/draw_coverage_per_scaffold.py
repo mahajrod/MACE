@@ -4,6 +4,7 @@ import os
 import pandas as pd
 import argparse
 from copy import deepcopy
+from _collections import OrderedDict
 
 import pandas as pd
 from BCBio import GFF
@@ -13,8 +14,8 @@ from MACE.Routines import Visualization, StatsVCF
 
 parser = argparse.ArgumentParser()
 
-parser.add_argument("-i", "--input", action="store", dest="input", required=True,
-                    help="Input file with precalculated coverage in windows.")
+parser.add_argument("-i", "--input", action="store", dest="input", required=True, type=lambda s: s.split(","),
+                    help="Comma_separated_list of input file with precalculated coverage in windows.")
 parser.add_argument("-o", "--output_prefix", action="store", dest="output_prefix", required=True,
                     help="Prefix of output files")
 
@@ -23,15 +24,14 @@ parser.add_argument("-e", "--output_formats", action="store", dest="output_forma
                     help="Comma-separated list of formats (supported by matlotlib) of "
                          "output figure.Default: svg,png")
 
-parser.add_argument("-l", "--title", action="store", dest="title", default="Coverage",
-                    help="Suptitle of figure. Default: 'Coverage'")
 """
 parser.add_argument("-g", "--draw_gaps", action="store_true", dest="draw_gaps",
                     help="Draw gaps, ignored if reference genome is not set. Default: False")
 """
-parser.add_argument("-m", "--mean_coverage_list", action="store", dest="mean_coverage_list", required=True,
-                    type=lambda s: list(map(float, s.split(","))),
-                    help="Comma-separated list of mean/median coverage to use")
+parser.add_argument("-m", "--mean_coverage_file", action="store", dest="mean_coverage_file", required=True,
+                    help="File with mean coverage for all samples")
+parser.add_argument("-l", "--label_list", action="store", dest="label_list", required=True, type=lambda s: s.split(","),
+                    help="Comma-separated list of labels to use for samples")
 
 parser.add_argument("--scaffold_column_name", action="store", dest="scaffold_column_name", default="scaffold",
                     help="Name of column in coverage file with scaffold ids per window. Default: scaffold")
@@ -41,6 +41,8 @@ parser.add_argument("--coverage_column_name_list", action="store", dest="coverag
                     default=["median", "mean"],
                     type=lambda s: s.split(","),
                     help="Coverage file with mean/median coverage per window. Default: median,mean")
+parser.add_argument("--label_column_name", action="store", dest="label_column_name", default="label",
+                    help="Name of column in mean coverage file with labels of samples. Default: label")
 parser.add_argument("-w", "--window_size", action="store", dest="window_size", default=100000, type=int,
                     help="Size of the windows Default: 100000")
 parser.add_argument("-s", "--window_step", action="store", dest="window_step", default=None, type=int,
@@ -102,46 +104,75 @@ parser.add_argument("--figure_height_per_scaffold", action="store", dest="figure
 
 args = parser.parse_args()
 
+mean_coverage_df = pd.read_csv(args.mean_coverage_file, sep='\t', header=0,  index_col=0,
+                               usecols=[args.label_column_name] + args.coverage_column_name_list)
+
 chr_syn_dict = SynDict(filename=args.scaffold_syn_file,
                        key_index=args.syn_file_key_column,
                        value_index=args.syn_file_value_column)
 
-
-coverage_df = pd.read_csv(args.input, sep="\t", usecols=[args.scaffold_column_name,
-                                                         args.window_column_name] + args.coverage_column_name_list,
-                          index_col=(args.scaffold_column_name, args.window_column_name))
-
-scaffold_to_keep = StatsVCF.get_filtered_entry_list(coverage_df.index.get_level_values(level=0).unique().to_list(),
-                                                    entry_white_list=args.scaffold_white_list)
-
-coverage_df = coverage_df[coverage_df.index.isin(scaffold_to_keep, level=0)]
-
 chr_len_df = pd.read_csv(args.scaffold_length_file, sep='\t', header=None, names=("scaffold", "length"), index_col=0)
 
 if args.scaffold_syn_file:
-    coverage_df.rename(index=chr_syn_dict, inplace=True)
     chr_len_df.rename(index=chr_syn_dict, inplace=True)
 
-average_coverage_dict = dict(zip(args.coverage_column_name_list, args.mean_coverage_list))
+coverage_df_dict = OrderedDict()
 
-Visualization.draw_coverage_windows(coverage_df, args.window_size, args.window_step, chr_len_df,
-                                    average_coverage_dict,
-                                    args.output_prefix,
-                                    figure_width=args.figure_width,
-                                    figure_height_per_scaffold=args.figure_height_per_scaffold, dpi=300,
-                                    colormap=args.colormap, title=args.title,
-                                    extensions=args.output_formats,
-                                    scaffold_order_list=args.scaffold_ordered_list,
-                                    test_colormaps=args.test_colormaps,
-                                    thresholds=args.coverage_thresholds,
-                                    absolute_coverage_values=args.absolute_coverage_values,
-                                    subplots_adjust_left=args.subplots_adjust_left,
-                                    subplots_adjust_bottom=args.subplots_adjust_bottom,
-                                    subplots_adjust_right=args.subplots_adjust_right,
-                                    subplots_adjust_top=args.subplots_adjust_top,
-                                    show_track_label=True,
-                                    show_trackgroup_label=True
-                                    )
+final_scaffold_set = set()
+for entry, label in zip(args.input, args.label_list):
+    coverage_df = pd.read_csv(entry, sep="\t", usecols=[args.scaffold_column_name,
+                                                             args.window_column_name] + args.coverage_column_name_list,
+                              index_col=(args.scaffold_column_name, args.window_column_name))
+
+    scaffold_to_keep = StatsVCF.get_filtered_entry_list(coverage_df.index.get_level_values(level=0).unique().to_list(),
+                                                        entry_white_list=args.scaffold_white_list)
+
+    coverage_df = coverage_df[coverage_df.index.isin(scaffold_to_keep, level=0)]
+
+    if args.scaffold_syn_file:
+        coverage_df.rename(index=chr_syn_dict, inplace=True)
+
+    coverage_df_dict[label] = coverage_df
+    #print("AAA")
+    #print(coverage_df_dict[label].index.get_level_values(0).unique().to_list())
+    final_scaffold_set |= set(coverage_df_dict[label].index.get_level_values(0).unique().to_list())
+
+#print(final_scaffold_set)
+#print(chr_syn_dict)
+for scaf in final_scaffold_set:
+    scaf_df_list = []
+    #len_df = pd.DataFrame(columns=["length"])
+    len_dict = OrderedDict()
+    for label in args.label_list:
+        scaf_df_list.append(coverage_df_dict[label].loc[[scaf]])
+        #print(scaf_df_list[-1])
+        #print(label)
+        scaf_df_list[-1].rename(index={scaf: label}, inplace=True)
+        len_dict[label] = chr_len_df.loc[scaf]
+    len_df = pd.DataFrame.from_dict(len_dict, orient="index")
+    #print(len_df)
+    #merged_coverage_df_dict[scaf] = pd.concat(scaf_df_list)
+    #print(scaf)
+    Visualization.draw_coverage_windows(pd.concat(scaf_df_list),
+                                        args.window_size, args.window_step, len_df,
+                                        mean_coverage_df,
+                                        "{0}.{1}".format(args.output_prefix, scaf),
+                                        figure_width=args.figure_width,
+                                        figure_height_per_scaffold=args.figure_height_per_scaffold, dpi=300,
+                                        colormap=args.colormap, title="Coverage {0}".format(scaf),
+                                        extensions=args.output_formats,
+                                        scaffold_order_list=args.scaffold_ordered_list,
+                                        test_colormaps=args.test_colormaps,
+                                        thresholds=args.coverage_thresholds,
+                                        absolute_coverage_values=args.absolute_coverage_values,
+                                        subplots_adjust_left=args.subplots_adjust_left,
+                                        subplots_adjust_bottom=args.subplots_adjust_bottom,
+                                        subplots_adjust_right=args.subplots_adjust_right,
+                                        subplots_adjust_top=args.subplots_adjust_top,
+                                        show_track_label=True,
+                                        show_trackgroup_label=True,
+                                        close_figure=True
+                                        )
 
 
 
