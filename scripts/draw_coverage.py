@@ -94,6 +94,11 @@ parser.add_argument("--subplots_adjust_right", action="store", dest="subplots_ad
                     help="Adjust right border of subplots on the figure. Default: matplotlib defaults")
 parser.add_argument("--subplots_adjust_bottom", action="store", dest="subplots_adjust_bottom", type=float,
                     help="Adjust bottom border of subplots on the figure. Default: matplotlib defaults")
+parser.add_argument("--figure_width", action="store", dest="figure_width", type=float, default=15,
+                    help="Width of figure in inches. Default: 15")
+parser.add_argument("--figure_height_per_scaffold", action="store", dest="figure_height_per_scaffold",
+                    type=float, default=0.5,
+                    help="Height of figure per chromosome track. Default: 0.5")
 
 args = parser.parse_args()
 
@@ -122,7 +127,8 @@ average_coverage_dict = dict(zip(args.coverage_column_name_list, args.mean_cover
 Visualization.draw_coverage_windows(coverage_df, args.window_size, args.window_step, chr_len_df,
                                     average_coverage_dict,
                                     args.output_prefix,
-                                    figure_width=15, figure_height_per_scaffold=0.5, dpi=300,
+                                    figure_width=args.figure_width,
+                                    figure_height_per_scaffold=args.figure_height_per_scaffold, dpi=300,
                                     colormap=args.colormap, title=args.title,
                                     extensions=args.output_formats,
                                     scaffold_order_list=args.scaffold_ordered_list,
@@ -132,7 +138,9 @@ Visualization.draw_coverage_windows(coverage_df, args.window_size, args.window_s
                                     subplots_adjust_left=args.subplots_adjust_left,
                                     subplots_adjust_bottom=args.subplots_adjust_bottom,
                                     subplots_adjust_right=args.subplots_adjust_right,
-                                    subplots_adjust_top=args.subplots_adjust_top
+                                    subplots_adjust_top=args.subplots_adjust_top,
+                                    show_track_label=True,
+                                    show_trackgroup_label=True
                                     )
 
 
