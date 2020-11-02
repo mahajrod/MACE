@@ -6,7 +6,7 @@ from copy import deepcopy
 from collections import Iterable, OrderedDict
 
 import numpy as np
-
+import pandas as pd
 import matplotlib.pyplot as plt
 plt.ioff()
 from matplotlib.collections import PatchCollection
@@ -135,6 +135,8 @@ class Visualization(DrawingRoutines):
                                       subplots_adjust_bottom=None,
                                       subplots_adjust_right=None,
                                       subplots_adjust_top=None,
+                                      show_track_label=True,
+                                      show_trackgroup_label=True
                                       ):
 
         self.draw_windows(count_df, window_size, window_step, scaffold_length_df,
@@ -154,6 +156,8 @@ class Visualization(DrawingRoutines):
                           subplots_adjust_bottom=subplots_adjust_bottom,
                           subplots_adjust_right=subplots_adjust_right,
                           subplots_adjust_top=subplots_adjust_top,
+                          show_track_label=show_track_label,
+                          show_trackgroup_label=show_trackgroup_label
                           )
 
     def draw_coverage_windows(self, count_df, window_size, window_step, scaffold_length_df,
@@ -173,7 +177,8 @@ class Visualization(DrawingRoutines):
                               subplots_adjust_right=None,
                               subplots_adjust_top=None,
                               show_track_label=True,
-                              show_trackgroup_label=True):
+                              show_trackgroup_label=True,
+                              close_figure=False):
 
         if absolute_coverage_values:
             if len(mean_coverage_dict) == 1:
@@ -183,34 +188,46 @@ class Visualization(DrawingRoutines):
                 raise ValueError("ERROR!!! Drawing absolute values is not possible for more than 1 track yet")
         else:
             cov_df = count_df.copy(deep=True)
-
-            for entry in mean_coverage_dict:
-                cov_df[entry] = cov_df[entry] / mean_coverage_dict[entry]
+            if isinstance(mean_coverage_dict, pd.DataFrame):
+                for row_scaf in mean_coverage_dict.index:
+                    for cov_column in mean_coverage_dict.columns:
+                        #print("AAAAAAAAAAAAAA")
+                        #print(row_scaf, cov_column, mean_coverage_dict.loc[row_scaf, cov_column])
+                        #print(cov_df.loc[row_scaf, cov_column])
+                        cov_df.loc[[row_scaf], [cov_column]] = cov_df.loc[[row_scaf], [cov_column]] / mean_coverage_dict.loc[row_scaf, cov_column]
+                        #print(cov_df.loc[row_scaf, cov_column])
+            else:
+                for entry in mean_coverage_dict:
+                    cov_df[entry] = cov_df[entry] / mean_coverage_dict[entry]
             final_thresholds = list(np.array(thresholds))
 
-        print(mean_coverage_dict)
+        #print(mean_coverage_dict)
+        #print (count_df)
+        #print (cov_df)
+        fig = self.draw_windows(cov_df, window_size, window_step, scaffold_length_df,
+                                output_prefix,
+                                figure_width=figure_width,
+                                plot_type="coverage",
+                                figure_height_per_scaffold=figure_height_per_scaffold, dpi=dpi,
+                                colormap=colormap, thresholds=final_thresholds,
+                                colors=colors, background=background, masked=False,
+                                title=title,
+                                extensions=extensions,
+                                scaffold_order_list=scaffold_order_list,
+                                test_colormaps=test_colormaps,
+                                masking=False,
+                                multiplier=multiplier,
+                                norm=False,
+                                subplots_adjust_left=subplots_adjust_left,
+                                subplots_adjust_bottom=subplots_adjust_bottom,
+                                subplots_adjust_right=subplots_adjust_right,
+                                subplots_adjust_top=subplots_adjust_top,
+                                show_track_label=show_track_label,
+                                show_trackgroup_label=show_trackgroup_label,
+                                close_figure=close_figure
+                                )
 
-        self.draw_windows(cov_df, window_size, window_step, scaffold_length_df,
-                          output_prefix,
-                          figure_width=figure_width,
-                          plot_type="coverage",
-                          figure_height_per_scaffold=figure_height_per_scaffold, dpi=dpi,
-                          colormap=colormap, thresholds=final_thresholds,
-                          colors=colors, background=background, masked=False,
-                          title=title,
-                          extensions=extensions,
-                          scaffold_order_list=scaffold_order_list,
-                          test_colormaps=test_colormaps,
-                          masking=False,
-                          multiplier=multiplier,
-                          norm=False,
-                          subplots_adjust_left=subplots_adjust_left,
-                          subplots_adjust_bottom=subplots_adjust_bottom,
-                          subplots_adjust_right=subplots_adjust_right,
-                          subplots_adjust_top=subplots_adjust_top,
-                          show_track_label=show_track_label,
-                          show_trackgroup_label=show_trackgroup_label
-                          )
+        return fig
 
     def draw_windows(self, count_df, window_size, window_step, scaffold_length_df,
                      output_prefix,
@@ -229,7 +246,8 @@ class Visualization(DrawingRoutines):
                      subplots_adjust_right=None,
                      subplots_adjust_top=None,
                      show_track_label=True,
-                     show_trackgroup_label=True):
+                     show_trackgroup_label=True,
+                     close_figure=False):
 
         track_group_dict = OrderedDict()
         window_step_final = window_step if window_step else window_size
@@ -278,7 +296,7 @@ class Visualization(DrawingRoutines):
                                          style=chromosome_subplot_style,
                                          legend=legend)
 
-            plt.figure(1, figsize=(figure_width, int(track_number * figure_height_per_scaffold)), dpi=dpi)
+            fig = plt.figure(1, figsize=(figure_width, int(track_number * figure_height_per_scaffold)), dpi=dpi)
 
             chromosome_subplot.draw()
             plt.subplots_adjust(left=subplots_adjust_left, right=subplots_adjust_right,
@@ -286,8 +304,10 @@ class Visualization(DrawingRoutines):
 
             for ext in extensions:
                 plt.savefig("%s.%s.%s" % (output_prefix, colormap_entry, ext))
-            if test_colormaps:
+            if test_colormaps or close_figure:
                 plt.close(1)
+
+        return None if test_colormaps else fig
         """
         else:
             if plot_type == "densities":

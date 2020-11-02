@@ -72,7 +72,7 @@ class Subplot(OrderedDict):
         self.style.apply(x_max=self.x_end, y_max=self.y_end, axes=axes_to_use)
 
         plt.xlim(xmin=self.x_start, xmax=self.x_end*1.1)
-        plt.ylim(ymin=self.y_start, ymax=self.y_end)
+        plt.ylim(ymin=self.y_start, ymax=self.y_end*1.1)
 
         if self.title:
             plt.title(self.title)
