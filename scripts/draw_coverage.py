@@ -104,8 +104,6 @@ args = parser.parse_args()
 chr_syn_dict = SynDict(filename=args.scaffold_syn_file,
                        key_index=args.syn_file_key_column,
                        value_index=args.syn_file_value_column)
-
-
 coverage_df = pd.read_csv(args.input, sep="\t", usecols=[args.scaffold_column_name,
                                                          args.window_column_name] + args.coverage_column_name_list,
                           index_col=(args.scaffold_column_name, args.window_column_name))
