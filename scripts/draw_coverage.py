@@ -73,15 +73,14 @@ parser.add_argument("--syn_file_value_column", action="store", dest="syn_file_va
                     default=1, type=int,
                     help="Column(0-based) with value(synonym id) for scaffolds in synonym file synonym. Default: 1")
 
-parser.add_argument("--colormap", action="store", dest="colormap",
-                    help="Matplotlib colormap to use for SNP densities. Default: not set, "
-                         "colors from HapMap article are used")
+parser.add_argument("--colormap", action="store", dest="colormap", default="jet",
+                    help="Matplotlib colormap to use for SNP densities. Default: jet")
 parser.add_argument("--coverage_thresholds", action="store", dest="coverage_thresholds",
-                    default=(0.0, 0.25, 0.75, 1.5, 2.0, 2.5),
+                    default=(0.0, 0.25, 0.75, 1.5, 2.5),
                     type=lambda s: list(map(float, s.split(","))),
                     help="Comma-separated list of coverage thresholds(relative to mean/median) to use for "
                          "window coloring."
-                         "Default: (0.0, 0.25, 0.75, 1.5, 2.0, 2.5)")
+                         "Default: (0.0, 0.25, 0.75, 1.5, 2.5)")
 parser.add_argument("--test_colormaps", action="store_true", dest="test_colormaps",
                     help="Test colormaps. If set --colormap option will be ignored")
 parser.add_argument("--absolute_coverage_values", action="store_true", dest="absolute_coverage_values",
