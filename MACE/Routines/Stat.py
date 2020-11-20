@@ -288,6 +288,7 @@ class StatsVCF(FileRoutines):
             #bbb[bbb.index.get_level_values('CHROM').isin(number_of_windows_non_zero_df.index)]
 
         print(count_df)
+        print(steps_in_window)
         if window_stepppp != window_size:
             count_df = count_df.groupby("CHROM").apply(partial(convert_step_counts_to_win_counts,
                                                                number_of_steps_per_window=steps_in_window))
