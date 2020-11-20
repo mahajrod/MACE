@@ -10,7 +10,7 @@ import datetime
 
 from math import sqrt
 from copy import deepcopy
-
+from functools import reduce, partial
 from collections import OrderedDict, Iterable
 
 import numpy as np
@@ -246,50 +246,55 @@ class StatsVCF(FileRoutines):
             return [window_index for window_index in range(max(step_index - steps_in_window + 1, 0),
                                                            step_index + 1)]
 
+        def convert_step_counts_to_win_counts(df, number_of_steps_per_window):
+
+            return reduce(lambda x, y: x.add(y, fill_value=0),
+                          [df.shift(periods=entry, fill_value=0) for entry in range(0, -number_of_steps_per_window, -1)])
 
             #if step_index < window_number else window_number)]
 
         if expression:
-            step_index_df = collection_vcf.records[collection_vcf.records.apply(expression, axis=1)][['POS']] / window_stepppp
+            step_index_df = collection_vcf.records[collection_vcf.records.apply(expression, axis=1)][['POS']] // window_stepppp
         else:
             step_index_df = collection_vcf.records[['POS']] // window_stepppp
         step_index_df.columns = ["WINDOWSTEP"]
 
         if per_sample_output:
             count_df = []
-            if window_stepppp == window_size:
-                variant_presence = collection_vcf.check_variant_presence()
-                # string below is temporaly remove beforer git pull
-                variant_presence.columns = collection_vcf.samples
 
-                for sample in collection_vcf.samples:
-                    tmp_count_df = pd.DataFrame(0, index=count_index,
-                                                columns=[sample],
-                                                dtype=np.int64)
-                    variant_counts = step_index_df[variant_presence[sample]].reset_index(level=1).set_index(['WINDOWSTEP'], append=True).groupby(["CHROM", "WINDOWSTEP"]).count()
-                    tmp_count_df[tmp_count_df.index.isin(variant_counts.index)] = variant_counts
-                    count_df.append(tmp_count_df)
-                count_df = pd.concat(count_df, axis=1)
-            else:
-                # TODO add code for sliding windows
-                #window_index_df = step_index_df.applymap(get_overlapping_window_indexes)
-                pass
+            variant_presence = collection_vcf.check_variant_presence()
+            # string below is temporaly remove beforer git pull
+            variant_presence.columns = collection_vcf.samples
+
+            for sample in collection_vcf.samples:
+                tmp_count_df = pd.DataFrame(0, index=count_index,
+                                            columns=[sample],
+                                            dtype=np.int64)
+                variant_counts = step_index_df[variant_presence[sample]].reset_index(level=1).set_index(['WINDOWSTEP'], append=True).groupby(["CHROM", "WINDOWSTEP"]).count()
+                tmp_count_df[tmp_count_df.index.isin(variant_counts.index)] = variant_counts
+                count_df.append(tmp_count_df)
+            count_df = pd.concat(count_df, axis=1)
+
         else:
             count_df = pd.DataFrame(0, index=count_index,
                                     columns=["All"],
                                     dtype=np.int64)
 
-            if window_stepppp == window_size:
-                # code for staking windows: in this case window step index  is equal to window index
-                variant_counts = step_index_df.reset_index(level=1).set_index(['WINDOWSTEP'],
-                                                                              append=True).groupby(["CHROM",
-                                                                                                    "WINDOWSTEP"]).count()
-                count_df[count_df.index.isin(variant_counts.index)] = variant_counts
-                #bbb[bbb.index.get_level_values('CHROM').isin(number_of_windows_non_zero_df.index)]
-            else:
-                # TODO add code for sliding windows
-                #window_index_df = step_index_df.applymap(get_overlapping_window_indexes)
-                pass
+            # code for staking windows: in this case window step index  is equal to window index
+            variant_counts = step_index_df.reset_index(level=1).set_index(['WINDOWSTEP'],
+                                                                          append=True).groupby(["CHROM",
+                                                                                                "WINDOWSTEP"]).count()
+            count_df[count_df.index.isin(variant_counts.index)] = variant_counts
+            #bbb[bbb.index.get_level_values('CHROM').isin(number_of_windows_non_zero_df.index)]
+
+        print(count_df)
+        if window_stepppp != window_size:
+            count_df = count_df.groupby("CHROM").apply(partial(convert_step_counts_to_win_counts,
+                                                               number_of_steps_per_window=steps_in_window))
+
+            print(count_df)
+            # window_index_df = step_index_df.applymap(get_overlapping_window_indexes)
+            pass
 
         if scaffold_black_list or scaffold_white_list:
             scaffold_to_keep = self.get_filtered_entry_list(count_df.index.get_level_values(level=0).unique().to_list(),
