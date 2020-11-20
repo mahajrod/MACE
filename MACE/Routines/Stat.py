@@ -287,13 +287,13 @@ class StatsVCF(FileRoutines):
             count_df[count_df.index.isin(variant_counts.index)] = variant_counts
             #bbb[bbb.index.get_level_values('CHROM').isin(number_of_windows_non_zero_df.index)]
 
-        print(count_df)
-        print(steps_in_window)
+        #print(count_df)
+        #print(steps_in_window)
         if window_stepppp != window_size:
             count_df = count_df.groupby("CHROM").apply(partial(convert_step_counts_to_win_counts,
                                                                number_of_steps_per_window=steps_in_window))
 
-            print(count_df)
+            #print(count_df)
             # window_index_df = step_index_df.applymap(get_overlapping_window_indexes)
             pass
 
