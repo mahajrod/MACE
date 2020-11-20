@@ -321,6 +321,8 @@ class StatsVCF(FileRoutines):
 
             count_df.to_csv("%s.variant_counts.tsv" % output_prefix, sep='\t', header=True, index=True)
 
+            stat_df = count_df.groupby("CHROM").agg(["mean", "median", "min", "max"])
+            stat_df.to_csv("%s.variant_counts.stats" % output_prefix, sep='\t', header=True, index=True)
         return count_df
 
     def count_feature_length_in_windows(self, collection_gff, window_size, window_step,
