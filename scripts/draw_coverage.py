@@ -98,6 +98,8 @@ parser.add_argument("--figure_width", action="store", dest="figure_width", type=
 parser.add_argument("--figure_height_per_scaffold", action="store", dest="figure_height_per_scaffold",
                     type=float, default=0.5,
                     help="Height of figure per chromosome track. Default: 0.5")
+parser.add_argument("-v", "--verbose", action="store_true", dest="verbose",
+                    help="Print additional info to stdout")
 
 args = parser.parse_args()
 
@@ -120,8 +122,11 @@ if args.scaffold_syn_file:
     chr_len_df.rename(index=chr_syn_dict, inplace=True)
 
 average_coverage_dict = dict(zip(args.coverage_column_name_list, args.mean_coverage_list))
-print(coverage_df)
-print(chr_syn_dict)
+
+if args.verbose:
+    print(coverage_df)
+    print(chr_syn_dict)
+
 Visualization.draw_coverage_windows(coverage_df, args.window_size, args.window_step, chr_len_df,
                                     average_coverage_dict,
                                     args.output_prefix,
