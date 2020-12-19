@@ -120,7 +120,7 @@ if args.scaffold_syn_file:
     chr_len_df.rename(index=chr_syn_dict, inplace=True)
 
 average_coverage_dict = dict(zip(args.coverage_column_name_list, args.mean_coverage_list))
-
+print(coverage_df)
 Visualization.draw_coverage_windows(coverage_df, args.window_size, args.window_step, chr_len_df,
                                     average_coverage_dict,
                                     args.output_prefix,
