@@ -81,6 +81,11 @@ parser.add_argument("--coverage_thresholds", action="store", dest="coverage_thre
                     help="Comma-separated list of coverage thresholds(relative to mean/median) to use for "
                          "window coloring."
                          "Default: (0.0, 0.25, 0.75, 1.25, 1.75, 2.25)")
+parser.add_argument("--split_coverage_thresholds", action="store_true", dest="split_coverage_thresholds",
+                    help="Use  (0.0, 0.125, 0.25, 0.375, 0.5, 0.625, 0.75,"
+                         "0.875, 1.0, 1.125, 1.25, 1.375, 1.5, 1.625,"
+                         "1.75, 1.875, 2.0, 2.125, 2.25) as thresholds instead  of default ones."
+                         "Doesn't work if --coverage_thresholds is set")
 parser.add_argument("--test_colormaps", action="store_true", dest="test_colormaps",
                     help="Test colormaps. If set --colormap option will be ignored")
 parser.add_argument("--absolute_coverage_values", action="store_true", dest="absolute_coverage_values",
@@ -127,6 +132,7 @@ if args.verbose:
     print(coverage_df)
     print(chr_syn_dict)
 
+
 Visualization.draw_coverage_windows(coverage_df, args.window_size, args.window_step, chr_len_df,
                                     average_coverage_dict,
                                     args.output_prefix,
@@ -136,7 +142,9 @@ Visualization.draw_coverage_windows(coverage_df, args.window_size, args.window_s
                                     extensions=args.output_formats,
                                     scaffold_order_list=args.scaffold_ordered_list,
                                     test_colormaps=args.test_colormaps,
-                                    thresholds=args.coverage_thresholds,
+                                    thresholds=(0.0, 0.125, 0.25, 0.375, 0.5, 0.625, 0.75,
+                                                0.875, 1.0, 1.125, 1.25, 1.375, 1.5, 1.625,
+                                                1.75, 1.875, 2.0, 2.125, 2.25) if args.split_coverage_thresholds else args.coverage_thresholds,
                                     absolute_coverage_values=args.absolute_coverage_values,
                                     subplots_adjust_left=args.subplots_adjust_left,
                                     subplots_adjust_bottom=args.subplots_adjust_bottom,
