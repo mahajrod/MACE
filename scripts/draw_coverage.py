@@ -76,7 +76,7 @@ parser.add_argument("--syn_file_value_column", action="store", dest="syn_file_va
 parser.add_argument("--colormap", action="store", dest="colormap", default="jet",
                     help="Matplotlib colormap to use for SNP densities. Default: jet")
 parser.add_argument("--coverage_thresholds", action="store", dest="coverage_thresholds",
-                    default=(0.0, 0.25, 0.75, 1.5, 2.5),
+                    default=(0.0, 0.25, 0.75, 1.25, 1.75, 2.25),
                     type=lambda s: list(map(float, s.split(","))),
                     help="Comma-separated list of coverage thresholds(relative to mean/median) to use for "
                          "window coloring."
