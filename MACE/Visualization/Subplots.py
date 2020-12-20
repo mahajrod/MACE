@@ -1,5 +1,6 @@
 
 from MACE.Visualization.Styles.Subplot import SubplotStyle, default_subplot_style
+from MACE.Visualization.Legends import DensityLegend, CoverageLegend
 import math
 from collections import Iterable, OrderedDict
 
@@ -54,8 +55,16 @@ class Subplot(OrderedDict):
             self.x_end = self.x_end * self.style.x_multiplier
             self.y_end = (y + self.style.internal_offset) * self.style.y_multiplier
 
+            if isinstance(CoverageLegend, self.legend) or isinstance(DensityLegend, self.legend):
+                legend_height = (len(self.legend.thresholds) + 3) * self.legend.element_size
+            else:
+                legend_height = None
+
             self.legend.x_start = self.x_end
-            self.legend.y_start = self.y_end/2
+            if legend_height:
+                self.legend.y_start = (self.y_end - legend_height) / 2
+            else:
+                self.legend.y_start = self.y_end/2
             self.legend.x_size = self.x_end / self.legend.style.x_size_denominator
 
         elif self.type == "plot":
@@ -79,3 +88,9 @@ class Subplot(OrderedDict):
 
         if self.legend:
             self.legend.draw()
+
+    def hide(self, axes=None):
+        axes_to_use = axes if axes else self.axes if self.axes else plt.gca()
+        axes_to_use.set_axis_off()
+        #axes_to_use.get_xaxis().set_visible(False)
+        #axes_to_use.get_yaxis().set_visible(False)
