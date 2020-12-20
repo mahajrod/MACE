@@ -80,7 +80,7 @@ parser.add_argument("--coverage_thresholds", action="store", dest="coverage_thre
                     type=lambda s: list(map(float, s.split(","))),
                     help="Comma-separated list of coverage thresholds(relative to mean/median) to use for "
                          "window coloring."
-                         "Default: (0.0, 0.25, 0.75, 1.5, 2.5)")
+                         "Default: (0.0, 0.25, 0.75, 1.25, 1.75, 2.25)")
 parser.add_argument("--test_colormaps", action="store_true", dest="test_colormaps",
                     help="Test colormaps. If set --colormap option will be ignored")
 parser.add_argument("--absolute_coverage_values", action="store_true", dest="absolute_coverage_values",
