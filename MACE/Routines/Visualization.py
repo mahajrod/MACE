@@ -164,7 +164,7 @@ class Visualization(DrawingRoutines):
                               mean_coverage_dict,
                               output_prefix,
                               figure_width=15, figure_height_per_scaffold=0.5, dpi=300,
-                              colormap=None, thresholds=(0.0, 0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 2.0, 2.5),
+                              colormap=None, thresholds=(0.0, 0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0, 2.25),
                               colors=None, background=None,
                               title=None,
                               extensions=("png", ),
@@ -280,9 +280,10 @@ class Visualization(DrawingRoutines):
                 for track_name in count_df.columns:
                     #print(chr)
                     #print(track_name)
+
                     track_group_dict[chr][track_name] = WindowTrack(count_df.loc[chr, [track_name]],
                                                                                 window_size, window_step_final,
-                                                                                x_end=scaffold_length_df.loc[chr][0],
+                                                                                x_end=scaffold_length_df.loc[chr].iloc[0],
                                                                                 multiplier=multiplier,
                                                                                 label=track_name if show_track_label else None,
                                                                                 colormap=colormap_entry,
@@ -366,10 +367,19 @@ class Visualization(DrawingRoutines):
         df_list = [cluster_number_df] + cluster_count_list + [triple_plus_count_df, five_plus_count_df]
         label_list = ["All", "1", "2", "3", "5", "3+", "5+"]
         color_list = ["blue", "red", "orange", "magenta", "green", "black", "brown"]
-        for (scaffold, subplot_index) in zip(subplot_dict.keys(), range(0, scaffold_number)):
+
+        subplot_number = figure.horizontal_subplot_number * figure.vertical_subplot_number
+
+        for (scaffold, subplot_index) in zip(list(subplot_dict.keys()) + [None] * (subplot_number - scaffold_number),
+                                             range(0, subplot_number)):
             subplot_hor_index = subplot_index % figure.horizontal_subplot_number
             subplot_vert_index = subplot_index // figure.horizontal_subplot_number
             axes = figure.axes_array[subplot_vert_index][subplot_hor_index]
+
+            if scaffold is None:
+                axes.set_axis_off()
+                continue
+
             for data, label, color in zip(df_list, label_list, color_list):
                 #print data
                 if scaffold in data.index:
