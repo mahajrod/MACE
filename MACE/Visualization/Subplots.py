@@ -55,7 +55,7 @@ class Subplot(OrderedDict):
             self.x_end = self.x_end * self.style.x_multiplier
             self.y_end = (y + self.style.internal_offset) * self.style.y_multiplier
 
-            if isinstance(CoverageLegend, self.legend) or isinstance(DensityLegend, self.legend):
+            if isinstance(self.legend, (CoverageLegend, DensityLegend)):
                 legend_height = (len(self.legend.thresholds) + 3) * self.legend.element_size
             else:
                 legend_height = None
