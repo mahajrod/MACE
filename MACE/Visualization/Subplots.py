@@ -61,6 +61,7 @@ class Subplot(OrderedDict):
                 legend_height = None
 
             self.legend.x_start = self.x_end
+
             if legend_height:
                 self.legend.y_start = (self.y_end - legend_height) / 2
             else:
