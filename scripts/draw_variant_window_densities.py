@@ -149,6 +149,7 @@ count_df = StatsVCF.count_variants_in_windows(variants, args.window_size, args.w
                                               skip_empty_windows=False, expression=None, per_sample_output=False,
                                               scaffold_white_list=args.scaffold_white_list,
                                               scaffold_syn_dict=chr_syn_dict)
+print(count_df)
 if not args.only_count:
 
     if args.coverage:
