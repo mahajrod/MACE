@@ -206,8 +206,10 @@ class StatsVCF(FileRoutines):
             raise ValueError("ERROR!!! Window size(%i) is not a multiple of window step(%i)..." % (window_size, window_stepppp))
 
         steps_in_window = window_size // window_stepppp
-
-        tmp_len_df = reference_scaffold_lengths if reference_scaffold_lengths else collection_vcf.metadata["contig"]
+        if reference_scaffold_lengths:
+            tmp_len_df = reference_scaffold_lengths
+        else:
+            tmp_len_df =  collection_vcf.metadata["contig"]
 
         if isinstance(tmp_len_df, pd.DataFrame):
             ref_scaf_len_df = tmp_len_df
