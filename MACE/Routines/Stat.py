@@ -230,7 +230,9 @@ class StatsVCF(FileRoutines):
         reference_scaffolds = set(ref_scaf_len_df.index.unique().to_list())
 
         scaffolds_absent_in_reference = IdSet(vcf_scaffolds - reference_scaffolds)
+
         if scaffolds_absent_in_reference:
+            print(scaffolds_absent_in_reference)
             raise ValueError("ERROR!!! Some scaffolds from vcf file are absent in reference...")
         scaffolds_absent_in_vcf = IdSet(reference_scaffolds - vcf_scaffolds)
 
