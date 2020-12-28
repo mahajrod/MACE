@@ -129,8 +129,7 @@ chr_syn_dict = SynDict(filename=args.scaffold_syn_file,
                        key_index=args.syn_file_key_column,
                        value_index=args.syn_file_value_column)
 
-if args.scaffold_syn_file:
-    chr_len_df.rename(index=chr_syn_dict, inplace=True)
+
 
 #print chr_len_df
 """
@@ -149,6 +148,10 @@ count_df = StatsVCF.count_variants_in_windows(variants, args.window_size, args.w
                                               skip_empty_windows=False, expression=None, per_sample_output=False,
                                               scaffold_white_list=args.scaffold_white_list,
                                               scaffold_syn_dict=chr_syn_dict)
+
+if args.scaffold_syn_file:
+    chr_len_df.rename(index=chr_syn_dict, inplace=True)
+
 print(count_df)
 if not args.only_count:
 
