@@ -107,7 +107,8 @@ parser.add_argument("--density_thresholds", action="store", dest="density_thresh
                          "(0.0, 0.1, 0.5, 0.75, 1.0, 1.25, 1.5, 2.0, 2.5)")
 parser.add_argument("--test_colormaps", action="store_true", dest="test_colormaps",
                     help="Test colormaps. If set --colormap option will be ignored")
-
+parser.add_argument("--hide_track_label", action="store_true", dest="hide_track_label", default=False,
+                    help="Hide track label. Default: False")
 parser.add_argument("--subplots_adjust_left", action="store", dest="subplots_adjust_left", type=float,
                     help="Adjust left border of subplots on the figure. Default: matplotlib defaults")
 parser.add_argument("--subplots_adjust_top", action="store", dest="subplots_adjust_top", type=float,
@@ -181,6 +182,7 @@ if not args.only_count:
                                                 figure_width=15,
                                                 figure_height_per_scaffold=0.5,
                                                 dpi=300,
+                                                show_track_label=not args.hide_track_label,
                                                 colormap=args.colormap, title=args.title,
                                                 extensions=args.output_formats,
                                                 scaffold_order_list=args.scaffold_ordered_list,
