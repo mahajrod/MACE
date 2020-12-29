@@ -88,6 +88,10 @@ parser.add_argument("--split_coverage_thresholds", action="store_true", dest="sp
                          "Doesn't work if --coverage_thresholds is set")
 parser.add_argument("--test_colormaps", action="store_true", dest="test_colormaps",
                     help="Test colormaps. If set --colormap option will be ignored")
+
+parser.add_argument("--hide_track_label", action="store_true", dest="hide_track_label", default=False,
+                    help="Hide track label. Default: False")
+
 parser.add_argument("--absolute_coverage_values", action="store_true", dest="absolute_coverage_values",
                     help="Use absolute coverage values. Default: False")
 parser.add_argument("--subplots_adjust_left", action="store", dest="subplots_adjust_left", type=float,
@@ -150,7 +154,7 @@ Visualization.draw_coverage_windows(coverage_df, args.window_size, args.window_s
                                     subplots_adjust_bottom=args.subplots_adjust_bottom,
                                     subplots_adjust_right=args.subplots_adjust_right,
                                     subplots_adjust_top=args.subplots_adjust_top,
-                                    show_track_label=True,
+                                    show_track_label=not args.hide_track_label,
                                     show_trackgroup_label=True
                                     )
 
