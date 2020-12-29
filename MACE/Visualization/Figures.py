@@ -98,7 +98,8 @@ class Figure(OrderedDict):
                                                         sharex=self.style.share_x_axis, sharey=self.style.share_y_axis,
                                                         num=self.id,
                                                         dpi=self.style.dpi,
-                                                        figsize=(self.width, self.height),
+                                                        figsize=(self.horizontal_subplot_number * self.style.width_per_subplot,
+                                                                 self.vertical_subplot_number * self.style.height_per_subplot),
                                                         squeeze=False)
         else:
             self.figure = plt.figure(self.id, dpi=self.style.dpi,

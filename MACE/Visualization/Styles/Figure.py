@@ -50,7 +50,7 @@ chromosome_figure_style = FigureStyle(dpi=300, width=15, height_per_subplot=None
 rainfall_figure_style = FigureStyle(dpi=300, width_per_subplot=None,
                                     height_per_subplot=2,
                                     share_x_axis=True, share_y_axis=True)
-plot_figure_style = FigureStyle(dpi=300, width_per_subplot=None,
+plot_figure_style = FigureStyle(dpi=300, width_per_subplot=2,
                                 height_per_subplot=2,
                                 share_x_axis=True, share_y_axis=True,
                                 width=8, height=8)

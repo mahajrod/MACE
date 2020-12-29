@@ -32,7 +32,7 @@ class TrackGroup(OrderedDict):
 
     def init_coordinates(self):
         y = self.y_start + self.style.internal_offset - self.style.distance
-        self.track_label_param_list = [[len(self[track_name].label) if self[track_name].label else 0,
+        self.track_label_param_list = [[len(self[track_name].label) if (self[track_name].label and self[track_name].style.show_label) else 0,
                                        self[track_name].style.label_fontsize] for track_name in self]
         for track_name in self:
             self[track_name].y_start = y + self.style.distance
