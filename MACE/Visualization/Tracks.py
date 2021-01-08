@@ -9,7 +9,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 plt.ioff()
 from matplotlib.collections import PatchCollection
-from matplotlib.patches import Rectangle
+from matplotlib.patches import Rectangle, Circle
 
 
 class Track:
@@ -213,7 +213,8 @@ class WindowTrack(Track):
             self.records = self.records[["start"] + list(self.records.columns[:-1])]
 
         elif self.window_type == "sliding":
-            # TODO: implement sliding window drawing
+            # TODO: implement sliding window
+            # TODO: verify - sliding window drawing is already implemented  somewhere else:)))
             pass
         else:
             raise ValueError("ERROR!!! Unknown window type: %s" % self.window_type)
@@ -301,30 +302,40 @@ class FeatureTrack(Track):
                  style=default_track_style, label=None,
                  feature_style=default_feature_style, color_expression=None,
                  colormap=None, thresholds=None,
-                 colors=None, background=None, masked=None):
+                 colors=None, background=None, masked=None,
+                 feature_start_column_id="start", 
+                 feature_end_column_id="end", 
+                 feature_color_column_id="color",
+                 feature_length_column_id="length"):
+
         Track.__init__(self, feature_df, style, y_start=y_start, x_start=x_start, x_end=x_end, label=label,
                        feature_style=feature_style, color_expression=color_expression,
                        colormap=colormap, thresholds=thresholds, colors=colors, background=background, masked=masked)
 
         self.track_type = "feature"
         self.preprocess_data()
+        
+        self.feature_start_column_id = feature_start_column_id
+        self.feature_end_column_id = feature_end_column_id
+        self.feature_color_column_id = feature_color_column_id
+        self.feature_length_column_id = feature_length_column_id
 
     def preprocess_data(self):
-        self.records["length"] = self.records["end"] - self.records["start"]
+        self.records[self.feature_length_column_id] = self.records[self.feature_end_column_id] - self.records[self.feature_start_column_id]
 
     def create_patch_function(self, style=None, feature_style=None, y_start=None, *args, **kwargs):
 
         if feature_style.patch_type == "rectangle":
-            if "color" in self.records.columns:
+            if self.feature_color_column_id in self.records.columns:
 
                 def create_patch(row, style=style if style else self.style,
                                  feature_style=feature_style if feature_style else self.feature_style, y_start=y_start):
 
-                    return Rectangle((row['start'], y_start), row['length'],
+                    return Rectangle((row[self.feature_start_column_id], y_start), row[self.feature_length_column_id],
                                      style.height,
                                      fill=True,
                                      edgecolor=feature_style.edge_color,
-                                     facecolor=row["color"],
+                                     facecolor=row[self.feature_color_column_id],
                                      linewidth=feature_style.edge_width)
 
                 return create_patch
@@ -332,11 +343,37 @@ class FeatureTrack(Track):
             else:
                 def create_patch(row, style=style, feature_style=feature_style, y_start=y_start):
 
-                    return Rectangle((row['start'], y_start), row['length'],
+                    return Rectangle((row[self.feature_start_column_id], y_start), row[self.feature_length_column_id],
                                      style.height,
                                      fill=True,
                                      edgecolor=feature_style.edge_color,
                                      facecolor=feature_style.face_color,
                                      linewidth=feature_style.edge_width)
 
+                return create_patch
+
+        elif feature_style.patch_type == "circle":
+
+            if self.feature_color_column_id in self.records.columns:
+
+                def create_patch(row, style=style if style else self.style,
+                                 feature_style=feature_style if feature_style else self.feature_style, y_start=y_start):
+
+                    return Circle(((row[self.feature_end_column_id] + row[self.feature_start_column_id]) / 2 , y_start + style.height / 2), radius=style.height / 2,
+                                  fill=True,
+                                  edgecolor=feature_style.edge_color,
+                                  facecolor=row[self.feature_color_column_id],
+                                  linewidth=feature_style.edge_width)
+
+                return create_patch
+
+            else:
+                def create_patch(row, style=style, feature_style=feature_style, y_start=y_start):
+                    return Circle(((row[self.feature_end_column_id] + row[self.feature_start_column_id]) / 2, y_start + style.height / 2),
+                                  radius=style.height / 2,
+                                  fill=True,
+                                  edgecolor=feature_style.edge_color,
+                                  facecolor=feature_style.face_color,
+                                  linewidth=feature_style.edge_width)
+                
                 return create_patch

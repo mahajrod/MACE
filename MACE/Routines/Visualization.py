@@ -24,7 +24,7 @@ from MACE.Visualization.Legends import DensityLegend, FeatureLegend, CoverageLeg
 from MACE.Functions.Generators import recursive_generator
 from MACE.Visualization.Styles.Subplot import chromosome_subplot_style
 from MACE.Visualization.Styles.Figure import plot_figure_style, rainfall_figure_style, chromosome_figure_style, one_plot_figure_style
-
+from MACE.Visualization.Styles.Feature import default_feature_style, circle_feature_style
 
 class Visualization(DrawingRoutines):
 
@@ -452,25 +452,42 @@ class Visualization(DrawingRoutines):
 
         pass
 
-    def draw_gff(self, collection_gff, scaffold_length_df,
-                 output_prefix,
-                 figure_width=15, figure_height_per_scaffold=0.5, dpi=300,
-                 colormap=None, thresholds=None, colors=None, background=None,
-                 title=None,
-                 extensions=("png", ),
-                 scaffold_order_list=None,
-                 ):
+    def draw_features(self, collection_gff, scaffold_length_df,
+                      output_prefix,
+                      figure_width=15, figure_height_per_scaffold=0.5, dpi=300,
+                      colormap=None, thresholds=None, colors=None, background=None,
+                      title=None,
+                      extensions=("png", ),
+                      scaffold_order_list=None,
+                      feature_shape="rectangle",
+                      feature_start_column_id="start",
+                      feature_end_column_id="end",
+                      feature_color_column_id="color",
+                      feature_length_column_id="length"
+                      ):
 
         track_group_dict = OrderedDict()
 
         scaffolds = scaffold_order_list[::-1] if scaffold_order_list else collection_gff.records.index.get_level_values(level=0).unique().to_list()
         scaffold_number = len(scaffolds)
 
+        if feature_shape == "rectangle":
+            feature_style = default_feature_style
+        elif feature_shape == "circle":
+            feature_style = circle_feature_style
+        else:
+            raise ValueError("ERROR!!! Unknown feature style")
+
         for chr in scaffolds:  # count_df.index.get_level_values(level=0).unique():
             track_group_dict[chr] = TrackGroup(
                 {chr: FeatureTrack(collection_gff.records.xs(chr), x_end=scaffold_length_df.loc[chr][0],
                                    label=chr, colormap=colormap, thresholds=thresholds,
-                                   colors=colors, background=background)})
+                                   colors=colors, background=background,
+                                   style=feature_style,
+                                   feature_start_column_id=feature_start_column_id,
+                                   feature_end_column_id=feature_end_column_id,
+                                   feature_color_column_id=feature_color_column_id,
+                                   feature_length_column_id=feature_length_column_id)})
             track_group_dict[chr][chr].add_color_by_dict()
         # track_group_dict
         # track_group_dict["chr13"]
