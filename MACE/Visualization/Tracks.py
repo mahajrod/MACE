@@ -9,14 +9,15 @@ import numpy as np
 import matplotlib.pyplot as plt
 plt.ioff()
 from matplotlib.collections import PatchCollection
-from matplotlib.patches import Rectangle, Circle
+from matplotlib.patches import Rectangle, Circle, Ellipse
 
 
 class Track:
 
-    def __init__(self, records, style, y_start=None, x_start=0, x_end=None, label=None, feature_style=default_feature_style,
-                 color_expression=None, colormap=None, thresholds=None, colors=None, background=None, masked=None,
-                 patch_function=None):
+    def __init__(self, records, style, y_start=None, x_start=0, x_end=None, label=None,
+                 feature_style=default_feature_style, color_expression=None, colormap=None, thresholds=None,
+                 colors=None, background=None, masked=None, patch_function=None, subplot_scale=False,
+                 track_group_scale=False, figure_x_y_ration=None, subplot_x_y_ratio=None, track_group_x_y_ratio=None):
 
         self.records = records
 
@@ -49,6 +50,13 @@ class Track:
 
         self.patch_function = patch_function
 
+        self.figure_x_y_ratio = figure_x_y_ration
+        self.subplot_x_y_ratio = subplot_x_y_ratio
+        self.track_group_x_y_ratio = track_group_x_y_ratio
+
+        self.subplot_scale = subplot_scale
+        self.track_group_scale = track_group_scale
+
     def color_threshold_expression(self, value):
                                    # colors=("white", "#333a97", "#3d3795", "#5d3393","#813193", "#9d2d7f", "#b82861",
                                    #         "#d33845", "#ea2e2e", "#f5ae27"))
@@ -68,9 +76,11 @@ class Track:
 
     #def set_color(self):
     #    self.records["color"] = self.records["value"].apply()
-    def create_patch_function(self, style=None, feature_style=None, y_start=None, *args, **kwargs):
+    def create_patch_function(self, style=None, feature_style=None, y_start=None,  *args, **kwargs):
         """
         Track type dependent function
+        :param track_group_scale:
+        :param subplot_scale:
         :param style:
         :param feature_style:
         :param y_start:
@@ -100,7 +110,7 @@ class Track:
                                                                  feature_style=used_feature_style,
                                                                  y_start=y_track,
                                                                  *args, **kwargs)
-
+        print(self.records.apply(self.patch_function, axis=1))
         return PatchCollection(self.records.apply(self.patch_function, axis=1), match_original=True,)
 
     def add_color(self, expression=None, value_column_index=-1, value_column_name=None, masking=True):
@@ -150,7 +160,8 @@ class WindowTrack(Track):
                  style=default_track_style, label=None, norm=False,
                  window_type="stacking", multiplier=None, feature_style=default_feature_style, color_expression=None,
                  colormap=None, thresholds=None,
-                 colors=None, background=None, masked=None):
+                 colors=None, background=None, masked=None, subplot_scale=False,
+                 track_group_scale=False, figure_x_y_ration=None, subplot_x_y_ratio=None, track_group_x_y_ratio=None):
         """
 
         :param windows_df:      Example
@@ -179,7 +190,11 @@ class WindowTrack(Track):
 
         Track.__init__(self, windows_df, style, y_start=y_start, x_start=x_start, x_end=x_end, label=label,
                        feature_style=feature_style, color_expression=color_expression,
-                       colormap=colormap, thresholds=thresholds, colors=colors, background=background, masked=masked)
+                       colormap=colormap, thresholds=thresholds, colors=colors, background=background, masked=masked,
+                       subplot_scale=subplot_scale, track_group_scale=track_group_scale,
+                       figure_x_y_ration=figure_x_y_ration, subplot_x_y_ratio=subplot_x_y_ratio,
+                       track_group_x_y_ratio=track_group_x_y_ratio
+                       )
 
         self.track_type = "window"
         self.window_type = window_type
@@ -306,19 +321,35 @@ class FeatureTrack(Track):
                  feature_start_column_id="start", 
                  feature_end_column_id="end", 
                  feature_color_column_id="color",
-                 feature_length_column_id="length"):
+                 feature_length_column_id="length",
+                 x_scale_factor=1,
+                 y_scale_factor=1,
+                 auto_scale=False,
+                 subplot_scale=False,
+                 track_group_scale=False,
+                 figure_x_y_ration=None, subplot_x_y_ratio=None, track_group_x_y_ratio=None
+                 ):
 
         Track.__init__(self, feature_df, style, y_start=y_start, x_start=x_start, x_end=x_end, label=label,
                        feature_style=feature_style, color_expression=color_expression,
-                       colormap=colormap, thresholds=thresholds, colors=colors, background=background, masked=masked)
+                       colormap=colormap, thresholds=thresholds, colors=colors, background=background, masked=masked,
+                       subplot_scale=subplot_scale,
+                       track_group_scale=track_group_scale,
+                       figure_x_y_ration=figure_x_y_ration, subplot_x_y_ratio=subplot_x_y_ratio,
+                       track_group_x_y_ratio=track_group_x_y_ratio
+                       )
 
         self.track_type = "feature"
-        self.preprocess_data()
-        
+
         self.feature_start_column_id = feature_start_column_id
         self.feature_end_column_id = feature_end_column_id
         self.feature_color_column_id = feature_color_column_id
         self.feature_length_column_id = feature_length_column_id
+
+        self.x_scale_factor = x_scale_factor
+        self.y_scale_factor = y_scale_factor
+        self.auto_scale = auto_scale
+        self.preprocess_data()
 
     def preprocess_data(self):
         self.records[self.feature_length_column_id] = self.records[self.feature_end_column_id] - self.records[self.feature_start_column_id]
@@ -359,7 +390,7 @@ class FeatureTrack(Track):
                 def create_patch(row, style=style if style else self.style,
                                  feature_style=feature_style if feature_style else self.feature_style, y_start=y_start):
 
-                    return Circle(((row[self.feature_end_column_id] + row[self.feature_start_column_id]) / 2 , y_start + style.height / 2), radius=style.height / 2,
+                    return Circle(((row[self.feature_end_column_id] + row[self.feature_start_column_id]) / 2 , y_start + style.height / 2), radius=feature_style.height / 2,
                                   fill=True,
                                   edgecolor=feature_style.edge_color,
                                   facecolor=row[self.feature_color_column_id],
@@ -370,10 +401,50 @@ class FeatureTrack(Track):
             else:
                 def create_patch(row, style=style, feature_style=feature_style, y_start=y_start):
                     return Circle(((row[self.feature_end_column_id] + row[self.feature_start_column_id]) / 2, y_start + style.height / 2),
-                                  radius=style.height / 2,
+                                  radius=feature_style.height / 2,
                                   fill=True,
                                   edgecolor=feature_style.edge_color,
                                   facecolor=feature_style.face_color,
                                   linewidth=feature_style.edge_width)
                 
+                return create_patch
+
+        elif feature_style.patch_type == "ellipse":
+
+            if self.subplot_scale:
+                x_scale_factor = self.subplot_x_y_ratio / self.figure_x_y_ratio
+            elif self.track_group_scale:
+                x_scale_factor = self.track_group_x_y_ratio / self.figure_x_y_ratio
+            else:
+                x_scale_factor = 1
+            print(x_scale_factor)
+            y_scale_factor = 1
+
+            if self.feature_color_column_id in self.records.columns:
+
+                def create_patch(row, style=style if style else self.style,
+                                 feature_style=feature_style if feature_style else self.feature_style, y_start=y_start):
+
+                    return Ellipse(((row[self.feature_end_column_id] + row[self.feature_start_column_id]) / 2,
+                                   y_start + style.height / 2),
+                                   height=feature_style.height * y_scale_factor,
+                                   width=feature_style.height * x_scale_factor if self.subplot_scale else (row[self.feature_end_column_id] - row[self.feature_start_column_id] + 1) * x_scale_factor,
+                                   fill=True,
+                                   edgecolor=feature_style.edge_color,
+                                   facecolor=row[self.feature_color_column_id],
+                                   linewidth=feature_style.edge_width)
+
+                return create_patch
+
+            else:
+                def create_patch(row, style=style, feature_style=feature_style, y_start=y_start):
+                    return Ellipse(((row[self.feature_end_column_id] + row[self.feature_start_column_id]) / 2,
+                                   y_start + style.height / 2),
+                                   height=feature_style.height * y_scale_factor,
+                                   width=feature_style.height * x_scale_factor if self.subplot_scale else (row[self.feature_end_column_id] - row[self.feature_start_column_id] + 1) * x_scale_factor,
+                                   fill=True,
+                                   edgecolor=feature_style.edge_color,
+                                   facecolor=feature_style.face_color,
+                                   linewidth=feature_style.edge_width)
+
                 return create_patch

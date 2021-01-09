@@ -24,7 +24,7 @@ from MACE.Visualization.Legends import DensityLegend, FeatureLegend, CoverageLeg
 from MACE.Functions.Generators import recursive_generator
 from MACE.Visualization.Styles.Subplot import chromosome_subplot_style
 from MACE.Visualization.Styles.Figure import plot_figure_style, rainfall_figure_style, chromosome_figure_style, one_plot_figure_style
-from MACE.Visualization.Styles.Feature import default_feature_style, circle_feature_style
+from MACE.Visualization.Styles.Feature import default_feature_style, circle_feature_style, ellipse_feature_style
 
 class Visualization(DrawingRoutines):
 
@@ -454,6 +454,7 @@ class Visualization(DrawingRoutines):
 
     def draw_features(self, collection_gff, scaffold_length_df,
                       output_prefix,
+                      legend_df=None,
                       figure_width=15, figure_height_per_scaffold=0.5, dpi=300,
                       colormap=None, thresholds=None, colors=None, background=None,
                       title=None,
@@ -463,7 +464,16 @@ class Visualization(DrawingRoutines):
                       feature_start_column_id="start",
                       feature_end_column_id="end",
                       feature_color_column_id="color",
-                      feature_length_column_id="length"
+                      feature_length_column_id="length",
+                      subplots_adjust_left=None,
+                      subplots_adjust_bottom=None,
+                      subplots_adjust_right=None,
+                      subplots_adjust_top=None,
+                      show_track_label=True,
+                      show_trackgroup_label=True,
+                      close_figure=False,
+                      subplot_scale=False,
+                      track_group_scale=False
                       ):
 
         track_group_dict = OrderedDict()
@@ -475,34 +485,42 @@ class Visualization(DrawingRoutines):
             feature_style = default_feature_style
         elif feature_shape == "circle":
             feature_style = circle_feature_style
+        elif feature_shape == "ellipse":
+            feature_style = ellipse_feature_style
         else:
             raise ValueError("ERROR!!! Unknown feature style")
 
         for chr in scaffolds:  # count_df.index.get_level_values(level=0).unique():
-            print(chr)
             track_group_dict[chr] = TrackGroup(
-                {chr: FeatureTrack(collection_gff.records.xs(chr) if chr in collection_gff.records.index else None, x_end=scaffold_length_df.loc[chr][0],
+                {chr: FeatureTrack(collection_gff.records.loc[[chr]] if chr in collection_gff.records.index else None, x_end=scaffold_length_df.loc[chr][0],
                                    label=chr, colormap=colormap, thresholds=thresholds,
                                    colors=colors, background=background,
-                                   style=feature_style,
+                                   feature_style=feature_style,
                                    feature_start_column_id=feature_start_column_id,
                                    feature_end_column_id=feature_end_column_id,
                                    feature_color_column_id=feature_color_column_id,
-                                   feature_length_column_id=feature_length_column_id)})
-            track_group_dict[chr][chr].add_color_by_dict()
+                                   feature_length_column_id=feature_length_column_id,
+                                   subplot_scale=subplot_scale,
+                                   track_group_scale=track_group_scale)})
+            if feature_color_column_id not in collection_gff.records.columns:
+                track_group_dict[chr][chr].add_color_by_dict()
         # track_group_dict
         # track_group_dict["chr13"]
         chromosome_subplot = Subplot(track_group_dict, title=title, style=chromosome_subplot_style,
-                                     legend=FeatureLegend(colormap=colormap,
-                                                          thresholds=thresholds))
+                                     legend=FeatureLegend(legend_df, colormap=colormap,) if legend_df is not None else None,
+                                     auto_scale=True, figure_x_y_ratio=figure_width/int(scaffold_number * figure_height_per_scaffold))
 
         plt.figure(1, figsize=(figure_width, int(scaffold_number * figure_height_per_scaffold)), dpi=dpi)
 
         chromosome_subplot.draw()
+        plt.subplots_adjust(left=subplots_adjust_left, right=subplots_adjust_right,
+                            top=subplots_adjust_top, bottom=subplots_adjust_bottom)
 
         for ext in extensions:
             plt.savefig("%s.%s" % (output_prefix, ext))
 
+        if close_figure:
+            plt.close(1)
 
 
     # ------------------ Not rewritten yet --------------------------------

@@ -14,7 +14,8 @@ from matplotlib.patches import Rectangle
 class TrackGroup(OrderedDict):
 
     def __init__(self, tracks=None, y_start=None, x_start=0, x_end=1, style=default_track_group_style,
-                 label=None):
+                 label=None, x_scale_factor=1, y_scale_factor=1, auto_scale=False,
+                 subplot_x_y_ratio=None, figure_x_y_ratio=None):
         if tracks:
             OrderedDict.__init__(self, tracks)
         else:
@@ -30,6 +31,16 @@ class TrackGroup(OrderedDict):
         self.label = label
         self.track_label_param_list = None
 
+        self.x_scale_factor = x_scale_factor
+        self.y_scale_factor = y_scale_factor
+
+        # TODO: finish autoscale implementation
+        self.auto_scale = auto_scale
+
+        self.x_y_ratio = None
+        self.subplot_x_y_ratio = subplot_x_y_ratio
+        self.figure_x_y_ratio = figure_x_y_ratio
+
     def init_coordinates(self):
         y = self.y_start + self.style.internal_offset - self.style.distance
         self.track_label_param_list = [[len(self[track_name].label) if (self[track_name].label and self[track_name].style.show_label) else 0,
@@ -41,6 +52,13 @@ class TrackGroup(OrderedDict):
 
         self.x_end = self.x_end * self.style.x_multiplier
         self.y_end = y + self.style.internal_offset
+
+        #if self.auto_scale:
+        #    self.y_scale_factor = 1
+        self.x_y_ratio = self.x_end / self.y_end
+
+        for track_name in self:
+            self[track_name].track_group_x_y_ratio = self.x_y_ratio
 
     def draw(self, axes=None, style=None, label_shift=0):
         self.init_coordinates()

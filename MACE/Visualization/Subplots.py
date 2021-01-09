@@ -16,7 +16,8 @@ class Subplot(OrderedDict):
 
     def __init__(self, track_groups=None, y_start=None, y_end=None, x_start=None, x_end=None,
                  style=default_subplot_style, title=None,
-                 legend=None, axes=None, type="track"):
+                 legend=None, axes=None, type="track", auto_scale=False, x_scale_factor=1,
+                 y_scale_factor=1, figure_x_y_ratio=None):
         if track_groups:
             OrderedDict.__init__(self, track_groups)
         else:
@@ -41,6 +42,13 @@ class Subplot(OrderedDict):
         self.legend = legend
         self.axes = axes
 
+        # TODO: add autoscale implementation
+        #self.auto_scale = auto_scale
+        self.x_scale_factor = x_scale_factor
+        self.y_scale_factor = y_scale_factor
+        self.x_y_ratio = None
+        self.figure_x_y_ratio = figure_x_y_ratio
+
     def init_coordinates(self):
         if self.type == "track":
             y = self.y_start + self.style.internal_offset - self.style.distance
@@ -54,6 +62,17 @@ class Subplot(OrderedDict):
 
             self.x_end = self.x_end * self.style.x_multiplier
             self.y_end = (y + self.style.internal_offset) * self.style.y_multiplier
+
+            #if self.auto_scale:
+            # self.y_scale_factor = 1
+            self.x_y_ratio = self.x_end / self.y_end
+            for track_group_name in self:
+                self[track_group_name].subplot_x_y_ratio = self.x_y_ratio
+                self[track_group_name].figure_x_y_ratio = self.figure_x_y_ratio
+                for track_name in self[track_group_name]:
+                    self[track_group_name][track_name].figure_x_y_ratio = self.figure_x_y_ratio
+                    self[track_group_name][track_name].subplot_x_y_ratio = self.x_y_ratio
+            #print(self.x_scale_factor)
 
             if isinstance(self.legend, (CoverageLegend, DensityLegend)):
                 legend_height = (len(self.legend.thresholds) + 3) * self.legend.element_size
