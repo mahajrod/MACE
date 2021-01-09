@@ -479,8 +479,9 @@ class Visualization(DrawingRoutines):
             raise ValueError("ERROR!!! Unknown feature style")
 
         for chr in scaffolds:  # count_df.index.get_level_values(level=0).unique():
+            print(chr)
             track_group_dict[chr] = TrackGroup(
-                {chr: FeatureTrack(collection_gff.records.xs(chr), x_end=scaffold_length_df.loc[chr][0],
+                {chr: FeatureTrack(collection_gff.records.xs(chr) if chr in collection_gff.records.index else None, x_end=scaffold_length_df.loc[chr][0],
                                    label=chr, colormap=colormap, thresholds=thresholds,
                                    colors=colors, background=background,
                                    style=feature_style,
