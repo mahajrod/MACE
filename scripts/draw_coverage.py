@@ -115,18 +115,15 @@ args = parser.parse_args()
 chr_syn_dict = SynDict(filename=args.scaffold_syn_file,
                        key_index=args.syn_file_key_column,
                        value_index=args.syn_file_value_column)
-print(chr_syn_dict)
 
 coverage_df = pd.read_csv(args.input, sep="\t", usecols=[args.scaffold_column_name,
                                                          args.window_column_name] + args.coverage_column_name_list,
                           index_col=(args.scaffold_column_name, args.window_column_name))
-print(coverage_df)
-print(args.scaffold_white_list)
+
 scaffold_to_keep = StatsVCF.get_filtered_entry_list(coverage_df.index.get_level_values(level=0).unique().to_list(),
                                                     entry_white_list=args.scaffold_white_list)
 
 coverage_df = coverage_df[coverage_df.index.isin(scaffold_to_keep, level=0)]
-print(coverage_df)
 chr_len_df = pd.read_csv(args.scaffold_length_file, sep='\t', header=None, names=("scaffold", "length"), index_col=0)
 
 if args.scaffold_syn_file:

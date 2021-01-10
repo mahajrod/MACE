@@ -278,9 +278,6 @@ class Visualization(DrawingRoutines):
 
             track_number = 0
 
-            print(count_df)
-            print(count_df.index)
-
             for chr in scaffolds: # count_df.index.get_level_values(level=0).unique():
                 track_group_dict[chr] = TrackGroup(label=chr if show_trackgroup_label else None)
                 for track_name in count_df.columns:
