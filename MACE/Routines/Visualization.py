@@ -286,6 +286,7 @@ class Visualization(DrawingRoutines):
                     if count_df.loc[chr, [track_name]].isnull().values.any():
                         # skip empty track
                         continue
+                    print(chr, track_name)
                     track_group_dict[chr][track_name] = WindowTrack(count_df.loc[chr, [track_name]],
                                                                     window_size, window_step_final,
                                                                     x_end=scaffold_length_df.loc[chr].iloc[0],
