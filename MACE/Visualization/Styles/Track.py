@@ -9,9 +9,11 @@ class TrackStyle:
                  show_label=True, label_fontsize=16, label_hor_aln='right', label_vert_aln='center',
                  label_y_shift=None, colormap=None, thresholds=array((0.0, 0.1, 0.25, 0.5, 1.0)),
                  colors=("#333a97", "green", "yellow", "orange", "red"), background="white",
-                 masked="grey", color_expression=None):
+                 masked="grey", color_expression=None, fill_empty=False, empty_color="lightgrey"):
         self.height = height
         self.fill = fill
+        self.fill_empty = fill_empty
+        self.empty_color = empty_color
         self.face_color = face_color
         self.edge = edge
         self.edge_color = edge_color
@@ -38,4 +40,7 @@ class TrackStyle:
 
 default_track_style = TrackStyle(height=10, colormap=None, thresholds=array((0.0, 0.1, 0.25, 0.5, 1.0)),
                                  colors=("#333a97", "green", "yellow", "orange", "red"), background="white",
-                                 masked="grey")
+                                 masked="grey", fill_empty=False)
+
+feature_track_style = TrackStyle(height=10, colormap=None, background="white",
+                                 masked="grey", fill_empty=True, empty_color="lightgrey")

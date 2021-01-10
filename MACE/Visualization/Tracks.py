@@ -94,6 +94,8 @@ class Track:
 
     def create_patch_collection(self, y_start=None, style=None, feature_style=None,
                                 track_xmin=None, track_xmax=None, patch_function=None, *args, **kwargs):
+        if self.records is None:
+            return 0
         # TODO: add min and max coordinate filtering
         if self.style is None and style is None:
             raise ValueError("ERROR!!! No style was set!")
@@ -110,7 +112,6 @@ class Track:
                                                                  feature_style=used_feature_style,
                                                                  y_start=y_track,
                                                                  *args, **kwargs)
-        print(self.records.apply(self.patch_function, axis=1))
         return PatchCollection(self.records.apply(self.patch_function, axis=1), match_original=True,)
 
     def add_color(self, expression=None, value_column_index=-1, value_column_name=None, masking=True):
@@ -140,12 +141,13 @@ class Track:
             #print (self.x_start, self.y_start, self.x_end)
             current_subplot.add_patch(Rectangle((self.x_start, self.y_start), self.x_end,
                                       used_style.height,
-                                      fill=used_style.fill,
+                                      color=used_style.empty_color if (used_style.fill_empty and self.records is None) else used_style.face_color,
+                                      fill=True if (used_style.fill_empty and self.records is None) else used_style.fill,
                                       edgecolor=used_style.edge_color,
                                       facecolor=used_style.face_color,
                                       linewidth=used_style.edge_width))
-
-        current_subplot.add_collection(self.create_patch_collection())
+        if self.records is not None:
+            current_subplot.add_collection(self.create_patch_collection())
 
         if self.label and self.style.show_label:
             current_subplot.annotate(self.label, xy=(0, self.y_start + self.style.label_y_shift), xycoords='data',
@@ -352,9 +354,12 @@ class FeatureTrack(Track):
         self.preprocess_data()
 
     def preprocess_data(self):
-        self.records[self.feature_length_column_id] = self.records[self.feature_end_column_id] - self.records[self.feature_start_column_id]
+        if self.records is not None:
+            self.records[self.feature_length_column_id] = self.records[self.feature_end_column_id] - self.records[self.feature_start_column_id]
 
     def create_patch_function(self, style=None, feature_style=None, y_start=None, *args, **kwargs):
+        if self.records is None:
+            return 0
 
         if feature_style.patch_type == "rectangle":
             if self.feature_color_column_id in self.records.columns:
@@ -417,7 +422,6 @@ class FeatureTrack(Track):
                 x_scale_factor = self.track_group_x_y_ratio / self.figure_x_y_ratio
             else:
                 x_scale_factor = 1
-            print(x_scale_factor)
             y_scale_factor = 1
 
             if self.feature_color_column_id in self.records.columns:

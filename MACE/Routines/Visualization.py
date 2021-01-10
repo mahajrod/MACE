@@ -25,6 +25,8 @@ from MACE.Functions.Generators import recursive_generator
 from MACE.Visualization.Styles.Subplot import chromosome_subplot_style
 from MACE.Visualization.Styles.Figure import plot_figure_style, rainfall_figure_style, chromosome_figure_style, one_plot_figure_style
 from MACE.Visualization.Styles.Feature import default_feature_style, circle_feature_style, ellipse_feature_style
+from MACE.Visualization.Styles.Track import default_track_style, feature_track_style
+
 
 class Visualization(DrawingRoutines):
 
@@ -494,6 +496,7 @@ class Visualization(DrawingRoutines):
             track_group_dict[chr] = TrackGroup(
                 {chr: FeatureTrack(collection_gff.records.loc[[chr]] if chr in collection_gff.records.index else None, x_end=scaffold_length_df.loc[chr][0],
                                    label=chr, colormap=colormap, thresholds=thresholds,
+                                   style=feature_track_style,
                                    colors=colors, background=background,
                                    feature_style=feature_style,
                                    feature_start_column_id=feature_start_column_id,
