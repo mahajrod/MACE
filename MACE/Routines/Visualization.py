@@ -277,22 +277,24 @@ class Visualization(DrawingRoutines):
             # TODO: switch to delivering masking as separate df
 
             track_number = 0
-
+            print("AAAAAA")
             for chr in scaffolds: # count_df.index.get_level_values(level=0).unique():
                 track_group_dict[chr] = TrackGroup(label=chr if show_trackgroup_label else None)
                 for track_name in count_df.columns:
                     #print(chr)
                     #print(track_name)
-
+                    if count_df.loc[chr, [track_name]].isnull().values.any():
+                        # skip empty track
+                        continue
                     track_group_dict[chr][track_name] = WindowTrack(count_df.loc[chr, [track_name]],
-                                                                                window_size, window_step_final,
-                                                                                x_end=scaffold_length_df.loc[chr].iloc[0],
-                                                                                multiplier=multiplier,
-                                                                                label=track_name if show_track_label else None,
-                                                                                colormap=colormap_entry,
-                                                                                thresholds=thresholds,
-                                                                                colors=colors, background=background,
-                                                                                masked=masked, norm=norm)
+                                                                    window_size, window_step_final,
+                                                                    x_end=scaffold_length_df.loc[chr].iloc[0],
+                                                                    multiplier=multiplier,
+                                                                    label=track_name if show_track_label else None,
+                                                                    colormap=colormap_entry,
+                                                                    thresholds=thresholds,
+                                                                    colors=colors, background=background,
+                                                                    masked=masked, norm=norm)
                     track_group_dict[chr][track_name].add_color(masking=masking)
                     track_number += 1
             chromosome_subplot = Subplot(track_group_dict,
