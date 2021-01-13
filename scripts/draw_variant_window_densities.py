@@ -192,5 +192,5 @@ if not args.only_count:
                                                 subplots_adjust_left=args.subplots_adjust_left,
                                                 subplots_adjust_bottom=args.subplots_adjust_bottom,
                                                 subplots_adjust_right=args.subplots_adjust_right,
-                                                subplots_adjust_top=args.subplots_adjust_top
-                                                )
+                                                subplots_adjust_top=args.subplots_adjust_top,
+                                                show_trackgroup_label=True)
