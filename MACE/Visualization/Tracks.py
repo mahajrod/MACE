@@ -150,7 +150,7 @@ class Track:
             current_subplot.add_collection(self.create_patch_collection())
 
         if self.label and self.style.show_label:
-            current_subplot.annotate(self.label, xy=(0, self.y_start + self.style.label_y_shift), xycoords='data',
+            current_subplot.annotate(self.label, xy=(0, self.y_start + self.style.height/2.5), xycoords='data',
                                      fontsize=self.style.label_fontsize,
                                      xytext=(-15, 0), textcoords='offset points',
                                      ha=self.style.label_hor_aln, va=self.style.label_vert_aln)

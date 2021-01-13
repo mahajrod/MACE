@@ -15,17 +15,17 @@ from matplotlib.patches import Rectangle
 from RouToolPa.Collections.General import TwoLvlDict
 from RouToolPa.Routines.Drawing import DrawingRoutines
 
-from MACE.Visualization.Tracks import WindowTrack, FeatureTrack
-from MACE.Visualization.TrackGroups import TrackGroup
-from MACE.Visualization.Subplots import Subplot
-from MACE.Visualization.Figures import Figure
+from MACE.Visualization.Tracks import *
+from MACE.Visualization.TrackGroups import *
+from MACE.Visualization.Subplots import *
+from MACE.Visualization.Figures import *
 
-from MACE.Visualization.Legends import DensityLegend, FeatureLegend, CoverageLegend
+from MACE.Visualization.Legends import *
 from MACE.Functions.Generators import recursive_generator
-from MACE.Visualization.Styles.Subplot import chromosome_subplot_style
-from MACE.Visualization.Styles.Figure import plot_figure_style, rainfall_figure_style, chromosome_figure_style, one_plot_figure_style
-from MACE.Visualization.Styles.Feature import default_feature_style, circle_feature_style, ellipse_feature_style
-from MACE.Visualization.Styles.Track import default_track_style, feature_track_style
+from MACE.Visualization.Styles.Subplot import *
+from MACE.Visualization.Styles.Figure import *
+from MACE.Visualization.Styles.Feature import *
+from MACE.Visualization.Styles.Track import *
 
 
 class Visualization(DrawingRoutines):
@@ -138,8 +138,8 @@ class Visualization(DrawingRoutines):
                                       subplots_adjust_right=None,
                                       subplots_adjust_top=None,
                                       show_track_label=True,
-                                      show_trackgroup_label=True
-                                      ):
+                                      show_trackgroup_label=True,
+                                      track_group_label_fontstyle='normal'):
 
         self.draw_windows(count_df, window_size, window_step, scaffold_length_df,
                           output_prefix,
@@ -159,7 +159,8 @@ class Visualization(DrawingRoutines):
                           subplots_adjust_right=subplots_adjust_right,
                           subplots_adjust_top=subplots_adjust_top,
                           show_track_label=show_track_label,
-                          show_trackgroup_label=show_trackgroup_label
+                          show_trackgroup_label=show_trackgroup_label,
+                          track_group_label_fontstyle=track_group_label_fontstyle
                           )
 
     def draw_coverage_windows(self, count_df, window_size, window_step, scaffold_length_df,
@@ -180,7 +181,8 @@ class Visualization(DrawingRoutines):
                               subplots_adjust_top=None,
                               show_track_label=True,
                               show_trackgroup_label=True,
-                              close_figure=False):
+                              close_figure=False,
+                              track_group_label_fontstyle='normal'):
 
         if absolute_coverage_values:
             if len(mean_coverage_dict) == 1:
@@ -226,8 +228,8 @@ class Visualization(DrawingRoutines):
                                 subplots_adjust_top=subplots_adjust_top,
                                 show_track_label=show_track_label,
                                 show_trackgroup_label=show_trackgroup_label,
-                                close_figure=close_figure
-                                )
+                                close_figure=close_figure,
+                                track_group_label_fontstyle=track_group_label_fontstyle)
 
         return fig
 
@@ -249,7 +251,8 @@ class Visualization(DrawingRoutines):
                      subplots_adjust_top=None,
                      show_track_label=True,
                      show_trackgroup_label=True,
-                     close_figure=False):
+                     close_figure=False,
+                     track_group_label_fontstyle='normal'):
 
         track_group_dict = OrderedDict()
         window_step_final = window_step if window_step else window_size
@@ -277,16 +280,18 @@ class Visualization(DrawingRoutines):
             # TODO: switch to delivering masking as separate df
 
             track_number = 0
-            print("AAAAAA")
+
+            track_group_style = TrackGroupStyle(label_fontstyle=track_group_label_fontstyle)
+
             for chr in scaffolds: # count_df.index.get_level_values(level=0).unique():
-                track_group_dict[chr] = TrackGroup(label=chr if show_trackgroup_label else None)
+                track_group_dict[chr] = TrackGroup(label=chr if show_trackgroup_label else None,
+                                                   style=track_group_style)
                 for track_name in count_df.columns:
                     #print(chr)
                     #print(track_name)
                     if count_df.loc[chr, [track_name]].isnull().values.any():
                         # skip empty track
                         continue
-                    print(chr, track_name)
                     track_group_dict[chr][track_name] = WindowTrack(count_df.loc[chr, [track_name]],
                                                                     window_size, window_step_final,
                                                                     x_end=scaffold_length_df.loc[chr].iloc[0],
