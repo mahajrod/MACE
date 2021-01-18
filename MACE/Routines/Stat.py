@@ -127,14 +127,14 @@ class StatsVCF(FileRoutines):
 
             singleton_counts_df = pd.DataFrame(singleton_counts_df, index=["double", "hetero", "homo"]).transpose()
             singleton_counts_df["all"] = singleton_counts_df.apply(sum, axis=1)
-            singleton_counts.index.name = "sample"
+            singleton_counts_df.index.name = "sample"
 
-            for index, typeeee in zip([0,1,2], ("dosi", "hesi", "hosi")):
+            for index, typeeee in zip([0, 1, 2], ("dosi", "hesi", "hosi")):
                 df_list[index].columns = pd.MultiIndex.from_arrays([collection_vcf.samples,
                                                                    [typeeee] * len(collection_vcf.samples),
                                                                    np.zeros(len(collection_vcf.samples), dtype=int)])
 
-            merged_df = pd.concat([collection_vcf.records] + df_list, axis = 1)
+            merged_df = pd.concat([collection_vcf.records] + df_list, axis=1)
 
             """
             all_genotype_sum = (collection_vcf.records[collection_vcf.samples].xs('GT', axis=1, level=1, drop_level=False).fillna(0) != 0).sum(axis=1)
