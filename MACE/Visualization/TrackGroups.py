@@ -74,10 +74,10 @@ class TrackGroup(OrderedDict):
 
         label_shift_full = (-120 if max(list(map(lambda s: s[0]*s[1], self.track_label_param_list))) else 0) + label_shift
         if self.label and used_style.show_label:
-            print(self.label)
-            print(self.style.label_x_shift + label_shift_full, (self.y_end + self.y_start) / 2)
-            print(self.y_start, self.y_end)
-            print()
+            #print(self.label)
+            #print(self.style.label_x_shift + label_shift_full, (self.y_end + self.y_start) / 2)
+            #print(self.y_start, self.y_end)
+            #print()
             current_subplot.annotate(self.label, xy=(0, (self.y_start + self.y_end)/2 + self.style.label_y_shift + 2), xycoords='data',
                                      fontsize=self.style.label_fontsize,
                                      fontstyle=self.style.label_fontstyle,
