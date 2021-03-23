@@ -117,6 +117,8 @@ coverage_df = pd.read_csv(args.input, sep="\t", usecols=[args.scaffold_column_na
 if args.verbose:
     print("Coverage df (raw)")
     print(coverage_df)
+    print("Coverage df index")
+    print(coverage_df.index)
     print("Whitelist")
     print(args.scaffold_white_list)
 scaffold_to_keep = StatsVCF.get_filtered_entry_list(coverage_df.index.get_level_values(level=0).unique().to_list(),
