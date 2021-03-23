@@ -113,9 +113,9 @@ chr_syn_dict = SynDict(filename=args.scaffold_syn_file,
 
 coverage_df = pd.read_csv(args.input, sep="\t", usecols=[args.scaffold_column_name,
                                                          args.window_column_name] + args.coverage_column_name_list,
-                          index_col=(args.scaffold_column_name, args.window_column_name), converters={args.scaffold_column_name: str,})
+                          index_col=(args.scaffold_column_name, args.window_column_name),)
 
-#coverage_df.index.set_levels(list(map(str, coverage_df.index.levels[0])), level=0, inplace=True)
+coverage_df.index.set_levels(list(map(str, coverage_df.index.levels[0])), level=0, inplace=True)
 if args.verbose:
     print("Coverage df (raw)")
     print(coverage_df)
@@ -129,7 +129,7 @@ scaffold_to_keep = StatsVCF.get_filtered_entry_list(coverage_df.index.get_level_
 coverage_df = coverage_df[coverage_df.index.isin(scaffold_to_keep, level=0)]
 chr_len_df = pd.read_csv(args.scaffold_length_file, sep='\t', header=None, names=("scaffold", "length"), index_col=0,
                          converters={args.scaffold_column_name: str,})
-#chr_len_df.index = pd.Index(list(map(str, chr_len_df.index)))
+chr_len_df.index = pd.Index(list(map(str, chr_len_df.index)))
 
 if args.scaffold_syn_file:
     coverage_df.rename(index=chr_syn_dict, inplace=True)
