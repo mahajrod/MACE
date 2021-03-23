@@ -129,6 +129,7 @@ scaffold_to_keep = StatsVCF.get_filtered_entry_list(coverage_df.index.get_level_
 coverage_df = coverage_df[coverage_df.index.isin(scaffold_to_keep, level=0)]
 chr_len_df = pd.read_csv(args.scaffold_length_file, sep='\t', header=None, names=("scaffold", "length"), index_col=0,
                          dtype={"scaffold": str, "length": int})
+chr_len_df.index.set_levels(list(map(str, chr_len_df.index.levels[0])), level=0, inplace=True)
 
 if args.scaffold_syn_file:
     coverage_df.rename(index=chr_syn_dict, inplace=True)
