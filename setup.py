@@ -12,7 +12,7 @@ scripts = ["scripts/%s" % script for script in scripts]
 
 
 setup(name='MACE',
-      version='1.1.3',
+      version='1.1.4',
       packages=find_packages(),
       author='Sergei F. Kliver',
       author_email='mahajrod@gmail.com',

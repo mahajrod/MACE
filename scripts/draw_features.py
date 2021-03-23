@@ -30,7 +30,7 @@ parser.add_argument("-l", "--title", action="store", dest="title", default="Cove
 parser.add_argument("--scaffold_column_name", action="store", dest="scaffold_column_name", default="scaffold_id",
                     help="Name of column in feature file with scaffold ids . Default: scaffold_id")
 parser.add_argument("--start_column_name", action="store", dest="start_column_name", default="start",
-                    help="Name of column in feature file with starts. Default: etart")
+                    help="Name of column in feature file with starts. Default: start")
 parser.add_argument("--end_column_name", action="store", dest="end_column_name", default="end",
                     help="Name of column in feature file with ends. Default: end")
 parser.add_argument("--color_column_name", action="store", dest="color_column_name", default="color",
@@ -114,6 +114,7 @@ scaffold_to_keep = StatsVCF.get_filtered_entry_list(feature_df.records.index.get
 
 
 chr_len_df = pd.read_csv(args.scaffold_length_file, sep='\t', header=None, names=("scaffold", "length"), index_col=0)
+chr_len_df.index = pd.Index(list(map(str, chr_len_df.index)))
 
 if args.scaffold_syn_file:
     chr_len_df.rename(index=chr_syn_dict, inplace=True)
@@ -122,7 +123,7 @@ if args.verbose:
     print(chr_syn_dict)
 
     print(feature_df.records)
-
+print(feature_df.records.columns)
 Visualization.draw_features(feature_df, chr_len_df,
                             args.output_prefix,
                             legend_df=legend_df,
