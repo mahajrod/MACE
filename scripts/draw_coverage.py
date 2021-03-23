@@ -128,8 +128,11 @@ if args.scaffold_syn_file:
 average_coverage_dict = dict(zip(args.coverage_column_name_list, args.mean_coverage_list))
 
 if args.verbose:
+    print(chr_syn_dict)
+    print(scaffold_to_keep)
     print(coverage_df)
     print(chr_syn_dict)
+    print(coverage_df)
 
 
 Visualization.draw_coverage_windows(coverage_df, args.window_size, args.window_step, chr_len_df,
