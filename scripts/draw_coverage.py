@@ -115,7 +115,7 @@ coverage_df = pd.read_csv(args.input, sep="\t", usecols=[args.scaffold_column_na
                                                          args.window_column_name] + args.coverage_column_name_list,
                           index_col=(args.scaffold_column_name, args.window_column_name), dtype={args.scaffold_column_name: str,})
 
-coverage_df.index = coverage_df.index.set_levels(list(map(str,coverage_df.index.levels[0])), level=0)
+coverage_df.index.set_levels(list(map(str,coverage_df.index.levels[0])), level=0, inplace=True)
 if args.verbose:
     print("Coverage df (raw)")
     print(coverage_df)
