@@ -115,7 +115,7 @@ coverage_df = pd.read_csv(args.input, sep="\t", usecols=[args.scaffold_column_na
                                                          args.window_column_name] + args.coverage_column_name_list,
                           index_col=(args.scaffold_column_name, args.window_column_name), dtype={args.scaffold_column_name: str,})
 
-coverage_df.index.set_levels(list(map(str,coverage_df.index.levels[0])), level=0, inplace=True)
+coverage_df.index.set_levels(list(map(str, coverage_df.index.levels[0])), level=0, inplace=True)
 if args.verbose:
     print("Coverage df (raw)")
     print(coverage_df)
@@ -127,7 +127,8 @@ scaffold_to_keep = StatsVCF.get_filtered_entry_list(coverage_df.index.get_level_
                                                     entry_white_list=args.scaffold_white_list)
 
 coverage_df = coverage_df[coverage_df.index.isin(scaffold_to_keep, level=0)]
-chr_len_df = pd.read_csv(args.scaffold_length_file, sep='\t', header=None, names=("scaffold", "length"), index_col=0)
+chr_len_df = pd.read_csv(args.scaffold_length_file, sep='\t', header=None, names=("scaffold", "length"), index_col=0,
+                         dtype={"scaffold": str, "length": int})
 
 if args.scaffold_syn_file:
     coverage_df.rename(index=chr_syn_dict, inplace=True)
