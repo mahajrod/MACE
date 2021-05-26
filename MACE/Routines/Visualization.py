@@ -286,13 +286,16 @@ class Visualization(DrawingRoutines):
             for chr in scaffolds: # count_df.index.get_level_values(level=0).unique():
                 track_group_dict[chr] = TrackGroup(label=chr if show_trackgroup_label else None,
                                                    style=track_group_style)
-                for track_name in count_df.columns:
+                tracks_to_use = list(count_df.columns)
+                if "masked" in tracks_to_use:
+                    tracks_to_use.remove("masked")
+                for track_name in tracks_to_use: #count_df.columns:
                     #print(chr)
                     #print(track_name)
                     if count_df.loc[chr, [track_name]].isnull().values.any():
                         # skip empty track
                         continue
-                    track_group_dict[chr][track_name] = WindowTrack(count_df.loc[chr, [track_name]],
+                    track_group_dict[chr][track_name] = WindowTrack(count_df.loc[chr, [track_name, "masked"] if "masked" in count_df.columns else [track_name]],
                                                                     window_size, window_step_final,
                                                                     x_end=scaffold_length_df.loc[chr].iloc[0],
                                                                     multiplier=multiplier,
