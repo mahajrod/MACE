@@ -23,7 +23,7 @@ parser.add_argument("-f", "--size_of_figure", action="store", dest="size_of_figu
                     help="Size of figure in inches. X and Y values should be separated by comma. Default: 40,40")
 """
 parser.add_argument("-e", "--output_formats", action="store", dest="output_formats", type=lambda s: s.split(","),
-                    default=("png", ),
+                    default=("png", "svg"),
                     help="Comma-separated list of formats (supported by matlotlib) of "
                          "output figure.Default: svg,png")
 
