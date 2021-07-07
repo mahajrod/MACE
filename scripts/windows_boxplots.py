@@ -101,14 +101,7 @@ parser.add_argument("--hide_track_label", action="store_true", dest="hide_track_
 
 parser.add_argument("--absolute_coverage_values", action="store_true", dest="absolute_coverage_values",
                     help="Use absolute coverage values. Default: False")
-parser.add_argument("--subplots_adjust_left", action="store", dest="subplots_adjust_left", type=float,
-                    help="Adjust left border of subplots on the figure. Default: matplotlib defaults")
-parser.add_argument("--subplots_adjust_top", action="store", dest="subplots_adjust_top", type=float,
-                    help="Adjust top border of subplots on the figure. Default: matplotlib defaults")
-parser.add_argument("--subplots_adjust_right", action="store", dest="subplots_adjust_right", type=float,
-                    help="Adjust right border of subplots on the figure. Default: matplotlib defaults")
-parser.add_argument("--subplots_adjust_bottom", action="store", dest="subplots_adjust_bottom", type=float,
-                    help="Adjust bottom border of subplots on the figure. Default: matplotlib defaults")
+
 parser.add_argument("--figure_width", action="store", dest="figure_width", type=float, default=15,
                     help="Width of figure in inches. Default: 15")
 parser.add_argument("--figure_height_per_scaffold", action="store", dest="figure_height_per_scaffold",
@@ -117,7 +110,17 @@ parser.add_argument("--figure_height_per_scaffold", action="store", dest="figure
 parser.add_argument("-v", "--verbose", action="store_true", dest="verbose",
                     help="Print additional info to stdout")
 """
+
+parser.add_argument("--subplots_adjust_left", action="store", dest="subplots_adjust_left", type=float, default=0.15,
+                    help="Adjust left border of subplots on the figure. Default: 0.15")
+parser.add_argument("--subplots_adjust_top", action="store", dest="subplots_adjust_top", type=float, default=0.98,
+                    help="Adjust top border of subplots on the figure. Default: 0.98")
+parser.add_argument("--subplots_adjust_right", action="store", dest="subplots_adjust_right", type=float, default=0.98,
+                    help="Adjust right border of subplots on the figure. Default: 0.98")
+parser.add_argument("--subplots_adjust_bottom", action="store", dest="subplots_adjust_bottom", type=float, default=0.17,
+                    help="Adjust bottom border of subplots on the figure. Default: 0.17")
 args = parser.parse_args()
+
 
 number_of_files = len(args.input_list)
 
@@ -188,14 +191,12 @@ else:
             x_pos_list.append(0)
         else:
             x_pos_list.append(x_pos_list[-1] + distance)
-    plt.xticks(rotation=45)
-
+    plt.xticks(rotation=45, fontstyle='italic')
 
 plt.boxplot(data_list, labels=label_list, positions=x_pos_list)
 plt.ylabel(args.ylabel)
 plt.ylim(ymin=-0.1)
 plt.grid(linestyle='dotted')
-
 
 max_data_y = max(list(map(max, data_list)))
 min_data_y = min(list(map(min, data_list)))
@@ -208,6 +209,7 @@ if x_chr_dict:
         plt.text(label_x_coord, min_data_y - max_data_y/6 , args.label_list[index],
                  fontstyle="italic", horizontalalignment='center')
 
-plt.subplots_adjust(top=0.98, bottom=0.17)
+plt.subplots_adjust(top=args.subplots_adjust_top, bottom=args.subplots_adjust_bottom,
+                    left=args.subplots_adjust_left, right=args.subplots_adjust_right)
 for ext in "png", "svg":
     plt.savefig("{0}.{1}".format(args.output_prefix, ext), transparent=False)
