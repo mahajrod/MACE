@@ -37,7 +37,7 @@ parser.add_argument("-c", "--coverage", action="store", dest="coverage",
                     help="File with precalculated mean/median coverage in windows")
 
 parser.add_argument("--scaffold_column_name", action="store", dest="scaffold_column_name", default="scaffold",
-                    help="Name of column in coverage file with scaffold ids per window. Default: median")
+                    help="Name of column in coverage file with scaffold ids per window. Default: scaffold")
 parser.add_argument("--window_column_name", action="store", dest="window_column_name", default="window",
                     help="Name of column in coverage file with window id. Default: window")
 parser.add_argument("--coverage_column_name", action="store", dest="coverage_column_name", default="median",
@@ -96,9 +96,8 @@ parser.add_argument("--masking_gff_list", action="store", dest="masking_gff_list
 parser.add_argument("--masking_threshold", action="store", dest="masking_threshold", default=0.5,
                     type=float,
                     help="Maximum gaped or masked fraction of the window. Default: 0.5")
-parser.add_argument("--colormap", action="store", dest="colormap",
-                    help="Matplotlib colormap to use for SNP densities. Default: not set, "
-                         "colors from HapMap article are used")
+parser.add_argument("--colormap", action="store", dest="colormap", default='jet',
+                    help="Matplotlib colormap to use for SNP densities. Default: jet")
 parser.add_argument("--density_thresholds", action="store", dest="density_thresholds",
                     default=(0.0, 0.1, 0.5, 0.75, 1.0, 1.25, 1.5, 2.0, 2.5),
                     type=lambda s: list(map(float, s.split(","))),

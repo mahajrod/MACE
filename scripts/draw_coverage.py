@@ -14,9 +14,9 @@ parser.add_argument("-o", "--output_prefix", action="store", dest="output_prefix
                     help="Prefix of output files")
 
 parser.add_argument("-e", "--output_formats", action="store", dest="output_formats", type=lambda s: s.split(","),
-                    default=("png", ),
+                    default=("png", "svg"),
                     help="Comma-separated list of formats (supported by matlotlib) of "
-                         "output figure.Default: svg,png")
+                         "output figure.Default: svg, png")
 
 parser.add_argument("-l", "--title", action="store", dest="title", default="Coverage",
                     help="Suptitle of figure. Default: 'Coverage'")
