@@ -81,6 +81,9 @@ parser.add_argument("--syn_file_key_column", action="store", dest="syn_file_key_
 parser.add_argument("--syn_file_value_column", action="store", dest="syn_file_value_column",
                     default=1, type=int,
                     help="Column(0-based) with value(synonym id) for scaffolds in synonym file synonym. Default: 1")
+parser.add_argument("--scaffold_reverse_list", action="store", dest="scaffold_reverse_list", default=[],
+                    type=lambda s: IdList(filename=s) if os.path.exists(s) else s.split(","),
+                    help="Comma-separated list of the only scaffolds to reverse. Default: not set")
 
 """
 parser.add_argument("-q", "--figure_width", action="store", dest="figure_width", default=12, type=int,
@@ -149,7 +152,8 @@ count_df = StatsVCF.count_variants_in_windows(variants, args.window_size, args.w
                                               output_prefix=args.output_prefix,
                                               skip_empty_windows=False, expression=None, per_sample_output=False,
                                               scaffold_white_list=args.scaffold_white_list,
-                                              scaffold_syn_dict=chr_syn_dict)
+                                              scaffold_syn_dict=chr_syn_dict,
+                                              scaffold_reverse_list=args.scaffold_reverse_list)
 
 if args.scaffold_syn_file:
     chr_len_df.rename(index=chr_syn_dict, inplace=True)

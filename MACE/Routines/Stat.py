@@ -195,7 +195,7 @@ class StatsVCF(FileRoutines):
                                   ignore_scaffolds_shorter_than_window=True, output_prefix=None,
                                   skip_empty_windows=False, expression=None, per_sample_output=False,
                                   scaffold_black_list=(), scaffold_white_list=(),
-                                  scaffold_syn_dict=None
+                                  scaffold_syn_dict=None, scaffold_reverse_list=()
                                   ):
 
         window_stepppp = window_size if window_step is None else window_step
@@ -310,6 +310,9 @@ class StatsVCF(FileRoutines):
         if scaffold_syn_dict:
             count_df.rename(index=scaffold_syn_dict, inplace=True)
 
+        if scaffold_reverse_list:
+            for scaffold in scaffold_reverse_list:
+                count_df["All"].loc[scaffold] = count_df["All"].loc[scaffold][::-1].reset_index(drop=True).tolist()
 
         # TODO: add storing of variants in uncounted tails
         #uncounted_tail_variants_number_dict = SynDict()
