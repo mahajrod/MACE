@@ -7,6 +7,7 @@ import argparse
 import pandas as pd
 import numpy as np
 from RouToolPa.Parsers.STR import CollectionSTR
+from RouToolPa.Parsers.GFF import CollectionGFF
 from RouToolPa.Collections.General import SynDict, IdList
 from MACE.Routines import Visualization, StatsVCF
 
@@ -14,6 +15,8 @@ parser = argparse.ArgumentParser()
 
 parser.add_argument("-i", "--input", action="store", dest="input", required=True,
                     help="Input file with selected features")
+parser.add_argument("-t", "--input_type", action="store", dest="input_type", default="str",
+                    help="Type of input file. Allowed: str (default), gff")
 parser.add_argument("-g", "--legend", action="store", dest="legend",
                     help="File with legend for feature colors containing two columns with color and legend text")
 parser.add_argument("-o", "--output_prefix", action="store", dest="output_prefix", required=True,
@@ -100,11 +103,16 @@ chr_syn_dict = SynDict(filename=args.scaffold_syn_file,
                        key_index=args.syn_file_key_column,
                        value_index=args.syn_file_value_column)
 
-feature_df = CollectionSTR(in_file=args.input, records=None, format="filtered_str", parsing_mode="all",
-                           black_list=(), white_list=(),
-                           syn_dict=chr_syn_dict)
+if args.input_type == "str":
+    feature_df = CollectionSTR(in_file=args.input, records=None, format="filtered_str", parsing_mode="all",
+                               black_list=(), white_list=(),
+                               syn_dict=chr_syn_dict)
 
-feature_df.records.set_index("scaffold_id", inplace=True)
+    feature_df.records.set_index("scaffold_id", inplace=True)
+elif args.input_type == "gff":
+    feature_df = CollectionGFF(in_file=args.input, parsing_mode="only_coordinates")
+else:
+    raise ValueError("ERROR!!! Unrecognized input type ({}). ".format(args.input_type))
 
 legend_df = pd.read_csv(args.legend, header=None, index_col=0, sep="\t")
 
@@ -124,6 +132,7 @@ if args.verbose:
 
     print(feature_df.records)
 print(feature_df.records.columns)
+
 Visualization.draw_features(feature_df, chr_len_df,
                             args.output_prefix,
                             legend_df=legend_df,
