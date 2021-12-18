@@ -78,14 +78,14 @@ class Subplot(OrderedDict):
                 legend_height = (len(self.legend.thresholds) + 3) * self.legend.element_size
             else:
                 legend_height = None
+            if self.legend:
+                self.legend.x_start = self.x_end
 
-            self.legend.x_start = self.x_end
-
-            if legend_height:
-                self.legend.y_start = (self.y_end - legend_height) / 2
-            else:
-                self.legend.y_start = self.y_end/2
-            self.legend.x_size = self.x_end / self.legend.style.x_size_denominator
+                if legend_height:
+                    self.legend.y_start = (self.y_end - legend_height) / 2
+                else:
+                    self.legend.y_start = self.y_end/2
+                self.legend.x_size = self.x_end / self.legend.style.x_size_denominator
 
         elif self.type == "plot":
             pass

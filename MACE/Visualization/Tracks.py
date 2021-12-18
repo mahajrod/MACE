@@ -123,13 +123,20 @@ class Track:
             self.records.loc[self.records["masked"] == True, "color"] = self.style.masked
 
     def add_color_by_dict(self, value_column_name=None, value_column_index=None, default_color='black'):
-        if (value_column_name is None) and (value_column_index is None):
-            raise ValueError("ERROR!!! Both column name and column index were not set!")
+        #if (value_column_name is None) and (value_column_index is None):
+        #    raise ValueError("ERROR!!! Both column name and column index were not set!")
+        if self.records is None:
+            return 0
         if value_column_name:
             self.records["color"] = self.records[value_column_name].replace(self.color_dict)
-        else:
+        elif value_column_index:
             self.records["color"] = self.records.iloc[:, value_column_index].replace(self.color_dict)
+        else:
+
+            self.records["color"] = default_color
+            return 0
         self.records["color"][~self.records["color"].isin(list(self.color_dict.keys()))] = default_color
+        return 0
 
     def draw(self, axes=None, style=None):
 

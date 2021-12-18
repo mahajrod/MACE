@@ -471,6 +471,7 @@ class Visualization(DrawingRoutines):
                       legend_df=None,
                       figure_width=15, figure_height_per_scaffold=0.5, dpi=300,
                       colormap=None, thresholds=None, colors=None, background=None,
+                      default_color="red",
                       title=None,
                       extensions=("png", ),
                       scaffold_order_list=None,
@@ -517,8 +518,9 @@ class Visualization(DrawingRoutines):
                                    feature_length_column_id=feature_length_column_id,
                                    subplot_scale=subplot_scale,
                                    track_group_scale=track_group_scale)})
+            print(track_group_dict[chr][chr])
             if feature_color_column_id not in collection_gff.records.columns:
-                track_group_dict[chr][chr].add_color_by_dict()
+                track_group_dict[chr][chr].add_color_by_dict(default_color=default_color) if default_color else track_group_dict[chr][chr].add_color_by_dict()
         # track_group_dict
         # track_group_dict["chr13"]
         chromosome_subplot = Subplot(track_group_dict, title=title, style=chromosome_subplot_style,
