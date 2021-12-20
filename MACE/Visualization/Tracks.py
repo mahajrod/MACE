@@ -162,7 +162,7 @@ class WindowTrack(Track):
                  style=default_track_style, label=None, norm=False,
                  window_type="stacking", multiplier=None, feature_style=default_feature_style, color_expression=None,
                  colormap=None, thresholds=None,
-                 colors=None, background=None, masked=None, subplot_scale=False,
+                 colors=None, background=None, masked=None, subplot_scale=False, track_reverse=False,
                  track_group_scale=False, figure_x_y_ration=None, subplot_x_y_ratio=None, track_group_x_y_ratio=None):
         """
 
@@ -220,13 +220,32 @@ class WindowTrack(Track):
         self.window_size = window_size
         self.window_step = window_step
         self.multiplier = multiplier
-        self.preprocess_data()
+        if track_reverse:
+            self.preprocess_data_track_reverse()
+        else:
+            self.preprocess_data()
 
     def preprocess_data(self):
         window_index_name = self.records.index.names[0]
         if self.window_type == "stacking":
             self.records.reset_index(level=window_index_name, inplace=True)
             self.records["start"] = self.records[window_index_name] * self.window_step
+            self.records = self.records[["start"] + list(self.records.columns[:-1])]
+
+        elif self.window_type == "sliding":
+            # TODO: implement sliding window
+            # TODO: verify - sliding window drawing is already implemented  somewhere else:)))
+            pass
+        else:
+            raise ValueError("ERROR!!! Unknown window type: %s" % self.window_type)
+
+    def preprocess_data_track_reverse(self):
+        window_index_name = self.records.index.names[0]
+        indent_len = self.x_end - self.records.index[-1] * self.window_size - self.window_size
+        if self.window_type == "stacking":
+            self.records.reset_index(level=window_index_name, inplace=True)
+            self.records["density"] = self.records["density"].values[::-1]
+            self.records["start"] =  self.records[window_index_name] * self.window_step + indent_len
             self.records = self.records[["start"] + list(self.records.columns[:-1])]
 
         elif self.window_type == "sliding":
