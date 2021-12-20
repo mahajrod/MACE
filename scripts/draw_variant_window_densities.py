@@ -81,7 +81,9 @@ parser.add_argument("--syn_file_key_column", action="store", dest="syn_file_key_
 parser.add_argument("--syn_file_value_column", action="store", dest="syn_file_value_column",
                     default=1, type=int,
                     help="Column(0-based) with value(synonym id) for scaffolds in synonym file synonym. Default: 1")
-
+parser.add_argument("--scaffold_reverse_list", action="store", dest="scaffold_reverse_list", default=[],
+                    type=lambda s: IdList(filename=s) if os.path.exists(s) else s.split(","),
+                    help="Comma-separated list of the only scaffolds to reverse draw. Default: not set")
 """
 parser.add_argument("-q", "--figure_width", action="store", dest="figure_width", default=12, type=int,
                     help="Width of figure in inches. Default: 12")
@@ -187,6 +189,7 @@ if not args.only_count:
                                                 colormap=args.colormap, title=args.title,
                                                 extensions=args.output_formats,
                                                 scaffold_order_list=args.scaffold_ordered_list,
+                                                scaffold_reverse_list=args.scaffold_reverse_list,
                                                 test_colormaps=args.test_colormaps,
                                                 thresholds=args.density_thresholds,
                                                 masking=True if args.coverage else False,
