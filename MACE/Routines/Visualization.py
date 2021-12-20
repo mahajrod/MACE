@@ -130,6 +130,7 @@ class Visualization(DrawingRoutines):
                                       title=None,
                                       extensions=("png", ),
                                       scaffold_order_list=None,
+                                      scaffold_reverse_list=None,
                                       test_colormaps=False,
                                       masking=True,
                                       multiplier=1000,
@@ -150,6 +151,7 @@ class Visualization(DrawingRoutines):
                           title=title,
                           extensions=extensions,
                           scaffold_order_list=scaffold_order_list,
+                          scaffold_reverse_list=scaffold_reverse_list,
                           test_colormaps=test_colormaps,
                           masking=masking,
                           multiplier=multiplier,
@@ -241,6 +243,7 @@ class Visualization(DrawingRoutines):
                      title=None,
                      extensions=("png", ),
                      scaffold_order_list=None,
+                     scaffold_reverse_list=None,
                      test_colormaps=False,
                      masking=True,
                      multiplier=None,
@@ -284,7 +287,11 @@ class Visualization(DrawingRoutines):
             track_group_style = TrackGroupStyle(label_fontstyle=track_group_label_fontstyle)
 
             for chr in scaffolds: # count_df.index.get_level_values(level=0).unique():
-                track_group_dict[chr] = TrackGroup(label=chr if show_trackgroup_label else None,
+                if show_trackgroup_label:
+                    label = "* " + chr if chr in scaffold_reverse_list else chr # setting reverse scaffold label
+                else:
+                    label = None
+                track_group_dict[chr] = TrackGroup(label=label,
                                                    style=track_group_style)
                 tracks_to_use = list(count_df.columns)
                 if "masked" in tracks_to_use:
@@ -303,7 +310,8 @@ class Visualization(DrawingRoutines):
                                                                     colormap=colormap_entry,
                                                                     thresholds=thresholds,
                                                                     colors=colors, background=background,
-                                                                    masked=masked, norm=norm)
+                                                                    masked=masked, norm=norm,
+                                                                    track_reverse=True if chr in scaffold_reverse_list else False)
                     track_group_dict[chr][track_name].add_color(masking=masking)
                     track_number += 1
             chromosome_subplot = Subplot(track_group_dict,
