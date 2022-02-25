@@ -1,14 +1,8 @@
 __author__ = 'mahajrod'
 
 import os
-
+from pathlib import Path
 from setuptools import setup, find_packages
-
-from os.path import join, dirname
-
-scripts = os.listdir("scripts/")
-
-scripts = ["scripts/%s" % script for script in scripts]
 
 
 setup(name='MACE',
@@ -18,4 +12,4 @@ setup(name='MACE',
       author_email='mahajrod@gmail.com',
       install_requires=['scipy', 'numpy', 'matplotlib', 'biopython', 'bcbio-gff'],
       long_description=open(join(dirname(__file__), 'README.md')).read(),
-      scripts=scripts)
+      scripts=list(map(str, sorted(Path('scripts/').rglob("*.py")))))
