@@ -12,4 +12,4 @@ setup(name='MACE',
       author_email='mahajrod@gmail.com',
       install_requires=['scipy', 'numpy', 'matplotlib', 'biopython', 'bcbio-gff'],
       long_description=open(join(dirname(__file__), 'README.md')).read(),
-      scripts=list(map(str, sorted(Path('scripts/').rglob("*.py")))))
+      scripts=list(map(str, sorted(Path('scripts/').glob("*.py")))))
