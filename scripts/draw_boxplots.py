@@ -21,6 +21,8 @@ parser.add_argument("--figure_height", action="store", dest="figure_height", typ
                     help="Height of figure in inches. Default: 6")
 parser.add_argument("--figure_width_per_sample", action="store", dest="figure_width_per_sample", type=float, default=1,
                     help="Per sample width of figure in inches. Default: 1")
+parser.add_argument("--figure_grid", action="store_true", default=False,
+                    help="Add grid lines to the figure. Default: False")
 
 parser.add_argument("-e", "--output_formats", action="store", dest="output_formats", type=lambda s: s.split(","),
                     default=("png", ),
@@ -93,6 +95,8 @@ if args.horizontal_lines:
 plt.ylim(ymax=args.ymax, ymin=args.ymin)
 plt.subplots_adjust(left=args.subplots_adjust_left, right=args.subplots_adjust_right,
                     top=args.subplots_adjust_top, bottom=args.subplots_adjust_bottom)
+if args.figure_grid:
+    plt.grid(color="gray", linestyle = '--', linewidth = 0.5)
 
 plt.title(args.title)
 for ext in args.output_formats:
