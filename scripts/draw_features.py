@@ -9,6 +9,7 @@ import numpy as np
 from RouToolPa.Parsers.STR import CollectionSTR
 from RouToolPa.Parsers.GFF import CollectionGFF
 from RouToolPa.Parsers.BLAST import CollectionBLAST
+from RouToolPa.Parsers.BED import CollectionBED
 from RouToolPa.Collections.General import SynDict, IdList
 from MACE.Routines import Visualization, StatsVCF
 
@@ -118,6 +119,12 @@ if args.input_type == "str":
 
 elif args.input_type == "gff":
     feature_df = CollectionGFF(in_file=args.input, parsing_mode="only_coordinates")
+
+    feature_start_column_id = args.start_column_name if args.start_column_name else "start"
+    feature_end_column_id = args.end_column_name if args.end_column_name else "end"
+
+elif args.input_type == "bed":
+    feature_df = CollectionBED(in_file=args.input, parsing_mode="only_coordinates")
 
     feature_start_column_id = args.start_column_name if args.start_column_name else "start"
     feature_end_column_id = args.end_column_name if args.end_column_name else "end"
