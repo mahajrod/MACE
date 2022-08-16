@@ -18,7 +18,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("-i", "--input", action="store", dest="input", required=True,
                     help="Input file with selected features")
 parser.add_argument("-t", "--input_type", action="store", dest="input_type", default="str",
-                    help="Type of input file. Allowed: str (default), gff, blast")
+                    help="Type of input file. Allowed: str (default), gff, blast, bed")
 parser.add_argument("-g", "--legend", action="store", dest="legend",
                     help="File with legend for feature colors containing two columns with color and legend text")
 parser.add_argument("-o", "--output_prefix", action="store", dest="output_prefix", required=True,
@@ -124,7 +124,7 @@ elif args.input_type == "gff":
     feature_end_column_id = args.end_column_name if args.end_column_name else "end"
 
 elif args.input_type == "bed":
-    feature_df = CollectionBED(in_file=args.input, parsing_mode="only_coordinates")
+    feature_df = CollectionBED(in_file=args.input, parsing_mode="coordinates_only", format="bed")
 
     feature_start_column_id = args.start_column_name if args.start_column_name else "start"
     feature_end_column_id = args.end_column_name if args.end_column_name else "end"
