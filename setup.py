@@ -1,12 +1,19 @@
 __author__ = 'mahajrod'
 
 import os
-
+from pathlib import Path
 from setuptools import setup, find_packages
 
 from os.path import join, dirname
 
-scripts = os.listdir("scripts/")
+scripts_dir_path = Path("scripts")
+
+scripts = []
+for script in scripts_dir_path.glob("*"):
+    if script.is_dir():  # ignore all dirs
+        continue
+    else:
+        scripts.append(script)
 
 scripts = ["scripts/%s" % script for script in scripts]
 
