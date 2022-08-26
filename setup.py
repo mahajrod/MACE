@@ -15,9 +15,6 @@ for script in scripts_dir_path.glob("*"):
     else:
         scripts.append(script)
 
-scripts = ["scripts/%s" % script for script in scripts]
-
-
 setup(name='MACE',
       version='1.1.4',
       packages=find_packages(),
