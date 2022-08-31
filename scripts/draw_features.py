@@ -23,6 +23,9 @@ parser.add_argument("-g", "--legend", action="store", dest="legend",
                     help="File with legend for feature colors containing two columns with color and legend text")
 parser.add_argument("-o", "--output_prefix", action="store", dest="output_prefix", required=True,
                     help="Prefix of output files")
+parser.add_argument("--centromere_bed", action="store", dest="centromere_bed", required=False,
+                    type=str,
+                    help="Bed file with coordinates of centromeres")
 
 parser.add_argument("-e", "--output_formats", action="store", dest="output_formats", type=lambda s: s.split(","),
                     default=("png", ),
@@ -31,6 +34,12 @@ parser.add_argument("-e", "--output_formats", action="store", dest="output_forma
 
 parser.add_argument("-l", "--title", action="store", dest="title", default="Coverage",
                     help="Suptitle of figure. Default: 'Coverage'")
+parser.add_argument("--stranded", action="store_true", dest="stranded", default=False,
+                    help="Stranded features and tracks. Default: False")
+parser.add_argument("--rounded", action="store_true", dest="rounded", default=False,
+                    help="Rounded tracks. Default: False")
+parser.add_argument("--stranded_end", action="store_true", dest="stranded_end", default=False,
+                    help="Stranded ends for tracks. Works only if --stranded is set. Default: False")
 
 parser.add_argument("--scaffold_column_name", action="store", dest="scaffold_column_name",
                     help="Name of column in feature file with scaffold ids . Default: dependent on format of the file")
@@ -107,6 +116,17 @@ chr_syn_dict = SynDict(filename=args.scaffold_syn_file,
                        key_index=args.syn_file_key_column,
                        value_index=args.syn_file_value_column)
 
+if args.centromere_bed:
+    centromere_df = pd.read_csv(args.centromere_bed,
+                                usecols=(0, 1, 2),
+                                index_col=0,
+                                header=None,
+                                sep="\t", names=["scaffold_id", "start", "end"])
+    centromere_df.rename(index=chr_syn_dict, inplace=True)
+    print(centromere_df)
+else:
+    centromere_df = None
+
 if args.input_type == "str":
     feature_df = CollectionSTR(in_file=args.input, records=None, format="filtered_str", parsing_mode="all",
                                black_list=(), white_list=(),
@@ -126,8 +146,8 @@ elif args.input_type == "gff":
 elif args.input_type == "bed":
     feature_df = CollectionBED(in_file=args.input, parsing_mode="coordinates_only", format="bed")
 
-    feature_start_column_id = args.start_column_name if args.start_column_name else "start"
-    feature_end_column_id = args.end_column_name if args.end_column_name else "end"
+    feature_start_column_id = "start"
+    feature_end_column_id = "end"
 
 elif args.input_type == "blast":
     feature_df = CollectionBLAST(in_file=args.input, parsing_mode="complete")
@@ -162,6 +182,7 @@ if args.verbose:
 Visualization.draw_features(feature_df, chr_len_df,
                             args.output_prefix,
                             legend_df=legend_df,
+                            centromere_df=centromere_df,
                             figure_width=15, figure_height_per_scaffold=0.5, dpi=300,
                             colormap=None, thresholds=None, colors=None, background=None,
                             default_color=args.default_color,
@@ -180,7 +201,10 @@ Visualization.draw_features(feature_df, chr_len_df,
                             show_track_label=not args.hide_track_label,
                             show_trackgroup_label=True,
                             subplot_scale=args.subplot_scale,
-                            track_group_scale=args.track_group_scale
+                            track_group_scale=args.track_group_scale,
+                            stranded_tracks=args.stranded,
+                            rounded_tracks=args.rounded,
+                            stranded_end_tracks=args.stranded_end
                             )
 
 

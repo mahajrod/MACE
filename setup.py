@@ -14,7 +14,7 @@ for script in scripts_dir_path.glob("*"):
         continue
     else:
         scripts.append(script)
-scripts = list(map(str, scripts))
+scripts = list(map(str, scripts)) # pip and setuptools doesnt work with Path objects
 setup(name='MACE',
       version='1.1.4',
       packages=find_packages(),

@@ -194,10 +194,10 @@ class StatsVCF(FileRoutines):
     def count_variants_in_windows(self, collection_vcf, window_size, window_step, reference_scaffold_lengths=None,
                                   ignore_scaffolds_shorter_than_window=True, output_prefix=None,
                                   skip_empty_windows=False, expression=None, per_sample_output=False,
-                                  scaffold_black_list=(), scaffold_white_list=(),
+                                  scaffold_black_list=None, scaffold_white_list=None,
                                   scaffold_syn_dict=None
                                   ):
-
+        # TODO: rewrite tosimplify this function
         window_stepppp = window_size if window_step is None else window_step
 
         if window_stepppp > window_size:
@@ -281,7 +281,7 @@ class StatsVCF(FileRoutines):
 
         else:
             count_df = pd.DataFrame(0, index=count_index,
-                                    columns=["All"],
+                                    columns=["All"] if len(collection_vcf.samples) > 1 else collection_vcf.samples,
                                     dtype=np.int64)
 
             # code for staking windows: in this case window step index  is equal to window index
@@ -301,11 +301,11 @@ class StatsVCF(FileRoutines):
             # window_index_df = step_index_df.applymap(get_overlapping_window_indexes)
             pass
 
-        if scaffold_black_list or scaffold_white_list:
-            scaffold_to_keep = self.get_filtered_entry_list(count_df.index.get_level_values(level=0).unique().to_list(),
+        #if ((scaffold_black_list is not None) and (not scaffold_black_list.empty)) or (scaffold_white_list is not None and (not scaffold_white_list.empty)):
+        scaffold_to_keep = self.get_filtered_entry_list(count_df.index.get_level_values(level=0).unique().to_list(),
                                                             entry_black_list=scaffold_black_list,
                                                             entry_white_list=scaffold_white_list)
-            count_df = count_df[count_df.index.isin(scaffold_to_keep, level=0)]
+        count_df = count_df[count_df.index.isin(scaffold_to_keep, level=0)]
 
         if scaffold_syn_dict:
             count_df.rename(index=scaffold_syn_dict, inplace=True)
@@ -328,6 +328,22 @@ class StatsVCF(FileRoutines):
             stat_df = count_df.groupby("CHROM").agg(["mean", "median", "min", "max"])
             stat_df.to_csv("%s.variant_counts.stats" % output_prefix, sep='\t', header=True, index=True)
         return count_df
+
+    @staticmethod
+    def convert_variant_count_to_feature_df(count_df,  window_step):
+        # TODO: adjust this function and count_variant to merge them. Now they are separated to keep compatibility
+        # function relies that there is only one track in file
+        feature_df = count_df.copy()
+        feature_df.index.names = ["scaffold", "window"]
+        #feature_df.rename(index={"CHROM": "scaffold", "WINDOW": "window"}, inplace=True)
+        feature_df.reset_index(level=1, inplace=True, drop=False)
+        columns = feature_df.columns
+        #print(feature_df)
+        #print(columns)
+        feature_df["start"] = feature_df["window"] * window_step
+        feature_df["end"] = (feature_df["window"] + 1) * window_step
+
+        return feature_df[list(columns[:-1]) + ["start", "end", columns[-1]]]
 
     def count_feature_length_in_windows(self, collection_gff, window_size, window_step,
                                         reference_scaffold_length_df,

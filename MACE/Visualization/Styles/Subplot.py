@@ -17,7 +17,13 @@ class SubplotStyle:
                  spines_left_visible=True, spines_top_visible=True,
                  track_group_style=None,
                  x_tick_type=None,
-                 y_tick_type=None):
+                 y_tick_type=None,
+                 x_tick_major_fontsize=None,
+                 x_tick_minor_fontsize=None,
+                 y_tick_major_fontsize=None,
+                 y_tick_minor_fontsize=None,
+                 title_fontsize=None,
+                 title_fontweight=None):
 
         self.distance = distance
         self.internal_offset = internal_offset
@@ -44,6 +50,14 @@ class SubplotStyle:
         self.x_tick_formatter = None
         self.y_tick_formatter = None
 
+        self.x_tick_major_fontsize = x_tick_major_fontsize
+        self.x_tick_minor_fontsize = x_tick_minor_fontsize
+        self.y_tick_major_fontsize = y_tick_major_fontsize
+        self.y_tick_minor_fontsize = y_tick_minor_fontsize
+
+        self.title_fontsize = title_fontsize
+        self.title_fontweight = title_fontweight
+
     def apply(self, axes=None, x_max=None, y_max=None):
         if axes is None:
             axes = plt.gca()
@@ -51,7 +65,6 @@ class SubplotStyle:
         axes.get_yaxis().set_visible(self.yaxis_visible)
         axes.get_xaxis().set_visible(self.xaxis_visible)
         #axes.xaxis.set_major_formatter(x_formatter)
-
         #subplot.spines['bottom'].set_color('none')
 
         for edge in self.spines_visibility:
@@ -70,6 +83,15 @@ class SubplotStyle:
         if self.y_tick_type and y_max:
             self.y_tick_formatter = self.create_tick_formatter_function(y_max, tick_type=self.y_tick_type)
             axes.yaxis.set_major_formatter(self.y_tick_formatter)
+
+        if self.x_tick_major_fontsize is not None:
+            axes.tick_params(axis='x', which='major', labelsize=self.x_tick_major_fontsize)
+        if self.x_tick_minor_fontsize is not None:
+            axes.tick_params(axis='x', which='minor', labelsize=self.x_tick_minor_fontsize)
+        if self.y_tick_major_fontsize is not None:
+            axes.tick_params(axis='y', which='major', labelsize=self.y_tick_major_fontsize)
+        if self.y_tick_minor_fontsize is not None:
+            axes.tick_params(axis='y', which='minor', labelsize=self.y_tick_minor_fontsize)
 
     @staticmethod
     def create_tick_formatter_function(max_value, tick_type="nucleotide"):
