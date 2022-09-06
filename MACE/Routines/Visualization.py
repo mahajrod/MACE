@@ -372,9 +372,9 @@ class Visualization(DrawingRoutines):
                 return colors[i]
 
     @staticmethod
-    def add_color_to_feature_df(feature_df, expression, value_column_index=-1, value_column_name=None,
+    def add_color_to_track_df(track_df, expression, value_column_index=-1, value_column_name=None,
                                 masking=False, masked_color="grey"):
-        output_df = feature_df.copy()
+        output_df = track_df.copy()
 
         output_df["color"] = list(map(expression, output_df[value_column_name].to_list() if value_column_name else output_df.iloc[:, value_column_index].to_list()))
         output_df["color"].astype('category', copy=False)

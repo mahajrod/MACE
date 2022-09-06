@@ -189,33 +189,42 @@ count_df = StatsVCF.count_variants_in_windows(variants, args.window_size, args.w
 if args.scaffold_syn_file:
     chr_len_df.rename(index=chr_syn_dict, inplace=True)
 
-feature_df = StatsVCF.convert_variant_count_to_feature_df(count_df, args.window_step)
+feature_df, track_df = StatsVCF.convert_variant_count_to_feature_df(count_df,
+                                                                    args.window_size,
+                                                                    args.window_step)
+
+feature_df.to_csv("{}.features.counts".format(args.output_prefix), sep="\t", header=True, index=True)
 feature_df[feature_df.columns[-1]] = feature_df[feature_df.columns[-1]] * float(args.density_multiplier) / float(args.window_size)
+track_df[track_df.columns[-1]] = track_df[track_df.columns[-1]] * float(args.density_multiplier) / float(args.window_size)
 
+feature_df.to_csv("{}.features.bed".format(args.output_prefix), sep="\t", header=True, index=True)
+# TODO: rewrite application of masking
+"""
+if args.coverage:
+    masking_df = pd.read_csv(args.coverage, usecols=(args.scaffold_column_name,
+                                                     args.window_column_name,
+                                                     args.coverage_column_name),
+                             index_col=(args.scaffold_column_name, args.window_column_name),
+                             sep="\t")
+    scaffold_to_keep = StatsVCF.get_filtered_entry_list(
+        masking_df.index.get_level_values(level=0).unique().to_list(),
+        entry_white_list=args.scaffold_white_list)
+    masking_df = masking_df[masking_df.index.isin(scaffold_to_keep, level=0)]
+    # print(scaffold_to_keep)
+    if chr_syn_dict:
+        masking_df.rename(index=chr_syn_dict, inplace=True)
+    # print("aaaaaaaa")
+    # print(masking_df)
+
+    min_threshold = args.mean_coverage * args.min_coverage_threshold
+    max_threshold = args.mean_coverage * args.max_coverage_threshold
+    count_df["masked"] = (masking_df[args.coverage_column_name] < min_threshold) | (
+            masking_df[args.coverage_column_name] > max_threshold)
+    # print(masking_df)
+    # print(count_df)
+    count_df.to_csv("%s.variant_counts.with_masking.tsv" % args.output_prefix, sep='\t', header=True, index=True)
+"""
 if not args.only_count:
-    if args.coverage:
-        masking_df = pd.read_csv(args.coverage, usecols=(args.scaffold_column_name,
-                                                         args.window_column_name,
-                                                         args.coverage_column_name),
-                                 index_col=(args.scaffold_column_name, args.window_column_name),
-                                 sep="\t")
-        scaffold_to_keep = StatsVCF.get_filtered_entry_list(
-            masking_df.index.get_level_values(level=0).unique().to_list(),
-            entry_white_list=args.scaffold_white_list)
-        masking_df = masking_df[masking_df.index.isin(scaffold_to_keep, level=0)]
-        # print(scaffold_to_keep)
-        if chr_syn_dict:
-            masking_df.rename(index=chr_syn_dict, inplace=True)
-        # print("aaaaaaaa")
-        # print(masking_df)
-
-        min_threshold = args.mean_coverage * args.min_coverage_threshold
-        max_threshold = args.mean_coverage * args.max_coverage_threshold
-        count_df["masked"] = (masking_df[args.coverage_column_name] < min_threshold) | (
-                    masking_df[args.coverage_column_name] > max_threshold)
-        # print(masking_df)
-        # print(count_df)
-        count_df.to_csv("%s.variant_counts.with_masking.tsv" % args.output_prefix, sep='\t', header=True, index=True)
 
     for colormap in (Visualization.colormap_list if args.test_colormaps else [args.colormap]):
         #title = (args.title + " (colormap {})".format(colormap)) if args.title else "Colormap {}".format(colormap)
@@ -228,16 +237,16 @@ if not args.only_count:
                                    colors=colors,
                                    background="white")
 
-        feature_with_colors_df = Visualization.add_color_to_feature_df(feature_df,
+        track_with_colors_df = Visualization.add_color_to_track_df(track_df,
                                                                        color_expression,
                                                                        value_column_index=-1 # TODO fix it, add support for multiple tracks in the file
                                                                        )
 
-        feature_with_colors_df.to_csv("{}.{}.track.bed".format(args.output_prefix,
+        track_with_colors_df.to_csv("{}.{}.track.bed".format(args.output_prefix,
                                                                colormap), sep="\t", header=True, index=True)
         #print(feature_with_colors_df)
         #print(args.scaffold_ordered_list)
-        Visualization.draw_features({"TR": feature_with_colors_df},
+        Visualization.draw_features({"TR": track_with_colors_df},
                                     chr_len_df,
                                     args.scaffold_ordered_list,
                                     args.output_prefix,
