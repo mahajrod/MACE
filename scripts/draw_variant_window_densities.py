@@ -1,10 +1,12 @@
 #!/usr/bin/env python
 __author__ = 'Sergei F. Kliver'
+
 import os
+import argparse
 from functools import partial
 
 import pandas as pd
-import argparse
+
 import matplotlib.pyplot as plt
 from copy import deepcopy
 from RouToolPa.Collections.General import SynDict, IdList
@@ -22,6 +24,7 @@ def rgb_tuple_to_hex(rgb_tuple):
         color_code += "{:02X}".format(int(255 * rgb_tuple[i]))
 
     return color_code
+
 
 parser = argparse.ArgumentParser()
 
@@ -238,9 +241,9 @@ if not args.only_count:
                                    background="white")
 
         track_with_colors_df = Visualization.add_color_to_track_df(track_df,
-                                                                       color_expression,
-                                                                       value_column_index=-1 # TODO fix it, add support for multiple tracks in the file
-                                                                       )
+                                                                   color_expression,
+                                                                   value_column_index=-1 # TODO fix it, add support for multiple tracks in the file
+                                                                   )
 
         track_with_colors_df.to_csv("{}.{}.track.bed".format(args.output_prefix,
                                                                colormap), sep="\t", header=True, index=True)
