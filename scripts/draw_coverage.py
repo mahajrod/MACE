@@ -144,6 +144,8 @@ args = parser.parse_args()
 if args.window_step is None:
     args.window_step = args.window_size
 
+args.scaffold_ordered_list = args.scaffold_ordered_list[::-1]
+
 chr_syn_dict = SynDict(filename=args.scaffold_syn_file,
                        key_index=args.syn_file_key_column,
                        value_index=args.syn_file_value_column)
@@ -218,45 +220,45 @@ for mean_coverage, track_label in zip(args.mean_coverage_list, args.coverage_col
                                                                color_expression,
                                                                value_column_index=-1 # TODO fix it, add support for multiple tracks in the file
                                                                )
-    print(track_with_colors_df)
+    #print(track_with_colors_df)
     track_df_dict[track_label] = track_with_colors_df
 
 Visualization.draw_features(track_df_dict,
-                                    chr_len_df,
-                                    args.scaffold_ordered_list,
-                                    args.output_prefix,
-                                    legend=Visualization.density_legend(colors, args.coverage_thresholds),
-                                    # query_species_color_df_dict,
-                                    centromere_df=centromere_df,
-                                    highlight_df=args.highlight_file,
-                                    figure_width=args.figure_width,
-                                    figure_height_per_scaffold=args.figure_height_per_scaffold,
-                                    dpi=300,
-                                    default_color="red",
-                                    title=args.title,
-                                    extensions=args.output_formats,
-                                    feature_start_column_id="start",
-                                    feature_end_column_id="end",
-                                    feature_color_column_id="color",
-                                    feature_length_column_id="length",
-                                    subplots_adjust_left=args.subplots_adjust_left,
-                                    subplots_adjust_bottom=args.subplots_adjust_bottom,
-                                    subplots_adjust_right=args.subplots_adjust_right,
-                                    subplots_adjust_top=args.subplots_adjust_top,
-                                    show_track_label=not args.hide_track_label,
-                                    show_trackgroup_label=True,
-                                    close_figure=True,
-                                    subplot_scale=False,
-                                    track_group_scale=False,
-                                    track_group_distance=2,
-                                    xmax_multiplier=1.3, ymax_multiplier=1.00,
-                                    stranded_tracks=args.stranded,
-                                    rounded_tracks=args.rounded,
-                                    stranded_end_tracks=args.stranded_end,
-                                    xtick_fontsize=args.x_tick_fontsize,
-                                    subplot_title_fontsize=args.title_fontsize,
-                                    subplot_title_fontweight='bold'
-                                    )
+                            chr_len_df,
+                            args.scaffold_ordered_list,
+                            args.output_prefix,
+                            legend=Visualization.density_legend(colors, args.coverage_thresholds),
+                            # query_species_color_df_dict,
+                            centromere_df=centromere_df,
+                            highlight_df=args.highlight_file,
+                            figure_width=args.figure_width,
+                            figure_height_per_scaffold=args.figure_height_per_scaffold,
+                            dpi=300,
+                            default_color="red",
+                            title=args.title,
+                            extensions=args.output_formats,
+                            feature_start_column_id="start",
+                            feature_end_column_id="end",
+                            feature_color_column_id="color",
+                            feature_length_column_id="length",
+                            subplots_adjust_left=args.subplots_adjust_left,
+                            subplots_adjust_bottom=args.subplots_adjust_bottom,
+                            subplots_adjust_right=args.subplots_adjust_right,
+                            subplots_adjust_top=args.subplots_adjust_top,
+                            show_track_label=not args.hide_track_label,
+                            show_trackgroup_label=True,
+                            close_figure=True,
+                            subplot_scale=False,
+                            track_group_scale=False,
+                            track_group_distance=2,
+                            xmax_multiplier=1.3, ymax_multiplier=1.00,
+                            stranded_tracks=args.stranded,
+                            rounded_tracks=args.rounded,
+                            stranded_end_tracks=args.stranded_end,
+                            xtick_fontsize=args.x_tick_fontsize,
+                            subplot_title_fontsize=args.title_fontsize,
+                            subplot_title_fontweight='bold'
+                            )
 """    
 Visualization.draw_coverage_windows(coverage_df, args.window_size, args.window_step, chr_len_df,
                                     average_coverage_dict,
