@@ -107,6 +107,9 @@ parser.add_argument("-v", "--verbose", action="store_true", dest="verbose",
 
 args = parser.parse_args()
 
+if args.window_step is None:
+    args.window_step = args.window_size
+
 chr_syn_dict = SynDict(filename=args.scaffold_syn_file,
                        key_index=args.syn_file_key_column,
                        value_index=args.syn_file_value_column)
