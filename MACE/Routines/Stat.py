@@ -330,7 +330,8 @@ class StatsVCF(FileRoutines):
         return count_df
 
     @staticmethod
-    def convert_variant_count_to_feature_df(count_df,  window_size, window_step):
+    def convert_variant_count_to_feature_df(count_df,  window_size, window_step, window_column="window",
+                                            scaffold_column="#scaffold"):
         # TODO: adjust this function and count_variant to merge them. Now they are separated to keep compatibility
         # function relies that there is only one track in file
         feature_df = count_df.copy()
