@@ -113,7 +113,7 @@ chr_syn_dict = SynDict(filename=args.scaffold_syn_file,
 
 coverage_df = pd.read_csv(args.input, sep="\t", usecols=[args.scaffold_column_name,
                                                          args.window_column_name] + args.coverage_column_name_list,
-                          index_col=(args.scaffold_column_name,),) #, args.window_column_name),)
+                          index_col=(args.scaffold_column_name, args.window_column_name),)
 
 coverage_df.index.set_levels(list(map(str, coverage_df.index.levels[0])), level=0, inplace=True)
 if args.verbose:
