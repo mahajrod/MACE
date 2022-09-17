@@ -145,6 +145,12 @@ if args.verbose:
     print(coverage_df)
 
 print(coverage_df)
+feature_df, track_df = StatsVCF.convert_variant_count_to_feature_df(coverage_df,
+                                                                    args.window_size,
+                                                                    args.window_step)
+
+print(feature_df)
+print(track_df)
 Visualization.draw_coverage_windows(coverage_df, args.window_size, args.window_step, chr_len_df,
                                     average_coverage_dict,
                                     args.output_prefix,
