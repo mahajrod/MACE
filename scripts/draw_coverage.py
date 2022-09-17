@@ -144,7 +144,7 @@ if args.verbose:
     print(chr_syn_dict)
     print(coverage_df)
 
-
+print(coverage_df)
 Visualization.draw_coverage_windows(coverage_df, args.window_size, args.window_step, chr_len_df,
                                     average_coverage_dict,
                                     args.output_prefix,
