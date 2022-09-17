@@ -218,6 +218,7 @@ for mean_coverage, track_label in zip(args.mean_coverage_list, args.coverage_col
                                                                color_expression,
                                                                value_column_index=-1 # TODO fix it, add support for multiple tracks in the file
                                                                )
+    print(track_with_colors_df)
     track_df_dict[track_label] = track_with_colors_df
 
 Visualization.draw_features(track_df_dict,
