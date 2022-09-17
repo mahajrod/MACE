@@ -331,7 +331,7 @@ class StatsVCF(FileRoutines):
 
     @staticmethod
     def convert_variant_count_to_feature_df(count_df,  window_size, window_step, window_column="window",
-                                            scaffold_column="#scaffold"):
+                                            scaffold_column="#scaffold", value_column=None):
         # TODO: adjust this function and count_variant to merge them. Now they are separated to keep compatibility
         # function relies that there is only one track in file
         feature_df = count_df.copy()
@@ -349,8 +349,8 @@ class StatsVCF(FileRoutines):
         track_df["start"] = track_df["window"] * window_step
         track_df["end"] = (track_df["window"] + 1) * window_step
 
-        return feature_df[list(columns[:-2]) + ["start", "end", "window", columns[-1]]], \
-               track_df[list(columns[:-2]) + ["start", "end", "window", columns[-1]]]
+        return feature_df[list(columns[:-2]) + ["start", "end", "window", columns[-1] if value_column is None else value_column]], \
+               track_df[list(columns[:-2]) + ["start", "end", "window", columns[-1] if value_column is None else value_column]]
 
     def count_feature_length_in_windows(self, collection_gff, window_size, window_step,
                                         reference_scaffold_length_df,
