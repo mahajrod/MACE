@@ -220,7 +220,7 @@ for mean_coverage, track_label in zip(args.mean_coverage_list, args.coverage_col
                                                                )
     track_df_dict[track_label] = track_with_colors_df
 
-Visualization.draw_features(track_df_dict[track_label],
+Visualization.draw_features(track_df_dict,
                                     chr_len_df,
                                     args.scaffold_ordered_list,
                                     args.output_prefix,
