@@ -83,7 +83,7 @@ parser.add_argument("--syn_file_value_column", action="store", dest="syn_file_va
                     help="Column(0-based) with value(synonym id) for scaffolds in synonym file synonym. Default: 1")
 
 parser.add_argument("--colormap", action="store", dest="colormap", default="jet",
-                    help="Matplotlib colormap to use for SNP densities. Default: jet")
+                    help="Matplotlib colormap to use for coverage bins. Default: jet")
 parser.add_argument("--coverage_thresholds", action="store", dest="coverage_thresholds",
                     default=(0.0, 0.25, 0.75, 1.25, 1.75, 2.25),
                     type=lambda s: list(map(float, s.split(","))),
@@ -190,9 +190,13 @@ if args.verbose:
 
 #print(coverage_df)
 
+args.coverage_thresholds = (0.0, 0.125, 0.25, 0.375, 0.5, 0.625, 0.75,
+                            0.875, 1.0, 1.125, 1.25, 1.375, 1.5, 1.625,
+                            1.75, 1.875, 2.0, 2.125, 2.25) if args.split_coverage_thresholds else args.coverage_thresholds
+
 track_df_dict = {}
-cmap = plt.get_cmap(args.colormap, len(args.density_thresholds))
-colors = [rgb_tuple_to_hex(cmap(i)[:3]) for i in range(0, len(args.density_thresholds))]
+cmap = plt.get_cmap(args.colormap, len(args.coverage_thresholds))
+colors = [rgb_tuple_to_hex(cmap(i)[:3]) for i in range(0, len(args.coverage_thresholds))]
 
 
 for mean_coverage, track_label in zip(args.mean_coverage_list, args.coverage_column_name_list):
@@ -202,9 +206,7 @@ for mean_coverage, track_label in zip(args.mean_coverage_list, args.coverage_col
                                                                         value_column=track_label)
     track_df[track_label] /= mean_coverage
     color_expression = partial(Visualization.color_threshold_expression,
-                               thresholds=(0.0, 0.125, 0.25, 0.375, 0.5, 0.625, 0.75,
-                                           0.875, 1.0, 1.125, 1.25, 1.375, 1.5, 1.625,
-                                           1.75, 1.875, 2.0, 2.125, 2.25) if args.split_coverage_thresholds else args.coverage_thresholds,
+                               thresholds=args.coverage_thresholds,
                                colors=colors,
                                background="white")
 
@@ -218,7 +220,7 @@ Visualization.draw_features(track_df_dict[track_label],
                                     chr_len_df,
                                     args.scaffold_ordered_list,
                                     args.output_prefix,
-                                    legend=Visualization.density_legend(colors, args.density_thresholds),
+                                    legend=Visualization.density_legend(colors, args.coverage_thresholds),
                                     # query_species_color_df_dict,
                                     centromere_df=centromere_df,
                                     highlight_df=args.highlight_file,
