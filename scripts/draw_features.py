@@ -180,15 +180,17 @@ if args.verbose:
 #print(chr_len_df)
 
 Visualization.draw_features(feature_df, chr_len_df,
+                            args.scaffold_ordered_list,
                             args.output_prefix,
-                            legend_df=legend_df,
+                            legend=Visualization.feature_legend(legend_df, colormap=args.colormap),
+                            #legend_df=legend_df,
                             centromere_df=centromere_df,
                             figure_width=15, figure_height_per_scaffold=0.5, dpi=300,
-                            colormap=None, thresholds=None, colors=None, background=None,
+                            #colormap=None, thresholds=None, colors=None, background=None,
                             default_color=args.default_color,
                             title=None,
                             extensions=args.output_formats,
-                            scaffold_order_list=args.scaffold_ordered_list,
+
                             feature_shape=args.feature_shape,
                             feature_start_column_id=feature_start_column_id,
                             feature_end_column_id=feature_end_column_id,
