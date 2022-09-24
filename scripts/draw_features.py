@@ -117,6 +117,8 @@ parser.add_argument("--track_group_scale", action="store_true", dest="track_grou
 
 args = parser.parse_args()
 
+args.scaffold_ordered_list = args.scaffold_ordered_list[::-1]
+
 chr_syn_dict = SynDict(filename=args.scaffold_syn_file,
                        key_index=args.syn_file_key_column,
                        value_index=args.syn_file_value_column)
