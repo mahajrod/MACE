@@ -183,7 +183,7 @@ if args.verbose:
 #print(feature_df.records)
 #print(chr_len_df)
 
-Visualization.draw_features(feature_df, chr_len_df,
+Visualization.draw_features({"features": feature_df}, chr_len_df,
                             args.scaffold_ordered_list,
                             args.output_prefix,
                             legend=Visualization.feature_legend(legend_df, colormap=args.colormap),
