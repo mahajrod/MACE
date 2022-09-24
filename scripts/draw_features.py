@@ -13,6 +13,11 @@ from RouToolPa.Parsers.BED import CollectionBED
 from RouToolPa.Collections.General import SynDict, IdList
 from MACE.Routines import Visualization, StatsVCF
 
+
+def read_series(s):
+    return pd.read_csv(s, header=None, squeeze=True) if os.path.exists(s) else pd.Series(s.split(","))
+
+
 parser = argparse.ArgumentParser()
 
 parser.add_argument("-i", "--input", action="store", dest="input", required=True,
@@ -52,18 +57,18 @@ parser.add_argument("--color_column_name", action="store", dest="color_column_na
 parser.add_argument("--default_color", action="store", dest="default_color", default="red",
                     help="Default color used for all features if color column is not set. Default: red")
 parser.add_argument("-a", "--scaffold_white_list", action="store", dest="scaffold_white_list", default=[],
-                    type=lambda s: IdList(filename=s) if os.path.exists(s) else s.split(","),
+                    type=read_series,
                     help="Comma-separated list of the only scaffolds to draw. Default: all")
 
 parser.add_argument("-b", "--scaffold_black_list", action="store", dest="scaffold_black_list", default=[],
-                    type=lambda s: IdList(filename=s) if os.path.exists(s) else s.split(","),
+                    type=read_series,
                     help="Comma-separated list of scaffolds to skip at drawing. Default: not set")
 
 parser.add_argument("-y", "--sort_scaffolds", action="store_true", dest="sort_scaffolds", default=False,
                     help="Order  scaffolds according to their names. Default: False")
 
 parser.add_argument("-z", "--scaffold_ordered_list", action="store", dest="scaffold_ordered_list", default=[],
-                    type=lambda s: IdList(filename=s) if os.path.exists(s) else s.split(","),
+                    type=read_series,
                     help="Comma-separated list of scaffolds to draw first and exactly in same order. "
                          "Scaffolds absent in this list are drawn last and in order according to vcf file . "
                          "Default: not set")
@@ -173,7 +178,6 @@ if args.scaffold_syn_file:
     feature_df.records.rename(index=chr_syn_dict, inplace=True)
 if args.verbose:
     print(chr_syn_dict)
-
     print(feature_df.records)
 #print(feature_df.records.columns)
 #print(feature_df.records)
@@ -190,7 +194,6 @@ Visualization.draw_features(feature_df, chr_len_df,
                             default_color=args.default_color,
                             title=None,
                             extensions=args.output_formats,
-
                             feature_shape=args.feature_shape,
                             feature_start_column_id=feature_start_column_id,
                             feature_end_column_id=feature_end_column_id,
