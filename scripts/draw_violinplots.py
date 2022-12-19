@@ -4,11 +4,13 @@ __author__ = 'Sergei F. Kliver'
 import argparse
 from collections import OrderedDict
 import pandas as pd
+import matplotlib
 import matplotlib.pyplot as plt
+import seaborn as sns
 
 parser = argparse.ArgumentParser()
 
-parser.add_argument("-i", "--input", action="store", dest="input", required=True,
+parser.add_argument("-i", "--input", required=True,
                     help="Input file with two columns containing label in the first one and filename in the second."
                          "Boxplots will be drawn in the same order as labels")
 parser.add_argument("-o", "--output_prefix", action="store", dest="output_prefix", required=True,
@@ -49,7 +51,7 @@ parser.add_argument("--rotation",  action="store", dest="rotation", type=float, 
                     help="Rotation angle for X labels. Default: 90")
 
 parser.add_argument("--horizontal_lines",  action="store", dest="horizontal_lines",
-                    type=lambda s: list(map(float, s.split())),
+                    type=lambda s: list(map(float, s.split(","))),
                     help="Comma-separated list of y-coordinates to draw horizontal lines. "
                          "Default: not set")
 """
@@ -79,25 +81,34 @@ with open(args.input, "r") as in_fd:
     file_dict = OrderedDict([line.strip().split("\t") for line in in_fd ])
 
 df_dict = OrderedDict({})
+
 for entry in file_dict:
     df_dict[entry] = pd.read_csv(file_dict[entry], sep="\t", index_col=["CHROM",])
     df_dict[entry]["density"] = df_dict[entry]["All"] / args.window_size * args.multiplicator
 
 fig, ax = plt.subplots(figsize=(args.figure_width_per_sample * len(file_dict), args.figure_height), dpi=args.dpi)
 plt.xticks(rotation=args.rotation)
-plt.boxplot([df_dict[entry]["density"] for entry in df_dict], labels=list(df_dict.keys()))
 
+sns.violinplot(data=[df_dict[entry]["density"] for entry in df_dict], scale='width', inner="box", linewidth=1, saturation=1, color = "#2b8cbe", boxprops={'alpha' : 1})
 
+#for violin in ax.collections:
+#    bbox = violin.get_paths()[0].get_extents()
+#    x0, y0, width, height = bbox.bounds
+#    violin.set_clip_path(plt.Rectangle((x0, y0), width / 2, height, transform=ax.transData))
+
+#sns.boxplot(data=[df_dict[entry]["density"] for entry in df_dict], width=0.2, boxprops={'zorder': 2, 'alpha' : 1}, linewidth=3, palette = "turbo")
+
+ax.set_xticklabels(list(df_dict.keys()))
 plt.yticks(args.yticklist)
 if args.horizontal_lines:
     for ycoord in args.horizontal_lines:
-        plt.axhline(y=ycoord, color="red", linestyle="--", linewidth=0.5)
+        plt.axhline(y=ycoord, color="red", linestyle="--", linewidth=1)
 plt.ylim(ymax=args.ymax, ymin=args.ymin)
 plt.subplots_adjust(left=args.subplots_adjust_left, right=args.subplots_adjust_right,
                     top=args.subplots_adjust_top, bottom=args.subplots_adjust_bottom)
 if args.figure_grid:
     plt.grid(color="gray", linestyle = '--', linewidth = 0.5)
-
+ax.set_ylabel("Heterozygous SNPs/kbp")
 plt.title(args.title)
 for ext in args.output_formats:
     plt.savefig("{0}.{1}".format(args.output_prefix, ext))
