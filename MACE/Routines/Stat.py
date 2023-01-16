@@ -340,7 +340,7 @@ class StatsVCF(FileRoutines):
         feature_df.reset_index(level=1, inplace=True, drop=False)
         track_df = feature_df.copy()
         columns = feature_df.columns
-        print(feature_df)
+        #print(feature_df)
         #print(columns)
 
         feature_df["start"] = feature_df["window"] * window_step

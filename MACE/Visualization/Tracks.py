@@ -181,15 +181,22 @@ class Track:
                                                                                                       y_start=y_track,
                                                                                                       *args, **kwargs)
 
-            forward_patch_collection = PatchCollection(self.records[self.records[strand_column] == "+"].apply(self.forward_patch_function, axis=1),
-                                                       antialiased=False,
-                                                       match_original=True,
-                                                       zorder=used_style.zorder["element"]) if not self.records[self.records[strand_column] == "+"].empty else None
-            reverse_patch_collection = PatchCollection(self.records[self.records[strand_column] == "-"].apply(self.reverse_patch_function, axis=1),
-                                                       antialiased=False,
-                                                       match_original=True,
-                                                       zorder=used_style.zorder["element"]) if not self.records[self.records[strand_column] == "-"].empty else None
-            # TODO: add unstranded patch collections
+            if strand_column in self.records.columns:
+                print(self.records)
+                forward_patch_collection = PatchCollection(self.records[self.records[strand_column] == "+"].apply(self.forward_patch_function, axis=1),
+                                                           antialiased=False,
+                                                           match_original=True,
+                                                           zorder=used_style.zorder["element"]) if not self.records[self.records[strand_column] == "+"].empty else None
+                reverse_patch_collection = PatchCollection(self.records[self.records[strand_column] == "-"].apply(self.reverse_patch_function, axis=1),
+                                                           antialiased=False,
+                                                           match_original=True,
+                                                           zorder=used_style.zorder["element"]) if not self.records[self.records[strand_column] == "-"].empty else None
+            else:
+                forward_patch_collection = PatchCollection(self.records.apply(self.forward_patch_function, axis=1),
+                                                           antialiased=False,
+                                                           match_original=True,
+                                                           zorder=used_style.zorder["element"]) if not self.records.empty else None
+                reverse_patch_collection = None
             return forward_patch_collection, reverse_patch_collection
 
     def draw(self, axes=None, style=None):
@@ -522,8 +529,10 @@ class Track:
                                               #color=used_style.empty_color if (
                                               #        used_style.fill_empty and self.records is None) else used_style.background,
                                               fill=True,
-                                              edgecolor=used_style.background,
-                                              facecolor=used_style.background,
+                                              edgecolor=used_style.empty_color if (
+                                                      used_style.fill_empty and self.records is None) else used_style.background,
+                                              facecolor=used_style.empty_color if (
+                                                      used_style.fill_empty and self.records is None) else used_style.background,
                                               linewidth=used_style.edge_width,
                                               zorder=used_style.zorder["background"])
         self.track_border_patch = Polygon(self.point_array,
@@ -531,8 +540,10 @@ class Track:
                                           #        used_style.fill_empty and self.records is None) else used_style.face_color,
                                           fill=True if (
                                                   used_style.fill_empty and self.records is None) else used_style.fill,
-                                          edgecolor=used_style.edge_color,
-                                          facecolor=used_style.face_color,
+                                          edgecolor=used_style.empty_color if (
+                                                  used_style.fill_empty and self.records is None) else  used_style.edge_color,
+                                          facecolor=used_style.empty_color if (
+                                                  used_style.fill_empty and self.records is None) else  used_style.face_color,
                                           linewidth=used_style.edge_width,
                                           zorder=used_style.zorder["border"])
 
@@ -710,6 +721,7 @@ class FeatureTrack(Track):
                  feature_color_column_id="color",
                  feature_length_column_id="length",
                  feature_strand_column_id="strand",
+                 feature_value_column_id=None,
                  x_scale_factor=1,
                  y_scale_factor=1,
                  auto_scale=False,
@@ -738,6 +750,7 @@ class FeatureTrack(Track):
         self.feature_color_column_id = feature_color_column_id
         self.feature_length_column_id = feature_length_column_id
         self.feature_strand_column_id = feature_strand_column_id
+        self.feature_value_column_id = feature_value_column_id
 
         self.x_scale_factor = x_scale_factor
         self.y_scale_factor = y_scale_factor
@@ -900,3 +913,25 @@ class FeatureTrack(Track):
                                    linewidth=feature_style.edge_width)
 
                 return create_patch, None
+
+        elif feature_style.patch_type == "hist":
+
+            def create_patch(row, style=style, feature_style=feature_style, y_start=y_start):
+
+                bin_values = np.array(map(float, row[self.feature_value_column_id].split(",")))
+                bin_heights = bin_values / sum(bin_values) * style.height
+                bin_cumulative_bottoms = np.zeros(len(bin_values))
+                bin_cumulative_bottoms[1:] = np.cumsum(bin_heights)[0:-1]
+                bin_colors = [style.hist_colors[i] for i in range(0, len(bin_values))]
+
+                return [Rectangle((row[self.feature_start_column_id], y_start + y_bottom),
+                                  row[self.feature_length_column_id],
+                                  style.height,
+                                  fill=True,
+                                  edgecolor=feature_style.edge_color,
+                                  facecolor=feature_style.face_color,
+                                  linewidth=0) for y_bottom, y_height, color in zip(bin_cumulative_bottoms,
+                                                                                    bin_heights,
+                                                                                    bin_colors)]
+
+            return create_patch, None

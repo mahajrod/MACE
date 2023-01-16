@@ -1,0 +1,545 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>MACE.Parsers.CCF module &mdash; MACE 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="MACE 1.0 documentation" href="index.html" />
+    <link rel="prev" title="MACE.Parsers.VCF module" href="MACE.Parsers.VCF.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="MACE.Parsers.VCF.html" title="MACE.Parsers.VCF module"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">MACE 1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="mace-parsers-ccf-module">
+<h1>MACE.Parsers.CCF module<a class="headerlink" href="#mace-parsers-ccf-module" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-MACE.Parsers.CCF">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-MACE.Parsers.CCF" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="MACE.Parsers.CCF.CollectionCCF">
+<em class="property">class </em><tt class="descclassname">MACE.Parsers.CCF.</tt><tt class="descname">CollectionCCF</tt><big>(</big><em>metadata=None</em>, <em>records_dict=None</em>, <em>header=None</em>, <em>input_file=None</em>, <em>from_file=False</em><big>)</big><a class="headerlink" href="#MACE.Parsers.CCF.CollectionCCF" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="MACE.Parsers.Abstract.html#MACE.Parsers.Abstract.Collection" title="MACE.Parsers.Abstract.Collection"><tt class="xref py py-class docutils literal"><span class="pre">MACE.Parsers.Abstract.Collection</span></tt></a></p>
+<blockquote>
+<div><dl class="docutils">
+<dt>def read(self, input_file):</dt>
+<dd><p class="first"># TODO: write read from ccf file
+with open(input_file, &#8220;r&#8221;) as in_fd:</p>
+<blockquote class="last">
+<div><p>stripped_line = in_fd.readline().strip()
+if stripped_line == &#8220;#VCF_METADATA START&#8221;:</p>
+<blockquote>
+<div><p>vcf_metadata = MetadataVCF()
+stripped_line = in_fd.readline().strip()
+while (stripped_line != &#8220;#VCF_METADATA END&#8221;):</p>
+<blockquote>
+<div>vcf_metadata.add_metadata(stripped_line)
+stripped_line = in_fd.readline().strip()</div></blockquote>
+</div></blockquote>
+<p>stripped_line = in_fd.readline().strip()
+if stripped_line == &#8220;#VCF_HEADER&#8221;:</p>
+<blockquote>
+<div>header_line = in_fd.readline().strip()
+vcf_header = HeaderVCF(header_line[1:].split(&#8221;      &#8221;))
+#print(&#8220;a</div></blockquote>
+</div></blockquote>
+</dd>
+</dl>
+</div></blockquote>
+<p>a
+a
+a
+a
+&#8221;)</p>
+<blockquote>
+<div><blockquote>
+<div>#print(vcf_header)
+self.metadata = MetadataCCF(vcf_header[9:], vcf_metadata=vcf_metadata, vcf_header=vcf_header)</div></blockquote>
+<p>stripped_line = in_fd.readline().strip()
+if stripped_line == &#8220;#CCF_HEADER&#8221;:</p>
+<blockquote>
+<div>header_line = in_fd.readline().strip()
+self.header = HeaderCCF(header_line[1:].split(&#8221;     &#8221;))</div></blockquote>
+<p>flag = 0
+self.records = []
+while True:</p>
+<blockquote>
+<div><p>data_line = in_fd.readline()</p>
+<p>if data_line == &#8220;&#8221; or data_line == &#8220;</p>
+</div></blockquote>
+</div></blockquote>
+<dl class="docutils">
+<dt>&#8221;:</dt>
+<dd><blockquote class="first">
+<div><blockquote>
+<div>break</div></blockquote>
+<p>stripped_line = data_line.strip()
+if data_line[0] == &#8221;        &#8221;:</p>
+<blockquote>
+<div>#stripped_line = stripped_line[1:]
+#print(collection_vcf)
+collection_vcf.records.append(collection_vcf.add_record(stripped_line, external_metadata=self.metadata.vcf_metadata))
+flag = 1
+#print(&#8220;aaaa&#8221;)
+continue</div></blockquote>
+<dl class="docutils">
+<dt>if flag != 0:</dt>
+<dd><dl class="first docutils">
+<dt>self.records.append(RecordCCF(id=cluster_id, chrom=chrom, size=size, start=start, end=end,</dt>
+<dd>info_dict=info_dict, flags=flags,
+collection_vcf=collection_vcf, bad_vcf_records=bad_records,
+from_records=False, subclusters=subclusters))</dd>
+</dl>
+<p class="last">#collection_vcf = None</p>
+</dd>
+<dt>if stripped_line[0] == &#8220;&gt;&#8221;:</dt>
+<dd><p class="first">flag = 0
+cluster_id, chrom, start, end, info_dict_and_flags = stripped_line[1:].split(&#8221;  &#8221;)
+start = int(start)
+end = int(end)
+info_dict_and_flags = info_dict_and_flags.split(&#8221;;&#8221;)
+info_dict = OrderedDict({})
+flags = set([])
+subclusters = None
+for descr_entry in info_dict_and_flags:</p>
+<blockquote>
+<div><p>descr_entry_splited = descr_entry.split(&#8220;=&#8221;)
+if len(descr_entry_splited) == 1:</p>
+<blockquote>
+<div>flags.add(descr_entry_splited[0])
+continue</div></blockquote>
+<dl class="docutils">
+<dt>if descr_entry_splited[0] == &#8220;Size&#8221;:</dt>
+<dd>size = int(descr_entry_splited[1])</dd>
+<dt>elif descr_entry_splited[0] == &#8220;Bad_records&#8221;:</dt>
+<dd>bad_records = int(descr_entry_splited[1])</dd>
+<dt>elif descr_entry_splited[0] == &#8220;Mean&#8221; or descr_entry_splited[0] == &#8220;Median&#8221; or descr_entry_splited[0] == &#8220;Power&#8221; or descr_entry_splited[0] == &#8220;Homogeneity&#8221;:</dt>
+<dd>info_dict[descr_entry_splited[0]] = float(descr_entry_splited[1])</dd>
+<dt>elif descr_entry_splited[0] == &#8220;Loc&#8221;:</dt>
+<dd>info_dict[descr_entry_splited[0]] = descr_entry_splited[1].split(&#8221;,&#8221;)</dd>
+<dt>elif descr_entry_splited[0] == &#8220;Subclusters&#8221;:</dt>
+<dd>subclusters = [int(x) for x in descr_entry_splited[1].split(&#8221;,&#8221;)]</dd>
+<dt>else:</dt>
+<dd><p class="first">info_dict[descr_entry_splited[0]] = descr_entry_splited[1].split(&#8221;,&#8221;)
+if len(info_dict[descr_entry_splited[0]]) == 1:</p>
+<blockquote class="last">
+<div>info_dict[descr_entry_splited[0]] = info_dict[descr_entry_splited[0]][0]</div></blockquote>
+</dd>
+</dl>
+</div></blockquote>
+<p class="last">collection_vcf = CollectionVCF(metadata=None, record_list=None, header=None, vcf_file=None, samples=None, from_file=False, external_metadata=None)
+continue</p>
+</dd>
+</dl>
+</div></blockquote>
+<dl class="last docutils">
+<dt>self.records.append(RecordCCF(id=cluster_id, chrom=chrom, size=size, start=start, end=end,</dt>
+<dd>info_dict=info_dict, flags=flags,
+collection_vcf=collection_vcf, bad_vcf_records=bad_records,
+from_records=False, subclusters=subclusters))</dd>
+</dl>
+</dd>
+</dl>
+<dl class="method">
+<dt id="MACE.Parsers.CCF.CollectionCCF.add_header">
+<tt class="descname">add_header</tt><big>(</big><big>)</big><a class="headerlink" href="#MACE.Parsers.CCF.CollectionCCF.add_header" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MACE.Parsers.CCF.CollectionCCF.add_metadata">
+<tt class="descname">add_metadata</tt><big>(</big><big>)</big><a class="headerlink" href="#MACE.Parsers.CCF.CollectionCCF.add_metadata" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MACE.Parsers.CCF.CollectionCCF.add_record">
+<tt class="descname">add_record</tt><big>(</big><big>)</big><a class="headerlink" href="#MACE.Parsers.CCF.CollectionCCF.add_record" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MACE.Parsers.CCF.CollectionCCF.adjust">
+<tt class="descname">adjust</tt><big>(</big><em>border_limit=None</em>, <em>min_size_to_adjust=2</em>, <em>remove_border_subclusters=False</em>, <em>remove_size_limit=1</em><big>)</big><a class="headerlink" href="#MACE.Parsers.CCF.CollectionCCF.adjust" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MACE.Parsers.CCF.CollectionCCF.check_flags">
+<tt class="descname">check_flags</tt><big>(</big><em>flag_list</em>, <em>mismatch_list=[]</em>, <em>expression_list=[]</em>, <em>remove_mismatch_list=[]</em>, <em>flags_to_reset=None</em>, <em>mode='all'</em>, <em>min_cluster_size=[]</em><big>)</big><a class="headerlink" href="#MACE.Parsers.CCF.CollectionCCF.check_flags" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MACE.Parsers.CCF.CollectionCCF.check_record_location">
+<tt class="descname">check_record_location</tt><big>(</big><em>bad_region_collection_gff</em><big>)</big><a class="headerlink" href="#MACE.Parsers.CCF.CollectionCCF.check_record_location" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MACE.Parsers.CCF.CollectionCCF.check_strandness">
+<tt class="descname">check_strandness</tt><big>(</big><big>)</big><a class="headerlink" href="#MACE.Parsers.CCF.CollectionCCF.check_strandness" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MACE.Parsers.CCF.CollectionCCF.count">
+<tt class="descname">count</tt><big>(</big><big>)</big><a class="headerlink" href="#MACE.Parsers.CCF.CollectionCCF.count" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MACE.Parsers.CCF.CollectionCCF.count_locations">
+<tt class="descname">count_locations</tt><big>(</big><em>annotation_black_list=[]</em>, <em>allow_several_counts_of_record=False</em>, <em>out_filename='location_counts.t'</em>, <em>write=True</em>, <em>count_dir='location_counts'</em><big>)</big><a class="headerlink" href="#MACE.Parsers.CCF.CollectionCCF.count_locations" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MACE.Parsers.CCF.CollectionCCF.extract_vcf">
+<tt class="descname">extract_vcf</tt><big>(</big><big>)</big><a class="headerlink" href="#MACE.Parsers.CCF.CollectionCCF.extract_vcf" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MACE.Parsers.CCF.CollectionCCF.filter">
+<tt class="descname">filter</tt><big>(</big><em>expression</em><big>)</big><a class="headerlink" href="#MACE.Parsers.CCF.CollectionCCF.filter" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MACE.Parsers.CCF.CollectionCCF.filter_by_flags">
+<tt class="descname">filter_by_flags</tt><big>(</big><em>white_flag_list=[]</em>, <em>black_flag_list=[]</em><big>)</big><a class="headerlink" href="#MACE.Parsers.CCF.CollectionCCF.filter_by_flags" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MACE.Parsers.CCF.CollectionCCF.filter_by_size">
+<tt class="descname">filter_by_size</tt><big>(</big><em>min_size=3</em><big>)</big><a class="headerlink" href="#MACE.Parsers.CCF.CollectionCCF.filter_by_size" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MACE.Parsers.CCF.CollectionCCF.filter_records">
+<tt class="descname">filter_records</tt><big>(</big><em>expression</em><big>)</big><a class="headerlink" href="#MACE.Parsers.CCF.CollectionCCF.filter_records" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MACE.Parsers.CCF.CollectionCCF.get_data_for_stat">
+<tt class="descname">get_data_for_stat</tt><big>(</big><em>additional_data=('Median'</em>, <em>'Mean'</em>, <em>'Power')</em><big>)</big><a class="headerlink" href="#MACE.Parsers.CCF.CollectionCCF.get_data_for_stat" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MACE.Parsers.CCF.CollectionCCF.get_data_for_strand_stat">
+<tt class="descname">get_data_for_strand_stat</tt><big>(</big><big>)</big><a class="headerlink" href="#MACE.Parsers.CCF.CollectionCCF.get_data_for_strand_stat" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MACE.Parsers.CCF.CollectionCCF.get_location">
+<tt class="descname">get_location</tt><big>(</big><em>annotation_dict</em>, <em>key='Loc'</em>, <em>use_synonym=False</em>, <em>strand_key='strand'</em>, <em>synonym_dict=None</em>, <em>feature_type_black_list=[]</em><big>)</big><a class="headerlink" href="#MACE.Parsers.CCF.CollectionCCF.get_location" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MACE.Parsers.CCF.CollectionCCF.get_record_index">
+<tt class="descname">get_record_index</tt><big>(</big><em>item</em><big>)</big><a class="headerlink" href="#MACE.Parsers.CCF.CollectionCCF.get_record_index" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MACE.Parsers.CCF.CollectionCCF.heatmap_statistics">
+<tt class="descname">heatmap_statistics</tt><big>(</big><em>filename='heatmap_statistics.svg'</em>, <em>suptitle='Heatmap_statistics'</em>, <em>dpi=150</em>, <em>facecolor='green'</em>, <em>n_bins_default=20</em>, <em>additional_data=('Median'</em>, <em>'Mean'</em>, <em>'Power')</em><big>)</big><a class="headerlink" href="#MACE.Parsers.CCF.CollectionCCF.heatmap_statistics" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MACE.Parsers.CCF.CollectionCCF.location_pie">
+<tt class="descname">location_pie</tt><big>(</big><em>pie_name='Location of variants'</em>, <em>annotation_colors=[]</em>, <em>dpi=150</em>, <em>figsize=(30</em>, <em>30)</em>, <em>facecolor='#D6D6D6'</em>, <em>ref_genome=None</em>, <em>explode=True</em>, <em>annotation_black_list=[]</em>, <em>allow_several_counts_of_record=False</em>, <em>pie_filename='variant_location_pie.svg'</em>, <em>full_genome_pie_filename='variant_location_pie_full_genome.svg'</em>, <em>counts_filename='location_counts.t'</em>, <em>plot_dir='variant_location_pie'</em>, <em>counts_dir='location_counts'</em>, <em>radius=1</em>, <em>draw_percents_on_single_pie=False</em>, <em>combine_mixed=False</em><big>)</big><a class="headerlink" href="#MACE.Parsers.CCF.CollectionCCF.location_pie" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MACE.Parsers.CCF.CollectionCCF.pop">
+<tt class="descname">pop</tt><big>(</big><em>index=None</em><big>)</big><a class="headerlink" href="#MACE.Parsers.CCF.CollectionCCF.pop" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MACE.Parsers.CCF.CollectionCCF.read">
+<tt class="descname">read</tt><big>(</big><em>input_file</em><big>)</big><a class="headerlink" href="#MACE.Parsers.CCF.CollectionCCF.read" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MACE.Parsers.CCF.CollectionCCF.rec_index">
+<tt class="descname">rec_index</tt><big>(</big><big>)</big><a class="headerlink" href="#MACE.Parsers.CCF.CollectionCCF.rec_index" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MACE.Parsers.CCF.CollectionCCF.scaffold_len">
+<tt class="descname">scaffold_len</tt><big>(</big><big>)</big><a class="headerlink" href="#MACE.Parsers.CCF.CollectionCCF.scaffold_len" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MACE.Parsers.CCF.CollectionCCF.scaffolds">
+<tt class="descname">scaffolds</tt><big>(</big><big>)</big><a class="headerlink" href="#MACE.Parsers.CCF.CollectionCCF.scaffolds" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MACE.Parsers.CCF.CollectionCCF.set_location_flag">
+<tt class="descname">set_location_flag</tt><big>(</big><em>annotation_dict</em>, <em>expression</em>, <em>flag</em><big>)</big><a class="headerlink" href="#MACE.Parsers.CCF.CollectionCCF.set_location_flag" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MACE.Parsers.CCF.CollectionCCF.split_by_flags">
+<tt class="descname">split_by_flags</tt><big>(</big><em>flag_set</em>, <em>mode='all'</em><big>)</big><a class="headerlink" href="#MACE.Parsers.CCF.CollectionCCF.split_by_flags" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MACE.Parsers.CCF.CollectionCCF.split_records_by_flags">
+<tt class="descname">split_records_by_flags</tt><big>(</big><em>flag_set</em>, <em>mode='all'</em><big>)</big><a class="headerlink" href="#MACE.Parsers.CCF.CollectionCCF.split_records_by_flags" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MACE.Parsers.CCF.CollectionCCF.statistics">
+<tt class="descname">statistics</tt><big>(</big><em>filename='cluster_size_distribution.svg'</em>, <em>title='Distribution of sizes of clusters'</em>, <em>dpi=150</em>, <em>figsize=(8</em>, <em>8)</em>, <em>facecolor='green'</em><big>)</big><a class="headerlink" href="#MACE.Parsers.CCF.CollectionCCF.statistics" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MACE.Parsers.CCF.CollectionCCF.strandness_statistics">
+<tt class="descname">strandness_statistics</tt><big>(</big><em>filename='Strandness_statistics.svg'</em>, <em>suptitle='Cluster strandness_statistics'</em>, <em>dpi=150</em>, <em>figsize=(20</em>, <em>20)</em>, <em>facecolor='green'</em><big>)</big><a class="headerlink" href="#MACE.Parsers.CCF.CollectionCCF.strandness_statistics" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MACE.Parsers.CCF.CollectionCCF.subclustering">
+<tt class="descname">subclustering</tt><big>(</big><em>method='inconsistent'</em>, <em>threshold=0.8</em>, <em>cluster_distance='average'</em><big>)</big><a class="headerlink" href="#MACE.Parsers.CCF.CollectionCCF.subclustering" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MACE.Parsers.CCF.CollectionCCF.write">
+<tt class="descname">write</tt><big>(</big><em>output_file</em><big>)</big><a class="headerlink" href="#MACE.Parsers.CCF.CollectionCCF.write" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="MACE.Parsers.CCF.HeaderCCF">
+<em class="property">class </em><tt class="descclassname">MACE.Parsers.CCF.</tt><tt class="descname">HeaderCCF</tt><a class="headerlink" href="#MACE.Parsers.CCF.HeaderCCF" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">list</span></tt>, <a class="reference internal" href="MACE.Parsers.Abstract.html#MACE.Parsers.Abstract.Header" title="MACE.Parsers.Abstract.Header"><tt class="xref py py-class docutils literal"><span class="pre">MACE.Parsers.Abstract.Header</span></tt></a></p>
+<dl class="method">
+<dt id="MACE.Parsers.CCF.HeaderCCF.append">
+<tt class="descname">append</tt><big>(</big><big>)</big><a class="headerlink" href="#MACE.Parsers.CCF.HeaderCCF.append" title="Permalink to this definition">¶</a></dt>
+<dd><p>L.append(object) &#8211; append object to end</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="MACE.Parsers.CCF.HeaderCCF.count">
+<tt class="descname">count</tt><big>(</big><em>value</em><big>)</big> &rarr; integer -- return number of occurrences of value<a class="headerlink" href="#MACE.Parsers.CCF.HeaderCCF.count" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MACE.Parsers.CCF.HeaderCCF.extend">
+<tt class="descname">extend</tt><big>(</big><big>)</big><a class="headerlink" href="#MACE.Parsers.CCF.HeaderCCF.extend" title="Permalink to this definition">¶</a></dt>
+<dd><p>L.extend(iterable) &#8211; extend list by appending elements from the iterable</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="MACE.Parsers.CCF.HeaderCCF.index">
+<tt class="descname">index</tt><big>(</big><em>value</em><span class="optional">[</span>, <em>start</em><span class="optional">[</span>, <em>stop</em><span class="optional">]</span><span class="optional">]</span><big>)</big> &rarr; integer -- return first index of value.<a class="headerlink" href="#MACE.Parsers.CCF.HeaderCCF.index" title="Permalink to this definition">¶</a></dt>
+<dd><p>Raises ValueError if the value is not present.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="MACE.Parsers.CCF.HeaderCCF.insert">
+<tt class="descname">insert</tt><big>(</big><big>)</big><a class="headerlink" href="#MACE.Parsers.CCF.HeaderCCF.insert" title="Permalink to this definition">¶</a></dt>
+<dd><p>L.insert(index, object) &#8211; insert object before index</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="MACE.Parsers.CCF.HeaderCCF.pop">
+<tt class="descname">pop</tt><big>(</big><span class="optional">[</span><em>index</em><span class="optional">]</span><big>)</big> &rarr; item -- remove and return item at index (default last).<a class="headerlink" href="#MACE.Parsers.CCF.HeaderCCF.pop" title="Permalink to this definition">¶</a></dt>
+<dd><p>Raises IndexError if list is empty or index is out of range.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="MACE.Parsers.CCF.HeaderCCF.remove">
+<tt class="descname">remove</tt><big>(</big><big>)</big><a class="headerlink" href="#MACE.Parsers.CCF.HeaderCCF.remove" title="Permalink to this definition">¶</a></dt>
+<dd><p>L.remove(value) &#8211; remove first occurrence of value.
+Raises ValueError if the value is not present.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="MACE.Parsers.CCF.HeaderCCF.reverse">
+<tt class="descname">reverse</tt><big>(</big><big>)</big><a class="headerlink" href="#MACE.Parsers.CCF.HeaderCCF.reverse" title="Permalink to this definition">¶</a></dt>
+<dd><p>L.reverse() &#8211; reverse <em>IN PLACE</em></p>
+</dd></dl>
+
+<dl class="method">
+<dt id="MACE.Parsers.CCF.HeaderCCF.sort">
+<tt class="descname">sort</tt><big>(</big><big>)</big><a class="headerlink" href="#MACE.Parsers.CCF.HeaderCCF.sort" title="Permalink to this definition">¶</a></dt>
+<dd><p>L.sort(cmp=None, key=None, reverse=False) &#8211; stable sort <em>IN PLACE</em>;
+cmp(x, y) -&gt; -1, 0, 1</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="MACE.Parsers.CCF.MetadataCCF">
+<em class="property">class </em><tt class="descclassname">MACE.Parsers.CCF.</tt><tt class="descname">MetadataCCF</tt><big>(</big><em>samples</em>, <em>vcf_metadata=None</em>, <em>vcf_header=None</em>, <em>metadata={}</em><big>)</big><a class="headerlink" href="#MACE.Parsers.CCF.MetadataCCF" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="MACE.Parsers.Abstract.html#MACE.Parsers.Abstract.Metadata" title="MACE.Parsers.Abstract.Metadata"><tt class="xref py py-class docutils literal"><span class="pre">MACE.Parsers.Abstract.Metadata</span></tt></a></p>
+<dl class="method">
+<dt id="MACE.Parsers.CCF.MetadataCCF.add_metadata">
+<tt class="descname">add_metadata</tt><big>(</big><big>)</big><a class="headerlink" href="#MACE.Parsers.CCF.MetadataCCF.add_metadata" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="MACE.Parsers.CCF.RecordCCF">
+<em class="property">class </em><tt class="descclassname">MACE.Parsers.CCF.</tt><tt class="descname">RecordCCF</tt><big>(</big><em>size=None</em>, <em>start=None</em>, <em>end=None</em>, <em>info_dict=None</em>, <em>flags=None</em>, <em>collection_vcf=None</em>, <em>bad_vcf_records=0</em>, <em>from_records=True</em>, <em>subclusters=None</em>, <em>features=None</em><big>)</big><a class="headerlink" href="#MACE.Parsers.CCF.RecordCCF" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="MACE.Parsers.Abstract.html#MACE.Parsers.Abstract.Record" title="MACE.Parsers.Abstract.Record"><tt class="xref py py-class docutils literal"><span class="pre">MACE.Parsers.Abstract.Record</span></tt></a>, <tt class="xref py py-class docutils literal"><span class="pre">_abcoll.Iterable</span></tt></p>
+<dl class="method">
+<dt id="MACE.Parsers.CCF.RecordCCF.adjust">
+<tt class="descname">adjust</tt><big>(</big><em>border_limit=None</em>, <em>min_size_to_adjust=2</em>, <em>remove_border_subclusters=False</em>, <em>remove_size_limit=1</em><big>)</big><a class="headerlink" href="#MACE.Parsers.CCF.RecordCCF.adjust" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MACE.Parsers.CCF.RecordCCF.check_flags">
+<tt class="descname">check_flags</tt><big>(</big><em>flag_list</em>, <em>mismatch_list=[]</em>, <em>expression_list=[]</em>, <em>remove_mismatch_list=[]</em>, <em>flags_to_reset=None</em>, <em>mode='all'</em>, <em>min_cluster_size=[]</em><big>)</big><a class="headerlink" href="#MACE.Parsers.CCF.RecordCCF.check_flags" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MACE.Parsers.CCF.RecordCCF.check_location">
+<tt class="descname">check_location</tt><big>(</big><em>bad_region_collection_gff</em>, <em>expression='bad_region.start &lt;= self.pos &lt;= bad_region.end'</em><big>)</big><a class="headerlink" href="#MACE.Parsers.CCF.RecordCCF.check_location" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MACE.Parsers.CCF.RecordCCF.check_strandness">
+<tt class="descname">check_strandness</tt><big>(</big><big>)</big><a class="headerlink" href="#MACE.Parsers.CCF.RecordCCF.check_strandness" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MACE.Parsers.CCF.RecordCCF.distances">
+<tt class="descname">distances</tt><big>(</big><big>)</big><a class="headerlink" href="#MACE.Parsers.CCF.RecordCCF.distances" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MACE.Parsers.CCF.RecordCCF.get_location">
+<tt class="descname">get_location</tt><big>(</big><em>record_dict</em>, <em>key='Loc'</em>, <em>use_synonym=False</em>, <em>synonym_dict=None</em><big>)</big><a class="headerlink" href="#MACE.Parsers.CCF.RecordCCF.get_location" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="staticmethod">
+<dt id="MACE.Parsers.CCF.RecordCCF.get_synonym">
+<em class="property">static </em><tt class="descname">get_synonym</tt><big>(</big><em>name</em>, <em>use_synonym=False</em>, <em>synonym_dict=None</em><big>)</big><a class="headerlink" href="#MACE.Parsers.CCF.RecordCCF.get_synonym" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MACE.Parsers.CCF.RecordCCF.reset_flags">
+<tt class="descname">reset_flags</tt><big>(</big><em>flags_to_reset='all'</em><big>)</big><a class="headerlink" href="#MACE.Parsers.CCF.RecordCCF.reset_flags" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MACE.Parsers.CCF.RecordCCF.set_flag">
+<tt class="descname">set_flag</tt><big>(</big><em>expression</em>, <em>flag</em><big>)</big><a class="headerlink" href="#MACE.Parsers.CCF.RecordCCF.set_flag" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MACE.Parsers.CCF.RecordCCF.set_location_flag">
+<tt class="descname">set_location_flag</tt><big>(</big><em>record_scaffold</em>, <em>annotation_dict</em>, <em>expression</em>, <em>flag</em><big>)</big><a class="headerlink" href="#MACE.Parsers.CCF.RecordCCF.set_location_flag" title="Permalink to this definition">¶</a></dt>
+<dd><p>This methods sets flag based on expression.</p>
+<dl class="docutils">
+<dt>Arguments:</dt>
+<dd><p class="first">record_scaffold         scaffold of record</p>
+<p>annotation_dict         Biopython dict of SeqRecords</p>
+<p>expression              two argument boolean function applied to features and record.pos</p>
+<p class="last">flag                    flag to set if expression return True</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="MACE.Parsers.CCF.RecordCCF.subclustering">
+<tt class="descname">subclustering</tt><big>(</big><em>method='inconsistent'</em>, <em>threshold=0.8</em>, <em>cluster_distance='average'</em><big>)</big><a class="headerlink" href="#MACE.Parsers.CCF.RecordCCF.subclustering" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">MACE.Parsers.CCF module</a><ul>
+<li><a class="reference internal" href="#module-MACE.Parsers.CCF">Module contents</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="MACE.Parsers.VCF.html"
+                        title="previous chapter">MACE.Parsers.VCF module</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/MACE.Parsers.CCF.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="MACE.Parsers.VCF.html" title="MACE.Parsers.VCF module"
+             >previous</a> |</li>
+        <li><a href="index.html">MACE 1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2015, S.F. Kliver.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+    </div>
+  </body>
+</html>

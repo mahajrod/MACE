@@ -1,0 +1,266 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>MACE.Parsers.Abstract module &mdash; MACE 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="MACE 1.0 documentation" href="index.html" />
+    <link rel="next" title="MACE.Parsers.VCF module" href="MACE.Parsers.VCF.html" />
+    <link rel="prev" title="MACE.Parsers.CCF module" href="MACE.Parsers.CCF.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="MACE.Parsers.VCF.html" title="MACE.Parsers.VCF module"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="MACE.Parsers.CCF.html" title="MACE.Parsers.CCF module"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">MACE 1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="mace-parsers-abstract-module">
+<h1>MACE.Parsers.Abstract module<a class="headerlink" href="#mace-parsers-abstract-module" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-MACE.Parsers.Abstract">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-MACE.Parsers.Abstract" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="MACE.Parsers.Abstract.Collection">
+<em class="property">class </em><tt class="descclassname">MACE.Parsers.Abstract.</tt><tt class="descname">Collection</tt><big>(</big><em>metadata=None</em>, <em>records_dict=None</em>, <em>header=None</em>, <em>input_file=None</em>, <em>from_file=False</em><big>)</big><a class="headerlink" href="#MACE.Parsers.Abstract.Collection" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="MACE.Parsers.Abstract.Collection.add_header">
+<tt class="descname">add_header</tt><big>(</big><big>)</big><a class="headerlink" href="#MACE.Parsers.Abstract.Collection.add_header" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MACE.Parsers.Abstract.Collection.add_metadata">
+<tt class="descname">add_metadata</tt><big>(</big><big>)</big><a class="headerlink" href="#MACE.Parsers.Abstract.Collection.add_metadata" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MACE.Parsers.Abstract.Collection.add_record">
+<tt class="descname">add_record</tt><big>(</big><big>)</big><a class="headerlink" href="#MACE.Parsers.Abstract.Collection.add_record" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MACE.Parsers.Abstract.Collection.count_locations">
+<tt class="descname">count_locations</tt><big>(</big><em>annotation_black_list=[]</em>, <em>allow_several_counts_of_record=False</em>, <em>out_filename='location_counts.t'</em>, <em>write=True</em>, <em>count_dir='location_counts'</em><big>)</big><a class="headerlink" href="#MACE.Parsers.Abstract.Collection.count_locations" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MACE.Parsers.Abstract.Collection.filter_records">
+<tt class="descname">filter_records</tt><big>(</big><em>expression</em><big>)</big><a class="headerlink" href="#MACE.Parsers.Abstract.Collection.filter_records" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MACE.Parsers.Abstract.Collection.get_location">
+<tt class="descname">get_location</tt><big>(</big><em>annotation_dict</em>, <em>key='Loc'</em>, <em>use_synonym=False</em>, <em>strand_key='strand'</em>, <em>synonym_dict=None</em>, <em>feature_type_black_list=[]</em><big>)</big><a class="headerlink" href="#MACE.Parsers.Abstract.Collection.get_location" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MACE.Parsers.Abstract.Collection.get_record_index">
+<tt class="descname">get_record_index</tt><big>(</big><em>item</em><big>)</big><a class="headerlink" href="#MACE.Parsers.Abstract.Collection.get_record_index" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MACE.Parsers.Abstract.Collection.location_pie">
+<tt class="descname">location_pie</tt><big>(</big><em>pie_name='Location of variants'</em>, <em>annotation_colors=[]</em>, <em>dpi=150</em>, <em>figsize=(30</em>, <em>30)</em>, <em>facecolor='#D6D6D6'</em>, <em>ref_genome=None</em>, <em>explode=True</em>, <em>annotation_black_list=[]</em>, <em>allow_several_counts_of_record=False</em>, <em>pie_filename='variant_location_pie.svg'</em>, <em>full_genome_pie_filename='variant_location_pie_full_genome.svg'</em>, <em>counts_filename='location_counts.t'</em>, <em>plot_dir='variant_location_pie'</em>, <em>counts_dir='location_counts'</em>, <em>radius=1</em>, <em>draw_percents_on_single_pie=False</em>, <em>combine_mixed=False</em><big>)</big><a class="headerlink" href="#MACE.Parsers.Abstract.Collection.location_pie" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MACE.Parsers.Abstract.Collection.pop">
+<tt class="descname">pop</tt><big>(</big><em>index=None</em><big>)</big><a class="headerlink" href="#MACE.Parsers.Abstract.Collection.pop" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MACE.Parsers.Abstract.Collection.read">
+<tt class="descname">read</tt><big>(</big><em>input_file</em><big>)</big><a class="headerlink" href="#MACE.Parsers.Abstract.Collection.read" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MACE.Parsers.Abstract.Collection.rec_index">
+<tt class="descname">rec_index</tt><big>(</big><big>)</big><a class="headerlink" href="#MACE.Parsers.Abstract.Collection.rec_index" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MACE.Parsers.Abstract.Collection.scaffold_len">
+<tt class="descname">scaffold_len</tt><big>(</big><big>)</big><a class="headerlink" href="#MACE.Parsers.Abstract.Collection.scaffold_len" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MACE.Parsers.Abstract.Collection.scaffolds">
+<tt class="descname">scaffolds</tt><big>(</big><big>)</big><a class="headerlink" href="#MACE.Parsers.Abstract.Collection.scaffolds" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MACE.Parsers.Abstract.Collection.set_location_flag">
+<tt class="descname">set_location_flag</tt><big>(</big><em>annotation_dict</em>, <em>expression</em>, <em>flag</em><big>)</big><a class="headerlink" href="#MACE.Parsers.Abstract.Collection.set_location_flag" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MACE.Parsers.Abstract.Collection.split_by_flags">
+<tt class="descname">split_by_flags</tt><big>(</big><em>flag_set</em>, <em>mode='all'</em><big>)</big><a class="headerlink" href="#MACE.Parsers.Abstract.Collection.split_by_flags" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MACE.Parsers.Abstract.Collection.split_records_by_flags">
+<tt class="descname">split_records_by_flags</tt><big>(</big><em>flag_set</em>, <em>mode='all'</em><big>)</big><a class="headerlink" href="#MACE.Parsers.Abstract.Collection.split_records_by_flags" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MACE.Parsers.Abstract.Collection.write">
+<tt class="descname">write</tt><big>(</big><em>output_file</em><big>)</big><a class="headerlink" href="#MACE.Parsers.Abstract.Collection.write" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="MACE.Parsers.Abstract.Header">
+<em class="property">class </em><tt class="descclassname">MACE.Parsers.Abstract.</tt><tt class="descname">Header</tt><a class="headerlink" href="#MACE.Parsers.Abstract.Header" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="class">
+<dt id="MACE.Parsers.Abstract.Metadata">
+<em class="property">class </em><tt class="descclassname">MACE.Parsers.Abstract.</tt><tt class="descname">Metadata</tt><big>(</big><em>metadata=[]</em><big>)</big><a class="headerlink" href="#MACE.Parsers.Abstract.Metadata" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="MACE.Parsers.Abstract.Metadata.add_metadata">
+<tt class="descname">add_metadata</tt><big>(</big><big>)</big><a class="headerlink" href="#MACE.Parsers.Abstract.Metadata.add_metadata" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="MACE.Parsers.Abstract.Record">
+<em class="property">class </em><tt class="descclassname">MACE.Parsers.Abstract.</tt><tt class="descname">Record</tt><big>(</big><em>pos</em>, <em>info_dict=None</em>, <em>flags=None</em><big>)</big><a class="headerlink" href="#MACE.Parsers.Abstract.Record" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="MACE.Parsers.Abstract.Record.get_location">
+<tt class="descname">get_location</tt><big>(</big><em>record_scaffold</em>, <em>annotation_dict</em>, <em>key='Loc'</em>, <em>strand_key='strand'</em>, <em>feature_type_black_list=[]</em>, <em>use_synonym=False</em>, <em>synonym_dict=None</em><big>)</big><a class="headerlink" href="#MACE.Parsers.Abstract.Record.get_location" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="staticmethod">
+<dt id="MACE.Parsers.Abstract.Record.get_synonym">
+<em class="property">static </em><tt class="descname">get_synonym</tt><big>(</big><em>name</em>, <em>use_synonym=False</em>, <em>synonym_dict=None</em><big>)</big><a class="headerlink" href="#MACE.Parsers.Abstract.Record.get_synonym" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MACE.Parsers.Abstract.Record.set_flag">
+<tt class="descname">set_flag</tt><big>(</big><em>expression</em>, <em>flag</em><big>)</big><a class="headerlink" href="#MACE.Parsers.Abstract.Record.set_flag" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MACE.Parsers.Abstract.Record.set_location_flag">
+<tt class="descname">set_location_flag</tt><big>(</big><em>record_scaffold</em>, <em>annotation_dict</em>, <em>expression</em>, <em>flag</em><big>)</big><a class="headerlink" href="#MACE.Parsers.Abstract.Record.set_location_flag" title="Permalink to this definition">¶</a></dt>
+<dd><p>This methods sets flag based on expression.</p>
+<dl class="docutils">
+<dt>Arguments:</dt>
+<dd><p class="first">record_scaffold         scaffold of record</p>
+<p>annotation_dict         Biopython dict of SeqRecords</p>
+<p>expression              two argument boolean function applied to features and record.pos</p>
+<p class="last">flag                    flag to set if expression return True</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">MACE.Parsers.Abstract module</a><ul>
+<li><a class="reference internal" href="#module-MACE.Parsers.Abstract">Module contents</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="MACE.Parsers.CCF.html"
+                        title="previous chapter">MACE.Parsers.CCF module</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="MACE.Parsers.VCF.html"
+                        title="next chapter">MACE.Parsers.VCF module</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/MACE.Parsers.Abstract.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="MACE.Parsers.VCF.html" title="MACE.Parsers.VCF module"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="MACE.Parsers.CCF.html" title="MACE.Parsers.CCF module"
+             >previous</a> |</li>
+        <li><a href="index.html">MACE 1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2015, S.F. Kliver.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+    </div>
+  </body>
+</html>

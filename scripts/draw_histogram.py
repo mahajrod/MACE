@@ -21,15 +21,14 @@ def read_series(s):
 parser = argparse.ArgumentParser()
 
 parser.add_argument("-i", "--input", action="store", dest="input", required=True,
-                    help="Input file with selected features")
-parser.add_argument("-t", "--input_type", action="store", dest="input_type", default="str",
-                    help="Type of input file. Allowed: str (default), gff, blast, bed")
+                    help="Input bed track with histogram values")
+
 parser.add_argument("-g", "--legend", action="store", dest="legend",
                     help="File with legend for feature colors containing two columns with color and legend text")
 parser.add_argument("-o", "--output_prefix", action="store", dest="output_prefix", required=True,
                     help="Prefix of output files")
 parser.add_argument("-e", "--output_formats", action="store", dest="output_formats", type=lambda s: s.split(","),
-                    default=("png", "svg"),
+                    default=("png", ),
                     help="Comma-separated list of formats (supported by matlotlib) of "
                          "output figure.Default: svg,png")
 
@@ -75,10 +74,6 @@ parser.add_argument("--syn_file_value_column", action="store", dest="syn_file_va
                     default=1, type=int,
                     help="Column(0-based) with value(synonym id) for scaffolds in synonym file synonym. Default: 1")
 
-parser.add_argument("--colormap", action="store", dest="colormap", default="jet",
-                    help="Matplotlib colormap to use for SNP densities. Default: jet")
-
-
 parser.add_argument("--hide_track_label", action="store_true", dest="hide_track_label", default=False,
                     help="Hide track label. Default: False")
 parser.add_argument("--feature_shape", action="store", dest="feature_shape", default="rectangle",
@@ -120,8 +115,7 @@ parser.add_argument("--highlight_file", action="store", dest="highlight_file",
                     help="Tab-separated file with two columns ('scaffold' and 'color'). "
                          "Scaffold ids are ids after renaming"
                          "Must contain header.")
-parser.add_argument("--title_fontsize", action="store", dest="title_fontsize", default=20, type=int,
-                    help="Fontsize of the figure. Default: 20")
+
 
 args = parser.parse_args()
 
@@ -142,36 +136,10 @@ if args.centromere_bed:
 else:
     centromere_df = None
 
-if args.input_type == "str":
-    feature_df = CollectionSTR(in_file=args.input, records=None, format="filtered_str", parsing_mode="all",
-                               black_list=(), white_list=(),
-                               syn_dict=chr_syn_dict)
+feature_df = CollectionBED(in_file=args.input, parsing_mode="all", format="bed_track")
+feature_start_column_id = "start"
+feature_end_column_id = "end"
 
-    feature_df.records.set_index("scaffold_id", inplace=True)
-
-    feature_start_column_id = args.start_column_name if args.start_column_name else "start"
-    feature_end_column_id = args.end_column_name if args.end_column_name else "end"
-
-elif args.input_type == "gff":
-    feature_df = CollectionGFF(in_file=args.input, parsing_mode="only_coordinates")
-
-    feature_start_column_id = args.start_column_name if args.start_column_name else "start"
-    feature_end_column_id = args.end_column_name if args.end_column_name else "end"
-
-elif args.input_type == "bed":
-    feature_df = CollectionBED(in_file=args.input, parsing_mode="coordinates_only", format="bed")
-
-    feature_start_column_id = "start"
-    feature_end_column_id = "end"
-
-elif args.input_type == "blast":
-    feature_df = CollectionBLAST(in_file=args.input, parsing_mode="complete")
-    feature_df.records.reset_index(level="query_id", inplace=True)
-    feature_start_column_id = args.start_column_name if args.start_column_name else "target_start"
-    feature_end_column_id = args.end_column_name if args.end_column_name else "target_end"
-
-else:
-    raise ValueError("ERROR!!! Unrecognized input type ({}). ".format(args.input_type))
 
 legend_df = pd.read_csv(args.legend, header=None, index_col=0, sep="\t") if args.legend else None
 
@@ -200,12 +168,12 @@ Visualization.draw_features({"features": feature_df}, chr_len_df,
                             #legend_df=legend_df,
                             centromere_df=centromere_df,
                             highlight_df=args.highlight_file,
-                            figure_width=args.figure_width, figure_height_per_scaffold=0.5, dpi=300,
+                            figure_width=15, figure_height_per_scaffold=0.5, dpi=300,
                             #colormap=None, thresholds=None, colors=None, background=None,
                             default_color=args.default_color,
-                            title=args.title,
+                            title=None,
                             extensions=args.output_formats,
-                            feature_shape=args.feature_shape,
+                            feature_shape="hist",
                             feature_start_column_id=feature_start_column_id,
                             feature_end_column_id=feature_end_column_id,
                             feature_color_column_id=args.color_column_name,

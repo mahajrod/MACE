@@ -8,7 +8,9 @@ class TrackStyle:
     def __init__(self, height, edge=True, fill=False, face_color=None, edge_color="black", edge_width=None,
                  show_label=True, label_fontsize=16, label_fontstyle='normal', label_fontweight='normal',
                  label_hor_aln='right', label_vert_aln='center',
-                 label_y_shift=0, colormap=None, thresholds=array((0.0, 0.1, 0.25, 0.5, 1.0)),
+                 label_y_shift=0, colormap=None, hist_colormap="Set1",
+                 hist_colormap_level_number=10,
+                 thresholds=array((0.0, 0.1, 0.25, 0.5, 1.0)),
                  colors=("#333a97", "green", "yellow", "orange", "red"), background="white",
                  masked="grey", color_expression=None, fill_empty=False, empty_color="lightgrey",
                  middle_line_color="black", middle_line_width=0.5, stranded=False, rounded=False,
@@ -16,7 +18,8 @@ class TrackStyle:
                  centromere=False, arc_point_number=100,
                  highlight_color=None,
                  highlight_edge_color=None,
-                 highlight_edge_width=None
+                 highlight_edge_width=None,
+
                  ):
         self.height = height
         self.fill = fill
@@ -37,11 +40,15 @@ class TrackStyle:
         self.label_y_shift = label_y_shift
 
         self.colormap = colormap
+
         self.color_expression = color_expression
         self.thresholds = thresholds
         self.colors = colors
         self.background = background
         self.masked = masked
+
+        self.hist_colormap = hist_colormap
+        self.hist_colors = get_cmap(hist_colormap, hist_colormap_level_number)
 
         self.stranded = stranded
         self.rounded = rounded

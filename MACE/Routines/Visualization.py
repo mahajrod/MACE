@@ -416,6 +416,7 @@ class Visualization(DrawingRoutines):
                      feature_length_column_id="length",
                      feature_strand_column_id="strand",
                      feature_shape="rectangle",
+                     feature_height_fraction=0.7,
                      stranded_tracks=False,
                      rounded_tracks=False,
                      stranded_end_tracks=False,
@@ -452,9 +453,13 @@ class Visualization(DrawingRoutines):
         if feature_shape == "rectangle":
             feature_style = FeatureStyle(patch_type="rectangle", height=feature_height, label_fontsize=10)
         elif feature_shape == "circle":
-            feature_style = FeatureStyle(patch_type="circle", height=feature_height/2, label_fontsize=10)
+            feature_style = FeatureStyle(patch_type="circle", height=feature_height * feature_height_fraction,
+                                         label_fontsize=10)
         elif feature_shape == "ellipse":
-            feature_style = FeatureStyle(patch_type="ellipse", height=feature_height/2, label_fontsize=10)
+            feature_style = FeatureStyle(patch_type="ellipse", height=feature_height * feature_height_fraction,
+                                         label_fontsize=10)
+        elif feature_shape == "hist":
+            feature_style = FeatureStyle(patch_type="hist", height=feature_height, label_fontsize=10)
         else:
             raise ValueError("ERROR!!! Unknown feature style")
 
@@ -513,8 +518,6 @@ class Visualization(DrawingRoutines):
                 #if feature_color_column_id not in records.columns:
                 #    track_group_dict[chr][species].add_color_by_dict(default_color=default_color) if default_color else \
                 #    track_group_dict[chr][species].add_color_by_dict()
-            # track_group_dict
-            # track_group_dict["chr13"]
         subplot_style = SubplotStyle(distance=5, xaxis_visible=True, yaxis_visible=False, spines_bottom_visible=True,
                                      spines_right_visible=False, spines_left_visible=False, spines_top_visible=False,
                                      x_tick_type="nucleotide",
@@ -530,7 +533,7 @@ class Visualization(DrawingRoutines):
                                      xmax_multiplier=xmax_multiplier, ymax_multiplier=ymax_multiplier)
 
         plt.figure(1, figsize=(figure_width, int(scaffold_number * figure_height_per_scaffold)), dpi=dpi)
-        #print((figure_width, int(scaffold_number * figure_height_per_scaffold)))
+
         chromosome_subplot.draw()
         plt.subplots_adjust(left=subplots_adjust_left, right=subplots_adjust_right,
                             top=subplots_adjust_top, bottom=subplots_adjust_bottom)
