@@ -1,0 +1,6 @@
+Example 1
+
+Example for usage of draw_synteny.py script
+
+Input data includes output of halSynteny for alignment Martes zibellina and Martes martes versus Martes foina.
+Three different --minBlockSize/--maxAnchorDistance values (50000, 100000, 1000000) were used to generate psl files

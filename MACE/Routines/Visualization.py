@@ -139,7 +139,11 @@ class Visualization(DrawingRoutines):
                                       subplots_adjust_top=None,
                                       show_track_label=True,
                                       show_trackgroup_label=True,
-                                      track_group_label_fontstyle='normal'):
+                                      track_group_label_fontstyle='normal',
+                                      stranded_tracks=False,
+                                      rounded_tracks=False,
+                                      stranded_end_tracks=False
+                                      ):
 
         self.draw_windows(count_df, window_size, window_step, scaffold_length_df,
                           output_prefix,
@@ -160,7 +164,10 @@ class Visualization(DrawingRoutines):
                           subplots_adjust_top=subplots_adjust_top,
                           show_track_label=show_track_label,
                           show_trackgroup_label=show_trackgroup_label,
-                          track_group_label_fontstyle=track_group_label_fontstyle
+                          track_group_label_fontstyle=track_group_label_fontstyle,
+                          stranded_tracks=stranded_tracks,
+                          rounded_tracks=rounded_tracks,
+                          stranded_end_tracks=stranded_end_tracks
                           )
 
     def draw_coverage_windows(self, count_df, window_size, window_step, scaffold_length_df,
@@ -182,7 +189,11 @@ class Visualization(DrawingRoutines):
                               show_track_label=True,
                               show_trackgroup_label=True,
                               close_figure=False,
-                              track_group_label_fontstyle='normal'):
+                              track_group_label_fontstyle='normal',
+                              stranded_tracks=False,
+                              rounded_tracks=False,
+                              stranded_end_tracks=False
+                              ):
 
         if absolute_coverage_values:
             if len(mean_coverage_dict) == 1:
@@ -229,7 +240,11 @@ class Visualization(DrawingRoutines):
                                 show_track_label=show_track_label,
                                 show_trackgroup_label=show_trackgroup_label,
                                 close_figure=close_figure,
-                                track_group_label_fontstyle=track_group_label_fontstyle)
+                                track_group_label_fontstyle=track_group_label_fontstyle,
+                                stranded_tracks=stranded_tracks,
+                                rounded_tracks=rounded_tracks,
+                                stranded_end_tracks=stranded_end_tracks
+                                )
 
         return fig
 
@@ -252,7 +267,11 @@ class Visualization(DrawingRoutines):
                      show_track_label=True,
                      show_trackgroup_label=True,
                      close_figure=False,
-                     track_group_label_fontstyle='normal'):
+                     track_group_label_fontstyle='normal',
+                     stranded_tracks=False,
+                     rounded_tracks=False,
+                     stranded_end_tracks=False
+                     ):
 
         track_group_dict = OrderedDict()
         window_step_final = window_step if window_step else window_size
@@ -260,6 +279,9 @@ class Visualization(DrawingRoutines):
         scaffold_number = len(scaffolds)
         # if test_colormaps:
         #print(count_df)
+
+        #feature_df =
+
         for colormap_entry in self.colormap_list if test_colormaps else [colormap]:
             print("%s\tDrawing using %s colormap..." % (str(datetime.datetime.now()), colormap_entry))
             if plot_type == "densities":
@@ -323,35 +345,301 @@ class Visualization(DrawingRoutines):
                 plt.close(1)
 
         return None if test_colormaps else fig
+
+    @staticmethod
+    def color_threshold_expression(value, thresholds, colors, background):
+        # TODO: Needs at least partial implementation as ColorStyle
         """
+        :param value:
+        :param thresholds:
+        :param background:
+        :return:
+        """
+        # colors=("white", "#333a97", "#3d3795", "#5d3393","#813193", "#9d2d7f", "#b82861",
+        #         "#d33845", "#ea2e2e", "#f5ae27"))
+        # thresholds=np.array((0.0, 0.1, 0.5, 0.75, 1.0, 1.25, 1.5, 2.0, 2.5)),
+        # colors=("white", "#333a97", "#3d3795", "#5d3393","#813193", "#9d2d7f", "#b82861",
+        #         "#d33845", "#ea2e2e", "#f5ae27")):
+        if value <= thresholds[0]:
+            return background
+        if value > thresholds[-1]:
+            return colors[-1]
+        for i in range(0, len(thresholds) - 1):
+            if thresholds[i] < value <= thresholds[i + 1]:
+                # print(i)
+                # print(self.style.colors)
+                # print(self.style.thresholds)
+                return colors[i]
+
+    @staticmethod
+    def add_color_to_track_df(track_df, expression, value_column_index=-1, value_column_name=None,
+                                masking=False, masked_color="grey"):
+        output_df = track_df.copy()
+
+        output_df["color"] = list(map(expression, output_df[value_column_name].to_list() if value_column_name else output_df.iloc[:, value_column_index].to_list()))
+        output_df["color"].astype('category', copy=False)
+        if masking and ("masked" in output_df):
+            output_df.loc[output_df["masked"] == True, "color"] = masked_color
+
+        return output_df
+
+    @staticmethod
+    def density_legend(colors, thresholds, colormap=None):
+        return DensityLegend(colors=colors, colormap=colormap, thresholds=thresholds)
+
+    @staticmethod
+    def coverage_legend(colormap, thresholds):
+        return CoverageLegend(colormap=colormap, thresholds=thresholds)
+
+    @staticmethod
+    def chromosome_legend(species_color_df_dict, reference_scaffold_order_list):
+        return ChromosomeLegend(chromosome_df_dict=species_color_df_dict,
+                                scaffold_order_list=reference_scaffold_order_list)
+
+    @staticmethod
+    def feature_legend(legend_df, colormap):
+        return FeatureLegend(legend_df, colormap=colormap, ) if legend_df is not None else None
+
+    def draw_features(self, bed_collection_dict, scaffold_length_df, scaffold_order_list, #species_color_df_dict,
+                     output_prefix,
+                     legend=None,
+                     centromere_df=None,
+                     highlight_df=None,
+                     figure_width=15, figure_height_per_scaffold=0.5, dpi=300,
+                     #colormap=None, thresholds=None, colors=None, background=None,
+                     default_color="red", # TODO: check if it is possible to remove it
+                     title=None,
+                     extensions=("png",),
+                     feature_start_column_id="start",
+                     feature_end_column_id="end",
+                     feature_color_column_id="color",
+                     feature_length_column_id="length",
+                     feature_strand_column_id="strand",
+                     feature_shape="rectangle",
+                     feature_height_fraction=0.7,
+                     stranded_tracks=False,
+                     rounded_tracks=False,
+                     stranded_end_tracks=False,
+                     subplots_adjust_left=None,
+                     subplots_adjust_bottom=None,
+                     subplots_adjust_right=None,
+                     subplots_adjust_top=None,
+                     show_track_label=True,
+                     show_trackgroup_label=True,
+                     close_figure=False,
+                     subplot_scale=False,
+                     track_group_scale=False,
+                     track_group_label_fontstyle='normal',
+                     track_group_distance=2,
+                     xmax_multiplier=1.1, ymax_multiplier=1.1,
+                     xtick_fontsize=None,
+                     subplot_title_fontsize=None,
+                     subplot_title_fontweight='bold'
+                     ):
+
+        track_group_dict = OrderedDict()
+
+        scaffolds = scaffold_order_list.to_list()  # scaffold_order_list[::-1] if scaffold_order_list else collection_gff.records.index.get_level_values(level=0).unique().to_list()
+        scaffold_number = len(scaffolds)
+        synteny_feature_track_style = TrackStyle(height=10, colormap=None, background="white",
+                                                 masked="grey", fill_empty=True, empty_color="lightgrey",
+                                                 stranded=stranded_tracks,
+                                                 rounded=rounded_tracks,
+                                                 stranded_end=stranded_end_tracks,
+                                                 centromere=True if centromere_df is not None else False)
+
+        feature_height = 5 if stranded_tracks else 10
+
+        if feature_shape == "rectangle":
+            feature_style = FeatureStyle(patch_type="rectangle", height=feature_height, label_fontsize=10)
+        elif feature_shape == "circle":
+            feature_style = FeatureStyle(patch_type="circle", height=feature_height * feature_height_fraction,
+                                         label_fontsize=10)
+        elif feature_shape == "ellipse":
+            feature_style = FeatureStyle(patch_type="ellipse", height=feature_height * feature_height_fraction,
+                                         label_fontsize=10)
+        elif feature_shape == "hist":
+            feature_style = FeatureStyle(patch_type="hist", height=feature_height, label_fontsize=10)
         else:
-            if plot_type == "densities":
-                legend = DensityLegend(colormap=colormap,
-                                       thresholds=thresholds)
-            elif plot_type == "coverage":
-                legend = CoverageLegend(colormap=colormap,
-                                        thresholds=thresholds)
+            raise ValueError("ERROR!!! Unknown feature style")
 
-            for chr in scaffolds:  # count_df.index.get_level_values(level=0).unique():
+        #feature_style = FeatureStyle(patch_type="rectangle", height=feature_height, label_fontsize=10)
 
-                track_group_dict[chr] = TrackGroup(
-                    {chr: WindowTrack(count_df.xs[chr], window_size, window_step_final, x_end=scaffold_length_df.loc[chr].iloc[0],
-                                      multiplier=multiplier, label=chr, colormap=colormap, thresholds=thresholds,
-                                      colors=colors, background=background, masked=masked, norm=norm)})
-                track_group_dict[chr][chr].add_color(masking=masking)
-            # track_group_dict
-            # track_group_dict["chr13"]
-            chromosome_subplot = Subplot(track_group_dict, title=title, style=chromosome_subplot_style,
-                                         legend=legend)
+        for chr in scaffolds:  # count_df.index.get_level_values(level=0).unique():
 
-            plt.figure(1, figsize=(figure_width, int(scaffold_number * figure_height_per_scaffold)), dpi=dpi)
+            highlight = False
+            highlight_color = None
+            if (highlight_df is not None) and (not highlight_df.empty):
+                if chr in highlight_df.index:
+                    highlight = True
+                    highlight_color = highlight_df.loc[chr, "color"]
 
-            chromosome_subplot.draw()
-            plt.subplots_adjust(left=subplots_adjust_left, right=subplots_adjust_right,
-                                top=subplots_adjust_top, bottom=subplots_adjust_bottom)
-            for ext in extensions:
-                plt.savefig("%s.%s" % (output_prefix, ext))
-        """
+            track_group_style = TrackGroupStyle(label_fontstyle=track_group_label_fontstyle,
+                                                distance=track_group_distance,
+                                                highlight_color=highlight_color)
+
+            track_group_dict[chr] = TrackGroup(label=chr if show_trackgroup_label else None,
+                                               style=track_group_style,
+                                               highlight=highlight
+                                               )
+            centromere_start = None
+            centromere_end = None
+            if (centromere_df is not None) and (not centromere_df.empty):
+                if chr in centromere_df.index:
+                    #print(chr)
+                    centromere_start = centromere_df.loc[chr, "start"]
+                    centromere_end = centromere_df.loc[chr, "end"]
+
+            for species in bed_collection_dict:
+                records = bed_collection_dict[species].records if hasattr(bed_collection_dict[species], "records") else bed_collection_dict[species]
+
+                # print(species)
+                #print(scaffold_length_df)
+                #print(scaffold_length_df)
+                #print(scaffold_length_df.loc[chr])
+                #print(scaffold_length_df.loc[chr][0])
+                track_group_dict[chr][species] = FeatureTrack(
+                    records.loc[[chr]] if chr in records.index else None, x_end=scaffold_length_df.loc[chr][0],
+                    label=species if show_track_label else None, #colormap=colormap, thresholds=thresholds,
+                    style=synteny_feature_track_style,
+                    #colors=colors, background=background,
+                    feature_style=feature_style,
+                    feature_start_column_id=feature_start_column_id,
+                    feature_end_column_id=feature_end_column_id,
+                    feature_color_column_id=feature_color_column_id,
+                    feature_length_column_id=feature_length_column_id,
+                    feature_strand_column_id=feature_strand_column_id,
+                    subplot_scale=subplot_scale,
+                    track_group_scale=track_group_scale,
+                    stranded=stranded_tracks,
+                    centromere_start=centromere_start,
+                    centromere_end=centromere_end)
+                # print(track_group_dict[chr][species].records)
+                #if feature_color_column_id not in records.columns:
+                #    track_group_dict[chr][species].add_color_by_dict(default_color=default_color) if default_color else \
+                #    track_group_dict[chr][species].add_color_by_dict()
+        subplot_style = SubplotStyle(distance=5, xaxis_visible=True, yaxis_visible=False, spines_bottom_visible=True,
+                                     spines_right_visible=False, spines_left_visible=False, spines_top_visible=False,
+                                     x_tick_type="nucleotide",
+                                     title_fontsize=subplot_title_fontsize,
+                                     title_fontweight=subplot_title_fontweight,
+                                     x_tick_major_fontsize=xtick_fontsize,
+                                     x_tick_minor_fontsize=(xtick_fontsize - 1) if xtick_fontsize is not None else None)
+
+        chromosome_subplot = Subplot(track_group_dict, title=title, style=subplot_style,
+                                     legend=legend, #ChromosomeLegend(chromosome_df_dict=species_color_df_dict, scaffold_order_list=scaffold_order_list),
+                                     auto_scale=True,
+                                     figure_x_y_ratio=figure_width / int(scaffold_number * figure_height_per_scaffold),
+                                     xmax_multiplier=xmax_multiplier, ymax_multiplier=ymax_multiplier)
+
+        plt.figure(1, figsize=(figure_width, int(scaffold_number * figure_height_per_scaffold)), dpi=dpi)
+
+        chromosome_subplot.draw()
+        plt.subplots_adjust(left=subplots_adjust_left, right=subplots_adjust_right,
+                            top=subplots_adjust_top, bottom=subplots_adjust_bottom)
+
+        for ext in extensions:
+            plt.savefig("%s.%s" % (output_prefix, ext))
+
+        if close_figure:
+            plt.close(1)
+    """
+    def draw_features(self, collection_gff, scaffold_length_df,
+                      output_prefix,
+                      legend_df=None,
+                      centromere_df=None,
+                      figure_width=15, figure_height_per_scaffold=0.5, dpi=300,
+                      colormap=None, thresholds=None, colors=None, background=None,
+                      default_color="red",
+                      title=None,
+                      extensions=("png", ),
+                      scaffold_order_list=None,
+                      feature_shape="rectangle",
+                      feature_start_column_id="start",
+                      feature_end_column_id="end",
+                      feature_color_column_id="color",
+                      feature_length_column_id="length",
+                      subplots_adjust_left=None,
+                      subplots_adjust_bottom=None,
+                      subplots_adjust_right=None,
+                      subplots_adjust_top=None,
+                      show_track_label=True,
+                      show_trackgroup_label=True,
+                      close_figure=False,
+                      subplot_scale=False,
+                      track_group_scale=False,
+                      stranded_tracks=False,
+                      rounded_tracks=False,
+                      stranded_end_tracks=False
+                      ):
+
+        track_group_dict = OrderedDict()
+
+        scaffolds = scaffold_order_list[::-1] if scaffold_order_list else collection_gff.records.index.get_level_values(level=0).unique().to_list()
+        scaffold_number = len(scaffolds)
+
+        if feature_shape == "rectangle":
+            feature_style = default_feature_style
+        elif feature_shape == "circle":
+            feature_style = circle_feature_style
+        elif feature_shape == "ellipse":
+            feature_style = ellipse_feature_style
+        else:
+            raise ValueError("ERROR!!! Unknown feature style")
+        feature_track_style = TrackStyle(height=10, colormap=None, background="white",
+                                         masked="grey", fill_empty=True, empty_color="lightgrey",
+                                         stranded=stranded_tracks,
+                                         rounded=rounded_tracks,
+                                         stranded_end=stranded_end_tracks,
+                                         centromere=True if centromere_df is not None else False)
+
+        for chr in scaffolds:  # count_df.index.get_level_values(level=0).unique():
+            centromere_start = None
+            centromere_end = None
+            if (centromere_df is not None) and (not centromere_df.empty):
+                if chr in centromere_df.index:
+                    centromere_start = centromere_df.loc[chr, "start"]
+                    centromere_end = centromere_df.loc[chr, "end"]
+            track_group_dict[chr] = TrackGroup(
+                {chr: FeatureTrack(collection_gff.records.loc[[chr]] if chr in collection_gff.records.index else None,
+                                   x_end=scaffold_length_df.loc[chr][0],
+                                   label=chr, colormap=colormap, thresholds=thresholds,
+                                   style=feature_track_style,
+                                   colors=colors, background=background,
+                                   feature_style=feature_style,
+                                   feature_start_column_id=feature_start_column_id,
+                                   feature_end_column_id=feature_end_column_id,
+                                   feature_color_column_id=feature_color_column_id,
+                                   feature_length_column_id=feature_length_column_id,
+                                   subplot_scale=subplot_scale,
+                                   track_group_scale=track_group_scale,
+                                   stranded=stranded_tracks,
+                                   centromere_start=centromere_start,
+                                   centromere_end=centromere_end
+                                   )})
+            if feature_color_column_id not in collection_gff.records.columns:
+                track_group_dict[chr][chr].add_color_by_dict(default_color=default_color) if default_color else track_group_dict[chr][chr].add_color_by_dict()
+        # track_group_dict
+        # track_group_dict["chr13"]
+        subplot_style = deepcopy(chromosome_subplot_style)
+
+        chromosome_subplot = Subplot(track_group_dict, title=title, style=subplot_style,
+                                     legend=FeatureLegend(legend_df, colormap=colormap,) if legend_df is not None else None,
+                                     auto_scale=True, figure_x_y_ratio=figure_width/int(scaffold_number * figure_height_per_scaffold))
+
+        plt.figure(1, figsize=(figure_width, int(scaffold_number * figure_height_per_scaffold)), dpi=dpi)
+
+        chromosome_subplot.draw()
+        plt.subplots_adjust(left=subplots_adjust_left, right=subplots_adjust_right,
+                            top=subplots_adjust_top, bottom=subplots_adjust_bottom)
+
+        for ext in extensions:
+            plt.savefig("%s.%s" % (output_prefix, ext))
+
+        if close_figure:
+            plt.close(1)
+    """
+
     # ----------------------- In progress ------------------------------
     @staticmethod
     def plot_clustering_threshold_tests(cluster_df, output_prefix, scaffold_order_list=None,
@@ -466,78 +754,7 @@ class Visualization(DrawingRoutines):
 
         pass
 
-    def draw_features(self, collection_gff, scaffold_length_df,
-                      output_prefix,
-                      legend_df=None,
-                      figure_width=15, figure_height_per_scaffold=0.5, dpi=300,
-                      colormap=None, thresholds=None, colors=None, background=None,
-                      default_color="red",
-                      title=None,
-                      extensions=("png", ),
-                      scaffold_order_list=None,
-                      feature_shape="rectangle",
-                      feature_start_column_id="start",
-                      feature_end_column_id="end",
-                      feature_color_column_id="color",
-                      feature_length_column_id="length",
-                      subplots_adjust_left=None,
-                      subplots_adjust_bottom=None,
-                      subplots_adjust_right=None,
-                      subplots_adjust_top=None,
-                      show_track_label=True,
-                      show_trackgroup_label=True,
-                      close_figure=False,
-                      subplot_scale=False,
-                      track_group_scale=False
-                      ):
 
-        track_group_dict = OrderedDict()
-
-        scaffolds = scaffold_order_list[::-1] if scaffold_order_list else collection_gff.records.index.get_level_values(level=0).unique().to_list()
-        scaffold_number = len(scaffolds)
-
-        if feature_shape == "rectangle":
-            feature_style = default_feature_style
-        elif feature_shape == "circle":
-            feature_style = circle_feature_style
-        elif feature_shape == "ellipse":
-            feature_style = ellipse_feature_style
-        else:
-            raise ValueError("ERROR!!! Unknown feature style")
-
-        for chr in scaffolds:  # count_df.index.get_level_values(level=0).unique():
-            track_group_dict[chr] = TrackGroup(
-                {chr: FeatureTrack(collection_gff.records.loc[[chr]] if chr in collection_gff.records.index else None, x_end=scaffold_length_df.loc[chr][0],
-                                   label=chr, colormap=colormap, thresholds=thresholds,
-                                   style=feature_track_style,
-                                   colors=colors, background=background,
-                                   feature_style=feature_style,
-                                   feature_start_column_id=feature_start_column_id,
-                                   feature_end_column_id=feature_end_column_id,
-                                   feature_color_column_id=feature_color_column_id,
-                                   feature_length_column_id=feature_length_column_id,
-                                   subplot_scale=subplot_scale,
-                                   track_group_scale=track_group_scale)})
-            print(track_group_dict[chr][chr])
-            if feature_color_column_id not in collection_gff.records.columns:
-                track_group_dict[chr][chr].add_color_by_dict(default_color=default_color) if default_color else track_group_dict[chr][chr].add_color_by_dict()
-        # track_group_dict
-        # track_group_dict["chr13"]
-        chromosome_subplot = Subplot(track_group_dict, title=title, style=chromosome_subplot_style,
-                                     legend=FeatureLegend(legend_df, colormap=colormap,) if legend_df is not None else None,
-                                     auto_scale=True, figure_x_y_ratio=figure_width/int(scaffold_number * figure_height_per_scaffold))
-
-        plt.figure(1, figsize=(figure_width, int(scaffold_number * figure_height_per_scaffold)), dpi=dpi)
-
-        chromosome_subplot.draw()
-        plt.subplots_adjust(left=subplots_adjust_left, right=subplots_adjust_right,
-                            top=subplots_adjust_top, bottom=subplots_adjust_bottom)
-
-        for ext in extensions:
-            plt.savefig("%s.%s" % (output_prefix, ext))
-
-        if close_figure:
-            plt.close(1)
 
 
     # ------------------ Not rewritten yet --------------------------------
