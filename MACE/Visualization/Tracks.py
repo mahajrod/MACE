@@ -182,7 +182,7 @@ class Track:
                                                                                                       *args, **kwargs)
 
             if strand_column in self.records.columns:
-                print(self.records)
+                #print(self.records)
                 forward_patch_collection = PatchCollection(self.records[self.records[strand_column] == "+"].apply(self.forward_patch_function, axis=1),
                                                            antialiased=False,
                                                            match_original=True,
@@ -263,9 +263,6 @@ class Track:
         self.left_center_point = np.array([self.x_start + self.left_x_smooth_element_len, self.y_start + used_style.height / 2])  # (x, y)
         self.right_center_point = np.array([self.x_end - self.right_x_smooth_element_len, self.y_start + used_style.height / 2])
 
-        # self.left_center_point = np.array([self.x_start + used_style.height / 2 * self.x_scale_factor, self.y_start + used_style.height / 2])  # (x, y)
-        # self.right_center_point = np.array([self.x_end - used_style.height / 2 * self.x_scale_factor, self.y_start + used_style.height / 2])
-
         self.left_middle_point = np.array([self.x_start, self.y_start + used_style.height / 2])
         self.left_top_point = np.array([self.x_start + self.left_x_smooth_element_len, self.y_start + used_style.height])
         self.left_bottom_point = np.array([self.x_start + self.left_x_smooth_element_len, self.y_start])
@@ -284,8 +281,7 @@ class Track:
             self.left_bottom_point[0] = self.left_top_point[0]
         else:
             self.left_right_overlap = False
-        #print("AAAAAAAAAAAA")
-        #print(self.right_top_point, self.right_middle_point, self.right_bottom_point)
+
         if used_style.centromere and (self.centromere_start is not None) and (self.centromere_end is not None):
             centromere_middle = float(self.centromere_start + self.centromere_end) / 2
 
@@ -345,8 +341,7 @@ class Track:
 
                     self.centromere_right_top_point[0] = self.right_top_point[0]
                     self.centromere_right_bottom_point[0] = self.right_top_point[0]
-        #print("BBBBBBB")
-        #print(self.right_top_point, self.right_middle_point, self.right_bottom_point, self.x_end, self.right_x_radius)
+
         self.arc_angles_dict = {"left_bottom": np.linspace(1.5 * np.pi, np.pi, used_style.arc_point_number),
                                 "left_top": np.linspace(np.pi, np.pi / 2, used_style.arc_point_number),
                                 "right_top": np.linspace(np.pi / 2, 0, used_style.arc_point_number),

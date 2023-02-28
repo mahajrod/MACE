@@ -112,6 +112,11 @@ parser.add_argument("--rounded", action="store_true", dest="rounded", default=Fa
                     help="Rounded tracks. Default: False")
 parser.add_argument("--stranded_end", action="store_true", dest="stranded_end", default=False,
                     help="Stranded ends for tracks. Works only if --stranded is set. Default: False")
+parser.add_argument("--fill_empty_tracks", action="store_true", dest="fill_empty_tracks", default=False,
+                    help="Fill empty tracks (without features) with color set by --empty_color. Default: False")
+parser.add_argument("--empty_color", action="store", dest="empty_color", default="lightgrey",
+                    help="Color used to fill empty tracks. Ignored if --fill_empty_tracks is not set. "
+                         "Default: 'lightgrey'")
 parser.add_argument("--centromere_bed", action="store", dest="centromere_bed", required=False,
                     type=str,
                     help="Bed file with coordinates of centromeres")
@@ -221,6 +226,8 @@ Visualization.draw_features({"features": feature_df}, chr_len_df,
                             stranded_tracks=args.stranded,
                             rounded_tracks=args.rounded,
                             stranded_end_tracks=args.stranded_end,
+                            fill_empty_tracks=args.fill_empty_tracks,
+                            empty_color=args.empty_color,
                             xtick_fontsize=args.x_tick_fontsize,
                             subplot_title_fontsize=args.title_fontsize,
                             subplot_title_fontweight='bold'

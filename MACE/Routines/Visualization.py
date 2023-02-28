@@ -420,6 +420,8 @@ class Visualization(DrawingRoutines):
                      stranded_tracks=False,
                      rounded_tracks=False,
                      stranded_end_tracks=False,
+                     fill_empty_tracks=True,
+                     empty_color="lightgrey",
                      subplots_adjust_left=None,
                      subplots_adjust_bottom=None,
                      subplots_adjust_right=None,
@@ -442,7 +444,7 @@ class Visualization(DrawingRoutines):
         scaffolds = scaffold_order_list.to_list()  # scaffold_order_list[::-1] if scaffold_order_list else collection_gff.records.index.get_level_values(level=0).unique().to_list()
         scaffold_number = len(scaffolds)
         synteny_feature_track_style = TrackStyle(height=10, colormap=None, background="white",
-                                                 masked="grey", fill_empty=True, empty_color="lightgrey",
+                                                 masked="grey", fill_empty=fill_empty_tracks, empty_color=empty_color,
                                                  stranded=stranded_tracks,
                                                  rounded=rounded_tracks,
                                                  stranded_end=stranded_end_tracks,
