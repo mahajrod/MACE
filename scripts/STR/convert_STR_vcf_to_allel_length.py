@@ -87,7 +87,7 @@ new_genotype_df = pd.DataFrame.from_records(genotype_length_array,
 allel_df = new_genotype_df.transpose().droplevel(level=1)
 allel_df.index.name = "sample"
 
-if args.encode_ids and args.prefix:
+if args.encode_ids and args.pop_df_file:
     pop_df.to_csv(args.pop_df_file, sep="\t", header=True, index=True)
 
 if args.encode_ids and args.add_population_column:
