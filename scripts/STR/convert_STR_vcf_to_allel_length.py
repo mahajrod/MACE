@@ -44,7 +44,7 @@ args = parser.parse_args()
 str_vcf_col = CollectionVCF(in_file=args.input, parsing_mode="complete")
 
 if args.pop_file:
-    pop_df = pd.read_csv(args.pop_file, sep="\t", header=None, index_col=0, names=["id", "pop_id"])
+    pop_df = pd.read_csv(args.pop_file, sep="\t", header=None, index_col="id", names=["id", "pop_id"])
 else:
     pop_df = pd.DataFrame.from_records(zip(str_vcf_col.samples,
                                            range(1, len(str_vcf_col.samples) + 1)), index=0, columns=["id", "pop_id"])
