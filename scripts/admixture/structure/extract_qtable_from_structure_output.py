@@ -9,6 +9,8 @@ from MACE.Functions.General import metaopen
 def convert_line_to_q_line(line):
     return line.split(":")[-1].strip()
 
+def convert_line_to_one_space_separated_line(line):
+    return " ".join(line.strip().split())
 
 def convert_line_to_clumpp_input(line):
     line_list = list(map(lambda s: s.strip(), line.split(":")))
@@ -29,7 +31,7 @@ parser.add_argument("-i", "--input", action="store", dest="input", default=sys.s
 parser.add_argument("-o", "--output", action="store", dest="output", default=sys.stdout,
                     help="Output file with Q table. Default: stdout")
 parser.add_argument("-f", "--format", action="store", dest="format", default="q_table",
-                    help="Format of output file. Allowed: 'q_table' (default), clumpp_input")
+                    help="Format of output file. Allowed: 'q_table' (default), clumpp_input, 'structure'")
 
 args = parser.parse_args()
 
@@ -38,6 +40,8 @@ if args.format == "q_table":
     convert_function = convert_line_to_q_line
 elif args.format == "clumpp_input":
     convert_function = convert_line_to_clumpp_input
+elif args.format == "structure":
+    convert_function = convert_line_to_one_space_separated_line
 else:
     raise ValueError("ERROR!!! Unknown format {0}".format(args.format))
 
