@@ -47,7 +47,7 @@ if args.pop_file:
     pop_df = pd.read_csv(args.pop_file, sep="\t", header=None, index_col="id", names=["id", "pop_id"])
 else:
     pop_df = pd.DataFrame.from_records(zip(str_vcf_col.samples,
-                                           range(1, len(str_vcf_col.samples) + 1)), index=0, columns=["id", "pop_id"])
+                                           range(1, len(str_vcf_col.samples) + 1)), index=["id"], columns=["id", "pop_id"])
 
 pop_df["id_code"] = range(1, len(pop_df) + 1)
 pop_df["pop_id_code"] = range(1, len(pop_df) + 1)
