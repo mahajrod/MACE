@@ -47,7 +47,7 @@ else:
 
 with metaopen(args.input, "r") as in_fd, metaopen(args.output, "w") as out_fd:
     for line in in_fd:
-        if "Label (%Miss) :  Inferred clusters" in line:
+        if ("Label (%Miss)" in line) and ("Inferred clusters" in line):
             break
     for line in in_fd:
         if line == "\n":
