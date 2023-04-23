@@ -94,7 +94,6 @@ if args.encode_ids and args.add_population_column:
     allel_df["pop_id"] = pop_df["pop_id_code"]
 elif args.add_population_column:
     allel_df["pop_id"] = pop_df["pop_id"]
-print(allel_df)
 if args.add_population_column:  # make pop_id column first
     allel_df = allel_df[[list(allel_df.columns)[-1]] + list(allel_df.columns)[:-1]]
 
