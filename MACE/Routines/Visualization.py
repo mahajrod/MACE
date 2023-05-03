@@ -441,7 +441,7 @@ class Visualization(DrawingRoutines):
 
         track_group_dict = OrderedDict()
 
-        scaffolds = scaffold_order_list.to_list()  # scaffold_order_list[::-1] if scaffold_order_list else collection_gff.records.index.get_level_values(level=0).unique().to_list()
+        scaffolds = scaffold_order_list.to_list() if isinstance(scaffold_order_list, (pd.Series, pd.Index)) else scaffold_order_list  # scaffold_order_list[::-1] if scaffold_order_list else collection_gff.records.index.get_level_values(level=0).unique().to_list()
         scaffold_number = len(scaffolds)
         synteny_feature_track_style = TrackStyle(height=10, colormap=None, background="white",
                                                  masked="grey", fill_empty=fill_empty_tracks, empty_color=empty_color,
