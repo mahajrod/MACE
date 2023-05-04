@@ -59,18 +59,18 @@ parser.add_argument("-w", "--window_size", action="store", dest="window_size", d
 parser.add_argument("-s", "--window_step", action="store", dest="window_step", default=None, type=int,
                     help="Step of the sliding windows. Default: window size, i.e windows are staking")
 
-parser.add_argument("-a", "--scaffold_white_list", action="store", dest="scaffold_white_list", default=pd.Series(),
+parser.add_argument("-a", "--scaffold_white_list", action="store", dest="scaffold_white_list", default=[],
                     type=read_series,
                     help="Comma-separated list of the only scaffolds to draw. Default: all")
 
-parser.add_argument("-b", "--scaffold_black_list", action="store", dest="scaffold_black_list", default=pd.Series(),
+parser.add_argument("-b", "--scaffold_black_list", action="store", dest="scaffold_black_list", default=[],
                     type=read_series,
                     help="Comma-separated list of scaffolds to skip at drawing. Default: not set")
 
 parser.add_argument("-y", "--sort_scaffolds", action="store_true", dest="sort_scaffolds", default=False,
                     help="Order  scaffolds according to their names. Default: False")
 
-parser.add_argument("-z", "--scaffold_ordered_list", action="store", dest="scaffold_ordered_list", default=pd.Series(),
+parser.add_argument("-z", "--scaffold_ordered_list", action="store", dest="scaffold_ordered_list", default=[],
                     type=read_series,
                     help="Comma-separated list of scaffolds to draw first and exactly in same order. "
                          "Scaffolds absent in this list are drawn last and in order according to vcf file . "
