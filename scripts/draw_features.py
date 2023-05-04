@@ -75,6 +75,7 @@ parser.add_argument("--syn_file_value_column", action="store", dest="syn_file_va
                     default=1, type=int,
                     help="Column(0-based) with value(synonym id) for scaffolds in synonym file synonym. Default: 1")
 
+
 parser.add_argument("--colormap", action="store", dest="colormap", default="jet",
                     help="Matplotlib colormap to use for SNP densities. Default: jet")
 
