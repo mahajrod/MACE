@@ -55,8 +55,9 @@ class DensityLegend(Legend):
         self.background = background
         self.masked = masked
 
-    def init_coordinates(self):
+    def init_coordinates(self, style=None):
         self.x_end = self.x_start + (2 + 5) * self.x_size
+        self.y_end = self.y_start + (len(self.thresholds) + 3) * self.element_size
 
     def draw(self, axes=None, style=None):
 

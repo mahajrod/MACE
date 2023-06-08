@@ -531,15 +531,14 @@ class Visualization(DrawingRoutines):
                                      title_fontweight=subplot_title_fontweight,
                                      x_tick_major_fontsize=xtick_fontsize,
                                      x_tick_minor_fontsize=(xtick_fontsize - 1) if xtick_fontsize is not None else None)
-
         chromosome_subplot = Subplot(track_group_dict, title=title, style=subplot_style,
                                      legend=legend, #ChromosomeLegend(chromosome_df_dict=species_color_df_dict, scaffold_order_list=scaffold_order_list),
                                      auto_scale=True,
-                                     figure_x_y_ratio=figure_width / int(scaffold_number * figure_height_per_scaffold + figure_header_height),
+                                     figure_x_y_ratio=figure_width / max(1, int(scaffold_number * figure_height_per_scaffold + figure_header_height)),
                                      xmax_multiplier=xmax_multiplier, ymax_multiplier=ymax_multiplier)
 
         plt.figure(1, figsize=(figure_width,
-                               int(scaffold_number * figure_height_per_scaffold + figure_header_height)), dpi=dpi)
+                               max(1, int(scaffold_number * figure_height_per_scaffold + figure_header_height))), dpi=dpi)
 
         chromosome_subplot.draw()
         plt.subplots_adjust(left=subplots_adjust_left, right=subplots_adjust_right,

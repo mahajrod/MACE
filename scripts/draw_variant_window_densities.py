@@ -15,7 +15,7 @@ from MACE.Routines import Visualization, StatsVCF
 
 
 def read_series(s):
-    return pd.read_csv(s, header=None, squeeze=True) if os.path.exists(s) else pd.Series(s.split(","))
+    return pd.read_csv(s, header=None).squeeze("columns") if os.path.exists(s) else pd.Series(s.split(","))
 
 
 def rgb_tuple_to_hex(rgb_tuple):
@@ -111,7 +111,9 @@ parser.add_argument("-u", "--figure_height_per_scaffold", action="store", dest="
                     default=0.5, type=float,
                     help="Figure height per scaffold. Figure height is calculated in inches as "
                          "int(figure_height_per_scaffold * scaffold_number * sample_number). Default: 0.5")
-
+parser.add_argument("--figure_header_height", action="store", dest="figure_header_height",
+                    type=float, default=0,
+                    help="Height of figure header. Default: 0")
 parser.add_argument("--masking_gff_list", action="store", dest="masking_gff_list", default=None,
                     type=lambda s: s.split(","),
                     help="Comma-separated list of GFF files with masked regions")
@@ -259,6 +261,7 @@ if not args.only_count:
                                     highlight_df=args.highlight_file,
                                     figure_width=args.figure_width,
                                     figure_height_per_scaffold=args.figure_height_per_scaffold,
+                                    figure_header_height=args.figure_header_height,
                                     dpi=300,
                                     default_color="red",
                                     title=args.title,

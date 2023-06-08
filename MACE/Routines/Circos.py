@@ -16,8 +16,8 @@ from collections import OrderedDict, Iterable
 import numpy as np
 import pandas as pd
 
-from scipy.spatial.distance import pdist
-from scipy.cluster.hierarchy import linkage, dendrogram, inconsistent, cophenet, fcluster
+#from scipy.spatial.distance import pdist
+#from scipy.cluster.hierarchy import linkage, dendrogram, inconsistent, cophenet, fcluster
 
 import matplotlib
 #matplotlib.use('Agg')

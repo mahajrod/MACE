@@ -153,44 +153,47 @@ if args.centromere_bed:
     print(centromere_df)
 else:
     centromere_df = None
+try:
+    if args.input_type == "str":
+        feature_df = CollectionSTR(in_file=args.input, records=None, format="filtered_str", parsing_mode="all",
+                                   black_list=(), white_list=(),
+                                   syn_dict=chr_syn_dict)
 
-if args.input_type == "str":
-    feature_df = CollectionSTR(in_file=args.input, records=None, format="filtered_str", parsing_mode="all",
-                               black_list=(), white_list=(),
-                               syn_dict=chr_syn_dict)
+        feature_df.records.set_index("scaffold_id", inplace=True)
 
-    feature_df.records.set_index("scaffold_id", inplace=True)
+        feature_start_column_id = args.start_column_name if args.start_column_name else "start"
+        feature_end_column_id = args.end_column_name if args.end_column_name else "end"
 
-    feature_start_column_id = args.start_column_name if args.start_column_name else "start"
-    feature_end_column_id = args.end_column_name if args.end_column_name else "end"
+    elif args.input_type == "gff":
+        feature_df = CollectionGFF(in_file=args.input, parsing_mode="only_coordinates")
 
-elif args.input_type == "gff":
-    feature_df = CollectionGFF(in_file=args.input, parsing_mode="only_coordinates")
+        feature_start_column_id = args.start_column_name if args.start_column_name else "start"
+        feature_end_column_id = args.end_column_name if args.end_column_name else "end"
 
-    feature_start_column_id = args.start_column_name if args.start_column_name else "start"
-    feature_end_column_id = args.end_column_name if args.end_column_name else "end"
+    elif args.input_type == "bed":
+        feature_df = CollectionBED(in_file=args.input, parsing_mode="coordinates_only", format="bed")
 
-elif args.input_type == "bed":
-    feature_df = CollectionBED(in_file=args.input, parsing_mode="coordinates_only", format="bed")
+        feature_start_column_id = "start"
+        feature_end_column_id = "end"
 
-    feature_start_column_id = "start"
-    feature_end_column_id = "end"
+    elif args.input_type == "bedgraph":
+        feature_df = CollectionBED(in_file=args.input, parsing_mode="all", format="bed")
+        feature_df.records.columns = pd.Index(["start", "end", "value"])
+        feature_df.records.index.name = "scaffold"
+        feature_start_column_id = "start"
+        feature_end_column_id = "end"
 
-elif args.input_type == "bedgraph":
-    feature_df = CollectionBED(in_file=args.input, parsing_mode="all", format="bed")
-    feature_df.records.columns = pd.Index(["start", "end", "value"])
-    feature_df.records.index.name = "scaffold"
-    feature_start_column_id = "start"
-    feature_end_column_id = "end"
+    elif args.input_type == "blast":
+        feature_df = CollectionBLAST(in_file=args.input, parsing_mode="complete")
+        feature_df.records.reset_index(level="query_id", inplace=True)
+        feature_start_column_id = args.start_column_name if args.start_column_name else "target_start"
+        feature_end_column_id = args.end_column_name if args.end_column_name else "target_end"
 
-elif args.input_type == "blast":
-    feature_df = CollectionBLAST(in_file=args.input, parsing_mode="complete")
-    feature_df.records.reset_index(level="query_id", inplace=True)
-    feature_start_column_id = args.start_column_name if args.start_column_name else "target_start"
-    feature_end_column_id = args.end_column_name if args.end_column_name else "target_end"
-
-else:
-    raise ValueError("ERROR!!! Unrecognized input type ({}). ".format(args.input_type))
+    else:
+        raise ValueError("ERROR!!! Unrecognized input type ({}). ".format(args.input_type))
+except pd.errors.EmptyDataError:
+    print("Empty input file. Silent exit.")   # try-except added to handle case when input file is empty without raising exception. For use in snakemake
+    exit(0)
 
 legend_df = pd.read_csv(args.legend, header=None, index_col=0, sep="\t") if args.legend else None
 
