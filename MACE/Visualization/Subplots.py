@@ -99,6 +99,8 @@ class Subplot(OrderedDict):
 
                 self.legend.init_coordinates()
                 self.x_end = self.legend.x_end
+                self.y_end = max(self.legend.y_end, self.y_end) if self.legend.y_end is not None else self.y_end
+
         elif self.type == "plot":
             pass
 

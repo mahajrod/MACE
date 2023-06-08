@@ -180,8 +180,9 @@ class FeatureLegend(Legend):
 
                 self.legend_df = pd.DataFrame.from_dict(OrderedDict([(featuretype_list[i], self.cmap(i)) for i in range(0, len(featuretype_list))]))
 
-    def init_coordinates(self):
+    def init_coordinates(self, style=None):
         self.x_end = self.x_start + (2 + 5) * self.x_size
+        self.y_end = self.y_start + len(style.legend_df if (style and (style.legend_df is not None)) else self.legend_df) * self.element_size
 
     def draw(self, axes=None, style=None):
         l_df = style.legend_df if (style and (style.legend_df is not None)) else self.legend_df
