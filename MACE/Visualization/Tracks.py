@@ -20,7 +20,7 @@ class Track:
                  colors=None, background=None, masked=None, patch_function=None,
                  forward_patch_function=None, reverse_patch_function=None, subplot_scale=False,
                  track_group_scale=False, figure_x_y_ratio=None, subplot_x_y_ratio=None, track_group_x_y_ratio=None,
-                 stranded=False, rounded=False, centromere_start=None, centromere_end=None,
+                 stranded=False, rounded=False, middle_break=False, centromere_start=None, centromere_end=None,
                  track_group_highlight=False, track_group_highlight_color=None, highlight=False):
 
         self.records = records
@@ -65,6 +65,7 @@ class Track:
         self.track_group_scale = track_group_scale
         self.stranded = stranded
         self.rounded = rounded
+        self.middle_break = middle_break
 
         self.x_scale_factor = None
 
@@ -120,6 +121,16 @@ class Track:
         self.left_centromere_overlap = None
         self.right_centromere_overlap = None
         self.show_centromere = None
+
+        self.middle_break_left_top_point = None
+        self.middle_break_right_top_point = None
+        self.middle_break_right_bottom_point = None
+        self.middle_break_left_bottom_point = None
+
+        self.middle_break_array = None
+        self.middle_break_patch = None
+        self.middle_break_left_line = None
+        self.middle_break_right_line = None
 
         self.track_group_highlight = track_group_highlight
         self.track_group_highlight_color = track_group_highlight_color
@@ -519,6 +530,45 @@ class Track:
                 self.masking_point_array_dict["top_centromere"] = np.concatenate(top_middle_point_list)
                 self.masking_point_array_dict["bottom_centromere"] = np.concatenate(bottom_middle_point_list)
 
+        if self.middle_break:
+            x_middle = (self.x_end + self.x_start) / 2
+            self.middle_break_left_top_point = np.array([x_middle, self.y_start + used_style.height * (1 + used_style.middle_break_y_overhang)])
+            self.middle_break_right_top_point = np.array([x_middle + 2 * self.centromere_x_smooth_element_len,
+                                                          self.y_start + used_style.height * (1 + used_style.middle_break_y_overhang)])
+
+            self.middle_break_right_bottom_point = np.array([x_middle, self.y_start - used_style.height * used_style.middle_break_y_overhang])
+            self.middle_break_left_bottom_point = np.array([x_middle - 2 * self.centromere_x_smooth_element_len,
+                                                            self.y_start - used_style.height * used_style.middle_break_y_overhang])
+
+            self.middle_break_array = np.concatenate([[self.middle_break_left_top_point],
+                                                      [self.middle_break_right_top_point],
+                                                      [self.middle_break_right_bottom_point],
+                                                      [self.middle_break_left_bottom_point]])
+            #print(self.middle_break_array )
+            self.middle_break_patch = Polygon(self.middle_break_array,
+                                              #color=used_style.empty_color if (
+                                              #        used_style.fill_empty and self.records is None) else used_style.background,
+                                              fill=True,
+                                              edgecolor=used_style.background,
+                                              facecolor=used_style.background,
+                                              linewidth=used_style.edge_width,
+                                              zorder=used_style.zorder["middle_break"])
+
+            self.middle_break_left_line = Line2D((self.middle_break_left_bottom_point[0], self.middle_break_left_top_point[0]),
+                                                 (self.middle_break_left_bottom_point[1], self.middle_break_left_top_point[1]),
+                                                 color=used_style.empty_color if self.records is None else used_style.edge_color,
+                                                 linewidth=used_style.edge_width,
+                                                 zorder=used_style.zorder["middle_break"])
+
+            self.middle_break_right_line = Line2D((self.middle_break_right_bottom_point[0], self.middle_break_right_top_point[0]),
+                                                 (self.middle_break_right_bottom_point[1], self.middle_break_right_top_point[1]),
+                                                 color=used_style.empty_color if self.records is None else used_style.edge_color,
+                                                 linewidth=used_style.edge_width,
+                                                 zorder=used_style.zorder["middle_break"])
+            current_subplot.add_patch(self.middle_break_patch)
+            current_subplot.add_line(self.middle_break_left_line)
+            current_subplot.add_line(self.middle_break_right_line)
+
         self.point_array = np.concatenate(left_point_list + top_middle_point_list + right_point_list + bottom_middle_point_list)
         self.track_background_patch = Polygon(self.point_array,
                                               #color=used_style.empty_color if (
@@ -536,9 +586,9 @@ class Track:
                                           fill=True if (
                                                   used_style.fill_empty and self.records is None) else used_style.fill,
                                           edgecolor=used_style.empty_color if (
-                                                  used_style.fill_empty and self.records is None) else  used_style.edge_color,
+                                                  used_style.fill_empty and self.records is None) else used_style.edge_color,
                                           facecolor=used_style.empty_color if (
-                                                  used_style.fill_empty and self.records is None) else  used_style.face_color,
+                                                  used_style.fill_empty and self.records is None) else used_style.face_color,
                                           linewidth=used_style.edge_width,
                                           zorder=used_style.zorder["border"])
 
@@ -723,6 +773,8 @@ class FeatureTrack(Track):
                  subplot_scale=False,
                  track_group_scale=False,
                  stranded=False,
+                 rounded=False,
+                 middle_break=False,
                  figure_x_y_ratio=None, subplot_x_y_ratio=None, track_group_x_y_ratio=None,
                  centromere_start=None, centromere_end=None):
 
@@ -735,7 +787,8 @@ class FeatureTrack(Track):
                        track_group_scale=track_group_scale,
                        figure_x_y_ratio=figure_x_y_ratio, subplot_x_y_ratio=subplot_x_y_ratio,
                        track_group_x_y_ratio=track_group_x_y_ratio,
-                       stranded=stranded, centromere_start=centromere_start, centromere_end=centromere_end
+                       stranded=stranded, rounded=rounded, middle_break=middle_break,
+                       centromere_start=centromere_start, centromere_end=centromere_end
                        )
 
         self.track_type = "feature"

@@ -423,6 +423,7 @@ class Visualization(DrawingRoutines):
                       stranded_tracks=False,
                       rounded_tracks=False,
                       stranded_end_tracks=False,
+                      middle_break=False,
                       fill_empty_tracks=True,
                       empty_color="lightgrey",
                       subplots_adjust_left=None,
@@ -452,12 +453,13 @@ class Visualization(DrawingRoutines):
                                                  stranded=stranded_tracks,
                                                  rounded=rounded_tracks,
                                                  stranded_end=stranded_end_tracks,
+                                                 middle_break=middle_break,
                                                  centromere=True if centromere_df is not None else False)
 
         feature_height = 5 if stranded_tracks else 10
 
         if feature_shape == "rectangle":
-            feature_style = FeatureStyle(patch_type="rectangle", height=feature_height, label_fontsize=10)
+            feature_style = FeatureStyle(patch_type="rectangle", height=feature_height, label_fontsize=10,)
         elif feature_shape == "circle":
             feature_style = FeatureStyle(patch_type="circle", height=feature_height * feature_height_fraction,
                                          label_fontsize=10)
@@ -518,6 +520,7 @@ class Visualization(DrawingRoutines):
                     subplot_scale=subplot_scale,
                     track_group_scale=track_group_scale,
                     stranded=stranded_tracks,
+                    middle_break=middle_break,
                     centromere_start=centromere_start,
                     centromere_end=centromere_end)
                 # print(track_group_dict[chr][species].records)

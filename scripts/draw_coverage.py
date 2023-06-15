@@ -19,7 +19,7 @@ def rgb_tuple_to_hex(rgb_tuple):
 
 
 def read_series(s):
-    return pd.read_csv(s, header=None, squeeze=True) if os.path.exists(s) else pd.Series(s.split(","))
+    return pd.read_csv(s, header=None).squeeze("columns") if os.path.exists(s) else pd.Series(s.split(","))
 
 
 parser = argparse.ArgumentParser()

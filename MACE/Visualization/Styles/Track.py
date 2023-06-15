@@ -19,7 +19,8 @@ class TrackStyle:
                  highlight_color=None,
                  highlight_edge_color=None,
                  highlight_edge_width=None,
-
+                 middle_break=False,
+                 middle_break_y_overhang=0.2
                  ):
         self.height = height
         self.fill = fill
@@ -63,13 +64,16 @@ class TrackStyle:
         self.highlight_edge_color = highlight_edge_color
         self.highlight_edge_width = highlight_edge_width
 
+        self.middle_break = middle_break
+        self.middle_break_y_overhang = middle_break_y_overhang
         self.zorder = {
                        'highlight': 20,
                        'background': 30,
                        'element': 50,
                        'masking_patches': 70,
                        'strand_line': 90,
-                       'border': 100
+                       'border': 100,
+                       'middle_break': 110
                        }
         if colormap:
             self.cmap = get_cmap(self.colormap, len(self.thresholds))

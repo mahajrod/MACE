@@ -29,7 +29,9 @@ def rgb_tuple_to_hex(rgb_tuple):
 parser = argparse.ArgumentParser()
 
 parser.add_argument("-i", "--input", action="store", dest="input", required=True,
-                    help="Input vcf file with variants.")
+                    help="Input vcf file with variants or precomputed track.")
+parser.add_argument("-t", "--input_type", action="store", dest="input_type", default="vcf",
+                    help="Type of input. Allowed: 'vcf'(default), 'bedgraph'")
 parser.add_argument("-o", "--output_prefix", action="store", dest="output_prefix", required=True,
                     help="Prefix of output files")
 """
@@ -148,6 +150,8 @@ parser.add_argument("--stranded", action="store_true", dest="stranded", default=
                     help="Stranded features and tracks. Default: False")
 parser.add_argument("--rounded", action="store_true", dest="rounded", default=False,
                     help="Rounded tracks. Default: False")
+parser.add_argument("--middle_break", action="store_true", dest="middle_break", default=False,
+                    help="Add middle break to the track. Default: False")
 parser.add_argument("--stranded_end", action="store_true", dest="stranded_end", default=False,
                     help="Stranded ends for tracks. Works only if --stranded is set. Default: False")
 parser.add_argument("--centromere_bed", action="store", dest="centromere_bed", required=False,
@@ -183,26 +187,34 @@ if args.centromere_bed:
 else:
     centromere_df = None
 #print(chr_syn_dict)
-count_df = StatsVCF.count_variants_in_windows(variants, args.window_size, args.window_step,
-                                              reference_scaffold_lengths=chr_len_df,
-                                              ignore_scaffolds_shorter_than_window=True,
-                                              output_prefix=args.output_prefix,
-                                              skip_empty_windows=False, expression=None, per_sample_output=False,
-                                              scaffold_white_list=args.scaffold_white_list,
-                                              scaffold_syn_dict=chr_syn_dict)
+
+if args.input_type == "vcf":
+    count_df = StatsVCF.count_variants_in_windows(variants, args.window_size, args.window_step,
+                                                  reference_scaffold_lengths=chr_len_df,
+                                                  ignore_scaffolds_shorter_than_window=True,
+                                                  output_prefix=args.output_prefix,
+                                                  skip_empty_windows=False, expression=None, per_sample_output=False,
+                                                  scaffold_white_list=args.scaffold_white_list,
+                                                  scaffold_syn_dict=chr_syn_dict)
+    feature_df, track_df = StatsVCF.convert_variant_count_to_feature_df(count_df,
+                                                                    args.window_size,
+                                                                    args.window_step)
+    feature_df.to_csv("{}.features.counts".format(args.output_prefix), sep="\t", header=True, index=True)
+    feature_df[feature_df.columns[-1]] = feature_df[feature_df.columns[-1]] * float(args.density_multiplier) / float(args.window_size)
+
+    feature_df.to_csv("{}.features.bed".format(args.output_prefix), sep="\t", header=True, index=True)
+
+elif args.input_type == "bedgraph":
+    track_df = pd.read_csv(args.input, sep="\t", names=["scaffold", "start", "end", "value"],
+                           header=None, index_col=0, na_values=".")
+    track_df["value"] = track_df["value"].astype(float)
 
 if args.scaffold_syn_file:
     chr_len_df.rename(index=chr_syn_dict, inplace=True)
 
-feature_df, track_df = StatsVCF.convert_variant_count_to_feature_df(count_df,
-                                                                    args.window_size,
-                                                                    args.window_step)
-
-feature_df.to_csv("{}.features.counts".format(args.output_prefix), sep="\t", header=True, index=True)
-feature_df[feature_df.columns[-1]] = feature_df[feature_df.columns[-1]] * float(args.density_multiplier) / float(args.window_size)
 track_df[track_df.columns[-1]] = track_df[track_df.columns[-1]] * float(args.density_multiplier) / float(args.window_size)
 
-feature_df.to_csv("{}.features.bed".format(args.output_prefix), sep="\t", header=True, index=True)
+
 # TODO: rewrite application of masking
 """
 if args.coverage:
@@ -283,6 +295,7 @@ if not args.only_count:
                                     xmax_multiplier=1.3, ymax_multiplier=1.00,
                                     stranded_tracks=args.stranded,
                                     rounded_tracks=args.rounded,
+                                    middle_break=args.middle_break,
                                     stranded_end_tracks=args.stranded_end,
                                     xtick_fontsize=args.x_tick_fontsize,
                                     subplot_title_fontsize=args.title_fontsize,
