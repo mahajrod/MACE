@@ -154,6 +154,8 @@ parser.add_argument("--middle_break", action="store_true", dest="middle_break", 
                     help="Add middle break to the track. Default: False")
 parser.add_argument("--stranded_end", action="store_true", dest="stranded_end", default=False,
                     help="Stranded ends for tracks. Works only if --stranded is set. Default: False")
+parser.add_argument("--feature_name", action="store", dest="feature_name", default="SNPs",
+                    help="Feature name to use in legend. Default: 'SNPs'")
 parser.add_argument("--centromere_bed", action="store", dest="centromere_bed", required=False,
                     type=str,
                     help="Bed file with coordinates of centromeres")
@@ -267,7 +269,8 @@ if not args.only_count:
                                     chr_len_df,
                                     args.scaffold_ordered_list,
                                     args.output_prefix,
-                                    legend=Visualization.density_legend(colors, args.density_thresholds),
+                                    legend=Visualization.density_legend(colors, args.density_thresholds,
+                                                                        feature_name=args.feature_name),
                                     # query_species_color_df_dict,
                                     centromere_df=centromere_df,
                                     highlight_df=args.highlight_file,

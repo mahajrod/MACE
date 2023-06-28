@@ -384,8 +384,8 @@ class Visualization(DrawingRoutines):
         return output_df
 
     @staticmethod
-    def density_legend(colors, thresholds, colormap=None):
-        return DensityLegend(colors=colors, colormap=colormap, thresholds=thresholds)
+    def density_legend(colors, thresholds, colormap=None, feature_name="SNPs"):
+        return DensityLegend(colors=colors, colormap=colormap, thresholds=thresholds, feature_name=feature_name)
 
     @staticmethod
     def coverage_legend(colormap, thresholds):

@@ -39,7 +39,7 @@ class DensityLegend(Legend):
 
     def __init__(self, y_start=0, y_end=None, x_start=0, x_end=None, x_size=10, element_size=10, style=default_legend_style,
                  colormap=None, thresholds=np.array((0.0, 0.1, 0.25, 0.5, 1.0)),
-                 colors=("#333a97", "green", "yellow", "orange", "red"), background="white",
+                 colors=("#333a97", "green", "yellow", "orange", "red"), background="white", feature_name="SNPs",
                  masked="grey", fontsize=13):
 
         Legend.__init__(self, y_start=y_start, y_end=y_end, x_start=x_start, x_end=x_end, x_size=x_size, element_size=element_size,
@@ -54,6 +54,7 @@ class DensityLegend(Legend):
 
         self.background = background
         self.masked = masked
+        self.feature_name = feature_name
 
     def init_coordinates(self, style=None):
         self.x_end = self.x_start + (2 + 5) * self.x_size
@@ -67,7 +68,7 @@ class DensityLegend(Legend):
 
         square_y_pos = self.y_start - self.element_size
 
-        for color, legend_label in zip((self.masked, self.background), ("masked", "no SNPs")):
+        for color, legend_label in zip((self.masked, self.background), ("masked", "no {0}".format(self.feature_name))):
             square_y_pos += self.element_size
             #print (self.x_start, square_y_pos), self.x_size, self.element_size, color
             fragment = Rectangle((self.x_start , square_y_pos), self.x_size, self.element_size,
