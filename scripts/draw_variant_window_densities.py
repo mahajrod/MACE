@@ -15,8 +15,6 @@ from MACE.Routines import Visualization, StatsVCF
 
 
 def read_series(s):
-    print(s)
-
     return pd.read_csv(s, header=None).squeeze("columns") if os.path.exists(s) else pd.Series(s.split(","))
 
 
