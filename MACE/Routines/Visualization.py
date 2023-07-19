@@ -3,7 +3,8 @@ import math
 import datetime
 
 from copy import deepcopy
-from collections import Iterable, OrderedDict
+from collections.abc import Iterable
+from collections import OrderedDict
 
 import numpy as np
 import pandas as pd
