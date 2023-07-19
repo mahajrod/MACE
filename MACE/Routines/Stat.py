@@ -11,7 +11,8 @@ import datetime
 from math import sqrt
 from copy import deepcopy
 from functools import reduce, partial
-from collections import OrderedDict, Iterable
+from collections import OrderedDict
+from collections.abc import Iterable
 
 import numpy as np
 import pandas as pd

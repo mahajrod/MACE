@@ -20,6 +20,6 @@ setup(name='MACE',
       packages=find_packages(),
       author='Sergei F. Kliver',
       author_email='mahajrod@gmail.com',
-      install_requires=['scipy', 'numpy', 'matplotlib', 'biopython', 'bcbio-gff'],
+      install_requires=['scipy', 'pandas', 'numpy', 'matplotlib', 'biopython', 'bcbio-gff'],
       long_description=open(join(dirname(__file__), 'README.md')).read(),
       scripts=scripts)
