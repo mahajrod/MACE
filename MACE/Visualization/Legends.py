@@ -2,7 +2,7 @@
 from MACE.Visualization.Styles.Legend import default_legend_style
 
 
-from collections import Iterable, OrderedDict
+from collections import OrderedDict
 
 import numpy as np
 import pandas as pd

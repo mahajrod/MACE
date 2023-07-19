@@ -1,7 +1,7 @@
 
 from MACE.Visualization.Styles.Figure import FigureStyle, default_figure_style
 import math
-from collections import Iterable, OrderedDict
+from collections import OrderedDict
 
 import numpy as np
 

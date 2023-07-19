@@ -1,7 +1,7 @@
 
 from MACE.Visualization.Styles.TrackGroup import TrackGroupStyle, default_track_group_style
 import math
-from collections import Iterable, OrderedDict
+from collections import OrderedDict
 
 import numpy as np
 

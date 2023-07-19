@@ -1,8 +1,7 @@
 
 from MACE.Visualization.Styles.Track import default_track_style
 from MACE.Visualization.Styles.Feature import default_feature_style
-import math
-from collections import Iterable, OrderedDict
+
 
 import numpy as np
 
