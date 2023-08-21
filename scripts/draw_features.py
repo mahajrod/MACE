@@ -101,9 +101,7 @@ parser.add_argument("--figure_width", action="store", dest="figure_width", type=
 parser.add_argument("--figure_height_per_scaffold", action="store", dest="figure_height_per_scaffold",
                     type=float, default=0.5,
                     help="Height of figure per chromosome track. Default: 0.5")
-parser.add_argument("--figure_header_height", action="store", dest="figure_header_height",
-                    type=float, default=0,
-                    help="Height of figure header. Default: 0")
+x
 parser.add_argument("-v", "--verbose", action="store_true", dest="verbose",
                     help="Print additional info to stdout")
 

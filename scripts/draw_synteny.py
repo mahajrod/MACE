@@ -286,7 +286,7 @@ parser.add_argument("-e", "--output_formats", action="store", dest="output_forma
                     help="Comma-separated list of formats (supported by matlotlib) of "
                          "output figure.Default: svg,png")
 
-parser.add_argument("-l", "--title", action="store", dest="title", default="Coverage",
+parser.add_argument("-l", "--title", action="store", dest="title", default="Synteny",
                     help="Suptitle of figure. Default: 'Synteny'")
 parser.add_argument("--title_fontsize", action="store", dest="title_fontsize", default=20, type=int,
                     help="Fontsize of the figure. Default: 20")
