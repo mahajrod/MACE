@@ -15,7 +15,7 @@ from MACE.Routines import Visualization, StatsVCF
 
 
 def read_series(s):
-    return pd.read_csv(s, header=None, squeeze=True) if os.path.exists(s) else pd.Series(s.split(","))
+    return pd.read_csv(s, header=None).squeeze("columns") if os.path.exists(s) else pd.Series(s.split(","))
 
 
 def rgb_tuple_to_hex(rgb_tuple):
@@ -29,7 +29,9 @@ def rgb_tuple_to_hex(rgb_tuple):
 parser = argparse.ArgumentParser()
 
 parser.add_argument("-i", "--input", action="store", dest="input", required=True,
-                    help="Input vcf file with variants.")
+                    help="Input vcf file with variants or precomputed track.")
+parser.add_argument("-t", "--input_type", action="store", dest="input_type", default="vcf",
+                    help="Type of input. Allowed: 'vcf'(default), 'bedgraph'")
 parser.add_argument("-o", "--output_prefix", action="store", dest="output_prefix", required=True,
                     help="Prefix of output files")
 """
@@ -111,7 +113,9 @@ parser.add_argument("-u", "--figure_height_per_scaffold", action="store", dest="
                     default=0.5, type=float,
                     help="Figure height per scaffold. Figure height is calculated in inches as "
                          "int(figure_height_per_scaffold * scaffold_number * sample_number). Default: 0.5")
-
+parser.add_argument("--figure_header_height", action="store", dest="figure_header_height",
+                    type=float, default=0,
+                    help="Height of figure header. Default: 0")
 parser.add_argument("--masking_gff_list", action="store", dest="masking_gff_list", default=None,
                     type=lambda s: s.split(","),
                     help="Comma-separated list of GFF files with masked regions")
@@ -146,8 +150,12 @@ parser.add_argument("--stranded", action="store_true", dest="stranded", default=
                     help="Stranded features and tracks. Default: False")
 parser.add_argument("--rounded", action="store_true", dest="rounded", default=False,
                     help="Rounded tracks. Default: False")
+parser.add_argument("--middle_break", action="store_true", dest="middle_break", default=False,
+                    help="Add middle break to the track. Default: False")
 parser.add_argument("--stranded_end", action="store_true", dest="stranded_end", default=False,
                     help="Stranded ends for tracks. Works only if --stranded is set. Default: False")
+parser.add_argument("--feature_name", action="store", dest="feature_name", default="SNPs",
+                    help="Feature name to use in legend. Default: 'SNPs'")
 parser.add_argument("--centromere_bed", action="store", dest="centromere_bed", required=False,
                     type=str,
                     help="Bed file with coordinates of centromeres")
@@ -181,26 +189,34 @@ if args.centromere_bed:
 else:
     centromere_df = None
 #print(chr_syn_dict)
-count_df = StatsVCF.count_variants_in_windows(variants, args.window_size, args.window_step,
-                                              reference_scaffold_lengths=chr_len_df,
-                                              ignore_scaffolds_shorter_than_window=True,
-                                              output_prefix=args.output_prefix,
-                                              skip_empty_windows=False, expression=None, per_sample_output=False,
-                                              scaffold_white_list=args.scaffold_white_list,
-                                              scaffold_syn_dict=chr_syn_dict)
+
+if args.input_type == "vcf":
+    count_df = StatsVCF.count_variants_in_windows(variants, args.window_size, args.window_step,
+                                                  reference_scaffold_lengths=chr_len_df,
+                                                  ignore_scaffolds_shorter_than_window=True,
+                                                  output_prefix=args.output_prefix,
+                                                  skip_empty_windows=False, expression=None, per_sample_output=False,
+                                                  scaffold_white_list=args.scaffold_white_list,
+                                                  scaffold_syn_dict=chr_syn_dict)
+    feature_df, track_df = StatsVCF.convert_variant_count_to_feature_df(count_df,
+                                                                    args.window_size,
+                                                                    args.window_step)
+    feature_df.to_csv("{}.features.counts".format(args.output_prefix), sep="\t", header=True, index=True)
+    feature_df[feature_df.columns[-1]] = feature_df[feature_df.columns[-1]] * float(args.density_multiplier) / float(args.window_size)
+
+    feature_df.to_csv("{}.features.bed".format(args.output_prefix), sep="\t", header=True, index=True)
+
+elif args.input_type == "bedgraph":
+    track_df = pd.read_csv(args.input, sep="\t", names=["scaffold", "start", "end", "value"],
+                           header=None, index_col=0, na_values=".")
+    track_df["value"] = track_df["value"].astype(float)
 
 if args.scaffold_syn_file:
     chr_len_df.rename(index=chr_syn_dict, inplace=True)
 
-feature_df, track_df = StatsVCF.convert_variant_count_to_feature_df(count_df,
-                                                                    args.window_size,
-                                                                    args.window_step)
-
-feature_df.to_csv("{}.features.counts".format(args.output_prefix), sep="\t", header=True, index=True)
-feature_df[feature_df.columns[-1]] = feature_df[feature_df.columns[-1]] * float(args.density_multiplier) / float(args.window_size)
 track_df[track_df.columns[-1]] = track_df[track_df.columns[-1]] * float(args.density_multiplier) / float(args.window_size)
 
-feature_df.to_csv("{}.features.bed".format(args.output_prefix), sep="\t", header=True, index=True)
+
 # TODO: rewrite application of masking
 """
 if args.coverage:
@@ -253,12 +269,14 @@ if not args.only_count:
                                     chr_len_df,
                                     args.scaffold_ordered_list,
                                     args.output_prefix,
-                                    legend=Visualization.density_legend(colors, args.density_thresholds),
+                                    legend=Visualization.density_legend(colors, args.density_thresholds,
+                                                                        feature_name=args.feature_name),
                                     # query_species_color_df_dict,
                                     centromere_df=centromere_df,
                                     highlight_df=args.highlight_file,
                                     figure_width=args.figure_width,
                                     figure_height_per_scaffold=args.figure_height_per_scaffold,
+                                    figure_header_height=args.figure_header_height,
                                     dpi=300,
                                     default_color="red",
                                     title=args.title,
@@ -280,6 +298,7 @@ if not args.only_count:
                                     xmax_multiplier=1.3, ymax_multiplier=1.00,
                                     stranded_tracks=args.stranded,
                                     rounded_tracks=args.rounded,
+                                    middle_break=args.middle_break,
                                     stranded_end_tracks=args.stranded_end,
                                     xtick_fontsize=args.x_tick_fontsize,
                                     subplot_title_fontsize=args.title_fontsize,

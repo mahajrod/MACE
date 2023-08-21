@@ -114,7 +114,14 @@ class SubplotStyle:
                     return '%i bp' % (int(x))
 
             return FuncFormatter(tick_formater)
-
+        elif tick_type == "int_number":
+            def tick_formater(x, pos):
+                return '%i' % x
+            return FuncFormatter(tick_formater)
+        elif tick_type == "float_number":
+            def tick_formater(x, pos):
+                return '%f' % x
+            return FuncFormatter(tick_formater)
         else:
             raise ValueError("ERROR!!! Tick formter for %s is not implemented yet!" % tick_type)
 

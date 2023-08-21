@@ -2,7 +2,7 @@
 from MACE.Visualization.Styles.Subplot import SubplotStyle, default_subplot_style
 from MACE.Visualization.Legends import DensityLegend, CoverageLegend
 import math
-from collections import Iterable, OrderedDict
+from collections import OrderedDict
 
 import numpy as np
 
@@ -99,6 +99,8 @@ class Subplot(OrderedDict):
 
                 self.legend.init_coordinates()
                 self.x_end = self.legend.x_end
+                self.y_end = max(self.legend.y_end, self.y_end) if self.legend.y_end is not None else self.y_end
+
         elif self.type == "plot":
             pass
 

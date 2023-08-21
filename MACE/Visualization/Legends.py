@@ -2,7 +2,7 @@
 from MACE.Visualization.Styles.Legend import default_legend_style
 
 
-from collections import Iterable, OrderedDict
+from collections import OrderedDict
 
 import numpy as np
 import pandas as pd
@@ -39,7 +39,7 @@ class DensityLegend(Legend):
 
     def __init__(self, y_start=0, y_end=None, x_start=0, x_end=None, x_size=10, element_size=10, style=default_legend_style,
                  colormap=None, thresholds=np.array((0.0, 0.1, 0.25, 0.5, 1.0)),
-                 colors=("#333a97", "green", "yellow", "orange", "red"), background="white",
+                 colors=("#333a97", "green", "yellow", "orange", "red"), background="white", feature_name="SNPs",
                  masked="grey", fontsize=13):
 
         Legend.__init__(self, y_start=y_start, y_end=y_end, x_start=x_start, x_end=x_end, x_size=x_size, element_size=element_size,
@@ -54,9 +54,11 @@ class DensityLegend(Legend):
 
         self.background = background
         self.masked = masked
+        self.feature_name = feature_name
 
-    def init_coordinates(self):
+    def init_coordinates(self, style=None):
         self.x_end = self.x_start + (2 + 5) * self.x_size
+        self.y_end = self.y_start + (len(self.thresholds) + 3) * self.element_size
 
     def draw(self, axes=None, style=None):
 
@@ -66,7 +68,7 @@ class DensityLegend(Legend):
 
         square_y_pos = self.y_start - self.element_size
 
-        for color, legend_label in zip((self.masked, self.background), ("masked", "no SNPs")):
+        for color, legend_label in zip((self.masked, self.background), ("masked", "no {0}".format(self.feature_name))):
             square_y_pos += self.element_size
             #print (self.x_start, square_y_pos), self.x_size, self.element_size, color
             fragment = Rectangle((self.x_start , square_y_pos), self.x_size, self.element_size,
@@ -180,8 +182,9 @@ class FeatureLegend(Legend):
 
                 self.legend_df = pd.DataFrame.from_dict(OrderedDict([(featuretype_list[i], self.cmap(i)) for i in range(0, len(featuretype_list))]))
 
-    def init_coordinates(self):
+    def init_coordinates(self, style=None):
         self.x_end = self.x_start + (2 + 5) * self.x_size
+        self.y_end = self.y_start + len(style.legend_df if (style and (style.legend_df is not None)) else self.legend_df) * self.element_size
 
     def draw(self, axes=None, style=None):
         l_df = style.legend_df if (style and (style.legend_df is not None)) else self.legend_df

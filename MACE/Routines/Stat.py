@@ -11,13 +11,14 @@ import datetime
 from math import sqrt
 from copy import deepcopy
 from functools import reduce, partial
-from collections import OrderedDict, Iterable
+from collections import OrderedDict
+from collections.abc import Iterable
 
 import numpy as np
 import pandas as pd
 
-from scipy.spatial.distance import pdist
-from scipy.cluster.hierarchy import linkage, dendrogram, inconsistent, cophenet, fcluster
+#from scipy.spatial.distance import pdist # this import was moved into methods as temporary solution because of issues with scipy on rapunzel
+#from scipy.cluster.hierarchy import linkage, dendrogram, inconsistent, cophenet, fcluster # this import was moved into methods as temporary solution because of issues with scipy on rapunzel
 
 import matplotlib
 #matplotlib.use('Agg')
@@ -455,6 +456,8 @@ class StatsVCF(FileRoutines):
         'median'      -   WPGMC algorithm
         'ward'        -   incremental algorithm
         """
+        from scipy.spatial.distance import pdist
+        from scipy.cluster.hierarchy import linkage, dendrogram, inconsistent, cophenet, fcluster
         per_scaffold_counts = vcf_df.groupby(level=0).count()
 
         vcf_df_filtered = vcf_df[["POS"]][vcf_df.index.isin(per_scaffold_counts[per_scaffold_counts["POS"] > 1].index,
@@ -480,6 +483,7 @@ class StatsVCF(FileRoutines):
 
     @staticmethod
     def get_clusters(linkage_df, extracting_method="inconsistent", threshold=0.8, depth=2):
+        from scipy.cluster.hierarchy import fcluster
         clusters = linkage_df["linkage"].agg(fcluster, t=threshold, criterion=extracting_method, depth=depth)
 
         cluster_df = []
@@ -558,6 +562,8 @@ class StatsVCF(FileRoutines):
         'median'      -   WPGMC algorithm
         'ward'        -   incremental algorithm
         """
+        from scipy.spatial.distance import pdist
+        from scipy.cluster.hierarchy import linkage, dendrogram, inconsistent, cophenet, fcluster
         if threshold_tuple:
             threshold_list = threshold_tuple
         elif min_threshold and max_threshold:

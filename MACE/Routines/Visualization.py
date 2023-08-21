@@ -3,7 +3,8 @@ import math
 import datetime
 
 from copy import deepcopy
-from collections import Iterable, OrderedDict
+from collections.abc import Iterable
+from collections import OrderedDict
 
 import numpy as np
 import pandas as pd
@@ -384,8 +385,8 @@ class Visualization(DrawingRoutines):
         return output_df
 
     @staticmethod
-    def density_legend(colors, thresholds, colormap=None):
-        return DensityLegend(colors=colors, colormap=colormap, thresholds=thresholds)
+    def density_legend(colors, thresholds, colormap=None, feature_name="SNPs"):
+        return DensityLegend(colors=colors, colormap=colormap, thresholds=thresholds, feature_name=feature_name)
 
     @staticmethod
     def coverage_legend(colormap, thresholds):
@@ -401,43 +402,48 @@ class Visualization(DrawingRoutines):
         return FeatureLegend(legend_df, colormap=colormap, ) if legend_df is not None else None
 
     def draw_features(self, bed_collection_dict, scaffold_length_df, scaffold_order_list, #species_color_df_dict,
-                     output_prefix,
-                     legend=None,
-                     centromere_df=None,
-                     highlight_df=None,
-                     figure_width=15, figure_height_per_scaffold=0.5, dpi=300,
-                     #colormap=None, thresholds=None, colors=None, background=None,
-                     default_color="red", # TODO: check if it is possible to remove it
-                     title=None,
-                     extensions=("png",),
-                     feature_start_column_id="start",
-                     feature_end_column_id="end",
-                     feature_color_column_id="color",
-                     feature_length_column_id="length",
-                     feature_strand_column_id="strand",
-                     feature_shape="rectangle",
-                     feature_height_fraction=0.7,
-                     stranded_tracks=False,
-                     rounded_tracks=False,
-                     stranded_end_tracks=False,
-                     fill_empty_tracks=True,
-                     empty_color="lightgrey",
-                     subplots_adjust_left=None,
-                     subplots_adjust_bottom=None,
-                     subplots_adjust_right=None,
-                     subplots_adjust_top=None,
-                     show_track_label=True,
-                     show_trackgroup_label=True,
-                     close_figure=False,
-                     subplot_scale=False,
-                     track_group_scale=False,
-                     track_group_label_fontstyle='normal',
-                     track_group_distance=2,
-                     xmax_multiplier=1.1, ymax_multiplier=1.1,
-                     xtick_fontsize=None,
-                     subplot_title_fontsize=None,
-                     subplot_title_fontweight='bold'
-                     ):
+                      output_prefix,
+                      legend=None,
+                      centromere_df=None,
+                      highlight_df=None,
+                      figure_width=15,
+                      figure_height_per_scaffold=0.5,
+                      figure_header_height=0,
+                      dpi=300,
+                      #colormap=None, thresholds=None, colors=None, background=None,
+                      default_color="red", # TODO: check if it is possible to remove it
+                      title=None,
+                      extensions=("png",),
+                      feature_start_column_id="start",
+                      feature_end_column_id="end",
+                      feature_color_column_id="color",
+                      feature_length_column_id="length",
+                      feature_strand_column_id="strand",
+                      feature_shape="rectangle",
+                      feature_height_fraction=0.7,
+                      stranded_tracks=False,
+                      rounded_tracks=False,
+                      stranded_end_tracks=False,
+                      middle_break=False,
+                      fill_empty_tracks=True,
+                      empty_color="lightgrey",
+                      subplots_adjust_left=None,
+                      subplots_adjust_bottom=None,
+                      subplots_adjust_right=None,
+                      subplots_adjust_top=None,
+                      show_track_label=True,
+                      show_trackgroup_label=True,
+                      close_figure=False,
+                      subplot_scale=False,
+                      track_group_scale=False,
+                      track_group_label_fontstyle='normal',
+                      track_group_distance=2,
+                      x_tick_type="nucleotide",
+                      xmax_multiplier=1.1, ymax_multiplier=1.1,
+                      xtick_fontsize=None,
+                      subplot_title_fontsize=None,
+                      subplot_title_fontweight='bold'
+                      ):
 
         track_group_dict = OrderedDict()
 
@@ -448,12 +454,13 @@ class Visualization(DrawingRoutines):
                                                  stranded=stranded_tracks,
                                                  rounded=rounded_tracks,
                                                  stranded_end=stranded_end_tracks,
+                                                 middle_break=middle_break,
                                                  centromere=True if centromere_df is not None else False)
 
         feature_height = 5 if stranded_tracks else 10
 
         if feature_shape == "rectangle":
-            feature_style = FeatureStyle(patch_type="rectangle", height=feature_height, label_fontsize=10)
+            feature_style = FeatureStyle(patch_type="rectangle", height=feature_height, label_fontsize=10,)
         elif feature_shape == "circle":
             feature_style = FeatureStyle(patch_type="circle", height=feature_height * feature_height_fraction,
                                          label_fontsize=10)
@@ -514,6 +521,7 @@ class Visualization(DrawingRoutines):
                     subplot_scale=subplot_scale,
                     track_group_scale=track_group_scale,
                     stranded=stranded_tracks,
+                    middle_break=middle_break,
                     centromere_start=centromere_start,
                     centromere_end=centromere_end)
                 # print(track_group_dict[chr][species].records)
@@ -522,19 +530,19 @@ class Visualization(DrawingRoutines):
                 #    track_group_dict[chr][species].add_color_by_dict()
         subplot_style = SubplotStyle(distance=5, xaxis_visible=True, yaxis_visible=False, spines_bottom_visible=True,
                                      spines_right_visible=False, spines_left_visible=False, spines_top_visible=False,
-                                     x_tick_type="nucleotide",
+                                     x_tick_type=x_tick_type,
                                      title_fontsize=subplot_title_fontsize,
                                      title_fontweight=subplot_title_fontweight,
                                      x_tick_major_fontsize=xtick_fontsize,
                                      x_tick_minor_fontsize=(xtick_fontsize - 1) if xtick_fontsize is not None else None)
-
         chromosome_subplot = Subplot(track_group_dict, title=title, style=subplot_style,
                                      legend=legend, #ChromosomeLegend(chromosome_df_dict=species_color_df_dict, scaffold_order_list=scaffold_order_list),
                                      auto_scale=True,
-                                     figure_x_y_ratio=figure_width / int(scaffold_number * figure_height_per_scaffold),
+                                     figure_x_y_ratio=figure_width / max(1, int(scaffold_number * figure_height_per_scaffold + figure_header_height)),
                                      xmax_multiplier=xmax_multiplier, ymax_multiplier=ymax_multiplier)
 
-        plt.figure(1, figsize=(figure_width, int(scaffold_number * figure_height_per_scaffold)), dpi=dpi)
+        plt.figure(1, figsize=(figure_width,
+                               max(1, int(scaffold_number * figure_height_per_scaffold + figure_header_height))), dpi=dpi)
 
         chromosome_subplot.draw()
         plt.subplots_adjust(left=subplots_adjust_left, right=subplots_adjust_right,

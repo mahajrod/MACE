@@ -1,0 +1,36 @@
+package:
+  name: "mace"
+  version: '1.1.12'
+about:
+  summary: "MACE"
+source:
+  path: ../
+requirements:
+  build:
+    - python {{ python }}
+    - pip
+    - setuptools
+    - scipy
+    - numpy
+    - pandas
+    - matplotlib
+    - statsmodels
+    - biopython
+    - pyparsing
+    - xmltodict
+    - venn
+  run:
+    - python
+    - scipy
+    - numpy
+    - pandas
+    - matplotlib
+    - statsmodels
+    - pyparsing
+    - xmltodict
+    - biopython
+    - venn
+    - xlsxwriter
+
+build:
+  script: python setup.py install

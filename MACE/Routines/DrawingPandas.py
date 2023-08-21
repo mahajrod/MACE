@@ -2,7 +2,8 @@
 
 import os
 import math
-from collections import Iterable, OrderedDict
+from collections.abc import Iterable
+from collections import OrderedDict
 
 import numpy as np
 
