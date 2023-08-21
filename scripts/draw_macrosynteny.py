@@ -348,7 +348,12 @@ def chromosome_line_function(row, height):
                   linewidth=0.3,)
 
 
-for species, index, color, species_label in zip(genome_orderlist, range(0, len(genome_orderlist)), ["limegreen", "blue", "orange", "green"], genome_orderlist):
+color_number = len(genome_orderlist)
+colors = distinctipy.get_colors(color_number)
+color_list = list(map(rgb_tuple_to_hex, colors))
+
+for species, index, color, species_label in zip(genome_orderlist, range(0, len(genome_orderlist)), color_list, genome_orderlist):
+    #print(species)
     interchr_space = ((maximal_x - total_len_dict[species]) / (chr_number_dict[species] - 1)) if chr_number_dict[species] > 1 else 0
     lenlist_df_dict[species]["x_offset"] = lenlist_df_dict[species]["length"].cumsum().shift(periods=1, fill_value=0) + np.array(range(0, chr_number_dict[species])) * interchr_space
     lenlist_df_dict[species]["y_offset"] = (height + distance) * index
@@ -390,7 +395,13 @@ for species, index, color, species_label in zip(genome_orderlist, range(0, len(g
 def connector_function(row, length_df_dict, top_species, bottom_species, default_color="lightgrey", connector_color_idx=8,
                       top_scaffold_idx=3, top_start_idx=4, top_end_idx=5, bottom_scaffold_idx=0, bottom_start_idx=1, bottom_end_idx=2, strand_idx=6):
     con_len = (connector_color_idx + 1) if connector_color_idx is not None else None
-    y_chr_shift = height /2
+    y_chr_shift = height / 2
+    #print("AAAAAAAAA")
+    #print(top_species)
+    #print(length_df_dict[top_species])
+    #print("BBBBBBBBB")
+    #print(bottom_species)
+    #print(length_df_dict[bottom_species])
     return CubicBezierConnector(
                                  (row[top_start_idx] + length_df_dict[top_species].loc[row[top_scaffold_idx], "x_offset"], length_df_dict[top_species].loc[row[top_scaffold_idx], "y_offset"] + y_chr_shift),
                                  (row[top_end_idx] + length_df_dict[top_species].loc[row[top_scaffold_idx], "x_offset"], length_df_dict[top_species].loc[row[top_scaffold_idx], "y_offset"] + y_chr_shift),
@@ -419,6 +430,7 @@ for genome, genome_index in zip(genome_orderlist[:-1], range(0,len(genome_orderl
         synteny_dict[genome].records["connector_zorder"] += zorder_dict["connector"]
         connector_collection_dict[genome] = {}
         for zorder in sorted(synteny_dict[genome].records["connector_zorder"].unique()):
+            #print(lenlist_df_dict[genome])
             connector_collection_dict[genome][zorder] = PatchCollection(synteny_dict[genome].records[synteny_dict[genome].records["connector_zorder"] == zorder].apply(partial(connector_function,
                                                                                                                                                                        length_df_dict=lenlist_df_dict,
                                                                                                                                                                        top_species=genome_orderlist[genome_index+1],
