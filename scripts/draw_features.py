@@ -98,10 +98,12 @@ parser.add_argument("--subplots_adjust_bottom", action="store", dest="subplots_a
                     help="Adjust bottom border of subplots on the figure. Default: matplotlib defaults")
 parser.add_argument("--figure_width", action="store", dest="figure_width", type=float, default=15,
                     help="Width of figure in inches. Default: 15")
+parser.add_argument("--figure_header_height", action="store", dest="figure_header_height",
+                    type=float, default=0.0,
+                    help="Height of figure header. Default: 0.0")
 parser.add_argument("--figure_height_per_scaffold", action="store", dest="figure_height_per_scaffold",
                     type=float, default=0.5,
                     help="Height of figure per chromosome track. Default: 0.5")
-x
 parser.add_argument("-v", "--verbose", action="store_true", dest="verbose",
                     help="Print additional info to stdout")
 
@@ -209,9 +211,9 @@ if args.scaffold_syn_file:
 if args.verbose:
     print(chr_syn_dict)
     print(feature_df.records)
-print(feature_df.records.columns)
-print(feature_df.records)
-print(chr_len_df)
+#print(feature_df.records.columns)
+#print(feature_df.records)
+#print(chr_len_df)
 
 Visualization.draw_features({"features": feature_df}, chr_len_df,
                             args.scaffold_ordered_list,

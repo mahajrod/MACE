@@ -460,15 +460,16 @@ class Visualization(DrawingRoutines):
         feature_height = 5 if stranded_tracks else 10
 
         if feature_shape == "rectangle":
-            feature_style = FeatureStyle(patch_type="rectangle", height=feature_height, label_fontsize=10,)
+            feature_style = FeatureStyle(patch_type="rectangle", height=feature_height, label_fontsize=10,
+                                         face_color=default_color)
         elif feature_shape == "circle":
             feature_style = FeatureStyle(patch_type="circle", height=feature_height * feature_height_fraction,
-                                         label_fontsize=10)
+                                         label_fontsize=10, face_color=default_color)
         elif feature_shape == "ellipse":
             feature_style = FeatureStyle(patch_type="ellipse", height=feature_height * feature_height_fraction,
-                                         label_fontsize=10)
+                                         label_fontsize=10, face_color=default_color)
         elif feature_shape == "hist":
-            feature_style = FeatureStyle(patch_type="hist", height=feature_height, label_fontsize=10)
+            feature_style = FeatureStyle(patch_type="hist", height=feature_height, label_fontsize=10, face_color=default_color)
         else:
             raise ValueError("ERROR!!! Unknown feature style")
 

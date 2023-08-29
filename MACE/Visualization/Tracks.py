@@ -579,6 +579,7 @@ class Track:
                                                       used_style.fill_empty and self.records is None) else used_style.background,
                                               linewidth=used_style.edge_width,
                                               zorder=used_style.zorder["background"])
+
         self.track_border_patch = Polygon(self.point_array,
                                           #color=used_style.empty_color if (
                                           #        used_style.fill_empty and self.records is None) else used_style.face_color,
