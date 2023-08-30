@@ -168,6 +168,13 @@ args = parser.parse_args()
 
 args.scaffold_ordered_list = args.scaffold_ordered_list[::-1]
 
+if isinstance(args.scaffold_ordered_list, list):
+    if not args.scaffold_ordered_list:
+        args.scaffold_ordered_list = args.scaffold_white_list
+else:
+    if args.scaffold_ordered_list.empty:
+        args.scaffold_ordered_list = args.scaffold_white_list
+
 variants = CollectionVCF(args.input, parsing_mode="only_coordinates")
 
 chr_len_df = pd.read_csv(args.scaffold_length_file, sep='\t', header=None, index_col=0) if args.scaffold_length_file else deepcopy(variants.scaffold_length)
