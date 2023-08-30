@@ -144,6 +144,13 @@ args = parser.parse_args()
 if args.window_step is None:
     args.window_step = args.window_size
 
+if isinstance(args.scaffold_ordered_list, list):
+    if not args.scaffold_ordered_list:
+        args.scaffold_ordered_list = args.scaffold_white_list
+else:
+    if args.scaffold_ordered_list.empty:
+        args.scaffold_ordered_list = args.scaffold_white_list
+
 args.scaffold_ordered_list = args.scaffold_ordered_list[::-1]
 
 chr_syn_dict = SynDict(filename=args.scaffold_syn_file,
@@ -165,7 +172,7 @@ coverage_df = pd.read_csv(args.input, sep="\t", usecols=[args.scaffold_column_na
                                                          args.window_column_name] + args.coverage_column_name_list,
                           index_col=(args.scaffold_column_name, args.window_column_name),)
 
-coverage_df.index =  coverage_df.index.set_levels(list(map(str, coverage_df.index.levels[0])), level=0)
+coverage_df.index = coverage_df.index.set_levels(list(map(str, coverage_df.index.levels[0])), level=0)
 if args.verbose:
     print("Coverage df (raw)")
     print(coverage_df)
@@ -222,7 +229,7 @@ for mean_coverage, track_label in zip(args.mean_coverage_list, args.coverage_col
                                                                )
     #print(track_with_colors_df)
     track_df_dict[track_label] = track_with_colors_df
-
+#print(track_df_dict)
 Visualization.draw_features(track_df_dict,
                             chr_len_df,
                             args.scaffold_ordered_list,

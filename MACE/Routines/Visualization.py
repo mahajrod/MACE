@@ -446,7 +446,7 @@ class Visualization(DrawingRoutines):
                       ):
 
         track_group_dict = OrderedDict()
-
+        #print(scaffold_order_list)
         scaffolds = scaffold_order_list.to_list() if isinstance(scaffold_order_list, (pd.Series, pd.Index)) else scaffold_order_list  # scaffold_order_list[::-1] if scaffold_order_list else collection_gff.records.index.get_level_values(level=0).unique().to_list()
         scaffold_number = len(scaffolds)
         synteny_feature_track_style = TrackStyle(height=10, colormap=None, background="white",
@@ -541,7 +541,9 @@ class Visualization(DrawingRoutines):
                                      auto_scale=True,
                                      figure_x_y_ratio=figure_width / max(1, int(scaffold_number * figure_height_per_scaffold + figure_header_height)),
                                      xmax_multiplier=xmax_multiplier, ymax_multiplier=ymax_multiplier)
-
+        #print((figure_width,
+        #                       max(1, int(scaffold_number * figure_height_per_scaffold + figure_header_height))))
+        #print((scaffold_number, figure_height_per_scaffold, figure_header_height))
         plt.figure(1, figsize=(figure_width,
                                max(1, int(scaffold_number * figure_height_per_scaffold + figure_header_height))), dpi=dpi)
 
