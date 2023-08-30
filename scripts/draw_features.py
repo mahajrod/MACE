@@ -139,6 +139,13 @@ args = parser.parse_args()
 
 args.scaffold_ordered_list = args.scaffold_ordered_list[::-1]
 
+if isinstance(args.scaffold_ordered_list, list):
+    if not args.scaffold_ordered_list:
+        args.scaffold_ordered_list = args.scaffold_white_list
+else:
+    if args.scaffold_ordered_list.empty:
+        args.scaffold_ordered_list = args.scaffold_white_list
+
 chr_syn_dict = SynDict(filename=args.scaffold_syn_file,
                        key_index=args.syn_file_key_column,
                        value_index=args.syn_file_value_column)
