@@ -16,7 +16,7 @@ for script in scripts_dir_path.glob("*"):
         scripts.append(script)
 scripts = list(map(str, scripts)) # pip and setuptools doesnt work with Path objects
 setup(name='MACE',
-      version='1.1.22',
+      version='1.1.23',
       packages=find_packages(),
       author='Sergei F. Kliver',
       author_email='mahajrod@gmail.com',

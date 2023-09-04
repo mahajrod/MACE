@@ -131,7 +131,10 @@ parser.add_argument("--figure_width", action="store", dest="figure_width", type=
 parser.add_argument("--figure_height_per_genome", action="store", dest="figure_height_per_genome",
                     type=float, default=1,
                     help="Height of figure per genome track. Default: 1")
-
+parser.add_argument("--chromosome_label_fontsize", action="store", dest="chromosome_label_fontsize", type=int, default=7,
+                    help="Fontsize of chromosome labels. Default: 7")
+parser.add_argument("--genome_label_fontsize", action="store", dest="genome_label_fontsize", type=int, default=11,
+                    help="Fontsize of genome labels. Default: 11")
 #parser.add_argument("--subplot_scale", action="store_true", dest="subplot_scale",
 #                    help="Scale feature x size by subplot x/y ratio. Default: off")
 #parser.add_argument("--track_group_scale", action="store_true", dest="track_group_scale",
@@ -428,7 +431,7 @@ for species, index, color, species_label in zip(genome_orderlist, range(0, len(g
         ax.annotate(lenlist_df_dict[species].loc[chromosome, "label"],
                     xy=(lenlist_df_dict[species].loc[chromosome, "x_offset"] + lenlist_df_dict[species].loc[chromosome, "length"]/2,
                         lenlist_df_dict[species].loc[chromosome, "y_offset"] + height), xycoords='data',
-                    fontsize=5,
+                    fontsize=args.chromosome_label_fontsize,
                     xytext=(0, 0), textcoords='offset points',
                     ha="center", va="bottom",
                     color="black",
@@ -437,8 +440,8 @@ for species, index, color, species_label in zip(genome_orderlist, range(0, len(g
     ax.annotate(species_label,
                 xy=(- border_offset_fraction / 2 * maximal_x, (height + distance) * index + height/2),
                 xycoords='data',
-                fontsize=9,
-                fontstyle= "italic",
+                fontsize=args.genome_label_fontsize,
+                fontstyle="italic",
                 xytext=(0, 0), textcoords='offset points',
                 ha="right", va="center",
                 color="black",
