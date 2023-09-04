@@ -99,6 +99,9 @@ parser.add_argument("--min_len_threshold", action="store", dest="min_len_thresho
                     help="Minimum length of rearranged block to be highlighted. "
                          "Recommended value for mammalian-size genomes ranges between 200'000 and 1000'000"
                          "Default: 0, i.e. all rearranged blocks will be highlighted")
+parser.add_argument("--scaffold_prefix_cut", action="store", dest="scaffold_prefix_cut", default=3, type=int,
+                    help="Length of prefix to be cut from every scaffold id. "
+                         "Default: 3, i.e 'chr3' will be cut to '3' on the figure. Set this option to zero to avoid cutting.")
 
 parser.add_argument("-o", "--output_prefix", action="store", dest="output_prefix", required=True,
                     help="Prefix of output files")
@@ -410,7 +413,7 @@ for species, index, color, species_label in zip(genome_orderlist, range(0, len(g
     lenlist_df_dict[species]["color"] = color
 
     lenlist_df_dict[species]["label"] = pd.Series(list(lenlist_df_dict[species].index),
-                                                  index=lenlist_df_dict[species].index).apply(lambda s:s[3:])
+                                                  index=lenlist_df_dict[species].index).apply(lambda s: s[args.scaffold_prefix_cut:])
 
     patch_collection = PatchCollection(lenlist_df_dict[species].apply(patch_function, axis=1),
                                        match_original=True,
