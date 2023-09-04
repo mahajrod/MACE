@@ -95,6 +95,11 @@ parser.add_argument("--syn_file_value_column", action="store", dest="syn_file_va
 parser.add_argument("--synteny_format", action="store", dest="synteny_format", default="psl",
                     help="Format of the synteny file. Allowed: psl(default)")
 
+parser.add_argument("--min_len_threshold", action="store", dest="min_len_threshold", default=0, type=int,
+                    help="Minimum length of rearranged block to be highlighted. "
+                         "Recommended value for mammalian-size genomes ranges between 200'000 and 1000'000"
+                         "Default: 0, i.e. all rearranged blocks will be highlighted")
+
 parser.add_argument("-o", "--output_prefix", action="store", dest="output_prefix", required=True,
                     help="Prefix of output files")
 
@@ -118,7 +123,6 @@ parser.add_argument("--subplots_adjust_top", action="store", dest="subplots_adju
                     help="Adjust top border of subplots on the figure. Default: matplotlib defaults")
 parser.add_argument("--subplots_adjust_bottom", action="store", dest="subplots_adjust_bottom", type=float, default=0.05,
                     help="Adjust bottom border of subplots on the figure. Default: matplotlib defaults")
-
 parser.add_argument("--figure_width", action="store", dest="figure_width", type=float, default=8,
                     help="Width of figure in inches. Default: 8")
 parser.add_argument("--figure_height_per_genome", action="store", dest="figure_height_per_genome",
@@ -320,6 +324,13 @@ if synteny_format == "psl":
         connector_color_idx = len(columns_list)
         connector_zorder_idx = len(columns_list) + 1
         synteny_dict[genome].records = synteny_dict[genome].records[columns_list + ["connector_color", "connector_zorder"]]
+
+        if args.min_len_threshold > 0:
+            # disable highlighting for short rearrangements
+            synteny_dict[genome].records.loc[(synteny_dict[genome].records[query_block_len_column_name] < args.min_len_threshold) & (synteny_dict[genome].records[target_block_len_column_name] < args.min_len_threshold),
+                                             "connector_color"] = "default"
+            synteny_dict[genome].records.loc[(synteny_dict[genome].records[query_block_len_column_name] < args.min_len_threshold) & (synteny_dict[genome].records[target_block_len_column_name] < args.min_len_threshold),
+                                             "connector_zorder"] = 0
 
 for index, genome in zip(range(0, len(genome_orderlist) - 1), genome_orderlist[:-1]):
     synteny_dict[genome].records.sort_values(by=["qName", "qStart", "qEnd", "tName", "tStart", "tEnd"]).to_csv("{0}.{1}.to.{2}.tab".format(args.output_prefix,
