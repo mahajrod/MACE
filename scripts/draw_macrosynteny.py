@@ -97,6 +97,7 @@ parser.add_argument("--synteny_format", action="store", dest="synteny_format", d
 
 parser.add_argument("--min_len_threshold", action="store", dest="min_len_threshold", default=0, type=int,
                     help="Minimum length of rearranged block to be highlighted. "
+                         "Recommended value for mammalian-size genomes ranges between 200'000 and 1000'000"
                          "Default: 0, i.e. all rearranged blocks will be highlighted")
 
 parser.add_argument("-o", "--output_prefix", action="store", dest="output_prefix", required=True,
