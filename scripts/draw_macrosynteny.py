@@ -280,26 +280,42 @@ if synteny_format == "psl":
                                                                                           target_scaffold_id_column_name,
                                                                                           strand_column_name]).sum()
 
-
         #print(synteny_dict[genome].records)
+        synteny_dict[genome].records["connector_color"] = "default"
+        synteny_dict[genome].records["connector_zorder"] = 0
         synteny_dict[genome].records.set_index(["qName", "tName"], inplace=True)
         #print(synteny_dict[genome].records)
         major_strand_series = hit_sum.groupby(by=[query_scaffold_id_column_name,
-                                                  target_scaffold_id_column_name ]).apply(lambda df: df.idxmax()[query_block_len_column_name][2])
+                                                  target_scaffold_id_column_name]).apply(lambda df: df.idxmax()[query_block_len_column_name][2])
         synteny_dict[genome].records["major_strand"] = major_strand_series
-        synteny_dict[genome].records.reset_index(level=1,drop=False, inplace=True)
+        synteny_dict[genome].records.reset_index(level=1, drop=False, inplace=True)
+        #print(genome)
+        #print(hit_sum)
+        #detect translocations from query side
+        major_query_homolog_series = hit_sum.droplevel(level=2).groupby(by=[query_scaffold_id_column_name,
+                                                                            target_scaffold_id_column_name]).sum().groupby(by=[query_scaffold_id_column_name]).apply(lambda df: df.idxmax()[query_block_len_column_name][1])
 
-        major_homolog_series = hit_sum.droplevel(level=2).groupby(by=[query_scaffold_id_column_name,
-                                                                      target_scaffold_id_column_name ]).sum().groupby(by=[query_scaffold_id_column_name]).apply(lambda df: df.idxmax()[query_block_len_column_name ][1] )
+        synteny_dict[genome].records["major_query_homolog"] = major_query_homolog_series
+        synteny_dict[genome].records.loc[synteny_dict[genome].records[target_scaffold_id_column_name] != synteny_dict[genome].records["major_query_homolog"], "connector_color"] = "blue"
+        synteny_dict[genome].records.loc[synteny_dict[genome].records[target_scaffold_id_column_name] != synteny_dict[genome].records["major_query_homolog"], "connector_zorder"] = 50
 
-        synteny_dict[genome].records["major_homolog"] = major_homolog_series
+        #detect translocations from target side
         synteny_dict[genome].records.reset_index(level=0, drop=False, inplace=True)
-        synteny_dict[genome].records["connector_color"] = "default"
+        major_target_homolog_series = hit_sum.droplevel(level=2).groupby(by=[target_scaffold_id_column_name,
+                                                                             query_scaffold_id_column_name]).sum().groupby(by=[target_scaffold_id_column_name]).apply(lambda df: df.idxmax()[target_block_len_column_name][1])
+        #print(major_target_homolog_series)
+
+        synteny_dict[genome].records.set_index(target_scaffold_id_column_name, inplace=True)
+        synteny_dict[genome].records["major_target_homolog"] = major_target_homolog_series
+        synteny_dict[genome].records.loc[synteny_dict[genome].records[query_scaffold_id_column_name] != synteny_dict[genome].records["major_target_homolog"], "connector_color"] = "blue"
+        synteny_dict[genome].records.loc[synteny_dict[genome].records[query_scaffold_id_column_name] != synteny_dict[genome].records["major_target_homolog"], "connector_zorder"] = 50
+        #synteny_dict[genome].records.to_csv("AAAAAAAAAAAAAA.{0}.tmp".format(genome), sep="\t")
+        #print(synteny_dict[genome].records)
+
+        synteny_dict[genome].records.reset_index(level=0, drop=False, inplace=True)
+
         synteny_dict[genome].records.loc[synteny_dict[genome].records[strand_column_name] != synteny_dict[genome].records["major_strand"], "connector_color"] = "red"
-        synteny_dict[genome].records.loc[synteny_dict[genome].records[target_scaffold_id_column_name] != synteny_dict[genome].records["major_homolog"], "connector_color"] = "blue"
-        synteny_dict[genome].records["connector_zorder"] = 0
         synteny_dict[genome].records.loc[synteny_dict[genome].records[strand_column_name] != synteny_dict[genome].records["major_strand"], "connector_zorder"] = 20
-        synteny_dict[genome].records.loc[synteny_dict[genome].records[target_scaffold_id_column_name] != synteny_dict[genome].records["major_homolog"], "connector_zorder"] = 50
 
         connector_color_idx = len(columns_list)
         connector_zorder_idx = len(columns_list) + 1
@@ -307,9 +323,9 @@ if synteny_format == "psl":
 
 for index, genome in zip(range(0, len(genome_orderlist) - 1), genome_orderlist[:-1]):
     synteny_dict[genome].records.sort_values(by=["qName", "qStart", "qEnd", "tName", "tStart", "tEnd"]).to_csv("{0}.{1}.to.{2}.tab".format(args.output_prefix,
-                                                                    genome,
-                                                                    genome_orderlist[index + 1]),
-                                        sep="\t", index=False, header=True)
+                                                                                                                                           genome,
+                                                                                                                                           genome_orderlist[index + 1]),
+                                             sep="\t", index=False, header=True)
 
 border_offset_fraction = 0.05
 interchr_space_fraction = 0.3

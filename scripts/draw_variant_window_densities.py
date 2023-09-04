@@ -218,14 +218,28 @@ if args.input_type == "vcf":
 
 elif args.input_type == "bedgraph":
     track_df = pd.read_csv(args.input, sep="\t", names=["scaffold", "start", "end", "value"],
-                           header=None, index_col=0, na_values=".")
+                           header=None, index_col=0, na_values=".", dtype={"scaffold": str,
+                                                                           "start": int,
+                                                                           "end": int,
+                                                                           "value": float})
     track_df["value"] = track_df["value"].astype(float)
 
 if args.scaffold_syn_file:
     chr_len_df.rename(index=chr_syn_dict, inplace=True)
 
+# scale counts
 track_df[track_df.columns[-1]] = track_df[track_df.columns[-1]] * float(args.density_multiplier) / float(args.window_size)
 
+#print(chr_len_df)
+# remove windows with end bigger than scaffold length. Such cases might apper in some outputs
+#print(track_df)
+#print(track_df.index.nlevels)
+if track_df.index.nlevels > 1:
+    #drop second level of index if it was added by groupby
+    track_df = track_df.groupby("scaffold").apply(lambda df: df[df["end"] <= chr_len_df.loc[df.index[0], "length"]]).reset_index(level=1, drop=True)
+
+#print(track_df)
+#track_df.to_csv("{0}.track.bedgraph".format(args.output_prefix), sep="\t", header=False, index=True)
 
 # TODO: rewrite application of masking
 """
