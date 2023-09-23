@@ -100,7 +100,7 @@ parser.add_argument("--subplots_adjust_right", action="store", dest="subplots_ad
                     help="Adjust right border of subplots on the figure. Default: matplotlib defaults")
 parser.add_argument("--subplots_adjust_bottom", action="store", dest="subplots_adjust_bottom", type=float,
                     help="Adjust bottom border of subplots on the figure. Default: matplotlib defaults")
-parser.add_argument("--figure_width", action="store", dest="figure_width", type=float, default=15,
+parser.add_argument("--figure_width", action="store", dest="figure_width", type=float, default=10,
                     help="Width of figure in inches. Default: 15")
 parser.add_argument("--figure_header_height", action="store", dest="figure_header_height",
                     type=float, default=0.0,
