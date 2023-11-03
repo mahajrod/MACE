@@ -86,6 +86,8 @@ parser.add_argument("-i", "--input_dir", action="store", dest="input_dir", requi
 parser.add_argument("--genome_orderlist", action="store", dest="genome_orderlist", required=True,
                     type=split_comma_separated_list,
                     help="Comma-separated list of genomes to be used in figure.")
+parser.add_argument("--invert_genome_order", action="store_true", dest="invert_genome_order", default=False,
+                    help="Invert order of the genomes in the --genome_orderlist. Default: False")
 parser.add_argument("--syn_file_key_column", action="store", dest="syn_file_key_column",
                     default=0, type=int,
                     help="Column(0-based) with key(current id) for scaffolds in synonym file. Default: 0")
@@ -160,7 +162,7 @@ args = parser.parse_args()
 data_dir = args.input_dir
 data_dir_path = Path(data_dir)
 
-genome_orderlist = args.genome_orderlist
+genome_orderlist = args.genome_orderlist[::-1] if args.invert_genome_order else args.genome_orderlist
 syn_file_key_column, syn_file_value_column = args.syn_file_key_column, args.syn_file_value_column
 
 synteny_format = args.synteny_format
@@ -172,6 +174,7 @@ print(data_dir_path)
 # whitelist is obligatory
 for genome in genome_orderlist:
     print(data_dir_path / genome)
+    #print(get_filenames_for_extension(data_dir_path / genome, extension_list=["whitelist"]))
 whitelist_series_dict = {genome: pd.read_csv(get_filenames_for_extension(data_dir_path / genome, extension_list=["whitelist"]),
                                              sep="\t", header=None, comment="#").squeeze("columns") for genome in genome_orderlist}
 # orderlist might be absent in folders
