@@ -24,7 +24,9 @@ parser = argparse.ArgumentParser()
 parser.add_argument("-i", "--input", action="store", dest="input", required=True,
                     help="Input file with selected features")
 parser.add_argument("-t", "--input_type", action="store", dest="input_type", default="str",
-                    help="Type of input file. Allowed: str (default), gff, blast, bed, bedgraph")
+                    help="Type of input file. Allowed: str (default), gff, tab6, tab6_colored, bed, bedgraph")
+parser.add_argument("-r", "--header", action="store_true", dest="header", default=None,
+                    help="Header is present in input file. Default: False")
 parser.add_argument("-g", "--legend", action="store", dest="legend",
                     help="File with legend for feature colors containing two columns with color and legend text")
 parser.add_argument("-o", "--output_prefix", action="store", dest="output_prefix", required=True,
@@ -203,12 +205,16 @@ try:
         feature_start_column_id = "start"
         feature_end_column_id = "end"
 
-    elif args.input_type == "blast":
+    elif args.input_type == "tab6":
         feature_df = CollectionBLAST(in_file=args.input, parsing_mode="complete")
         feature_df.records.reset_index(level="query_id", inplace=True)
         feature_start_column_id = args.start_column_name if args.start_column_name else "target_start"
         feature_end_column_id = args.end_column_name if args.end_column_name else "target_end"
-
+    elif args.input_type == "tab6_colored":
+        feature_df = CollectionBLAST(in_file=args.input, parsing_mode="complete", format="tab6_colored", header=args.header)
+        feature_df.records.reset_index(level="query_id", inplace=True)
+        feature_start_column_id = args.start_column_name if args.start_column_name else "target_start"
+        feature_end_column_id = args.end_column_name if args.end_column_name else "target_end"
     else:
         raise ValueError("ERROR!!! Unrecognized input type ({}). ".format(args.input_type))
 except pd.errors.EmptyDataError:
@@ -233,6 +239,8 @@ args.scaffold_ordered_list = args.scaffold_ordered_list[args.scaffold_ordered_li
 chr_len_df = pd.read_csv(args.scaffold_length_file, sep='\t', header=None, names=("scaffold", "length"), index_col=0)
 chr_len_df.index = pd.Index(list(map(str, chr_len_df.index)))
 
+#print(chr_len_df)
+
 #print(feature_df.records)
 if args.scaffold_syn_file:
     chr_len_df.rename(index=chr_syn_dict, inplace=True)
@@ -240,6 +248,9 @@ if args.scaffold_syn_file:
 if args.verbose:
     print(chr_syn_dict)
     print(feature_df.records)
+
+
+print(chr_len_df)
 #print(feature_df.records.columns)
 #print(feature_df.records)
 #print(chr_len_df)
