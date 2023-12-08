@@ -3,6 +3,7 @@ __author__ = 'Sergei F. Kliver'
 import os
 import argparse
 from functools import partial
+from copy import deepcopy
 
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -147,18 +148,20 @@ args = parser.parse_args()
 if args.window_step is None:
     args.window_step = args.window_size
 
-if isinstance(args.scaffold_ordered_list, list):
-    if not args.scaffold_ordered_list:
-        args.scaffold_ordered_list = args.scaffold_white_list
-else:
-    if args.scaffold_ordered_list.empty:
-        args.scaffold_ordered_list = args.scaffold_white_list
-
-args.scaffold_ordered_list = args.scaffold_ordered_list[::-1]
-
 chr_syn_dict = SynDict(filename=args.scaffold_syn_file,
                        key_index=args.syn_file_key_column,
                        value_index=args.syn_file_value_column)
+
+if isinstance(args.scaffold_ordered_list, list):
+    if not args.scaffold_ordered_list:
+        args.scaffold_ordered_list = deepcopy(args.scaffold_white_list)
+        args.scaffold_ordered_list.replace(chr_syn_dict, inplace=True)
+else:
+    if args.scaffold_ordered_list.empty:
+        args.scaffold_ordered_list = deepcopy(args.scaffold_white_list)
+        args.scaffold_ordered_list.replace(chr_syn_dict, inplace=True)
+
+args.scaffold_ordered_list = args.scaffold_ordered_list[::-1]
 
 if args.centromere_bed:
     centromere_df = pd.read_csv(args.centromere_bed,

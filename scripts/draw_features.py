@@ -5,6 +5,7 @@ import os
 import argparse
 
 import pandas as pd
+from copy import deepcopy
 import numpy as np
 from RouToolPa.Parsers.STR import CollectionSTR
 from RouToolPa.Parsers.GFF import CollectionGFF
@@ -23,7 +24,9 @@ parser = argparse.ArgumentParser()
 parser.add_argument("-i", "--input", action="store", dest="input", required=True,
                     help="Input file with selected features")
 parser.add_argument("-t", "--input_type", action="store", dest="input_type", default="str",
-                    help="Type of input file. Allowed: str (default), gff, blast, bed, bedgraph")
+                    help="Type of input file. Allowed: str (default), gff, tab6, tab6_colored, bed, bedgraph")
+parser.add_argument("-r", "--header", action="store_true", dest="header", default=None,
+                    help="Header is present in input file. Default: False")
 parser.add_argument("-g", "--legend", action="store", dest="legend",
                     help="File with legend for feature colors containing two columns with color and legend text")
 parser.add_argument("-o", "--output_prefix", action="store", dest="output_prefix", required=True,
@@ -99,7 +102,7 @@ parser.add_argument("--subplots_adjust_right", action="store", dest="subplots_ad
                     help="Adjust right border of subplots on the figure. Default: matplotlib defaults")
 parser.add_argument("--subplots_adjust_bottom", action="store", dest="subplots_adjust_bottom", type=float,
                     help="Adjust bottom border of subplots on the figure. Default: matplotlib defaults")
-parser.add_argument("--figure_width", action="store", dest="figure_width", type=float, default=15,
+parser.add_argument("--figure_width", action="store", dest="figure_width", type=float, default=10,
                     help="Width of figure in inches. Default: 15")
 parser.add_argument("--figure_header_height", action="store", dest="figure_header_height",
                     type=float, default=0.0,
@@ -140,19 +143,28 @@ parser.add_argument("--title_fontsize", action="store", dest="title_fontsize", d
 
 args = parser.parse_args()
 
-args.scaffold_ordered_list = args.scaffold_ordered_list[::-1]
-
-if isinstance(args.scaffold_ordered_list, list):
-    if not args.scaffold_ordered_list:
-        args.scaffold_ordered_list = args.scaffold_white_list
-else:
-    if args.scaffold_ordered_list.empty:
-        args.scaffold_ordered_list = args.scaffold_white_list
-
 chr_syn_dict = SynDict(filename=args.scaffold_syn_file,
                        key_index=args.syn_file_key_column,
                        value_index=args.syn_file_value_column)
 
+if isinstance(args.scaffold_ordered_list, list):
+    #print("AAAAAAA")
+    if not args.scaffold_ordered_list:
+        #print("BBBBBBBBBB")
+        args.scaffold_ordered_list = deepcopy(args.scaffold_white_list)
+        args.scaffold_ordered_list.replace(chr_syn_dict, inplace=True)
+else:
+    if args.scaffold_ordered_list.empty:
+        #print("CCCCCCCCCCC")
+        args.scaffold_ordered_list = deepcopy(args.scaffold_white_list)
+        #print(args.scaffold_ordered_list)
+        args.scaffold_ordered_list.replace(chr_syn_dict, inplace=True)
+        #print(args.scaffold_ordered_list)
+
+args.scaffold_ordered_list = args.scaffold_ordered_list[::-1]
+
+#print(args.scaffold_ordered_list)
+#print(chr_syn_dict)
 if args.centromere_bed:
     centromere_df = pd.read_csv(args.centromere_bed,
                                 usecols=(0, 1, 2),
@@ -193,12 +205,16 @@ try:
         feature_start_column_id = "start"
         feature_end_column_id = "end"
 
-    elif args.input_type == "blast":
+    elif args.input_type == "tab6":
         feature_df = CollectionBLAST(in_file=args.input, parsing_mode="complete")
         feature_df.records.reset_index(level="query_id", inplace=True)
         feature_start_column_id = args.start_column_name if args.start_column_name else "target_start"
         feature_end_column_id = args.end_column_name if args.end_column_name else "target_end"
-
+    elif args.input_type == "tab6_colored":
+        feature_df = CollectionBLAST(in_file=args.input, parsing_mode="complete", format="tab6_colored", header=args.header)
+        feature_df.records.reset_index(level="query_id", inplace=True)
+        feature_start_column_id = args.start_column_name if args.start_column_name else "target_start"
+        feature_end_column_id = args.end_column_name if args.end_column_name else "target_end"
     else:
         raise ValueError("ERROR!!! Unrecognized input type ({}). ".format(args.input_type))
 except pd.errors.EmptyDataError:
@@ -213,6 +229,9 @@ scaffold_to_keep = StatsVCF.get_filtered_entry_list(feature_df.records.index.get
 
 #print(scaffold_to_keep)
 # remove redundant scaffolds
+#print(args.scaffold_white_list)
+#print(feature_df.records)
+#print(scaffold_to_keep)
 feature_df.records = feature_df.records[feature_df.records.index.isin(scaffold_to_keep)]
 args.scaffold_ordered_list = args.scaffold_ordered_list[args.scaffold_ordered_list.isin(pd.Series(args.scaffold_white_list).replace(chr_syn_dict))]
 #print(scaffold_to_keep)
@@ -220,12 +239,18 @@ args.scaffold_ordered_list = args.scaffold_ordered_list[args.scaffold_ordered_li
 chr_len_df = pd.read_csv(args.scaffold_length_file, sep='\t', header=None, names=("scaffold", "length"), index_col=0)
 chr_len_df.index = pd.Index(list(map(str, chr_len_df.index)))
 
+#print(chr_len_df)
+
+#print(feature_df.records)
 if args.scaffold_syn_file:
     chr_len_df.rename(index=chr_syn_dict, inplace=True)
     feature_df.records.rename(index=chr_syn_dict, inplace=True)
 if args.verbose:
     print(chr_syn_dict)
     print(feature_df.records)
+
+
+print(chr_len_df)
 #print(feature_df.records.columns)
 #print(feature_df.records)
 #print(chr_len_df)
