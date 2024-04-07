@@ -449,6 +449,7 @@ class Visualization(DrawingRoutines):
         #print(scaffold_order_list)
         scaffolds = scaffold_order_list.to_list() if isinstance(scaffold_order_list, (pd.Series, pd.Index)) else scaffold_order_list  # scaffold_order_list[::-1] if scaffold_order_list else collection_gff.records.index.get_level_values(level=0).unique().to_list()
         scaffold_number = len(scaffolds)
+
         synteny_feature_track_style = TrackStyle(height=10, colormap=None, background="white",
                                                  masked="grey", fill_empty=fill_empty_tracks, empty_color=empty_color,
                                                  stranded=stranded_tracks,
@@ -474,7 +475,7 @@ class Visualization(DrawingRoutines):
             raise ValueError("ERROR!!! Unknown feature style")
 
         #feature_style = FeatureStyle(patch_type="rectangle", height=feature_height, label_fontsize=10)
-
+        track_number = 0
         for chr in scaffolds:  # count_df.index.get_level_values(level=0).unique():
 
             highlight = False
@@ -509,7 +510,7 @@ class Visualization(DrawingRoutines):
                 #print(scaffold_length_df.loc[chr])
                 #print(scaffold_length_df.loc[chr][0])
                 track_group_dict[chr][species] = FeatureTrack(
-                    records.loc[[chr]] if chr in records.index else None, x_end=scaffold_length_df.loc[chr][0],
+                    records.loc[[chr]] if chr in records.index else None, x_end=scaffold_length_df.loc[chr].iloc[0],
                     label=species if show_track_label else None, #colormap=colormap, thresholds=thresholds,
                     style=synteny_feature_track_style,
                     #colors=colors, background=background,
@@ -525,10 +526,12 @@ class Visualization(DrawingRoutines):
                     middle_break=middle_break,
                     centromere_start=centromere_start,
                     centromere_end=centromere_end)
+                track_number += 1
                 # print(track_group_dict[chr][species].records)
                 #if feature_color_column_id not in records.columns:
                 #    track_group_dict[chr][species].add_color_by_dict(default_color=default_color) if default_color else \
                 #    track_group_dict[chr][species].add_color_by_dict()
+        #print(track_number)
         subplot_style = SubplotStyle(distance=5, xaxis_visible=True, yaxis_visible=False, spines_bottom_visible=True,
                                      spines_right_visible=False, spines_left_visible=False, spines_top_visible=False,
                                      x_tick_type=x_tick_type,
@@ -539,13 +542,13 @@ class Visualization(DrawingRoutines):
         chromosome_subplot = Subplot(track_group_dict, title=title, style=subplot_style,
                                      legend=legend, #ChromosomeLegend(chromosome_df_dict=species_color_df_dict, scaffold_order_list=scaffold_order_list),
                                      auto_scale=True,
-                                     figure_x_y_ratio=figure_width / max(1, int(scaffold_number * figure_height_per_scaffold + figure_header_height)),
+                                     figure_x_y_ratio=figure_width / max(1, int(track_number * figure_height_per_scaffold + figure_header_height)),
                                      xmax_multiplier=xmax_multiplier, ymax_multiplier=ymax_multiplier)
         #print((figure_width,
         #                       max(1, int(scaffold_number * figure_height_per_scaffold + figure_header_height))))
         #print((scaffold_number, figure_height_per_scaffold, figure_header_height))
         plt.figure(1, figsize=(figure_width,
-                               max(1, int(scaffold_number * figure_height_per_scaffold + figure_header_height))), dpi=dpi)
+                               max(1, int(track_number * figure_height_per_scaffold + figure_header_height))), dpi=dpi)
 
         chromosome_subplot.draw()
         plt.subplots_adjust(left=subplots_adjust_left, right=subplots_adjust_right,
