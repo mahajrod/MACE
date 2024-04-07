@@ -11,7 +11,7 @@ class ChromosomePolygon(Polygon):
     def __init__(self, x_start: float, y_start: float, length: float, height: float,
                  stranded: bool = False, rounded: bool = False,
                  centromere_start: (None, float) = None, centromere_end: (None, float) = None,
-                 show_centromere: (None, float) = None,
+                 show_centromere: (None, bool) = None,
                  arc_point_number: int = 100, x_scale_factor: float = 1,
                  edgecolor: str = "grey",
                  facecolor: str = "grey",
@@ -35,8 +35,8 @@ class ChromosomePolygon(Polygon):
 
         self.y_end = self.y_start + height
         self.x_end = self.x_start + length
-        self.centromere_x_start = (self.x_start + self.centromere_start) if self.centromere_start else None
-        self.centromere_x_end = (self.x_start + self.centromere_end) if self.centromere_start else None
+        self.centromere_x_start = (self.x_start + self.centromere_start) if self.centromere_start is not None else None
+        self.centromere_x_end = (self.x_start + self.centromere_end) if self.centromere_start is not None else None
         
         self.stranded = stranded
         self.rounded = rounded
@@ -88,7 +88,7 @@ class ChromosomePolygon(Polygon):
         self.right_centromere_middle_overlap = None
         self.left_centromere_overlap = None
         self.right_centromere_overlap = None
-        self.show_centromere = None
+        self.show_centromere = show_centromere
 
         self.point_array = self.init_point_array()
         
@@ -106,12 +106,9 @@ class ChromosomePolygon(Polygon):
 class LinearChromosome(ChromosomePolygon):
 
     def init_point_array(self):
-        
+        #print(self.show_centromere, self.centromere_start, self.centromere_end)
         #height = self.y_end - self.y_start
         # coordinates of outer track rectangle
-
-
-
         self.left_bottom_outer_point = np.array([self.x_start, self.y_start])
         self.left_top_outer_point = np.array([self.x_start, self.y_start + self.height])
         self.right_top_outer_point = np.array([self.x_end, self.y_start + self.height])
@@ -149,7 +146,9 @@ class LinearChromosome(ChromosomePolygon):
             self.left_right_overlap = False
 
         # print(self.right_top_point, self.right_middle_point, self.right_bottom_point)
+        #print(self.show_centromere, self.centromere_x_start, self.centromere_x_start is not None, self.centromere_x_end, self.centromere_x_end is not None)
         if self.show_centromere and (self.centromere_x_start is not None) and (self.centromere_x_end is not None):
+            #print("AAAA")
             centromere_middle = float(self.centromere_x_start + self.centromere_x_end) / 2
 
             self.centromere_middle_point = np.array([centromere_middle, self.y_start + self.height / 2])
@@ -165,52 +164,52 @@ class LinearChromosome(ChromosomePolygon):
                                                           self.y_start])
 
             # verify and adjust centromere coordinates
-            if self.left_right_overlap:
-                self.show_centromere = False
-            else:
-                self.show_centromere = True
-                # check overlaps with centromere
-                self.left_centromere_middle_overlap = True if centromere_middle < self.left_top_point[0] else False
-                self.right_centromere_middle_overlap = True if centromere_middle > self.right_top_point[0] else False
-                self.left_centromere_overlap = True if self.centromere_left_top_point[0] < self.left_top_point[
-                    0] else False
-                self.right_centromere_overlap = True if self.centromere_right_top_point[0] > self.right_top_point[
-                    0] else False
+            #if self.left_right_overlap:
+            #   pass # self.show_centromere = False
+            #else:
 
-                if self.left_centromere_middle_overlap:
-                    self.left_x_radius = (centromere_middle - self.left_middle_point[0]) / 2
-                    self.left_top_point[0] = self.left_middle_point[0] + self.left_x_radius
-                    self.left_bottom_point[0] = self.left_top_point[0]
-                    self.left_center_point[0] = self.left_top_point[0]
+            # check overlaps with centromere
+            self.left_centromere_middle_overlap = True if centromere_middle < self.left_top_point[0] else False
+            self.right_centromere_middle_overlap = True if centromere_middle > self.right_top_point[0] else False
+            self.left_centromere_overlap = True if self.centromere_left_top_point[0] < self.left_top_point[
+                0] else False
+            self.right_centromere_overlap = True if self.centromere_right_top_point[0] > self.right_top_point[
+                0] else False
 
-                    self.centromere_left_top_point[0] = self.left_top_point[0]
-                    self.centromere_left_bottom_point[0] = self.left_top_point[0]
-                elif self.left_centromere_overlap:
-                    self.left_x_radius = (self.left_top_point[0] + self.centromere_left_top_point[0]) / 2 - self.x_start
-                    self.left_top_point[0] = self.left_middle_point[0] + self.left_x_radius
-                    self.left_bottom_point[0] = self.left_top_point[0]
-                    self.left_center_point[0] = self.left_top_point[0]
+            if self.left_centromere_middle_overlap:
+                self.left_x_radius = (centromere_middle - self.left_middle_point[0]) / 2
+                self.left_top_point[0] = self.left_middle_point[0] + self.left_x_radius
+                self.left_bottom_point[0] = self.left_top_point[0]
+                self.left_center_point[0] = self.left_top_point[0]
 
-                    self.centromere_left_top_point[0] = self.left_top_point[0]
-                    self.centromere_left_bottom_point[0] = self.left_top_point[0]
+                self.centromere_left_top_point[0] = self.left_top_point[0]
+                self.centromere_left_bottom_point[0] = self.left_top_point[0]
+            elif self.left_centromere_overlap:
+                self.left_x_radius = (self.left_top_point[0] + self.centromere_left_top_point[0]) / 2 - self.x_start
+                self.left_top_point[0] = self.left_middle_point[0] + self.left_x_radius
+                self.left_bottom_point[0] = self.left_top_point[0]
+                self.left_center_point[0] = self.left_top_point[0]
 
-                if self.right_centromere_middle_overlap:
-                    self.right_x_radius = (self.right_middle_point[0] - centromere_middle) / 2
-                    self.right_top_point[0] = self.right_middle_point[0] - self.right_x_radius
-                    self.right_bottom_point[0] = self.right_top_point[0]
-                    self.right_center_point[0] = self.right_top_point[0]
+                self.centromere_left_top_point[0] = self.left_top_point[0]
+                self.centromere_left_bottom_point[0] = self.left_top_point[0]
 
-                    self.centromere_right_top_point[0] = self.right_top_point[0]
-                    self.centromere_right_bottom_point[0] = self.right_top_point[0]
-                elif self.right_centromere_overlap:
-                    self.right_x_radius = self.x_end - (
-                                self.centromere_right_top_point[0] + self.right_top_point[0]) / 2
-                    self.right_top_point[0] = self.right_middle_point[0] - self.right_x_radius
-                    self.right_bottom_point[0] = self.right_top_point[0]
-                    self.right_center_point[0] = self.right_top_point[0]
+            if self.right_centromere_middle_overlap:
+                self.right_x_radius = (self.right_middle_point[0] - centromere_middle) / 2
+                self.right_top_point[0] = self.right_middle_point[0] - self.right_x_radius
+                self.right_bottom_point[0] = self.right_top_point[0]
+                self.right_center_point[0] = self.right_top_point[0]
 
-                    self.centromere_right_top_point[0] = self.right_top_point[0]
-                    self.centromere_right_bottom_point[0] = self.right_top_point[0]
+                self.centromere_right_top_point[0] = self.right_top_point[0]
+                self.centromere_right_bottom_point[0] = self.right_top_point[0]
+            elif self.right_centromere_overlap:
+                self.right_x_radius = self.x_end - (
+                            self.centromere_right_top_point[0] + self.right_top_point[0]) / 2
+                self.right_top_point[0] = self.right_middle_point[0] - self.right_x_radius
+                self.right_bottom_point[0] = self.right_top_point[0]
+                self.right_center_point[0] = self.right_top_point[0]
+
+                self.centromere_right_top_point[0] = self.right_top_point[0]
+                self.centromere_right_bottom_point[0] = self.right_top_point[0]
 
         # print(self.right_top_point, self.right_middle_point, self.right_bottom_point, self.x_end, self.right_x_radius)
         self.arc_angles_dict = {"left_bottom": np.linspace(1.5 * np.pi, np.pi, self.arc_point_number),
@@ -372,7 +371,7 @@ class LinearChromosome(ChromosomePolygon):
 
         if self.show_centromere:
             # do not draw centromere if rounding points from left and right overlap
-            if self.centromere and (self.centromere_x_start is not None) and (self.centromere_x_end is not None):
+            if self.show_centromere and (self.centromere_x_start is not None) and (self.centromere_x_end is not None):
                 top_middle_point_list = [[self.centromere_left_top_point],
                                          [self.centromere_middle_point],
                                          [self.centromere_right_top_point]]
