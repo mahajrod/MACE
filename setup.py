@@ -18,6 +18,8 @@ for script in scripts_dir_path.glob("*"):
 
 scripts = list(map(str, scripts)) # pip and setuptools doesnt work with Path objects
 """
+
+
 def get_list_of_files(list_of_dirs_and_files, expression=None, recursive=True):
     file_list = []
 
@@ -44,7 +46,7 @@ def get_list_of_files(list_of_dirs_and_files, expression=None, recursive=True):
 
 
 setup(name='MACE',
-      version='1.1.30',
+      version='1.1.31',
       packages=find_packages(),
       author='Sergei F. Kliver',
       author_email='mahajrod@gmail.com',

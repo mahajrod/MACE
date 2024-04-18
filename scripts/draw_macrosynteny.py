@@ -837,6 +837,9 @@ for index, genome in zip(range(0, len(genome_orderlist) - 1), genome_orderlist[:
     workbook = writer.book
     # Adjust default format
     sheet_name = "{0}.to.{1}".format(genome, target_genome)
+    if len(sheet_name) > 31:
+        print(f"WARNING!!! Excel has a hardlimit of 31 char for sheetname. '{sheet_name}' is longer.Cutting to 31 chars...")
+        sheet_name = sheet_name[:31]
 
     green_hex = "#00FF00"
     light_green_hex = "#90EE90"
