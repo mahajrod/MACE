@@ -6,6 +6,7 @@ import argparse
 import glob
 from functools import partial
 from pathlib import Path
+from collections import OrderedDict
 
 import pandas as pd
 import numpy as np
@@ -94,7 +95,8 @@ def invert_coordinates_in_region_table(df, scaffold_list, length_df, scaffold_co
         #print(temp_df)
         #print(length_df)
         #print(length_df)
-        temp_df.loc[scaffold, "length_column"] = length_df.loc[scaffold, "length"]
+        if scaffold in length_df.index:
+            temp_df.loc[scaffold, "length_column"] = length_df.loc[scaffold, "length"]
 
     temp_df.loc[temp_df.index.isin(scaffold_list), start_column], temp_df.loc[temp_df.index.isin(scaffold_list), end_column] = temp_df.loc[temp_df.index.isin(scaffold_list), "length_column"] - temp_df.loc[temp_df.index.isin(scaffold_list), end_column], \
                temp_df.loc[temp_df.index.isin(scaffold_list), "length_column"] - temp_df.loc[temp_df.index.isin(scaffold_list), start_column]
@@ -123,6 +125,9 @@ parser.add_argument("--genome_labellist", action="store", dest="genome_labellist
                     type=split_comma_separated_list,
                     help="Comma-separated list of genome labels to be used in figure instead of genome names. "
                          "Must follow the same order as --genome_orderlist. If not set genome names will serve as labels.")
+parser.add_argument("--genome_config", action="store", dest="genome_config", default=None,
+                    help="Optional configuration file. If set orderlists and invertlists from genome folders will be ignored")
+
 parser.add_argument("--invert_genome_order", action="store_true", dest="invert_genome_order", default=False,
                     help="Invert order of the genomes in the --genome_orderlist. Default: False")
 parser.add_argument("--syn_file_key_column", action="store", dest="syn_file_key_column",
@@ -149,7 +154,8 @@ parser.add_argument("--invert_major_strand", action="store_true", dest="invert_m
                          "This flag affects all genomes and all chromosomes."
                          "If you wish to invert the major strand for the specific genome or even for a specific "
                          "chromosome, please, use genome=specific swithstrandlist file.  Default: False")
-
+parser.add_argument("--inverted_scaffold_label", action="store", dest="inverted_scaffold_label", default="'",
+                    help="Symbol to use for labeling inverted scaffolds. Default: '")
 parser.add_argument("--inversion_color", action="store", dest="inversion_color", default="red",
                     help="Color to use to highlight inversions on the plot. Must be a color recognized by Matplotlib. Default: 'red'")
 parser.add_argument("--translocation_color", action="store", dest="translocation_color", default="blue",
@@ -169,6 +175,9 @@ parser.add_argument("-l", "--title", action="store", dest="title", default="Macr
                     help="Suptitle of figure. Default: 'Macrosynteny'")
 parser.add_argument("--title_fontsize", action="store", dest="title_fontsize", default=20, type=int,
                     help="Fontsize of the figure. Default: 20")
+parser.add_argument("--chromosome_height", action="store", dest="chromosome_height", default=9, type=float,
+                    help="Height of chromosomes on the plot. Increase or decrease this parameter to make chromosomes "
+                         "thicker or thinner. Default: 9")
 parser.add_argument("--hide_chromosome_labels", action="store_true", dest="hide_chromosome_labels", default=False,
                     help="Hide chromosome labels. Default: False")
 parser.add_argument("--subplots_adjust_left", action="store", dest="subplots_adjust_left", type=float, default=0.05,
@@ -200,8 +209,18 @@ parser.add_argument("--smooth_multiplicator", action="store", dest="smooth_multi
                     help="Multiplicator used to control smoothing of the chromosome ends and visual width of centromere. "
                          "Reduction of it will narrow centromere and make chromosomes closer to the rectangle."
                          "Default value (4) is good for usual carnivora genomes (2-3 Gbp, with 2n~16-50)")
-
-
+parser.add_argument("--remove_scaffolds_absent_in_orderlist", action="store_true",
+                    dest="remove_scaffolds_absent_in_orderlist",
+                    default=False,
+                    help="Remove scaffolds absent in orderlist. Default: False")
+parser.add_argument("--do_not_highlight_translocations", action="store_true",
+                    dest="do_not_highlight_translocations",
+                    default=False,
+                    help="Do not highlight translocations. Default: False, i.e highlight")
+parser.add_argument("--do_not_highlight_inversions", action="store_true",
+                    dest="do_not_highlight_inversions",
+                    default=False,
+                    help="Do not highlight inversions. Default: False, i.e highlight")
 #parser.add_argument("--subplot_scale", action="store_true", dest="subplot_scale",
 #                    help="Scale feature x size by subplot x/y ratio. Default: off")
 #parser.add_argument("--track_group_scale", action="store_true", dest="track_group_scale",
@@ -226,6 +245,11 @@ if args.genome_labellist is None:
 else:
     genome_labellist = args.genome_labellist[::-1] if args.invert_genome_order else args.genome_labellist
 
+if args.do_not_highlight_translocations:
+    args.translocation_color = "default"
+if args.do_not_highlight_inversions:
+    args.inversion_color = "default"
+
 syn_file_key_column, syn_file_value_column = args.syn_file_key_column, args.syn_file_value_column
 
 #label_dict = {genome: label for genome, label in zip(args.genome_orderlist,
@@ -233,7 +257,7 @@ syn_file_key_column, syn_file_value_column = args.syn_file_key_column, args.syn_
 
 synteny_format = args.synteny_format
 
-inverted_scaffold_label = "'"
+#inverted_scaffold_label = "'"
 
 # read files
 print(data_dir_path)
@@ -257,15 +281,17 @@ for genome in genome_orderlist:
         whitelist_series_dict[genome] = pd.read_csv(get_filenames_for_extension(data_dir_path / genome, extension_list=["whitelist"]),
                                                     sep="\t", header=None, comment="#").squeeze("columns")
     except pd.errors.EmptyDataError:
-        raise pd.errors.EmptyDataError("ERROR!!! Whitelist for {0} is empty. Add relevant scaffold ids to it!")
-
+        raise pd.errors.EmptyDataError(f"ERROR!!! Whitelist for {genome} is empty. Add relevant scaffold ids to it!")
+    except ValueError:
+        raise ValueError(f"Whitelist for {genome} is absent!")
     # nonempty lenlist file is necessary for each genome
     try:
         lenlist_df_dict[genome] = pd.read_csv(get_filenames_for_extension(data_dir_path / genome, extension_list=["len"]),
                                              sep="\t", header=None, comment="#", names=["scaffold", "length"], index_col=0)
     except pd.errors.EmptyDataError:
-        raise pd.errors.EmptyDataError("ERROR!!! lenlist for {0} is empty. add scaffold ids and its lengths to it!")
-
+        raise pd.errors.EmptyDataError(f"ERROR!!! lenlist for {genome} is empty. add scaffold ids and its lengths to it!")
+    except ValueError:
+        raise ValueError(f"Lenlist for {genome} is absent!")
     # orderlist might be empty or absent
     if get_filenames_for_extension(data_dir_path / genome, extension_list=["orderlist"]) is None:
         orderlist_series_dict[genome] = pd.Series(dtype=str)
@@ -339,12 +365,33 @@ for genome in genome_orderlist:
     else:
         try:
             color_df_dict[genome] = pd.read_csv(get_filenames_for_extension(data_dir_path / genome, extension_list=["colors"]),
-                                             sep="\t", header=0, names=["scaffold", "color"], index_col=0)
+                                                sep="\t", header=0, names=["scaffold", "color"], index_col=0)
         except pd.errors.EmptyDataError:
             color_df_dict[genome] = pd.DataFrame(columns=["scaffold_id", "color"])
             color_df_dict[genome].set_index("scaffold_id", inplace=True)
 
-
+# ---------------------------- Read genome config if it was set --------------------------------------
+if args.genome_config:
+    genome_config_tmp_dict = OrderedDict()
+    with open(args.genome_config, "r") as in_fd:
+        for line in in_fd:
+            line_list = line.strip().split("\t", 1)
+            genome_config_tmp_dict[line_list[0]] = list(map(lambda s: s.split(","), line_list[1].split("\t")))
+    for genome in genome_config_tmp_dict:
+        invertlist_series_dict[genome] = []
+        orderlist_series_dict[genome] = []
+        for entry in genome_config_tmp_dict[genome]:
+            #print(entry)
+            for scaffold_id in entry:
+                #print(scaffold_id)
+                if scaffold_id[-1] == args.inverted_scaffold_label:
+                    invertlist_series_dict[genome].append(scaffold_id[:-1])
+                    orderlist_series_dict[genome].append(scaffold_id[:-1])
+                else:
+                    orderlist_series_dict[genome].append(scaffold_id)
+        invertlist_series_dict[genome] = pd.Series(invertlist_series_dict[genome])
+        orderlist_series_dict[genome] = pd.Series(orderlist_series_dict[genome])
+# -------------------------------------------------------------------------------------------------------
 #whitelist_series_dict = {genome: pd.read_csv(get_filenames_for_extension(data_dir_path / genome, extension_list=["whitelist"]),
 #                                             sep="\t", header=None, comment="#").squeeze("columns") for genome in genome_orderlist}
 # orderlist might be absent in folders
@@ -741,7 +788,6 @@ for genome_index in range(0, genome_number - 1): # genome_orderlist[:-1]:  # all
 
 #--------------------------------------------------------------------------------------
 
-
 for index, genome in zip(range(0, len(genome_orderlist) - 1), genome_orderlist[:-1]):
     synteny_dict[genome].to_csv("{0}.{1}.to.{2}.raw.tab".format(args.output_prefix,
                                                                 genome,
@@ -767,6 +813,15 @@ for genome_index in range(0, len(genome_orderlist)-1):
 #                                sep="\t", index=False, header=True)
 
 #--------------------------------------------------------------------------------------
+if args.remove_scaffolds_absent_in_orderlist:
+    for index in range(0, len(genome_orderlist) - 1):
+        query_genome = genome_orderlist[index]
+        target_genome = genome_orderlist[index + 1]
+        bool_series = synteny_dict[query_genome][query_scaffold_id_column_name].isin(orderlist_series_dict[query_genome])
+        #print(sum(bool_series))
+        bool_series &= synteny_dict[query_genome][target_scaffold_id_column_name].isin(orderlist_series_dict[target_genome])
+        #print(sum(bool_series))
+        synteny_dict[query_genome] = synteny_dict[query_genome][bool_series]
 #-------------------------- Inversion of coordinates ----------------------------------
 for genome_index in range(0, genome_number):
     genome = genome_orderlist[genome_index]
@@ -775,7 +830,7 @@ for genome_index in range(0, genome_number):
     #print(centromere_df_dict[genome])
     centromere_df_dict[genome] = invert_coordinates_in_region_table(centromere_df_dict[genome], invertlist_series_dict[genome],
                                                                     lenlist_df_dict[genome], "scaffold_id", "start", "end",
-                                                                    inverted_scaffolds_label="'")
+                                                                    inverted_scaffolds_label=args.inverted_scaffold_label)
 
     if genome_index < (genome_number - 1):  # apply listed inversion for all query genomes, i.e. for all except the last genome
         print("Inverting query coordinates in synteny file...")
@@ -787,7 +842,7 @@ for genome_index in range(0, genome_number):
                                                                    query_start_column_name,
                                                                    query_end_column_name,
                                                                    strand_column_name,
-                                                                   inverted_scaffold_label)
+                                                                   args.inverted_scaffold_label)
     if genome_index > 0:  # apply listed inversion for all target genomes, i.e. for all except the first genome
         #print(genome_orderlist[genome_index - 1])
         #print(synteny_dict[genome_orderlist[genome_index - 1]])
@@ -799,13 +854,13 @@ for genome_index in range(0, genome_number):
                                                                                                target_start_column_name,
                                                                                                target_end_column_name,
                                                                                                strand_column_name,
-                                                                                               inverted_scaffold_label)
-    lenlist_df_dict[genome].rename(index=dict(zip(invertlist_series_dict[genome], [scaf + inverted_scaffold_label for scaf in invertlist_series_dict[genome]])),
+                                                                                               args.inverted_scaffold_label)
+    lenlist_df_dict[genome].rename(index=dict(zip(invertlist_series_dict[genome], [scaf + args.inverted_scaffold_label for scaf in invertlist_series_dict[genome]])),
                                    inplace=True)
     #chr_color_df_dict[species].rename(index=dict(zip(invert_list_dict[species], [scaf + label  for scaf in invert_list_dict[species]])),inplace=True)
-    orderlist_series_dict[genome].replace(dict(zip(invertlist_series_dict[genome], [scaf + inverted_scaffold_label for scaf in invertlist_series_dict[genome]])),
+    orderlist_series_dict[genome].replace(dict(zip(invertlist_series_dict[genome], [scaf + args.inverted_scaffold_label for scaf in invertlist_series_dict[genome]])),
                                           inplace=True)
-    color_df_dict[genome].rename(index=dict(zip(invertlist_series_dict[genome], [scaf + inverted_scaffold_label for scaf in invertlist_series_dict[genome]])),
+    color_df_dict[genome].rename(index=dict(zip(invertlist_series_dict[genome], [scaf + args.inverted_scaffold_label for scaf in invertlist_series_dict[genome]])),
                                  inplace=True)
 #for genome in genome_orderlist:
 
@@ -814,10 +869,10 @@ for genome_index in range(0, genome_number):
 
 #--------------------------------------------------------------------------------------
 
-
-inversion_hex_color = mpl.colors.cnames[args.inversion_color]
-translocation_hex_color = mpl.colors.cnames[args.translocation_color]
 default_hex_color = mpl.colors.cnames["lightgrey"]
+inversion_hex_color = mpl.colors.cnames[args.inversion_color] if args.inversion_color != "default" else default_hex_color
+translocation_hex_color = mpl.colors.cnames[args.translocation_color] if args.translocation_color != "default" else default_hex_color
+
 long_block_hex_color = "#00FF00"
 short_block_hex_color = "#F4EA56"
 
@@ -836,7 +891,7 @@ for index, genome in zip(range(0, len(genome_orderlist) - 1), genome_orderlist[:
     writer = pd.ExcelWriter('{0}.xlsx'.format(output_pr), engine='xlsxwriter')
     workbook = writer.book
     # Adjust default format
-    sheet_name = "{0}.to.{1}".format(genome, target_genome)
+    sheet_name = "{0}.to.{1}".format(genome, target_genome).replace("'", "") # ' is not allowed in the sheetname
     if len(sheet_name) > 31:
         print(f"WARNING!!! Excel has a hardlimit of 31 char for sheetname. '{sheet_name}' is longer.Cutting to 31 chars...")
         sheet_name = sheet_name[:31]
@@ -910,14 +965,12 @@ for index, genome in zip(range(0, len(genome_orderlist) - 1), genome_orderlist[:
     workbook.formats[0].set_align('center')
     writer.close()
 
-
-
 border_offset_fraction = 0.05
 interchr_space_fraction = 0.3
 
 maximal_x = max_genome_length * (1 + interchr_space_fraction)
 
-height = 9
+height = args.chromosome_height
 length = 1000000
 distance = args.genome_distance
 
