@@ -148,23 +148,16 @@ chr_syn_dict = SynDict(filename=args.scaffold_syn_file,
                        value_index=args.syn_file_value_column)
 
 if isinstance(args.scaffold_ordered_list, list):
-    #print("AAAAAAA")
     if not args.scaffold_ordered_list:
-        #print("BBBBBBBBBB")
         args.scaffold_ordered_list = deepcopy(args.scaffold_white_list)
         args.scaffold_ordered_list.replace(chr_syn_dict, inplace=True)
 else:
     if args.scaffold_ordered_list.empty:
-        #print("CCCCCCCCCCC")
         args.scaffold_ordered_list = deepcopy(args.scaffold_white_list)
-        #print(args.scaffold_ordered_list)
         args.scaffold_ordered_list.replace(chr_syn_dict, inplace=True)
-        #print(args.scaffold_ordered_list)
 
 args.scaffold_ordered_list = args.scaffold_ordered_list[::-1]
 
-#print(args.scaffold_ordered_list)
-#print(chr_syn_dict)
 if args.centromere_bed:
     centromere_df = pd.read_csv(args.centromere_bed,
                                 usecols=(0, 1, 2),
@@ -172,7 +165,6 @@ if args.centromere_bed:
                                 header=None,
                                 sep="\t", names=["scaffold_id", "start", "end"])
     centromere_df.rename(index=chr_syn_dict, inplace=True)
-    print(centromere_df)
 else:
     centromere_df = None
 try:

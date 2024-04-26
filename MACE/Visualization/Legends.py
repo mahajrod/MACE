@@ -238,8 +238,8 @@ class ChromosomeLegend(Legend):
         current_subplot = axes if axes else plt.gca()
 
         last_x_start = self.x_start + 2 * self.x_size
-        square_y_pos_reference = self.y_start + self.reference_chromosome_number * self.element_size # TODO: make coordinate calculation more clear
-
+        square_y_pos_reference = (self.max_chromosomes + 3) * self.element_size # TODO: make coordinate calculation more clear
+        #square_y_pos_reference = self.y_start + self.reference_chromosome_number * self.element_size
         for species in self.chromosome_df_dict:
             chromosome_number = len(self.chromosome_df_dict[species])
             square_y_pos = square_y_pos_reference
