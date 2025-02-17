@@ -24,6 +24,9 @@ from RouToolPa.Parsers.VCF import CollectionVCF
 
 from MACE.Routines import StatsVCF, Visualization
 
+# TODO
+# add legend props
+# add multi-level xtick labels for PSMC plot
 
 class Plotter:
     def __init__(self):
@@ -670,7 +673,7 @@ class Plotter:
                 handler_map={species_1[0]: species_1[1], species_2[0]: species_2[1]},
                 loc=legend_loc,
                 ncol=legend_ncol,
-                frameon=False,
+                frameon=True,
             )
 
         ax.set_xlim(right=len(stacked_data) - 0.5)
@@ -1019,6 +1022,7 @@ class Plotter:
         colors={"N": "#23b4e8", "S": "#008dbf", "L": "#fbbc04", "UL": "#ea4335"},
         xticks=[50, 60, 70, 80, 90, 100],
         xlim=(45, 100),
+        vline_x_coord=65,
         sorting=True,
         groups=None,
         show_annotation=False,
@@ -1151,6 +1155,7 @@ class Plotter:
 
         # Plot a cumulative bar plot (replace vertical bars with horizontal ones)
         category_labels = {"N": "Non-RoHs (N)", "S": "Short RoHs (S)", "L": "Long RoHs (L)", "UL": "Ultra Long RoHs (UL)"}
+        # category_labels = {"N": "Не RoH", "S": "Короткие RoH (<1 млн п.н.)", "L": "Длинные RoH (>=1 млн п.н.)", "UL": "Ультра-длинные RoH (>=10 млн п.н.)"}
         bottom = None
         for category, color in colors.items():
             ax.barh(
@@ -1181,7 +1186,16 @@ class Plotter:
 
         ax.set_xlim(xlim)
         ax.set_xticks(xticks)
-        ax.set_xticklabels([f"{i}%" for i in xticks])
+        if vline_x_coord is not None:
+            ax.set_xticklabels(["0%"] + [f"{i}%" for i in xticks[1:]])
+        else:
+            ax.set_xticklabels([f"{i}%" for i in xticks])
+        # ax.set_xticklabels([f"{i}%" for i in xticks])
+
+        if vline_x_coord is not None:
+            ax.vlines(x=vline_x_coord, ymin=-0.5, ymax=len(result_df.index) - 0.5, color="white", linewidth=10)
+            ax.vlines(x=vline_x_coord, ymin=-0.75, ymax=len(result_df.index) - 0.25, color="gray", linewidth=1, linestyle="--")
+
         ax.spines["bottom"].set_bounds(xticks[0], xlim[1])
         if show_legend:
             ax.legend(loc=legend_loc, ncol=legend_ncol, handlelength=0.8, frameon=False)
@@ -1276,6 +1290,7 @@ class Plotter:
         feature_name="SNPs",
         centromere_bed=None,
         highlight_file=None,
+        show_legend=True
     ):
         # coverage=None,
         # scaffold_column_name="scaffold",
@@ -1427,7 +1442,7 @@ class Plotter:
                         interval_type=density_thresholds_expression_type,
                         skip_top_interval=skip_top_interval,
                         skip_bottom_interval=skip_bottom_interval,
-                    ),
+                    ) if show_legend else None,
                     centromere_df=centromere_df,
                     highlight_df=highlight_file,
                     figure_width=figure_width,
@@ -1698,6 +1713,7 @@ class Plotter:
         ax,
         diploid_data,
         round_data=None,
+        ids=None,
         n=100,
         colorlist=None,
         xlim=(50000, 23000000),
@@ -1747,6 +1763,9 @@ class Plotter:
             A list of file paths containing the round PSMC data (default is None). Each file is expected to follow the
             same format as the diploid data. The round data will be visualized with a reduced alpha transparency.
 
+        ids : list of str
+            A list of sample IDs per diploid PSMC data.
+
         n : int, optional, default: 100
             Number of round data.
 
@@ -1790,11 +1809,11 @@ class Plotter:
             if type(colorlist) == str:
                 colorlist = sns.color_palette(colorlist, len(diploid_data))
 
-        for diploid, color in zip(diploid_data, colorlist):
-            sample_name = diploid.split("/")[-1].split(".")[0]
+        for i, diploid in enumerate(diploid_data):
+            sample_name = diploid.split("/")[-1].split(".")[0] if ids is None else ids[i]
             data = pd.read_csv(diploid, names=["x", "y", "z", "w", "h"], sep="\t")
             data = data[data["x"] >= 0]
-            ax.step(data["x"], data["y"], where="post", color=color, linewidth=2, label=sample_name)
+            ax.step(data["x"], data["y"], where="post", color=colorlist[i], linewidth=2, label=sample_name)
 
         if round_data is not None:
             for round, color in zip(round_data, colorlist):
@@ -1824,13 +1843,15 @@ class Plotter:
 
         scale_exp = int(np.log10(scale))  # Calculate exponent for the scale
         ax.set_xlabel(rf"Years Ago, $10^{scale_exp}$ ($\mu={mu:.1e}$, g={g})")
+        # ax.set_xlabel(rf"Лет назад, $10^{scale_exp}$ ($\mu={mu:.1e}$, g={g})")
         ax.set_ylabel(rf"Effective population size, $10^{scale_exp}$")
+        # ax.set_ylabel(rf"Эффективный размер численности популяции, $10^{scale_exp}$")
 
         if show_legend:
             ax.legend(loc=legend_loc, ncol=legend_ncol, frameon=True)
 
         if figure_grid:
-            ax.grid(linestyle="--", alpha=0.5)
+            ax.grid(linestyle="--", alpha=0.2)
 
     def draw_pca_plot(
         self,
