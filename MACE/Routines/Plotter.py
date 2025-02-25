@@ -1109,6 +1109,7 @@ class Plotter:
             df["classification"] = df["length"].apply(self.classify_roh)
 
             total_lengths = df.groupby("classification")["length"].sum().to_dict()
+            print(f"{sample_name}\t{total_lengths}")
 
             for category in ["S", "L", "UL"]:
                 if not groups:
@@ -1192,9 +1193,11 @@ class Plotter:
             ax.set_xticklabels([f"{i}%" for i in xticks])
         # ax.set_xticklabels([f"{i}%" for i in xticks])
 
+        ax.set_ylim(bottom=-1.25)
+        ax.spines['bottom'].set_zorder(0)
         if vline_x_coord is not None:
-            ax.vlines(x=vline_x_coord, ymin=-0.5, ymax=len(result_df.index) - 0.5, color="white", linewidth=10)
-            ax.vlines(x=vline_x_coord, ymin=-0.75, ymax=len(result_df.index) - 0.25, color="gray", linewidth=1, linestyle="--")
+            ax.vlines(x=vline_x_coord, ymin=-1.5, ymax=len(result_df.index) - 0.5, color="white", linewidth=10, clip_on=False)
+            ax.vlines(x=vline_x_coord, ymin=-1.5, ymax=len(result_df.index) - 0.25, color="gray", linewidth=1, linestyle="--", clip_on=False)
 
         ax.spines["bottom"].set_bounds(xticks[0], xlim[1])
         if show_legend:
@@ -1256,7 +1259,7 @@ class Plotter:
         output_prefix=None,
         output_formats=[],
         title=False,
-        title_fontsize=20,
+        title_fontsize=10,
         window_size=1000000,
         window_step=None,
         density_multiplier=1000,
@@ -1739,7 +1742,7 @@ class Plotter:
             20000000,
         ],
         ylim=(0, 200),
-        scale=10000,
+        scale=1000000,
         mu=2.2e-9,
         g=5,
         figure_grid=True,
@@ -1839,7 +1842,7 @@ class Plotter:
         ax.set_ylim(ylim)
 
         ax.set_xticks(xticks)
-        ax.set_xticklabels([int(x / scale) for x in xticks])
+        ax.set_xticklabels([int(x / scale) if x / scale % 1 == 0 else x / scale for x in xticks])
 
         scale_exp = int(np.log10(scale))  # Calculate exponent for the scale
         ax.set_xlabel(rf"Years Ago, $10^{scale_exp}$ ($\mu={mu:.1e}$, g={g})")
