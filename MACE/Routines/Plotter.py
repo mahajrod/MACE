@@ -1785,7 +1785,7 @@ class Plotter:
         ylim : tuple of (int, int), optional, default: (0, 200)
             The y-axis limits, representing the effective population size.
 
-        scale : int, optional, default: 10000
+        scale : int, optional, default: 1000000
             The scaling factor for the x-axis labels.
 
         mu : float, optional, default: 2.2e-9
@@ -1847,8 +1847,8 @@ class Plotter:
         scale_exp = int(np.log10(scale))  # Calculate exponent for the scale
         ax.set_xlabel(rf"Years Ago, $10^{scale_exp}$ ($\mu={mu:.1e}$, g={g})")
         # ax.set_xlabel(rf"Лет назад, $10^{scale_exp}$ ($\mu={mu:.1e}$, g={g})")
-        ax.set_ylabel(rf"Effective population size, $10^{scale_exp}$")
-        # ax.set_ylabel(rf"Эффективный размер численности популяции, $10^{scale_exp}$")
+        ax.set_ylabel(rf"Effective population size, $10^4$")
+        # ax.set_ylabel(rf"Эффективный размер численности популяции, $10^4$")
 
         if show_legend:
             ax.legend(loc=legend_loc, ncol=legend_ncol, frameon=True)
