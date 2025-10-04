@@ -417,7 +417,7 @@ class Visualization(DrawingRoutines):
 
     @staticmethod
     def apply_masking_to_track_df(track_df, masking_df, masking_color=None):
-        print(track_df)
+        #print(track_df)
         output_df_columns = list(track_df.columns)
         output_df = track_df.copy().reset_index(drop=False).set_index(["scaffold", "start", "end"])
         tmp_masking_df = masking_df.reset_index(drop=False).set_index(["scaffold", "start", "end"])
@@ -436,7 +436,7 @@ class Visualization(DrawingRoutines):
         output_df["color"].astype('category', copy=False)
         output_df = output_df.reset_index(drop=False).set_index("scaffold")
         output_df = output_df[output_df_columns]
-        print(output_df)
+        #print(output_df)
 
         return output_df
 
