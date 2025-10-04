@@ -44,7 +44,7 @@ def get_filenames_for_extension(dir_path, extension_list, force_uniq=True):
         filelist += list(glob.glob(str(dir_path) + "/*{0}".format(extension)))
     if not filelist:
         return None
-    print(filelist)
+    #print(filelist)
     if force_uniq:
         if len(filelist) > 1:
             raise ValueError("Found more than one file with extensions: {0} in directory {1}".format(",".join(extension_list, str(dir_path))))
@@ -62,6 +62,7 @@ def invert_coordinates_in_synteny_table(df, scaffold_list, length_df, scaffold_c
     #print (temp_df)
     #temp_df.to_csv("tmp", sep="\t", index=True, header=True)
     #print(scaffold_list)
+    #print(length_df)
     for scaffold in temp_df.index.unique():
         #print(scaffold)
         #print(temp_df)
@@ -91,7 +92,7 @@ def invert_coordinates_in_region_table(df, scaffold_list, length_df, scaffold_co
         temp_df.set_index(scaffold_column, inplace=True)
 
     columns_list = list(temp_df.columns)
-
+    #print(length_df)
     for scaffold in temp_df.index.unique():
         #print(scaffold)
         #print(temp_df)
@@ -381,8 +382,12 @@ for genome in genome_orderlist:
             color_df_dict[genome] = pd.DataFrame(columns=["scaffold_id", "color"])
             color_df_dict[genome].set_index("scaffold_id", inplace=True)
 
-# ---------------------------- Read genome config if it was set --------------------------------------
 
+# -------
+print("Centromere dicts")
+print(centromere_df_dict)
+print("\n")
+# ---------------------------- Read genome config if it was set --------------------------------------
 
 def check_for_inversion_and_strand_switch_request(scaffold_id, strand_switch_symbol, inversion_symbol,):
     request_dict = {"inversion": False,
@@ -424,6 +429,8 @@ if args.genome_config:
 
     with open(args.genome_config, "r") as in_fd:
         for line in in_fd:
+            if line == "\n":
+                continue
             line_list = line.strip().split("\t", 2)
             genome_colors.append(line_list[1] if line_list[1] != "." else None) # read_colors
             genome_config_tmp_dict[line_list[0]] = list(map(lambda s: s.split(","), line_list[2].split("\t")))
@@ -459,6 +466,9 @@ if args.genome_config:
         queryswithstrandlist_series_dict[genome] = pd.Series(queryswithstrandlist_series_dict[genome], dtype='str')
         targetswithstrandlist_series_dict[genome] = pd.Series(targetswithstrandlist_series_dict[genome], dtype='str')
 
+print("Centromere dicts after config parsing (if any)")
+print(centromere_df_dict)
+print("\n")
 # -------------------------------------------------------------------------------------------------------
 #whitelist_series_dict = {genome: pd.read_csv(get_filenames_for_extension(data_dir_path / genome, extension_list=["whitelist"]),
 #                                             sep="\t", header=None, comment="#").squeeze("columns") for genome in genome_orderlist}
@@ -480,20 +490,38 @@ if args.genome_config:
 #swithstrandlist_series_dict = {genome: pd.read_csv(get_filenames_for_extension(data_dir_path / genome, extension_list=["switchstrandlist"]),
 #                                             sep="\t", header=None, comment="#").squeeze("columns") if get_filenames_for_extension(data_dir_path / genome, extension_list=["switchstrandlist"]) is not None else pd.Series(dtype=str) for genome in genome_orderlist}
 
-
-#print("AAAAAAAAAA")
-#print(lenlist_df_dict)
 #filter len list
 for genome in genome_orderlist:
     lenlist_df_dict[genome] = lenlist_df_dict[genome].loc[lenlist_df_dict[genome].index.isin(whitelist_series_dict[genome])]
-#print("BBBBBBBBBB")
-#print(lenlist_df_dict)
+
+
 # rename len list according to synonyms
+print("Len list test before renaming...")
+print(list(lenlist_df_dict.keys()))
+print(list(map(lambda s: len(lenlist_df_dict[s]), lenlist_df_dict.keys())))
+print(lenlist_df_dict)
+
+print("Syn dicts...")
+print(list(syn_df_dict.keys()))
+print(list(map(lambda s: len(syn_df_dict[s]), syn_df_dict.keys())))
+print(syn_df_dict)
+
 for genome in genome_orderlist:
     if not syn_df_dict[genome].empty:
         lenlist_df_dict[genome].rename(index=syn_df_dict[genome]["syn"].to_dict(), inplace=True)
+
+print("Len list test after renaming...")
+print(list(lenlist_df_dict.keys()))
+print(list(map(lambda s: len(lenlist_df_dict[s]), lenlist_df_dict.keys())))
+print(lenlist_df_dict)
+#print("CCCCCCCCCCCCCCCCCCC")
+#print(lenlist_df_dict)
+#print("SSSSSSSSSSSSSSSS")
+#print(syn_df_dict)
 #print("CCCCCCCCCCCCCCCCCCCCC")
 # reorder len list according the orderlist
+#print(lenlist_df_dict)
+#print("AAAAAAAA")
 #print(lenlist_df_dict)
 for genome in genome_orderlist:
     lenlist_df_dict[genome] = lenlist_df_dict[genome].reindex(orderlist_series_dict[genome]).dropna()
@@ -506,6 +534,12 @@ chr_number_dict = {genome: len(lenlist_df_dict[genome]) for genome in genome_ord
 max_genome_length = max(list(total_len_dict.values()))
 #print("CCCCCCCCCCC")
 #print(queryswithstrandlist_series_dict)
+
+#print("CRROOOOOOOOOOOOOOOO")
+print("Len list test after reindex")
+print(list(lenlist_df_dict.keys()))
+print(list(map(lambda s: len(lenlist_df_dict[s]), lenlist_df_dict.keys())))
+print(lenlist_df_dict)
 
 if synteny_format == "psl":
     # psl or psl.gz files must exist for all genomes except the last one
@@ -719,6 +753,7 @@ for genome_index in range(0, genome_number - 1):
                                                  target_scaffold_id_column_name=target_scaffold_id_column_name,
                                                  target_start_column_name=target_start_column_name,
                                                  target_end_column_name=target_end_column_name)
+    #print(tmp_dict)
     tmp_dict[genome] = tmp_dict[genome].groupby(by=[query_scaffold_id_column_name, target_scaffold_id_column_name],
                                                 sort=False, group_keys=False).apply(detect_nested_blocks_preset)
 
@@ -731,10 +766,13 @@ for genome_index in range(0, genome_number - 1):
     #                                                                 genome,
     #                                                                 genome_orderlist[genome_index + 1]),
     #                              sep="\t", index=False, header=True)
-    if args.remove_same_coords_blocks:
+    #print(tmp_dict)
+    #print("AAAAAAAAAA")
+    #print(synteny_dict[genome])
+    if args.remove_same_coords_blocks and not tmp_dict[genome].empty:
         block_remove_dict[genome] = list(tmp_dict[genome]["target_same_coords"].dropna())
 
-    if args.remove_nested_blocks:
+    if args.remove_nested_blocks and not tmp_dict[genome].empty:
         block_remove_dict[genome] += list(tmp_dict[genome][tmp_dict[genome]["query_nested_in"].notna()]["synteny_block_id"])
         block_remove_dict[genome] += list(tmp_dict[genome][tmp_dict[genome]["target_nested_in"].notna()]["synteny_block_id"])
 
@@ -863,17 +901,14 @@ for index, genome in zip(range(0, len(genome_orderlist) - 1), genome_orderlist[:
                                 sep="\t", index=False, header=True)
 #----------------------------- Renaming of scaffolds ----------------------------------
 for genome_index in range(0, len(genome_orderlist)-1):
-    synteny_dict[genome_orderlist[genome_index]][target_scaffold_id_column_name].replace(syn_df_dict[genome_orderlist[genome_index + 1]]["syn"].to_dict(),
-                                                                                         inplace=True)
-    synteny_dict[genome_orderlist[genome_index]][query_scaffold_id_column_name].replace(syn_df_dict[genome_orderlist[genome_index]]["syn"].to_dict(),
-                                                                                        inplace=True)
-    synteny_dict[genome_orderlist[genome_index]].sort_values(by=[query_scaffold_id_column_name,
-                                                                 query_start_column_name,
-                                                                 query_end_column_name,
-                                                                 target_scaffold_id_column_name,
-                                                                 target_start_column_name,
-                                                                 target_end_column_name],
-                                                             inplace=True)
+    synteny_dict[genome_orderlist[genome_index]][target_scaffold_id_column_name] = synteny_dict[genome_orderlist[genome_index]][target_scaffold_id_column_name].replace(syn_df_dict[genome_orderlist[genome_index + 1]]["syn"].to_dict())
+    synteny_dict[genome_orderlist[genome_index]][query_scaffold_id_column_name] = synteny_dict[genome_orderlist[genome_index]][query_scaffold_id_column_name].replace(syn_df_dict[genome_orderlist[genome_index]]["syn"].to_dict())
+    synteny_dict[genome_orderlist[genome_index]] = synteny_dict[genome_orderlist[genome_index]].sort_values(by=[query_scaffold_id_column_name,
+                                                                                                            query_start_column_name,
+                                                                                                            query_end_column_name,
+                                                                                                            target_scaffold_id_column_name,
+                                                                                                            target_start_column_name,
+                                                                                                            target_end_column_name])
 #for index, genome in zip(range(0, len(genome_orderlist) - 1), genome_orderlist[:-1]):
 #    synteny_dict[genome].to_csv("{0}.{1}.to.{2}.raw.renamed.tab".format(args.output_prefix,
 #                                                                        genome,
@@ -881,6 +916,7 @@ for genome_index in range(0, len(genome_orderlist)-1):
 #                                sep="\t", index=False, header=True)
 
 #--------------------------------------------------------------------------------------
+
 if args.remove_scaffolds_absent_in_orderlist:
     for index in range(0, len(genome_orderlist) - 1):
         query_genome = genome_orderlist[index]
@@ -896,6 +932,7 @@ for genome_index in range(0, genome_number):
 
     print("Inverting (if necessary) {0} scaffolds...".format(genome))
     #print(centromere_df_dict[genome])
+    print(lenlist_df_dict[genome])
     centromere_df_dict[genome] = invert_coordinates_in_region_table(centromere_df_dict[genome], invertlist_series_dict[genome],
                                                                     lenlist_df_dict[genome], "scaffold_id", "start", "end",
                                                                     inverted_scaffolds_label=args.inverted_scaffold_label)
