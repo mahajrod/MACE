@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 __author__ = 'Sergei F. Kliver'
 
-import numbers
+
 import os
 import argparse
 from functools import partial
@@ -112,9 +112,6 @@ parser.add_argument("-u", "--figure_height_per_scaffold", action="store", dest="
 parser.add_argument("--figure_header_height", action="store", dest="figure_header_height",
                     type=float, default=0,
                     help="Height of figure header. Default: 0")
-parser.add_argument("--masking_gff_list", action="store", dest="masking_gff_list", default=None,
-                    type=lambda s: s.split(","),
-                    help="Comma-separated list of GFF files with masked regions")
 parser.add_argument("--masking_track", action="store", dest="masking_track", default=None,
                     help="Track file with masked regions. It is 4-column bed file, the 4th column can contain any color recognized by Matplotlib or 'masked' keyword."
                          "In case of 3-column bed file, --masking_color is used to set the masking color")

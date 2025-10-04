@@ -427,12 +427,13 @@ class Visualization(DrawingRoutines):
         #check index overlap
         overlap_sr = tmp_masking_df.index.isin(output_df.index)
         if sum(overlap_sr) != len(overlap_sr):
-            print(overlap_sr)
-            print(overlap_sr[overlap_sr])
-            raise ValueError("ERROR!!! Not all windows from masking track are present in track df!")
+            #print(overlap_sr)
+            print("WARNING!!! Not all windows from masking track are present in track df:")
+            print(tmp_masking_df[~overlap_sr])
 
         # apply masking
-        output_df.loc[tmp_masking_df.index, "color"] = tmp_masking_df["color"] if masking_color is None else masking_color
+        index_intersection = tmp_masking_df.index.intersection(output_df.index)
+        output_df.loc[index_intersection, "color"] = tmp_masking_df[index_intersection, "color"] if masking_color is None else masking_color
         output_df["color"].astype('category', copy=False)
         output_df = output_df.reset_index(drop=False).set_index("scaffold")
         output_df = output_df[output_df_columns]
@@ -458,8 +459,8 @@ class Visualization(DrawingRoutines):
                                 scaffold_order_list=reference_scaffold_order_list)
 
     @staticmethod
-    def feature_legend(legend_df, colormap):
-        return FeatureLegend(legend_df, colormap=colormap, ) if legend_df is not None else None
+    def feature_legend(legend_df, colormap, masking_color='grey'):
+        return FeatureLegend(legend_df, colormap=colormap, masked=masking_color) if legend_df is not None else None
 
     def draw_features(self, bed_collection_dict, scaffold_length_df, scaffold_order_list, #species_color_df_dict,
                       output_prefix,
