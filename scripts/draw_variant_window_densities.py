@@ -222,7 +222,7 @@ if args.masking_track is not None:
 
     args.masking_track["color"] = args.masking_track["color"].apply(mpl.colors.to_hex)
     args.masking_track = args.masking_track.set_index("scaffold")
-    print(args.masking_track)
+    #print(args.masking_track)
 
 if args.custom_color_list is not None:
     if len(args.custom_color_list) != len(args.density_thresholds):
