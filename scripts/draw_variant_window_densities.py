@@ -1,11 +1,13 @@
 #!/usr/bin/env python
 __author__ = 'Sergei F. Kliver'
 
+import numbers
 import os
 import argparse
 from functools import partial
 
 import pandas as pd
+import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 from copy import deepcopy
@@ -39,12 +41,10 @@ parser.add_argument("-e", "--output_formats", action="store", dest="output_forma
                     default=("png", "svg"),
                     help="Comma-separated list of formats (supported by matlotlib) of "
                          "output figure.Default: svg,png")
-
 parser.add_argument("-l", "--title", action="store", dest="title", default="Variant density",
                     help="Suptitle of figure. Default: 'Variant density'")
 parser.add_argument("--title_fontsize", action="store", dest="title_fontsize", default=20, type=int,
                     help="Fontsize of the figure. Default: 20")
-
 """
 parser.add_argument("-g", "--draw_gaps", action="store_true", dest="draw_gaps",
                     help="Draw gaps, ignored if reference genome is not set. Default: False")
@@ -115,9 +115,17 @@ parser.add_argument("--figure_header_height", action="store", dest="figure_heade
 parser.add_argument("--masking_gff_list", action="store", dest="masking_gff_list", default=None,
                     type=lambda s: s.split(","),
                     help="Comma-separated list of GFF files with masked regions")
-parser.add_argument("--masking_threshold", action="store", dest="masking_threshold", default=0.5,
+parser.add_argument("--masking_track", action="store", dest="masking_track", default=None,
+                    help="Track file with masked regions. It is 4-column bed file, the 4th column can contain any color recognized by Matplotlib or 'masked' keyword."
+                         "In case of 3-column bed file, --masking_color is used to set the masking color")
+parser.add_argument("--masking_color", action="store", dest="masking_color", default='grey',
+                    help="Color to use for masked windows. Default: 'grey'")
+
+#parser.add_argument("--default_masking_color", action="store", dest="default_masking_color", default='grey',
+#                    help="Color to use as default for masking, i.e. it replaces 'masked' in the color column. Default: 'grey'")
+parser.add_argument("--masking_threshold", action="store", dest="masking_threshold", default=0.1,
                     type=float,
-                    help="Maximum gaped or masked fraction of the window. Default: 0.5")
+                    help="Maximum fraction of masked bases within the window. Default: 0.1")
 parser.add_argument("--colormap", action="store", dest="colormap", default='jet',
                     help="Matplotlib colormap to use for SNP densities. Default: jet")
 parser.add_argument("--custom_color_list", action="store", dest="custom_color_list", default=None,
@@ -186,6 +194,36 @@ else:
     if args.scaffold_ordered_list.empty:
         args.scaffold_ordered_list = args.scaffold_white_list
 
+
+if args.masking_track is not None:
+    args.masking_track = pd.read_csv(args.masking_track, header=None, index_col=None, sep="\t")
+
+    #detect type of masking track and assign colors
+    if len(args.masking_track.columns) == 3:
+        args.masking_track.columns = pd.Index(["scaffold", "start", "end"])
+        args.masking_track["color"] = args.masking_color if args.masking_color is not None else args.masking_color
+    elif len(args.masking_track.columns) == 4:
+        args.masking_track.columns = pd.Index(["scaffold", "start", "end", "color"])
+        if pd.api.types.is_integer_dtype(args.masking_track["color"]):
+            # assume that the fourth column contains counts of masked bases
+            threshold = int(args.window_size * args.masking_threshold)
+            args.masking_track = args.masking_track[args.masking_track["color"] >= threshold]
+            args.masking_track["color"] = args.masking_color
+        elif pd.api.types.is_float_dtype(args.masking_track["color"]):
+            # assume that the fourth column contains counts of masked bases
+            args.masking_track = args.masking_track[args.masking_track["color"] >= args.masking_threshold]
+            args.masking_track["color"] = args.masking_color
+        else:
+            # assume that the forth column is string like
+            raise ValueError("ERROR!!! Preset for string-like values in the fourth column is not implemented yet.")
+            #args.masking_track[args.masking_track["color"] == 'masked', "color"] = args.default_masking_color
+    else:
+        raise ValueError(f"ERROR! Masking track contains {len(args.masking_track.columns)} columns instead of 3 or 4!")
+
+    args.masking_track["color"] = args.masking_track["color"].apply(mpl.colors.to_hex)
+    args.masking_track = args.masking_track.set_index("scaffold")
+    print(args.masking_track)
+
 if args.custom_color_list is not None:
     if len(args.custom_color_list) != len(args.density_thresholds):
         raise ValueError("ERROR!!! Custom color list is set, but the number of colors ({0}) in the list is not equal to the number of the thresholds (1)!".format(len(args.custom_color_list),
@@ -221,9 +259,21 @@ if args.input_type == "vcf":
                                                   skip_empty_windows=False, expression=None, per_sample_output=False,
                                                   scaffold_white_list=args.scaffold_white_list,
                                                   scaffold_syn_dict=chr_syn_dict)
+    #print("Counts")
+    #print(count_df)
+    # instead of actual end of the window in track df start + window_step is used to avoid possible visualization artefacts.
+    # Masking track must be modified to take it in account
+    # It applies only for track_df calculated from vcf
     feature_df, track_df = StatsVCF.convert_variant_count_to_feature_df(count_df,
                                                                         args.window_size,
                                                                         args.window_step)
+    if args.masking_track is not None:
+        args.masking_track["end"] = args.masking_track["start"] + args.window_step
+    #print("Feature df")
+    #print(feature_df)
+    #print("track_df")
+    #print(track_df)
+
     feature_df.to_csv("{}.features.counts".format(args.output_prefix), sep="\t", header=True, index=True)
     feature_df[feature_df.columns[-1]] = feature_df[feature_df.columns[-1]] * float(args.density_multiplier) / float(args.window_size)
 
@@ -241,7 +291,10 @@ elif args.input_type == "bedgraph":
 
 if args.scaffold_syn_file:
     chr_len_df.rename(index=chr_syn_dict, inplace=True)
-
+    if args.masking_track is not None:
+        args.masking_track.rename(index=chr_syn_dict, inplace=True)
+        #print(args.masking_track)
+#print(track_df)
 # scale counts
 track_df[track_df.columns[-1]] = track_df[track_df.columns[-1]] * float(args.density_multiplier) / float(args.window_size)
 
@@ -311,6 +364,13 @@ if not args.only_count:
 
         track_with_colors_df.to_csv("{}.{}.track.bed".format(args.output_prefix,
                                                                colormap), sep="\t", header=True, index=True)
+
+        #apply track mask if exists
+        if args.masking_track is not None:
+            #args.masking_track
+            track_with_colors_df = Visualization.apply_masking_to_track_df(track_with_colors_df, args.masking_track, masking_color=args.masking_color)
+            track_with_colors_df.to_csv("{}.{}.masked.track.bed".format(args.output_prefix,
+                                                                        colormap), sep="\t", header=True, index=True)
         #print(feature_with_colors_df)
         #print(args.scaffold_ordered_list)
         Visualization.draw_features({"TR": track_with_colors_df},
@@ -321,7 +381,8 @@ if not args.only_count:
                                                                         feature_name=args.feature_name,
                                                                         interval_type=args.density_thresholds_expression_type,
                                                                         skip_top_interval=args.skip_top_interval,
-                                                                        skip_bottom_interval=args.skip_bottom_interval),
+                                                                        skip_bottom_interval=args.skip_bottom_interval,
+                                                                        masking_color=args.masking_color),
                                     # query_species_color_df_dict,
                                     centromere_df=centromere_df,
                                     highlight_df=args.highlight_file,
