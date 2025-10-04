@@ -13,10 +13,6 @@ import numpy as np
 from distinctipy import distinctipy
 from functools import partial
 
-import xlsxwriter as xlsx
-from xlsxwriter.utility import xl_rowcol_to_cell
-
-from RouToolPa.Collections.General import SynDict, IdList
 from MACE.Routines import Visualization, StatsVCF
 
 from RouToolPa.Parsers.PSL import CollectionPSL
@@ -178,7 +174,7 @@ def bed_dict_to_xlsx(bed_dict, output_prefix):
                                             species_format_dict[species][query_data[row - 1]])
 
         writer.sheets[species].set_column(column_start, len(bed_dict[species].records.columns) + len(bed_dict[species].records.index.names) - 1, 15)  #
-
+        #workbook.get_worksheet_by_name('species').autofit()  # NOT verified
         first_len_col = column_number - (2 if "query_len" in bed_dict[species].records.columns else 1)
         writer.sheets[species].conditional_format(1, first_len_col,
                                                   row_number, column_number - 1,
@@ -312,7 +308,9 @@ parser.add_argument("--final_min_block_len_list", action="store", dest="final_mi
                     type=lambda s: sorted(list(map(int, s.split(",")))), default=[1000000, ],
                     help="Comma-separated list of minimal block length for final filtration."
                          "Default: 1000000")
-
+parser.add_argument("--chromosome_height", action="store", dest="chromosome_height", default=9, type=float,
+                    help="Height of chromosomes on the plot. Increase or decrease this parameter to make chromosomes "
+                         "thicker or thinner. Default: 9")
 
 parser.add_argument("-o", "--output_prefix", action="store", dest="output_prefix", required=True,
                     help="Prefix of output files")

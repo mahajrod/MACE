@@ -40,7 +40,7 @@ class DensityLegend(Legend):
     def __init__(self, y_start=0, y_end=None, x_start=0, x_end=None, x_size=10, element_size=10, style=default_legend_style,
                  colormap=None, thresholds=np.array((0.0, 0.1, 0.25, 0.5, 1.0)),
                  colors=("#333a97", "green", "yellow", "orange", "red"), background="white", feature_name="SNPs",
-                 masked="grey", fontsize=13, interval_type='left_open', skip_top_interval=False, skip_bottom_interval=False):
+                 masked="grey", fontsize=13):
 
         Legend.__init__(self, y_start=y_start, y_end=y_end, x_start=x_start, x_end=x_end, x_size=x_size, element_size=element_size,
                         style=style, colormap=colormap, fontsize=fontsize)
@@ -55,9 +55,6 @@ class DensityLegend(Legend):
         self.background = background
         self.masked = masked
         self.feature_name = feature_name
-        self.interval_type = interval_type
-        self.skip_top_interval = skip_top_interval
-        self.skip_bottom_interval = skip_bottom_interval
 
     def init_coordinates(self, style=None):
         self.x_end = self.x_start + (2 + 5) * self.x_size
@@ -71,8 +68,7 @@ class DensityLegend(Legend):
 
         square_y_pos = self.y_start - self.element_size
 
-        for color, legend_label in zip((self.masked, self.background),
-                                       ("masked", "no {0}".format(self.feature_name))) if ((self.interval_type == "left_open") and not self.skip_bottom_interval) else zip((self.masked, ), ("masked", )):
+        for color, legend_label in zip((self.masked, self.background), ("masked", "no {0}".format(self.feature_name))):
             square_y_pos += self.element_size
             #print (self.x_start, square_y_pos), self.x_size, self.element_size, color
             fragment = Rectangle((self.x_start , square_y_pos), self.x_size, self.element_size,
@@ -84,12 +80,9 @@ class DensityLegend(Legend):
             current_subplot.annotate(legend_label,
                                      xy=(self.x_start + 2 * self.x_size, square_y_pos + self.element_size*0.25), xycoords='data',
                                      fontsize=self.fontsize,
-                                     xytext=(self.x_start + 2 * self.x_size, square_y_pos + self.element_size*0.25), )
+                                     xytext=(self.x_start + 2 * self.x_size, square_y_pos+ self.element_size*0.25), )
 
         for i in range(0, len(self.thresholds)):
-            if self.skip_top_interval:
-                if i == (len(self.thresholds) - 1):
-                    continue
             square_y_pos += self.element_size
             # print (colormap_tuple_list[i][1])
             fragment = Rectangle((self.x_start, square_y_pos), self.x_size, self.element_size,
@@ -97,24 +90,13 @@ class DensityLegend(Legend):
                                  edgecolor="black", facecolor=self.colors[i], linewidth=0.5)
 
             current_subplot.add_patch(fragment)
-
-            if i == 0:
-                if self.skip_bottom_interval:
-                    legend_element_label = "%s %.2f" % ("≤" if self.interval_type == "left_open" else "<", self.thresholds[i+1])
-                else:
-                    legend_element_label = "%.2f - %.2f" % (self.thresholds[i], self.thresholds[i + 1])
-            elif i == (len(self.thresholds) - 1):
-                legend_element_label = "%s %.2f" % (">" if self.interval_type == "left_open" else "≥", self.thresholds[i])
-            elif i == (len(self.thresholds) - 2):
-                if self.skip_top_interval:
-                    legend_element_label = "%s %.2f" % (">" if self.interval_type == "left_open" else "≥", self.thresholds[i])
-                else:
-                    legend_element_label = "%.2f - %.2f" % (self.thresholds[i], self.thresholds[i + 1])
+            if i == (len(self.thresholds) - 1):
+                legend_element_label = "> %.2f" % self.thresholds[i]
             else:
                 legend_element_label = "%.2f - %.2f" % (self.thresholds[i], self.thresholds[i + 1])
 
             current_subplot.annotate(legend_element_label,
-                                     xy=(self.x_start + 2 * self.x_size, square_y_pos + self.element_size*0.25), xycoords='data',
+                                     xy=(self.x_start + 2 * self.x_size, square_y_pos+ self.element_size*0.25), xycoords='data',
                                      fontsize=self.fontsize,
                                      xytext=(self.x_start + 2 * self.x_size, square_y_pos + self.element_size*0.25), )
 

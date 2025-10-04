@@ -241,8 +241,12 @@ class StatsVCF(FileRoutines):
 
         count_index = [[], []]
         for scaffold in number_of_windows_non_zero_df.index:
-            count_index[0] += [scaffold] * number_of_windows_non_zero_df.loc[scaffold][0]
-            count_index[1] += list(np.arange(number_of_windows_non_zero_df.loc[scaffold][0]))
+            #print("AAAa")
+            #print(number_of_windows_non_zero_df.loc[scaffold])
+            #print("\t{0}".format(number_of_windows_non_zero_df.loc[scaffold][0]))
+            #print("\t{0}".format(number_of_windows_non_zero_df.loc[scaffold].iloc[0]))
+            count_index[0] += [scaffold] * number_of_windows_non_zero_df.loc[scaffold].iloc[0]
+            count_index[1] += list(np.arange(number_of_windows_non_zero_df.loc[scaffold].iloc[0]))
         count_index = pd.MultiIndex.from_arrays(count_index, names=("CHROM", "WINDOW"))
 
         def get_overlapping_window_indexes(step_index):
@@ -284,19 +288,27 @@ class StatsVCF(FileRoutines):
             count_df = pd.DataFrame(0, index=count_index,
                                     columns=["All"] if len(collection_vcf.samples) > 1 else collection_vcf.samples,
                                     dtype=np.int64)
-
+            #print("XXXXXXXX")
+            #print(count_df)
             # code for staking windows: in this case window step index  is equal to window index
             variant_counts = step_index_df.reset_index(level=1).set_index(['WINDOWSTEP'],
                                                                           append=True).groupby(["CHROM",
-                                                                                                "WINDOWSTEP"]).count()
+                                                                                                "WINDOWSTEP"], group_keys=False).count()
+            #print(variant_counts.index.nlevels)
+            #print(variant_counts)
             count_df[count_df.index.isin(variant_counts.index)] = variant_counts
+            #print("AAAAAA")
+            #print(count_df)
             #bbb[bbb.index.get_level_values('CHROM').isin(number_of_windows_non_zero_df.index)]
+
+        #print("FFFFF")
+        #print(count_df)
 
         #print(count_df)
         #print(steps_in_window)
         if window_stepppp != window_size:
-            count_df = count_df.groupby("CHROM").apply(partial(convert_step_counts_to_win_counts,
-                                                               number_of_steps_per_window=steps_in_window))
+            count_df = count_df.groupby("CHROM", group_keys=False).apply(partial(convert_step_counts_to_win_counts,
+                                                                         number_of_steps_per_window=steps_in_window))
 
             #print(count_df)
             # window_index_df = step_index_df.applymap(get_overlapping_window_indexes)
@@ -304,8 +316,8 @@ class StatsVCF(FileRoutines):
 
         #if ((scaffold_black_list is not None) and (not scaffold_black_list.empty)) or (scaffold_white_list is not None and (not scaffold_white_list.empty)):
         scaffold_to_keep = self.get_filtered_entry_list(count_df.index.get_level_values(level=0).unique().to_list(),
-                                                            entry_black_list=scaffold_black_list,
-                                                            entry_white_list=scaffold_white_list)
+                                                        entry_black_list=scaffold_black_list,
+                                                        entry_white_list=scaffold_white_list)
         count_df = count_df[count_df.index.isin(scaffold_to_keep, level=0)]
 
         if scaffold_syn_dict:
@@ -328,6 +340,9 @@ class StatsVCF(FileRoutines):
 
             stat_df = count_df.groupby("CHROM").agg(["mean", "median", "min", "max"])
             stat_df.to_csv("%s.variant_counts.stats" % output_prefix, sep='\t', header=True, index=True)
+
+        #print("DDDDDDD")
+        #print(count_df)
         return count_df
 
     @staticmethod
@@ -384,7 +399,7 @@ class StatsVCF(FileRoutines):
 
         scaffolds_absent_in_reference = IdSet(gff_scaffolds - reference_scaffolds)
         if scaffolds_absent_in_reference:
-            print (scaffolds_absent_in_reference)
+            print(scaffolds_absent_in_reference)
             raise ValueError("ERROR!!! Some scaffolds from gff file are absent in reference...")
         scaffolds_absent_in_gff = IdSet(reference_scaffolds - gff_scaffolds)
         number_of_windows_non_zero_df = number_of_windows_df[number_of_windows_df['WINDOW'] > 0]

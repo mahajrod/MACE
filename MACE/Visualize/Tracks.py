@@ -14,7 +14,7 @@ from matplotlib.lines import Line2D
 
 class Track:
 
-    def __init__(self, records, style, type=None, y_start=None, x_start=0, x_end=None, label=None,
+    def __init__(self, records, style, type=None, y_start=None, x_start=0, x_end=None, y_end=None, label=None,
                  feature_style=default_feature_style, color_expression=None, colormap=None, thresholds=None,
                  colors=None, background=None, masked=None, patch_function=None,
                  forward_patch_function=None, reverse_patch_function=None, subplot_scale=False,
@@ -25,33 +25,16 @@ class Track:
         self.records = records
 
         self.style = style
-        self.feature_style = feature_style
 
         self.type = type
 
         self.y_start = y_start
-        self.y_end = None
+        self.y_end = y_end
 
         self.x_start = x_start
         self.x_end = x_end
 
         self.label = label
-
-        if color_expression:
-            self.style.color_expression = color_expression
-        if thresholds:
-            self.style.thresholds = thresholds
-        if colors:
-            self.style.colors = colors
-        if background:
-            self.style.background = background
-        if masked:
-            self.style.masked = masked
-        if colormap:
-            self.style.colormap = colormap
-            if thresholds:
-                self.style.cmap = plt.get_cmap(self.style.colormap, len(self.style.thresholds))
-                self.style.colors = [self.style.cmap(i) for i in range(0, len(self.style.thresholds))]
 
         self.patch_function = patch_function
 
@@ -62,6 +45,7 @@ class Track:
         self.subplot_x_y_ratio = subplot_x_y_ratio
         self.track_group_x_y_ratio = track_group_x_y_ratio
 
+        #----------------- Track Body options-------------------
         self.subplot_scale = subplot_scale
         self.track_group_scale = track_group_scale
         self.stranded = stranded
@@ -132,6 +116,8 @@ class Track:
         self.middle_break_patch = None
         self.middle_break_left_line = None
         self.middle_break_right_line = None
+
+        #----------------------------------------------
 
         self.track_group_highlight = track_group_highlight
         self.track_group_highlight_color = track_group_highlight_color
@@ -630,130 +616,6 @@ class Track:
             # add track
             current_subplot.add_patch(self.track_border_patch)
 
-    #def draw_borders(self, axes=None, style=None):
-    #    """Border drawing was separated from element drawing because of overlap of masking pathes and borders
-    #    resulting in visual bugs. Now all elements are drawn first, and all borders are added only after that"""
-    #    used_style = style if style else self.style
-    #
-    #    current_subplot = axes if axes else plt.gca()
-    #
-    #    if used_style.edge:
-    #        # add track
-    #        current_subplot.add_patch(self.track_patch)
-
-
-class WindowTrack(Track):
-
-    def __init__(self, windows_df, window_size, window_step, type=None, y_start=None, x_start=0, x_end=None,
-                 style=default_track_style, label=None, norm=False,
-                 window_type="stacking", multiplier=None, feature_style=default_feature_style, color_expression=None,
-                 colormap=None, thresholds=None,
-                 colors=None, background=None, masked=None, subplot_scale=False,
-                 track_group_scale=False, figure_x_y_ratio=1, subplot_x_y_ratio=None, track_group_x_y_ratio=None,
-                 stranded=False, rounded=False, centromere_start=None, centromere_end=None):
-        """
-
-        :param windows_df:      Example
-                                                All
-                                CHROM	WINDOW
-                                chr4	    0	58
-                                            1	61
-                                            2	54
-        :param window_size:
-        :param window_step:
-        :param y_start:
-        :param x_start:
-        :param x_end:
-        :param style:
-        :param label:
-        :param window_type:
-        :param multiplier:
-        :param feature_style:
-        :param color_expression:
-        :param colormap:
-        :param thresholds:
-        :param colors:
-        :param background:
-        :param masked:
-        """
-
-        Track.__init__(self, windows_df, style, type=type, y_start=y_start, x_start=x_start, x_end=x_end, label=label,
-                       feature_style=feature_style, color_expression=color_expression,
-                       colormap=colormap, thresholds=thresholds, colors=colors, background=background, masked=masked,
-                       subplot_scale=subplot_scale, track_group_scale=track_group_scale,
-                       figure_x_y_ratio=figure_x_y_ratio, subplot_x_y_ratio=subplot_x_y_ratio,
-                       track_group_x_y_ratio=track_group_x_y_ratio,
-                       stranded=stranded, rounded=rounded,
-                       centromere_start=centromere_start, centromere_end=centromere_end
-                       )
-
-        self.track_type = "window"
-        self.window_type = window_type
-
-        count_columns = self.records.columns.to_list()
-        if "masked" in count_columns:
-            count_columns.remove("masked")
-
-        if norm and multiplier:
-            self.records["density"] = self.records.loc[:, count_columns] * (float(multiplier) / float(window_size))
-        elif multiplier:
-            self.records["density"] = self.records.loc[:, count_columns] * float(multiplier)
-        elif norm:
-            self.records["density"] = self.records.loc[:, count_columns] / float(window_size)
-        else:
-            self.records["density"] = self.records.loc[:, count_columns]
-
-        self.window_size = window_size
-        self.window_step = window_step
-        self.multiplier = multiplier
-        self.preprocess_data()
-
-    def preprocess_data(self):
-        window_index_name = self.records.index.names[0]
-        if self.window_type == "stacking":
-            self.records.reset_index(level=window_index_name, inplace=True)
-            self.records["start"] = self.records[window_index_name] * self.window_step
-            self.records = self.records[["start"] + list(self.records.columns[:-1])]
-
-        elif self.window_type == "sliding":
-            # TODO: implement sliding window
-            # TODO: verify - sliding window drawing is already implemented  somewhere else:)))
-            pass
-        else:
-            raise ValueError("ERROR!!! Unknown window type: %s" % self.window_type)
-
-    def create_patch_function(self, style=None, feature_style=None, y_start=None, *args, **kwargs):
-
-        if feature_style.patch_type == "rectangle":
-            if "color" in self.records.columns:
-
-                def create_patch(row, style=style if style else self.style,
-                                 feature_style=feature_style if feature_style else self.feature_style, y_start=y_start,
-                                 window_size=self.window_size):
-
-                    return Rectangle((row['start'], y_start), window_size,
-                                     style.height,
-                                     fill=True,
-                                     edgecolor=feature_style.edge_color,
-                                     facecolor=row["color"],
-                                     linewidth=feature_style.edge_width)
-
-                return create_patch, None
-
-            else:
-                def create_patch(row, style=style, feature_style=feature_style, y_start=y_start,
-                                 window_size=self.window_size):
-
-                    return Rectangle((row['start'], y_start), window_size,
-                                     style.height,
-                                     fill=True,
-                                     edgecolor=feature_style.edge_color,
-                                     facecolor=feature_style.face_color,
-                                     linewidth=feature_style.edge_width)
-
-                return create_patch, None
-
-
 class FeatureTrack(Track):
 
     def __init__(self, feature_df, type=None, y_start=None, x_start=0, x_end=None,
@@ -816,8 +678,7 @@ class FeatureTrack(Track):
             return 0
 
         stranded_feature = stranded if stranded is not None else self.stranded
-        #print("AAAAa")
-        #print(feature_style.patch_type)
+
         if feature_style.patch_type == "rectangle":
             if self.feature_color_column_id in self.records.columns:
                 if stranded_feature:
@@ -927,7 +788,7 @@ class FeatureTrack(Track):
                 return create_patch, None
 
         elif feature_style.patch_type == "ellipse":
-            #print("BBBBB")
+
             if self.subplot_scale:
                 x_scale_factor = self.subplot_x_y_ratio / self.figure_x_y_ratio
             elif self.track_group_scale:
@@ -986,3 +847,6 @@ class FeatureTrack(Track):
                                                                                     bin_colors)]
 
             return create_patch, None
+
+
+

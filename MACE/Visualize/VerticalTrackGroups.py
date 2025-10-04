@@ -1,6 +1,5 @@
 
-from MACE.Visualization.Styles.TrackGroup import TrackGroupStyle, default_track_group_style
-import math
+from MACE.Visualize.Styles.VerticalTrackGroup import VerticalTrackGroupStyle, default_vertical_track_group_style
 from collections import OrderedDict
 
 import numpy as np
@@ -11,9 +10,9 @@ from matplotlib.collections import PatchCollection
 from matplotlib.patches import Rectangle, Polygon
 
 
-class TrackGroup(OrderedDict):
+class VerticalTrackGroup(OrderedDict):
 
-    def __init__(self, tracks=None, y_start=None, x_start=0, x_end=1, style=default_track_group_style,
+    def __init__(self, tracks=None, y_start=None, x_start=0, x_end=1, style=default_vertical_track_group_style,
                  label=None, x_scale_factor=1, y_scale_factor=1, auto_scale=False,
                  subplot_x_y_ratio=None, figure_x_y_ratio=None, highlight=False):
         if tracks:
@@ -73,7 +72,7 @@ class TrackGroup(OrderedDict):
         self.init_coordinates()
 
         used_style = style if style else self.style
-        current_subplot = axes if axes is not None else plt.gca()
+        current_subplot = axes if axes else plt.gca()
 
         if self.highlight and (used_style.highlight_color is not None):
             highlight_patch = Polygon(np.array([[self.x_start, self.y_start],

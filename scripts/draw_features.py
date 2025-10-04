@@ -24,7 +24,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("-i", "--input", action="store", dest="input", required=True,
                     help="Input file with selected features")
 parser.add_argument("-t", "--input_type", action="store", dest="input_type", default="str",
-                    help="Type of input file. Allowed: str (default), gff, tab6, tab6_colored, bed, bedgraph")
+                    help="Type of input file. Allowed: str (default), gff, tab6, tab6_colored, bed, bedgraph, bed_table, bed_track")
 parser.add_argument("-r", "--header", action="store_true", dest="header", default=None,
                     help="Header is present in input file. Default: False")
 parser.add_argument("-g", "--legend", action="store", dest="legend",
@@ -147,15 +147,19 @@ chr_syn_dict = SynDict(filename=args.scaffold_syn_file,
                        key_index=args.syn_file_key_column,
                        value_index=args.syn_file_value_column)
 
+#print(args.scaffold_ordered_list)
 if isinstance(args.scaffold_ordered_list, list):
     if not args.scaffold_ordered_list:
         args.scaffold_ordered_list = deepcopy(args.scaffold_white_list)
         args.scaffold_ordered_list.replace(chr_syn_dict, inplace=True)
 else:
+    #print("AAAA")
     if args.scaffold_ordered_list.empty:
         args.scaffold_ordered_list = deepcopy(args.scaffold_white_list)
         args.scaffold_ordered_list.replace(chr_syn_dict, inplace=True)
 
+#print("BBBBBBBb")
+#print(args.scaffold_ordered_list)
 args.scaffold_ordered_list = args.scaffold_ordered_list[::-1]
 
 if args.centromere_bed:
@@ -190,6 +194,11 @@ try:
         feature_start_column_id = "start"
         feature_end_column_id = "end"
 
+    elif args.input_type == "bed_table":
+        feature_df = CollectionBED(in_file=args.input, parsing_mode="complete", format="bed", header_in_file=False)
+        feature_start_column_id = "start"
+        feature_end_column_id = "end"
+
     elif args.input_type == "bedgraph":
         feature_df = CollectionBED(in_file=args.input, parsing_mode="all", format="bed")
         feature_df.records.columns = pd.Index(["start", "end", "value"])
@@ -197,16 +206,27 @@ try:
         feature_start_column_id = "start"
         feature_end_column_id = "end"
 
+    elif args.input_type == "bed_track":
+        feature_df = CollectionBED(in_file=args.input, parsing_mode="all", format="bed_track",)
+        print(feature_df.records)
+        feature_df.records.columns = pd.Index(["start", "end", "value", "color"])
+        feature_df.records.index.name = "scaffold"
+        feature_start_column_id = "start"
+        feature_end_column_id = "end"
+        args.color_column_name = "color"
+
     elif args.input_type == "tab6":
         feature_df = CollectionBLAST(in_file=args.input, parsing_mode="complete")
         feature_df.records.reset_index(level="query_id", inplace=True)
         feature_start_column_id = args.start_column_name if args.start_column_name else "target_start"
         feature_end_column_id = args.end_column_name if args.end_column_name else "target_end"
+
     elif args.input_type == "tab6_colored":
         feature_df = CollectionBLAST(in_file=args.input, parsing_mode="complete", format="tab6_colored", header=args.header)
         feature_df.records.reset_index(level="query_id", inplace=True)
         feature_start_column_id = args.start_column_name if args.start_column_name else "target_start"
         feature_end_column_id = args.end_column_name if args.end_column_name else "target_end"
+
     else:
         raise ValueError("ERROR!!! Unrecognized input type ({}). ".format(args.input_type))
 except pd.errors.EmptyDataError:
@@ -215,17 +235,24 @@ except pd.errors.EmptyDataError:
 
 legend_df = pd.read_csv(args.legend, header=None, index_col=0, sep="\t") if args.legend else None
 
-
+#print(args.scaffold_white_list)
+#print(feature_df.records)
 scaffold_to_keep = StatsVCF.get_filtered_entry_list(feature_df.records.index.get_level_values(level=0).unique().to_list(),
                                                     entry_white_list=args.scaffold_white_list)
-
+#print(scaffold_to_keep)
 #print(scaffold_to_keep)
 # remove redundant scaffolds
 #print(args.scaffold_white_list)
 #print(feature_df.records)
 #print(scaffold_to_keep)
 feature_df.records = feature_df.records[feature_df.records.index.isin(scaffold_to_keep)]
-args.scaffold_ordered_list = args.scaffold_ordered_list[args.scaffold_ordered_list.isin(pd.Series(args.scaffold_white_list).replace(chr_syn_dict))]
+#print("BBBBBBbb")
+#print(args.scaffold_white_list)
+#print(args.scaffold_ordered_list)
+if not args.scaffold_white_list.empty:
+    args.scaffold_ordered_list = args.scaffold_ordered_list[args.scaffold_ordered_list.isin(pd.Series(args.scaffold_white_list).replace(chr_syn_dict))]
+#print("CCCC")
+#print(args.scaffold_ordered_list)
 #print(scaffold_to_keep)
 #print(pd.Series(scaffold_to_keep).replace(chr_syn_dict))
 chr_len_df = pd.read_csv(args.scaffold_length_file, sep='\t', header=None, names=("scaffold", "length"), index_col=0)
@@ -242,11 +269,12 @@ if args.verbose:
     print(feature_df.records)
 
 
-print(chr_len_df)
+#print(chr_len_df)
+#print({"features": feature_df})
 #print(feature_df.records.columns)
 #print(feature_df.records)
 #print(chr_len_df)
-
+#print(args.scaffold_ordered_list)
 Visualization.draw_features({"features": feature_df}, chr_len_df,
                             args.scaffold_ordered_list,
                             args.output_prefix,
@@ -285,6 +313,3 @@ Visualization.draw_features({"features": feature_df}, chr_len_df,
                             subplot_title_fontweight='bold',
                             x_tick_type=args.x_tick_type,
                             )
-
-
-
