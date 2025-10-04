@@ -25,8 +25,8 @@ from RouToolPa.Parsers.VCF import CollectionVCF
 from MACE.Routines import StatsVCF, Visualization
 
 # TODO
+# upgrade PSMC plot
 # add legend props
-# add multi-level xtick labels for PSMC plot
 
 class Plotter:
     def __init__(self):
@@ -543,9 +543,7 @@ class Plotter:
             self.add_double_boxplot(ax, df_1, df_2, i, width=boxplot_width)
 
             if show_legend:
-                ax.legend(
-                    title=legend_title, loc=legend_loc, ncol=legend_ncol, handlelength=0.7, frameon=True
-                ) if i == 0 else None
+                ax.legend(title=legend_title, loc=legend_loc, ncol=legend_ncol, handlelength=0.7, frameon=True) if i == 0 else None
 
         ax.set_xticks(range(len(unique_ids)))
         ax.set_xticklabels(unique_ids, ha="right", rotation=rotation)
@@ -559,6 +557,86 @@ class Plotter:
         ax.set_title(title)
         if figure_grid:
             ax.grid(axis="y", linestyle="--", alpha=0.5)
+
+    def draw_single_admixture_barplot(
+        self,
+        ax,
+        df,
+        admixture_columns,
+        colors=["#e02828", "#4286c3"],
+        rotation=45,
+        yticks=[0, 25, 50, 75, 100],
+        xlabel="",
+        font_size=None,
+        show_legend=True,
+        legend_loc=(0.1, 0.95),
+        legend_ncol=4,
+    ):
+        """
+        Draw a single stacked barplot to visualize ADMIXTURE proportions for multiple samples.
+
+        Parameters:
+        -----------
+        ax : matplotlib.axes.Axes
+            The axes on which to draw the plot.
+
+        df : pandas.DataFrame
+            A DataFrame containing ADMIXTURE data. The first column must be `Sample_ID`,
+            followed by columns with ADMIXTURE proportions.
+
+        admixture_columns : list of str
+            Column names in `df` corresponding to ADMIXTURE proportions.
+
+        colors : list of str, optional
+            Colors for the ADMIXTURE bars. Defaults to ["#e02828", "#4286c3"].
+
+        rotation : int, optional
+            Rotation angle for the x-axis labels. Defaults to 45 degrees.
+
+        yticks : list of int, optional
+            Y-axis tick values. Defaults to [0, 25, 50, 75, 100].
+
+        xlabel : str, optional
+            Label for the x-axis. Defaults to an empty string.
+
+        font_size : int, optional
+            Font size for the plot text. If `None`, the default font size is used.
+
+        show_legend : bool, optional
+            Whether to display a legend. Default is True.
+
+        legend_loc : tuple of float, optional
+            Position of the legend box within the plot. Defaults to (0.1, 0.95).
+
+        legend_ncol : int, optional
+            Number of columns in the legend. Defaults to 4.
+
+        Notes:
+        ------
+        - The first column of `df` is used as the index (sample identifiers) for the plot.
+        - A single stacked bar plot is created to visualize ADMIXTURE proportions.
+        - If `show_legend` is True, a legend is added to the plot.
+        """
+        for spine in ["right", "top"]:
+            ax.spines[spine].set_visible(False)
+        ax.set_axisbelow(True)
+
+        if font_size is not None:
+            plt.rcParams.update({"font.size": font_size})
+
+        index_column = df.columns[0]  # первая колонка как индекс ('Sample_ID')
+        df.set_index(index_column, inplace=True)
+
+        stacked_data = df[admixture_columns]
+        stacked_data.plot(kind="bar", stacked=True, width=0.8, color=colors, ax=ax, legend=show_legend)
+
+        if show_legend:
+            ax.legend(loc=legend_loc, ncol=legend_ncol, frameon=True)
+
+        ax.set_xlim(right=len(stacked_data) - 0.5)
+        ax.set_xticklabels(df.index, ha="right", rotation=rotation)
+        ax.set_xlabel(xlabel)
+        ax.set_yticks(yticks)
 
     def legend_half_patch(self, color1, color2):
         class SplitPatchHandler(HandlerPatch):
@@ -668,12 +746,14 @@ class Plotter:
                 [species_1[0], species_2[0]],
                 [
                     f"Global and local ADMIXTURE from $\\mathit{{{references[0]}}}$",
+                    # f"Глобальный и локальный ADMIXTURE от $\\mathit{{{references[0]}}}$",
                     f"Global and local ADMIXTURE from $\\mathit{{{references[1]}}}$",
+                    # f"Глобальный и локальный ADMIXTURE от $\\mathit{{{references[1]}}}$",
                 ],
                 handler_map={species_1[0]: species_1[1], species_2[0]: species_2[1]},
                 loc=legend_loc,
                 ncol=legend_ncol,
-                frameon=True,
+                frameon=False,
             )
 
         ax.set_xlim(right=len(stacked_data) - 0.5)
@@ -916,13 +996,11 @@ class Plotter:
 
         # Annotate species, IDs, and BUSCO scores
         ax.text(xlim[0] - 0.5, len(df.index), "Species", va="center", ha="right", fontweight="semibold")
-        ax.text(xlim[0] + 0.5, len(df.index), "ID", va="center", ha="left", fontweight="semibold") if not df_input["ID"].eq(
-            ""
-        ).all() else None
+        ax.text(xlim[0] + 0.5, len(df.index), "ID", va="center", ha="left", fontweight="semibold") if not df_input["ID"].eq("").all() else None
         for i, row in df.iterrows():
             fontweight = "bold" if bold_species_indices and i in bold_species_indices else "medium"
-            ax.text(xlim[0] - 0.5, i, f'{row["Species"]}', va="center", ha="right", fontweight=fontweight, style="italic")
-            ax.text(xlim[0] + 0.5, i, f'{row["ID"]}', va="center", ha="left", fontweight="bold", color="white")
+            ax.text(xlim[0] - 0.5, i, f"{row['Species']}", va="center", ha="right", fontweight=fontweight, style="italic")
+            ax.text(xlim[0] + 0.5, i, f"{row['ID']}", va="center", ha="left", fontweight="bold", color="white")
             ax.text(
                 df["S"].min() - 1,
                 i,
@@ -1143,9 +1221,7 @@ class Plotter:
             if sorting:
                 # Sort within the group
                 group_df = result_df.loc[group_samples]
-                group_samples = group_df.sort_values(
-                    by=["UL", "L", "S", "N"], ascending=[False, False, False, False]
-                ).index.tolist()
+                group_samples = group_df.sort_values(by=["UL", "L", "S", "N"], ascending=[False, False, False, False]).index.tolist()
             grouped_samples.extend(group_samples)
 
         # Reorder the DataFrame indices based on groups
@@ -1181,9 +1257,17 @@ class Plotter:
         ax.set_yticks([])
         ax.set_yticklabels([])
 
-        # Add custom yticklabels
         for i, label in enumerate(result_df.index):
             ax.text(xticks[0] - 0.5, i, label, va="center", ha="right")
+
+        # if groups is None: # TEST IT!
+        #     # Remove default Y-axis ticks
+        #     ax.set_yticks([])
+        #     ax.set_yticklabels([])
+
+        #     # Add custom yticklabels
+        #     for i, label in enumerate(result_df.index):
+        #         ax.text(xticks[0] - 0.5, i, label, va="center", ha="right")
 
         ax.set_xlim(xlim)
         ax.set_xticks(xticks)
@@ -1293,7 +1377,7 @@ class Plotter:
         feature_name="SNPs",
         centromere_bed=None,
         highlight_file=None,
-        show_legend=True
+        show_legend=True,
     ):
         # coverage=None,
         # scaffold_column_name="scaffold",
@@ -1326,16 +1410,13 @@ class Plotter:
             if len(custom_color_list) != len(density_thresholds):
                 raise ValueError(
                     "ERROR!!! Custom color list is set, but the number of colors ({0}) in the list is not equal to the number of the thresholds (1)!".format(
-                        len(custom_color_list), len(density_thresholds)
-                    )
+                        len(custom_color_list), )
                 )
 
         variants = CollectionVCF(input_file, parsing_mode="only_coordinates")
 
         chr_len_df = (
-            pd.read_csv(scaffold_length_file, sep="\t", header=None, index_col=0)
-            if scaffold_length_file
-            else deepcopy(variants.scaffold_length)
+            pd.read_csv(scaffold_length_file, sep="\t", header=None, index_col=0) if scaffold_length_file else deepcopy(variants.scaffold_length)
         )
         chr_len_df.index = pd.Index(map(str, chr_len_df.index))
         chr_len_df.index.name = "scaffold"
@@ -1344,9 +1425,7 @@ class Plotter:
         chr_syn_dict = SynDict(filename=scaffold_syn_file, key_index=syn_file_key_column, value_index=syn_file_value_column)
 
         if centromere_bed:
-            centromere_df = pd.read_csv(
-                centromere_bed, usecols=(0, 1, 2), index_col=0, header=None, sep="\t", names=["scaffold_id", "start", "end"]
-            )
+            centromere_df = pd.read_csv(centromere_bed, usecols=(0, 1, 2), index_col=0, header=None, sep="\t", names=["scaffold_id", "start", "end"])
             centromere_df.rename(index=chr_syn_dict, inplace=True)
         else:
             centromere_df = None
@@ -1367,9 +1446,7 @@ class Plotter:
             )
             feature_df, track_df = StatsVCF.convert_variant_count_to_feature_df(count_df, window_size, window_step)
             # feature_df.to_csv("{}.features.counts".format(output_prefix), sep="\t", header=True, index=True)
-            feature_df[feature_df.columns[-1]] = (
-                feature_df[feature_df.columns[-1]] * float(density_multiplier) / float(window_size)
-            )
+            feature_df[feature_df.columns[-1]] = feature_df[feature_df.columns[-1]] * float(density_multiplier) / float(window_size)
 
             # feature_df.to_csv("{}.features.bed".format(output_prefix), sep="\t", header=True, index=True)
 
@@ -1396,9 +1473,7 @@ class Plotter:
         if track_df.index.nlevels > 1:
             # drop second level of index if it was added by groupby
             track_df = (
-                track_df.groupby("scaffold")
-                .apply(lambda df: df[df["end"] <= chr_len_df.loc[df.index[0], "length"]])
-                .reset_index(level=1, drop=True)
+                track_df.groupby("scaffold").apply(lambda df: df[df["end"] <= chr_len_df.loc[df.index[0], "length"]]).reset_index(level=1, drop=True)
             )
 
         if not only_count:
@@ -1438,14 +1513,18 @@ class Plotter:
                     chr_len_df,
                     scaffold_ordered_list,
                     output_prefix,
-                    legend=Visualization.density_legend(
-                        colors,
-                        density_thresholds,
-                        feature_name=feature_name,
-                        interval_type=density_thresholds_expression_type,
-                        skip_top_interval=skip_top_interval,
-                        skip_bottom_interval=skip_bottom_interval,
-                    ) if show_legend else None,
+                    legend=(
+                        Visualization.density_legend(
+                            colors,
+                            density_thresholds,
+                            feature_name=feature_name,
+                            interval_type=density_thresholds_expression_type,
+                            skip_top_interval=skip_top_interval,
+                            skip_bottom_interval=skip_bottom_interval,
+                        )
+                        if show_legend
+                        else None
+                    ),
                     centromere_df=centromere_df,
                     highlight_df=highlight_file,
                     figure_width=figure_width,
@@ -1548,9 +1627,7 @@ class Plotter:
                 scaffold_ordered_list.replace(chr_syn_dict, inplace=True)
 
         if centromere_bed:
-            centromere_df = pd.read_csv(
-                centromere_bed, usecols=(0, 1, 2), index_col=0, header=None, sep="\t", names=["scaffold_id", "start", "end"]
-            )
+            centromere_df = pd.read_csv(centromere_bed, usecols=(0, 1, 2), index_col=0, header=None, sep="\t", names=["scaffold_id", "start", "end"])
             centromere_df.rename(index=chr_syn_dict, inplace=True)
         else:
             centromere_df = None
@@ -1642,9 +1719,7 @@ class Plotter:
         # print(scaffold_white_list)
         # print(scaffold_ordered_list)
         if not scaffold_white_list.empty:
-            scaffold_ordered_list = scaffold_ordered_list[
-                scaffold_ordered_list.isin(pd.Series(scaffold_white_list).replace(chr_syn_dict))
-            ]
+            scaffold_ordered_list = scaffold_ordered_list[scaffold_ordered_list.isin(pd.Series(scaffold_white_list).replace(chr_syn_dict))]
         # print("CCCC")
         # print(scaffold_ordered_list)
         # print(scaffold_to_keep)
@@ -1720,29 +1795,7 @@ class Plotter:
         n=100,
         colorlist=None,
         xlim=(50000, 23000000),
-        xticks=[
-            50000,
-            70000,
-            100000,
-            150000,
-            200000,
-            300000,
-            400000,
-            500000,
-            600000,
-            800000,
-            1000000,
-            1500000,
-            2000000,
-            3000000,
-            5000000,
-            7000000,
-            10000000,
-            15000000,
-            20000000,
-        ],
         ylim=(0, 200),
-        scale=1000000,
         mu=2.2e-9,
         g=5,
         figure_grid=True,
@@ -1776,17 +1829,11 @@ class Plotter:
             A list of colors for the plot. If None, colors are generated automatically. If a string is provided, it is
             interpreted as a seaborn color palette.
 
-        xlim : tuple of (int, int), optional, default: (50000, 23000000)
-            The x-axis limits (years ago). The x-axis is logarithmic.
-
         xticks : list of int, optional, default: [50000, 70000, 100000, ..., 20000000]
             The ticks to display on the x-axis (years ago), with corresponding labels adjusted according to the `scale`.
 
         ylim : tuple of (int, int), optional, default: (0, 200)
             The y-axis limits, representing the effective population size.
-
-        scale : int, optional, default: 1000000
-            The scaling factor for the x-axis labels.
 
         mu : float, optional, default: 2.2e-9
             The mutation rate used for PSMC analysis (used in axis label formatting).
@@ -1809,7 +1856,7 @@ class Plotter:
         if colorlist is None:
             colorlist = distinctipy.get_colors(len(diploid_data))
         else:
-            if type(colorlist) == str:
+            if type(colorlist) is str:
                 colorlist = sns.color_palette(colorlist, len(diploid_data))
 
         for i, diploid in enumerate(diploid_data):
@@ -1841,14 +1888,12 @@ class Plotter:
         ax.set_xlim(xlim)
         ax.set_ylim(ylim)
 
-        ax.set_xticks(xticks)
-        ax.set_xticklabels([int(x / scale) if x / scale % 1 == 0 else x / scale for x in xticks])
-
-        scale_exp = int(np.log10(scale))  # Calculate exponent for the scale
-        ax.set_xlabel(rf"Years Ago, $10^{scale_exp}$ ($\mu={mu:.1e}$, g={g})")
-        # ax.set_xlabel(rf"Лет назад, $10^{scale_exp}$ ($\mu={mu:.1e}$, g={g})")
-        ax.set_ylabel(rf"Effective population size, $10^4$")
-        # ax.set_ylabel(rf"Эффективный размер численности популяции, $10^4$")
+        # ax.set_xlabel(rf"Years Ago ($\mu={mu:.1e}$, g={g})")
+        ax.set_xlabel(r"Лет назад ($\mu=4.64 \times 10^{-09}$, g=5)")
+        # ax.set_xlabel(r"Years Ago, ($\mu=4.64 \times 10^{-09}$, g=5)")
+        # ax.set_ylabel(r"Effective population size, $10^4$")
+        # ax.set_ylabel(r"Effective Population Size, $10^4$")
+        ax.set_ylabel(r"Эффективный размер численности популяции, $10^4$")
 
         if show_legend:
             ax.legend(loc=legend_loc, ncol=legend_ncol, frameon=True)
@@ -1920,7 +1965,7 @@ class Plotter:
             colors = distinctipy.get_colors(len(pca_df))
         else:
             if type(colors) == str:
-                colors = sns.color_palette(colors, len(pca_df))
+                colors = sns.color_palette(colors, len(pca_df))[::-1]
 
         for i in range(pca_df.shape[0]):
             ax.scatter(x=pca_df.loc[i, "PC1"], y=pca_df.loc[i, "PC2"], color=colors[i], label=pca_df.loc[i, "Sample"], s=dot_size)
@@ -1942,7 +1987,9 @@ class Plotter:
             ax.spines[spine].set_visible(False)
 
         ax.set_xlabel(f"Principal Component 1 ({explained_variance[0]:.2f}%)")
+        # ax.set_xlabel(f"Главная компонента 1 ({explained_variance[0]:.2f}%)")
         ax.set_ylabel(f"Principal Component 2 ({explained_variance[1]:.2f}%)")
+        # ax.set_ylabel(f"Главная компонента 2 ({explained_variance[1]:.2f}%)")
 
         if show_legend:
             ax.legend(loc=legend_loc, ncol=legend_ncol, handlelength=0.8, frameon=True)
