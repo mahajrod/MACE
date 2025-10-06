@@ -35,11 +35,12 @@ class DataDF(pd.DataFrame):
                  "attachment_separator", "default_tracktype", "check_method_dict", "convert_method_dict",
                  "track_number", "track_list", "autodetected_tracktype_list", "defaulted_tracktype_list",
                  "track_type_dict", "track_parameter_dict", "track_attachment_dict", "track_metadata_df", "parsed",
-                 "attached_track_dict", "attachment_relation_dict", "track_feature_dict"]
+                 "attached_track_dict", "attachment_relation_dict", "track_feature_dict",
+                 "track_name_list", "track_type_list"]
 
     def __init__(self, data=None, index=None, columns=None, dtype=None, copy=True,
                  syn_df=None, whitelist_series=None, blacklist_series=None,
-                 empty=False, parsed=False, default_tracktype=None,
+                 empty=False, parsed=False, default_tracktype=None, track_name_list=None, track_type_list=None,
                  parameter_separator="&", subtype_separator="$", attachment_separator="@"):
         
         pd.DataFrame.__init__(self, data=data, index=index, columns=columns, dtype=dtype, copy=copy,)
@@ -74,6 +75,8 @@ class DataDF(pd.DataFrame):
         #---- default metadata (is filled during parsing) ----
         self.track_number = None
         self.track_list = []
+        self.track_name_list = track_name_list if track_name_list is not None else []
+        self.track_type_list = track_type_list if track_type_list is not None else []
         self.autodetected_tracktype_list = []
         self.defaulted_tracktype_list = []
         self.track_type_dict = {}
@@ -86,7 +89,7 @@ class DataDF(pd.DataFrame):
         self.track_feature_dict = {}
 
         if (whitelist_series is not None) or (blacklist_series is not None):
-            print("AAAAAA")
+            #print("AAAAAA")
             self.filter_scaffolds(whitelist_series=whitelist_series,
                                   blacklist_series=blacklist_series,
                                   inplace=True)
@@ -100,7 +103,7 @@ class DataDF(pd.DataFrame):
 
     def parse(self):
         self._check_input_data(empty=self.empty)
-        self.track_metadata_df = self.parse_metadata_from_column_names()
+        self.parse_metadata_from_column_names()
         self.parse_features()
         self.parse_data()
         self.parsed = True
@@ -227,6 +230,10 @@ class DataDF(pd.DataFrame):
         #print(type_df)
         sys.stdout.write("Results of track metadata parsing:\n")
         sys.stdout.write(str(parsing_df) + "\n")
+
+        self.track_name_list = list(parsing_df[parsing_df["parameter"] == "type"].index)
+        self.track_type_list = list(parsing_df[parsing_df["parameter"] == "type"]["parameter_value"])
+        self.track_metadata_df = parsing_df
         return parsing_df
 
     def detect_track_type(self, track_column_name):
@@ -491,15 +498,21 @@ class DataDF(pd.DataFrame):
                 track_list.append(DataDF(self[["start", "end"] + list(self.track_metadata_df.loc[[track_name]]["column_name"])], parsed=True))
                 track_list[-1].track_metadata_df = self.track_metadata_df.loc[[track_name]].copy()
                 track_list[-1].track_feature_dict = {track_name: deepcopy(self.track_feature_dict[track_name])}
+                track_list[-1].track_name_list = [track_name]
+                track_list[-1].track_type_list = [self.track_metadata_df[(self.track_metadata_df["parameter"] == "type")].loc[track_name, "parameter_value"]]
                 for attached_track_name in list(self.track_metadata_df[(self.track_metadata_df["parameter"] == "type") & (self.track_metadata_df["attachment"] == track_name)].index):
                     track_list[-1].attached_track_dict[attached_track_name] = DataDF(self[["start", "end"] + list(self.track_metadata_df.loc[[attached_track_name]]["column_name"])], parsed=True)
                     track_list[-1].attached_track_dict[attached_track_name].track_metadata_df = self.track_metadata_df.loc[[attached_track_name]].copy()
                     track_list[-1].attached_track_dict[attached_track_name].track_feature_dict = {attached_track_name: deepcopy(self.track_feature_dict[attached_track_name])}
+                    track_list[-1].attached_track_dict[attached_track_name].track_name_list = [attached_track_name]
+                    track_list[-1].attached_track_dict[attached_track_name].track_type_list = [self.track_metadata_df[(self.track_metadata_df["parameter"] == "type")].loc[attached_track_name, "parameter_value"]]
         else:
             for track_name in list(self.track_metadata_df.index.unique()):
                 track_list.append(DataDF(self[["start", "end"] + list(self.track_metadata_df.loc[[track_name]]["column_name"])], parsed=True))
                 track_list[-1].track_metadata_df = self.track_metadata_df.loc[[track_name]].copy()
                 track_list[-1].track_feature_dict = {track_name: deepcopy(self.track_feature_dict[track_name])}
+                track_list[-1].track_name_list = [track_name]
+                track_list[-1].track_type_list = [self.track_metadata_df[(self.track_metadata_df["parameter"] == "type")].loc[track_name, "parameter_value"]]
         return track_list
 
     def split_tracks_generator(self, resolve_attachments=True):
@@ -509,15 +522,22 @@ class DataDF(pd.DataFrame):
                 new_track = DataDF(self[["start", "end"] + list(self.track_metadata_df.loc[[track_name]]["column_name"])], parsed=True)
                 new_track.track_metadata_df = self.track_metadata_df.loc[[track_name]].copy()
                 new_track.track_feature_dict = {track_name: deepcopy(self.track_feature_dict[track_name])}
+                new_track.track_name_list = [track_name]
+                new_track.track_type_list = [self.track_metadata_df[(self.track_metadata_df["parameter"] == "type")].loc[track_name, "parameter_value"]]
                 for attached_track_name in list(self.track_metadata_df[(self.track_metadata_df["parameter"] == "type") & (self.track_metadata_df["attachment"] == track_name)].index):
                     new_track.attached_track_dict[attached_track_name] = DataDF(self[["start", "end"] + list(self.track_metadata_df.loc[[attached_track_name]]["column_name"])], parsed=True)
                     new_track.attached_track_dict[attached_track_name].track_metadata_df = self.track_metadata_df.loc[[attached_track_name]].copy()
                     new_track.attached_track_dict[attached_track_name].track_feature_dict = {attached_track_name: deepcopy(self.track_feature_dict[attached_track_name])}
+                    new_track.attached_track_dict[attached_track_name].track_name_list = [attached_track_name]
+                    new_track.attached_track_dict[attached_track_name].track_type_list = [self.track_metadata_df[(self.track_metadata_df["parameter"] == "type")].loc[attached_track_name, "parameter_value"]]
+                yield new_track
         else:
             for track_name in list(self.track_metadata_df.index.unique()):
                 new_track = DataDF(self[["start", "end"] + list(self.track_metadata_df.loc[[track_name]]["column_name"])], parsed=True)
                 new_track.track_metadata_df = self.track_metadata_df.loc[[track_name]].copy()
                 new_track.track_feature_dict = {track_name: deepcopy(self.track_feature_dict[track_name])}
+                new_track.track_name_list = [track_name]
+                new_track.track_type_list = [self.track_metadata_df[(self.track_metadata_df["parameter"] == "type")].loc[track_name, "parameter_value"]]
                 yield new_track
 
     def split_tracks_by_scaffolds(self):

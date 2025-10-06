@@ -205,6 +205,7 @@ try:
         feature_df.records.index.name = "scaffold"
         feature_start_column_id = "start"
         feature_end_column_id = "end"
+
     elif args.input_type == "bed_track":
         feature_df = CollectionBED(in_file=args.input, parsing_mode="all", format="bed_track",)
         print(feature_df.records)
@@ -213,16 +214,19 @@ try:
         feature_start_column_id = "start"
         feature_end_column_id = "end"
         args.color_column_name = "color"
+
     elif args.input_type == "tab6":
         feature_df = CollectionBLAST(in_file=args.input, parsing_mode="complete")
         feature_df.records.reset_index(level="query_id", inplace=True)
         feature_start_column_id = args.start_column_name if args.start_column_name else "target_start"
         feature_end_column_id = args.end_column_name if args.end_column_name else "target_end"
+
     elif args.input_type == "tab6_colored":
         feature_df = CollectionBLAST(in_file=args.input, parsing_mode="complete", format="tab6_colored", header=args.header)
         feature_df.records.reset_index(level="query_id", inplace=True)
         feature_start_column_id = args.start_column_name if args.start_column_name else "target_start"
         feature_end_column_id = args.end_column_name if args.end_column_name else "target_end"
+
     else:
         raise ValueError("ERROR!!! Unrecognized input type ({}). ".format(args.input_type))
 except pd.errors.EmptyDataError:
@@ -309,6 +313,3 @@ Visualization.draw_features({"features": feature_df}, chr_len_df,
                             subplot_title_fontweight='bold',
                             x_tick_type=args.x_tick_type,
                             )
-
-
-

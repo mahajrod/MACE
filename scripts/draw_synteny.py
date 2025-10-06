@@ -174,7 +174,7 @@ def bed_dict_to_xlsx(bed_dict, output_prefix):
                                             species_format_dict[species][query_data[row - 1]])
 
         writer.sheets[species].set_column(column_start, len(bed_dict[species].records.columns) + len(bed_dict[species].records.index.names) - 1, 15)  #
-        workbook.get_worksheet_by_name('species').autofit() # NOT verified
+        #workbook.get_worksheet_by_name('species').autofit()  # NOT verified
         first_len_col = column_number - (2 if "query_len" in bed_dict[species].records.columns else 1)
         writer.sheets[species].conditional_format(1, first_len_col,
                                                   row_number, column_number - 1,

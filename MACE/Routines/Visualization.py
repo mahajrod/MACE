@@ -416,11 +416,38 @@ class Visualization(DrawingRoutines):
         return output_df
 
     @staticmethod
+    def apply_masking_to_track_df(track_df, masking_df, masking_color=None):
+        #print(track_df)
+        output_df_columns = list(track_df.columns)
+        output_df = track_df.copy().reset_index(drop=False).set_index(["scaffold", "start", "end"])
+        tmp_masking_df = masking_df.reset_index(drop=False).set_index(["scaffold", "start", "end"])
+        if "color" not in output_df.columns:
+            raise ValueError("ERROR!!! 'color' column is absent in track dataframe. Mask must be added after coloring dataframe!")
+
+        #check index overlap
+        overlap_sr = tmp_masking_df.index.isin(output_df.index)
+        if sum(overlap_sr) != len(overlap_sr):
+            #print(overlap_sr)
+            print("WARNING!!! Not all windows from masking track are present in track df:")
+            print(tmp_masking_df[~overlap_sr])
+
+        # apply masking
+        index_intersection = tmp_masking_df.index.intersection(output_df.index)
+        output_df.loc[index_intersection, "color"] = tmp_masking_df[index_intersection, "color"] if masking_color is None else masking_color
+        output_df["color"].astype('category', copy=False)
+        output_df = output_df.reset_index(drop=False).set_index("scaffold")
+        output_df = output_df[output_df_columns]
+        #print(output_df)
+
+        return output_df
+
+    @staticmethod
     def density_legend(colors, thresholds, colormap=None, feature_name="SNPs", interval_type='left_open',
-                       skip_top_interval=False, skip_bottom_interval=False):
+                       skip_top_interval=False, skip_bottom_interval=False, masking_color='grey'):
         return DensityLegend(colors=colors, colormap=colormap, thresholds=thresholds, feature_name=feature_name,
                              interval_type=interval_type,
-                             skip_top_interval=skip_top_interval, skip_bottom_interval=skip_bottom_interval)
+                             skip_top_interval=skip_top_interval, skip_bottom_interval=skip_bottom_interval,
+                             masked=masking_color)
 
     @staticmethod
     def coverage_legend(colormap, thresholds):
@@ -432,8 +459,8 @@ class Visualization(DrawingRoutines):
                                 scaffold_order_list=reference_scaffold_order_list)
 
     @staticmethod
-    def feature_legend(legend_df, colormap):
-        return FeatureLegend(legend_df, colormap=colormap, ) if legend_df is not None else None
+    def feature_legend(legend_df, colormap, masking_color='grey'):
+        return FeatureLegend(legend_df, colormap=colormap, masked=masking_color) if legend_df is not None else None
 
     def draw_features(self, bed_collection_dict, scaffold_length_df, scaffold_order_list, #species_color_df_dict,
                       output_prefix,
