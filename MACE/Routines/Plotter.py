@@ -9,6 +9,7 @@ from functools import partial
 from pathlib import Path
 
 import distinctipy
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -27,6 +28,7 @@ from MACE.Routines import StatsVCF, Visualization
 # TODO
 # upgrade PSMC plot
 # add legend props
+
 
 class Plotter:
     def __init__(self):
@@ -323,9 +325,7 @@ class Plotter:
         if font_size is not None:
             plt.rcParams.update({"font.size": font_size})
 
-        data_list = self.process_variant_counts(
-            data, removed_chrX=removed_chrX, window_size=window_size, multiplicator=multiplicator
-        )
+        data_list = self.process_variant_counts(data, removed_chrX=removed_chrX, window_size=window_size, multiplicator=multiplicator)
         data = pd.DataFrame(data_list)
 
         # Calculate mean or median values for sorting if needed
@@ -1011,20 +1011,24 @@ class Plotter:
                 color="white",
             )
 
-    def draw_histogram_with_stats(self, ax, data, bins, show_legend=True, legend_loc="upper right", legend_ncol=1):
+    def draw_histogram_with_stats(self, ax, data, bin_width=None, show_stats=True, show_legend=True, legend_loc="upper right", legend_ncol=1):
         """
-        Draws a histogram with key statistics.
+        Draws a histogram with optional statistics.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         ax : matplotlib.axes.Axes
             The axes on which to draw the histogram.
 
         data : array-like
             The dataset to plot as a histogram.
 
-        bins : int or sequence of scalars or str
-            Number of bins or bin edges for the histogram.
+        bin_width : float, optional
+            Width of each histogram bin. If None, matplotlib decides automatically.
+
+        show_stats : bool, optional
+            If True, shows mean, median, percentiles, and ±σ shaded areas.
+            If False, plots only the histogram.
 
         show_legend : bool, optional
             Whether to display a legend. Default is True.
@@ -1034,54 +1038,47 @@ class Plotter:
 
         legend_ncol : int, optional
             Number of columns in the legend. Default is 1.
-
-        Additional Details:
-        -------------------
-        - Adds vertical lines for:
-            * Mean (red dashed line).
-            * Median (blue dashed line).
-            * 5th and 95th percentiles (purple dashed-dotted lines).
-        - Shades regions within ±1, ±2, and ±3 standard deviations of the mean:
-            * ±1σ in orange.
-            * ±2σ in yellow.
-            * ±3σ in green.
         """
-        # Customize plot
-        # ax.spines[["right", "top"]].set_visible(False)
+        import numpy as np
+
+        # Hide unnecessary spines
         for spine in ["right", "top"]:
             ax.spines[spine].set_visible(False)
 
-        # Calculating statistics
-        mean = np.mean(data)
-        median = np.median(data)
-        std_dev = np.std(data)
-        percentile_5 = np.percentile(data, 5)
-        percentile_95 = np.percentile(data, 95)
+        # Determine bins based on bin_width
+        if bin_width is not None:
+            data_min, data_max = np.min(data), np.max(data)
+            bins = np.arange(data_min, data_max + bin_width, bin_width)
+        else:
+            bins = "auto"
 
-        # Mean line (red dashed)
-        ax.axvline(mean, color="red", linestyle="--", label=f"Mean: {mean:.0f}")
-
-        # Median line (blue dashed)
-        ax.axvline(median, color="blue", linestyle="--", label=f"Median: {median:.0f}")
-
-        # 5th and 95th percentiles lines
-        ax.axvline(percentile_5, color="purple", linestyle="-.", label=f"5th percentile: {percentile_5:.0f}")
-        ax.axvline(percentile_95, color="purple", linestyle="-.", label=f"95th percentile: {percentile_95:.0f}")
-
-        # Shaded areas for mean ± std_dev * 1, 2, 3
-        for i in range(1, 4):
-            color = "orange" if i == 1 else "yellow" if i == 2 else "green"
-            ax.axvspan(mean - i * std_dev, mean + i * std_dev, color=color, alpha=0.1)
-            left_value = mean - i * std_dev
-            right_value = mean + i * std_dev
-            ax.axvline(left_value, color=color, linestyle="--", label=f"Mean - {i}σ: {left_value:.0f}")
-            ax.axvline(right_value, color=color, linestyle="--", label=f"Mean + {i}σ: {right_value:.0f}")
-
-        # Plotting histogram
+        # Draw histogram
         ax.hist(data, bins=bins, edgecolor="black")
 
-        # Legend and labels
-        if show_legend:
+        if show_stats:
+            # Calculate statistics
+            mean = np.mean(data)
+            median = np.median(data)
+            std_dev = np.std(data)
+            percentile_5 = np.percentile(data, 5)
+            percentile_95 = np.percentile(data, 95)
+
+            # Plot key statistics
+            ax.axvline(mean, color="red", linestyle="--", label=f"Mean: {mean:.2f}")
+            ax.axvline(median, color="blue", linestyle="--", label=f"Median: {median:.2f}")
+            ax.axvline(percentile_5, color="purple", linestyle="-.", label=f"5th percentile: {percentile_5:.2f}")
+            ax.axvline(percentile_95, color="purple", linestyle="-.", label=f"95th percentile: {percentile_95:.2f}")
+
+            # Shaded regions for ±1σ, ±2σ, ±3σ
+            # for i, color in zip(range(1, 4), ["orange", "yellow", "green"]):
+                # ax.axvspan(mean - i * std_dev, mean + i * std_dev, color=color, alpha=0.1)
+                # left_value = mean - i * std_dev
+                # right_value = mean + i * std_dev
+                # ax.axvline(left_value, color=color, linestyle="--", label=f"Mean - {i}σ: {left_value:.2f}")
+                # ax.axvline(right_value, color=color, linestyle="--", label=f"Mean + {i}σ: {right_value:.2f}")
+
+        # Legend
+        if show_legend and show_stats:
             ax.legend(ncol=legend_ncol, loc=legend_loc)
 
     def classify_roh(self, length):
@@ -1278,7 +1275,7 @@ class Plotter:
         # ax.set_xticklabels([f"{i}%" for i in xticks])
 
         ax.set_ylim(bottom=-1.25)
-        ax.spines['bottom'].set_zorder(0)
+        ax.spines["bottom"].set_zorder(0)
         if vline_x_coord is not None:
             ax.vlines(x=vline_x_coord, ymin=-1.5, ymax=len(result_df.index) - 0.5, color="white", linewidth=10, clip_on=False)
             ax.vlines(x=vline_x_coord, ymin=-1.5, ymax=len(result_df.index) - 0.25, color="gray", linewidth=1, linestyle="--", clip_on=False)
@@ -1356,6 +1353,9 @@ class Plotter:
         figure_width=10,
         figure_height_per_scaffold=0.5,
         figure_header_height=0,
+        masking_track=None,
+        masking_color="grey",
+        masking_threshold=0.1,
         colormap="jet",
         custom_color_list=None,
         density_thresholds=(0.0, 0.1, 0.5, 0.75, 1.0, 1.25, 1.5, 2.0, 2.5),
@@ -1389,7 +1389,6 @@ class Plotter:
         # scaffold_black_list=pd.Series(dtype=str),
         # sort_scaffolds=False,
         # masking_gff_list=None,
-        # masking_threshold=0.5,
 
         # if not output_prefix
         #     raise ValueError("Output prefix is required.")
@@ -1406,11 +1405,42 @@ class Plotter:
             if scaffold_ordered_list.empty:
                 scaffold_ordered_list = scaffold_white_list
 
+
+        if masking_track is not None:
+            masking_track = pd.read_csv(masking_track, header=None, index_col=None, sep="\t")
+
+            #detect type of masking track and assign colors
+            if len(masking_track.columns) == 3:
+                masking_track.columns = pd.Index(["scaffold", "start", "end"])
+                masking_track["color"] = masking_color if masking_color is not None else masking_color
+            elif len(masking_track.columns) == 4:
+                masking_track.columns = pd.Index(["scaffold", "start", "end", "color"])
+                if pd.api.types.is_integer_dtype(masking_track["color"]):
+                    # assume that the fourth column contains counts of masked bases
+                    threshold = int(window_size * masking_threshold)
+                    masking_track = masking_track[masking_track["color"] >= threshold]
+                    masking_track["color"] = masking_color
+                elif pd.api.types.is_float_dtype(masking_track["color"]):
+                    # assume that the fourth column contains counts of masked bases
+                    masking_track = masking_track[masking_track["color"] >= masking_threshold]
+                    masking_track["color"] = masking_color
+                else:
+                    # assume that the forth column is string like
+                    raise ValueError("ERROR!!! Preset for string-like values in the fourth column is not implemented yet.")
+                    #masking_track[masking_track["color"] == 'masked', "color"] = default_masking_color
+            else:
+                raise ValueError(f"ERROR! Masking track contains {len(masking_track.columns)} columns instead of 3 or 4!")
+
+            masking_track["color"] = masking_track["color"].apply(mpl.colors.to_hex)
+            masking_track = masking_track.set_index("scaffold")
+            #print(masking_track)
+
         if custom_color_list is not None:
             if len(custom_color_list) != len(density_thresholds):
                 raise ValueError(
                     "ERROR!!! Custom color list is set, but the number of colors ({0}) in the list is not equal to the number of the thresholds (1)!".format(
-                        len(custom_color_list), )
+                        len(custom_color_list),
+                    )
                 )
 
         variants = CollectionVCF(input_file, parsing_mode="only_coordinates")
@@ -1444,7 +1474,21 @@ class Plotter:
                 scaffold_white_list=scaffold_white_list,
                 scaffold_syn_dict=chr_syn_dict,
             )
-            feature_df, track_df = StatsVCF.convert_variant_count_to_feature_df(count_df, window_size, window_step)
+            #print("Counts")
+            #print(count_df)
+            # instead of actual end of the window in track df start + window_step is used to avoid possible visualization artefacts.
+            # Masking track must be modified to take it in account
+            # It applies only for track_df calculated from vcf
+            feature_df, track_df = StatsVCF.convert_variant_count_to_feature_df(count_df,
+                                                                                window_size,
+                                                                                window_step)
+            if masking_track is not None:
+                masking_track["end"] = masking_track["start"] + window_step
+            #print("Feature df")
+            #print(feature_df)
+            #print("track_df")
+            #print(track_df)
+
             # feature_df.to_csv("{}.features.counts".format(output_prefix), sep="\t", header=True, index=True)
             feature_df[feature_df.columns[-1]] = feature_df[feature_df.columns[-1]] * float(density_multiplier) / float(window_size)
 
@@ -1466,7 +1510,10 @@ class Plotter:
 
         if scaffold_syn_file:
             chr_len_df.rename(index=chr_syn_dict, inplace=True)
-
+            if masking_track is not None:
+                masking_track.rename(index=chr_syn_dict, inplace=True)
+                #print(masking_track)
+        #print(track_df)
         # scale counts
         track_df[track_df.columns[-1]] = track_df[track_df.columns[-1]] * float(density_multiplier) / float(window_size)
 
@@ -1504,7 +1551,12 @@ class Plotter:
                     color_expression,
                     value_column_index=-1,  # TODO fix it, add support for multiple tracks in the file
                 )
-
+                #apply track mask if exists
+                if masking_track is not None:
+                    #masking_track
+                    track_with_colors_df = Visualization.apply_masking_to_track_df(track_with_colors_df, masking_track, masking_color=masking_color)
+                    track_with_colors_df.to_csv("{}.{}.masked.track.bed".format(output_prefix,
+                                                                                colormap), sep="\t", header=True, index=True)
                 # track_with_colors_df.to_csv("{}.{}.track.bed".format(output_prefix, colormap), sep="\t", header=True, index=True)
                 # print(feature_with_colors_df)
                 # print(scaffold_ordered_list)
@@ -1521,6 +1573,7 @@ class Plotter:
                             interval_type=density_thresholds_expression_type,
                             skip_top_interval=skip_top_interval,
                             skip_bottom_interval=skip_bottom_interval,
+                            masking_color=masking_color
                         )
                         if show_legend
                         else None
