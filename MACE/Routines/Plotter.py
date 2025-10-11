@@ -1496,7 +1496,7 @@ class Plotter:
 
         elif input_type == "bedgraph":
             track_df = pd.read_csv(
-                input,
+                input_file,
                 sep="\t",
                 names=["scaffold", "start", "end", "value"],
                 header=None,
