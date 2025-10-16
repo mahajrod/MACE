@@ -775,6 +775,7 @@ class Plotter:
         legend_loc="upper left",
         legend_ncol=2,
         linewidth=1.5,
+        show_legend=True,
         figure_grid=True,
     ):
         """
@@ -821,6 +822,9 @@ class Plotter:
         linewidth : float, optional
             The width of the plot lines. Defaults to 1.5.
 
+        show_legend : bool, optional
+            Whether to display a legend on the plot. Defaults to True.
+
         figure_grid : bool, optional
             Whether to display a grid on the plot. Defaults to True.
 
@@ -860,7 +864,9 @@ class Plotter:
         ax.set_ylim(ylim)
         ax.set_xlabel(xlabel)
         ax.set_ylabel(ylabel)
-        ax.legend(title=r"$\mathit{" + legend_title.replace(" ", r"\,") + "}$", loc=legend_loc, ncol=legend_ncol)
+
+        if show_legend:
+            ax.legend(title=r"$\mathit{" + legend_title.replace(" ", r"\,") + "}$", loc=legend_loc, ncol=legend_ncol)
 
         if figure_grid:
             ax.grid(True, linestyle="--", alpha=0.5)
