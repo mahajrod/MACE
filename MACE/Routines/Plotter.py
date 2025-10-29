@@ -8,6 +8,7 @@ from copy import deepcopy
 from functools import partial
 from pathlib import Path
 
+from adjustText import adjust_text
 import distinctipy
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -154,20 +155,21 @@ class Plotter:
             vert=True,
             positions=[position],
             widths=width,
-            showfliers=False,
+            whis=1,
+            showcaps=True,
             showmeans=True,
-            showcaps=False,
+            showfliers=True,
             patch_artist=True,
-            boxprops=dict(alpha=0),  # color="#575757", facecolor="#575757",
-            flierprops=dict(marker="o", markerfacecolor="#575757", markeredgecolor="#575757", markersize=0.5),
-            whiskerprops=dict(color="#575757", linewidth=1),
-            capprops=dict(color="#575757", linewidth=1),
+            boxprops=dict(alpha=0),
+            capprops=dict(color="black", linewidth=0.8),
+            whiskerprops=dict(color="black", linewidth=0.8),
             meanprops=dict(marker="o", markerfacecolor="w", markeredgecolor="w", markersize=2),
-            medianprops=dict(color="w", linewidth=1),
+            flierprops=dict(marker="o", markerfacecolor="black", markeredgecolor="none", markersize=.8),
+            medianprops=dict(color="w", linewidth=0.8)
         )
         q25, q75 = df.quantile([0.25, 0.75])
-        ax.hlines(y=q25, xmin=position - 0.1, xmax=position + 0.1, colors="#575757", linewidth=1)
-        ax.hlines(y=q75, xmin=position - 0.1, xmax=position + 0.1, colors="#575757", linewidth=1)
+        ax.hlines(y=q25, xmin=position-0.1, xmax=position+0.1, colors="black", linewidth=0.8)
+        ax.hlines(y=q75, xmin=position-0.1, xmax=position+0.1, colors="black", linewidth=0.8)
 
     def add_double_boxplot(self, ax, df_1, df_2, position, width=0.04):
         for d, pos in zip([df_1, df_2], [position - 0.02, position + 0.02]):
@@ -335,7 +337,10 @@ class Plotter:
         else:
             unique_ids = data["id"].unique()
 
-        colors = sns.color_palette(palette, len(unique_ids))
+        try:
+            colors = sns.color_palette(palette, len(unique_ids))
+        except ValueError:
+            colors = palette
 
         for i, unique_id in enumerate(unique_ids):
             df = data[data["id"] == unique_id]["density"]
@@ -745,9 +750,11 @@ class Plotter:
             ax.legend(
                 [species_1[0], species_2[0]],
                 [
-                    f"Global and local ADMIXTURE from $\\mathit{{{references[0]}}}$",
+                    # f"Global and local admixture from $\\mathit{{{references[0]}}}$",
+                    f"{references[0]} global and local ancestry",
                     # f"Глобальный и локальный ADMIXTURE от $\\mathit{{{references[0]}}}$",
-                    f"Global and local ADMIXTURE from $\\mathit{{{references[1]}}}$",
+                    # f"Global and local admixture from $\\mathit{{{references[1]}}}$",
+                    f"{references[1]} global and local ancestry",
                     # f"Глобальный и локальный ADMIXTURE от $\\mathit{{{references[1]}}}$",
                 ],
                 handler_map={species_1[0]: species_1[1], species_2[0]: species_2[1]},
@@ -866,7 +873,11 @@ class Plotter:
         ax.set_ylabel(ylabel)
 
         if show_legend:
-            ax.legend(title=r"$\mathit{" + legend_title.replace(" ", r"\,") + "}$", loc=legend_loc, ncol=legend_ncol)
+            if legend_title is not None:
+                # ax.legend(title=r"$\mathit{" + legend_title.replace(" ", r"\,") + "}$", loc=legend_loc, ncol=legend_ncol, fontsize=7.7)
+                ax.legend(title=f"{legend_title}", loc=legend_loc, ncol=legend_ncol, fontsize=7.7)
+            else:
+                ax.legend(loc=legend_loc, ncol=legend_ncol, fontsize=7.7)
 
         if figure_grid:
             ax.grid(True, linestyle="--", alpha=0.5)
@@ -1174,152 +1185,112 @@ class Plotter:
         - The function calculates the percentage of the genome occupied by each ROH category for each sample.
         - The stacked bar plot ensures each bar represents 100% of the genome for a given sample.
         """
-        # Customize plot
-        # ax.spines[["right", "top"]].set_visible(False)
+        # --- Customize axes
         for spine in ["left", "right", "top"]:
             ax.spines[spine].set_visible(False)
+        ax.spines["bottom"].set_zorder(0)
 
-        # Load data for each file
+        # --- Load data
         sample_data = {}
         sample_names = []
         for file_path in data:
-            sample_name = os.path.basename(file_path).split(".")[0]
-            sample_names.append(sample_name)
+            sample = os.path.basename(file_path).split(".")[0]
+            sample_names.append(sample)
             df = pd.read_csv(file_path, sep="\t", header=None, names=["scaffold", "start", "end", "length"])
-            df["length"] = pd.to_numeric(df["length"])
             df["classification"] = df["length"].apply(self.classify_roh)
+            total = df.groupby("classification")["length"].sum().to_dict()
 
-            total_lengths = df.groupby("classification")["length"].sum().to_dict()
-            print(f"{sample_name}\t{total_lengths}")
+            group = next((g for g, s in (groups or {}).items() if sample in s), None)
+            glen = genome_length[group] if groups else genome_length
 
-            for category in ["S", "L", "UL"]:
-                if not groups:
-                    total_lengths[category] = (total_lengths.get(category, 0) / genome_length) * 100
-                else:
-                    sample_group = next((key for key, values in groups.items() if sample_name in values), None)
-                    total_lengths[category] = (total_lengths.get(category, 0) / genome_length[sample_group]) * 100
+            for cat in ["S", "L", "UL"]:
+                total[cat] = total.get(cat, 0) / glen * 100
+            total["N"] = max(0, 100 - sum(total.get(c, 0) for c in ["S", "L", "UL"]))
 
-            # Add Non-ROHs
-            total_roh_percentage = sum(total_lengths.values())
-            total_lengths["N"] = max(0, 100 - total_roh_percentage)
+            sample_data[sample] = total
 
-            sample_data[sample_name] = total_lengths
+        # --- Build dataframe
+        df = pd.DataFrame.from_dict(sample_data, orient="index", columns=["N", "S", "L", "UL"]).fillna(0)
 
-        result_df = pd.DataFrame.from_dict(sample_data, orient="index").fillna(0)
-        result_df = result_df[["N", "S", "L", "UL"]]
-
-        # Sort the DataFrame if sorting=True
         if sorting:
-            result_df = result_df.sort_values(by=["UL", "L", "S", "N"], ascending=[False, False, False, False])
+            df = df.sort_values(by=["UL", "L", "S", "N"], ascending=False)
 
-        # If groups are not specified, all samples are considered as one group
         if not groups:
-            groups = {"All": result_df.index.tolist()}
+            groups = {"All": df.index.tolist()}
 
-        # Create an ordered list of indices based on grouping
-        grouped_samples = []
-        for group, samples in groups.items():
-            # Include only samples present in the DataFrame
-            group_samples = [sample for sample in samples if sample in result_df.index]
+        # --- Order samples by groups
+        ordered = []
+        for g, s in groups.items():
+            s = [x for x in s if x in df.index]
             if sorting:
-                # Sort within the group
-                group_df = result_df.loc[group_samples]
-                group_samples = group_df.sort_values(by=["UL", "L", "S", "N"], ascending=[False, False, False, False]).index.tolist()
-            grouped_samples.extend(group_samples)
+                s = df.loc[s].sort_values(by=["UL", "L", "S", "N"], ascending=False).index.tolist()
+            ordered.extend(s)
+        df = df.loc[ordered]
 
-        # Reorder the DataFrame indices based on groups
-        if groups and sorting:
-            result_df = result_df.loc[grouped_samples]
-        elif groups and not sorting:
-            result_df = result_df.loc[sample_names]
+        # --- Plot stacked bars
+        labels = {
+            "N": "Non-RoHs (N)",
+            "S": "Short RoHs (S)",
+            "L": "Long RoHs (L)",
+            "UL": "Ultra Long RoHs (UL)",
+        }
 
-        # Plot a cumulative bar plot (replace vertical bars with horizontal ones)
-        category_labels = {"N": "Non-RoHs (N)", "S": "Short RoHs (S)", "L": "Long RoHs (L)", "UL": "Ultra Long RoHs (UL)"}
-        # category_labels = {"N": "Не RoH", "S": "Короткие RoH (<1 млн п.н.)", "L": "Длинные RoH (>=1 млн п.н.)", "UL": "Ультра-длинные RoH (>=10 млн п.н.)"}
-        bottom = None
-        for category, color in colors.items():
+        left = pd.Series(0, index=df.index)
+        for cat, color in colors.items():
             ax.barh(
-                result_df.index,
-                result_df[category],
-                left=bottom,
+                df.index,
+                df[cat],
+                left=left,
                 color=color,
-                label=category_labels[category],
+                label=labels[cat],
                 height=0.9,
             )
+            left += df[cat]
 
-            bottom = result_df[category] if bottom is None else bottom + result_df[category]
-
-        # Configure initial area shading
+        # --- Initial shaded area (white span before first tick)
         if xticks[0] != 0:
             ax.axvspan(xlim[0], xticks[0], color="white")
 
-        # Configure axes and legend for the horizontal plot
+        # --- Configure x/y axes
+        ax.set_xlim(xlim)
+        ax.set_xticks(xticks)
+        ax.set_ylim(bottom=-1.25)
+        ax.spines["bottom"].set_bounds(xticks[0], xlim[1])
         ax.yaxis.set_ticks_position("none")
-
-        # Remove default Y-axis ticks
         ax.set_yticks([])
         ax.set_yticklabels([])
 
-        for i, label in enumerate(result_df.index):
-            ax.text(xticks[0] - 0.5, i, label, va="center", ha="right")
+        for i, sample in enumerate(df.index):
+            ax.text(xticks[0] - 0.5, i, sample, va="center", ha="right")
 
-        # if groups is None: # TEST IT!
-        #     # Remove default Y-axis ticks
-        #     ax.set_yticks([])
-        #     ax.set_yticklabels([])
-
-        #     # Add custom yticklabels
-        #     for i, label in enumerate(result_df.index):
-        #         ax.text(xticks[0] - 0.5, i, label, va="center", ha="right")
-
-        ax.set_xlim(xlim)
-        ax.set_xticks(xticks)
         if vline_x_coord is not None:
             ax.set_xticklabels(["0%"] + [f"{i}%" for i in xticks[1:]])
+            ax.vlines(x=vline_x_coord, ymin=-1.5, ymax=len(df.index) - 0.5, color="white", linewidth=10, clip_on=False)
+            ax.vlines(x=vline_x_coord, ymin=-1.5, ymax=len(df.index) - 0.25, color="gray", linewidth=1, linestyle="--", clip_on=False)
         else:
             ax.set_xticklabels([f"{i}%" for i in xticks])
-        # ax.set_xticklabels([f"{i}%" for i in xticks])
 
-        ax.set_ylim(bottom=-1.25)
-        ax.spines["bottom"].set_zorder(0)
-        if vline_x_coord is not None:
-            ax.vlines(x=vline_x_coord, ymin=-1.5, ymax=len(result_df.index) - 0.5, color="white", linewidth=10, clip_on=False)
-            ax.vlines(x=vline_x_coord, ymin=-1.5, ymax=len(result_df.index) - 0.25, color="gray", linewidth=1, linestyle="--", clip_on=False)
-
-        ax.spines["bottom"].set_bounds(xticks[0], xlim[1])
+        # --- Legend
         if show_legend:
             ax.legend(loc=legend_loc, ncol=legend_ncol, handlelength=0.8, frameon=False)
 
-        # Add vertical lines to indicate groups
+        # --- Draw group separators
         if groups and "All" not in groups:
-            for group, samples in groups.items():
-                group_samples = [sample for sample in result_df.index if sample in samples]
-                if group_samples:
-                    # Indices of the first and last samples in the group
-                    start_idx = result_df.index.get_loc(group_samples[0])
-                    end_idx = result_df.index.get_loc(group_samples[-1])
+            for g, s in groups.items():
+                s = [x for x in df.index if x in s]
+                if not s:
+                    continue
+                start, end = df.index.get_loc(s[0]), df.index.get_loc(s[-1])
+                ax.vlines(x=xlim[0], ymin=start - 0.25, ymax=end + 0.25, colors="black", linewidth=1)
+                ax.text(xlim[0] - 1, (start + end) / 2, g, va="center", ha="right", fontstyle="italic")
 
-                    # Draw a vertical line
-                    ax.vlines(
-                        x=xlim[0],
-                        ymin=start_idx - 0.25,
-                        ymax=end_idx + 0.25,
-                        colors="black",
-                        linewidth=1,
-                    )
-
-                    # Add group name
-                    y_pos = (start_idx + end_idx) / 2  # Average value for correct positioning
-                    ax.text(xlim[0] - 1, y_pos, group, rotation=0, va="center", ha="right", fontstyle="italic")
-
-        # Add annotation on each bar
+        # --- Optional annotation per sample
         if show_annotation:
-            for i, sample in enumerate(result_df.index):
-                values = result_df.loc[sample, ["N", "S", "L", "UL"]]
-                text = f'  N: {values["N"]:.1f}%   |   S: {values["S"]:.1f}%   |   L: {values["L"]:.1f}%   |   UL: {values["UL"]:.1f}%'
-                print(f"{sample}\t{values['N']:.1f}%\t{values['S']:.1f}%\t{values['L']:.1f}%\t{values['UL']:.1f}%")
+            for i, sample in enumerate(df.index):
+                vals = df.loc[sample]
+                text = f'  N: {vals["N"]:.1f}%   |   S: {vals["S"]:.1f}%   |   L: {vals["L"]:.1f}%   |   UL: {vals["UL"]:.1f}%'
                 ax.text(
-                    xticks[0],
+                    xticks[1],
                     i,
                     text,
                     va="center",
@@ -1994,8 +1965,11 @@ class Plotter:
         dot_size : int, optional
             Size of the dots in the scatter plot. Default is 70.
 
-        highlight_samples : list of str, optional
-            A list of sample identifiers to highlight on the PCA plot. These samples will be emphasized with a larger dot size or different color.
+        highlight_samples : list of str or bool, optional
+            - If None or False: No samples are highlighted with text labels.
+            - If True: All samples are labeled.
+            - If a list of str: Only the samples listed are labeled.
+            The labels' positions will be adjusted using adjust_text to minimize overlap. Default is None.
 
         highlight_samples_fontsize : int, optional
             Font size for the labels of the highlighted samples. If None, the default font size is used. Default is None.
@@ -2012,9 +1986,8 @@ class Plotter:
         legend_ncol : int, optional
             Number of columns in the legend. Default is 4.
         """
-
         pca_df = pd.read_csv(eigenvec_file, delim_whitespace=True, header=None)
-        pca_df = pca_df.iloc[:, 1:]  # Remove first column
+        pca_df = pca_df.iloc[:, 1:].copy()
         pca_df.columns = ["Sample"] + [f"PC{i}" for i in range(1, pca_df.shape[1])]
 
         eigenvals = pd.read_csv(eigenval_file, header=None).squeeze("columns")
@@ -2022,33 +1995,54 @@ class Plotter:
 
         if colors is None:
             colors = distinctipy.get_colors(len(pca_df))
-        else:
-            if type(colors) == str:
-                colors = sns.color_palette(colors, len(pca_df))[::-1]
+        elif isinstance(colors, str):
+            colors = sns.color_palette(colors, len(pca_df))[::-1]
 
         for i in range(pca_df.shape[0]):
-            ax.scatter(x=pca_df.loc[i, "PC1"], y=pca_df.loc[i, "PC2"], color=colors[i], label=pca_df.loc[i, "Sample"], s=dot_size)
+            ax.scatter(
+                x=pca_df.loc[i, "PC1"],
+                y=pca_df.loc[i, "PC2"],
+                color=colors[i] if len(colors) > i else colors[0],
+                label=pca_df.loc[i, "Sample"],
+                s=dot_size
+            )
 
-        if highlight_samples:
-            for i in range(pca_df.shape[0]):
-                if pca_df.loc[i, "Sample"] in highlight_samples:
-                    ax.text(
-                        x=pca_df.loc[i, "PC1"] + 0.005,
-                        y=pca_df.loc[i, "PC2"],
-                        s=pca_df.loc[i, "Sample"],
-                        fontsize=highlight_samples_fontsize,
-                        ha="left",
+        # highlight samples
+        texts = []
+        samples_to_label = []
+
+        if highlight_samples is True:
+            samples_to_label = pca_df["Sample"].tolist()
+        elif isinstance(highlight_samples, list):
+            samples_to_label = highlight_samples
+
+        if samples_to_label:
+            for i, row in pca_df.iterrows():
+                if row["Sample"] in samples_to_label:
+                    texts.append(
+                        ax.text(
+                            row["PC1"],
+                            row["PC2"],
+                            row["Sample"],
+                            fontsize=highlight_samples_fontsize,
+                        )
                     )
 
-        # Customize plot
-        # ax.spines[["right", "top"]].set_visible(False)
+            if texts:
+                adjust_text(
+                    texts,
+                    ax=ax,
+                    only_move={'points': 'xy', 'text': 'xy'},
+                    arrowprops=dict(arrowstyle='-', color='gray', lw=0.5),
+                    force_text=1.0
+                )
+
+        # 5. Кастомизация графика
         for spine in ["right", "top"]:
             ax.spines[spine].set_visible(False)
 
         ax.set_xlabel(f"Principal Component 1 ({explained_variance[0]:.2f}%)")
-        # ax.set_xlabel(f"Главная компонента 1 ({explained_variance[0]:.2f}%)")
         ax.set_ylabel(f"Principal Component 2 ({explained_variance[1]:.2f}%)")
-        # ax.set_ylabel(f"Главная компонента 2 ({explained_variance[1]:.2f}%)")
 
         if show_legend:
             ax.legend(loc=legend_loc, ncol=legend_ncol, handlelength=0.8, frameon=True)
