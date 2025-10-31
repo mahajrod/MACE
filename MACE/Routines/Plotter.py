@@ -8,13 +8,13 @@ from copy import deepcopy
 from functools import partial
 from pathlib import Path
 
-from adjustText import adjust_text
 import distinctipy
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
+from adjustText import adjust_text
 from matplotlib.legend_handler import HandlerPatch
 from matplotlib.patches import Rectangle
 from RouToolPa.Collections.General import SynDict
@@ -1824,10 +1824,13 @@ class Plotter:
         ids=None,
         n=100,
         colorlist=None,
-        xlim=(50000, 23000000),
+        xlim=(50000, 7000000),
         ylim=(0, 200),
-        mu=2.2e-9,
-        g=5,
+        xticks=[100000, 200000, 500000, 1000000, 2000000, 3000000, 5000000],
+        xtick_labels=["100k", "200k", "500k", "1M", "2M", "3M", "5M"],
+        xlabel=r"Years Ago ($\mu=4.64e-9$, g=5)",
+        ylabel=r"Effective population size, $10^4$",
+        title=None,
         figure_grid=True,
         show_legend=True,
         legend_loc="upper right",
@@ -1888,6 +1891,8 @@ class Plotter:
         else:
             if type(colorlist) is str:
                 colorlist = sns.color_palette(colorlist, len(diploid_data))
+            elif type(colorlist) is list:
+                colorlist = colorlist
 
         for i, diploid in enumerate(diploid_data):
             sample_name = diploid.split("/")[-1].split(".")[0] if ids is None else ids[i]
@@ -1918,15 +1923,20 @@ class Plotter:
         ax.set_xlim(xlim)
         ax.set_ylim(ylim)
 
-        # ax.set_xlabel(rf"Years Ago ($\mu={mu:.1e}$, g={g})")
-        ax.set_xlabel(r"Лет назад ($\mu=4.64 \times 10^{-09}$, g=5)")
-        # ax.set_xlabel(r"Years Ago, ($\mu=4.64 \times 10^{-09}$, g=5)")
-        # ax.set_ylabel(r"Effective population size, $10^4$")
-        # ax.set_ylabel(r"Effective Population Size, $10^4$")
-        ax.set_ylabel(r"Эффективный размер численности популяции, $10^4$")
+        if title:
+            ax.set_title(title)
+
+        if xticks:
+            ax.set_xticks(xticks)
+            ax.set_xticklabels(xtick_labels)
+
+        if xlabel:
+            ax.set_xlabel(xlabel)
+        if ylabel:
+            ax.set_ylabel(ylabel)
 
         if show_legend:
-            ax.legend(loc=legend_loc, ncol=legend_ncol, frameon=True)
+            ax.legend(loc=legend_loc, ncol=legend_ncol, frameon=False)
 
         if figure_grid:
             ax.grid(linestyle="--", alpha=0.2)
