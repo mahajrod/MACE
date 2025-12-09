@@ -567,14 +567,13 @@ class Plotter:
         self,
         ax,
         df,
-        admixture_columns,
-        colors=["#e02828", "#4286c3"],
+        colors=None,
         rotation=45,
         yticks=[0, 25, 50, 75, 100],
         xlabel="",
         font_size=None,
         show_legend=True,
-        legend_loc=(0.1, 0.95),
+        legend_loc="upper right",
         legend_ncol=4,
     ):
         """
@@ -622,6 +621,18 @@ class Plotter:
         - A single stacked bar plot is created to visualize ADMIXTURE proportions.
         - If `show_legend` is True, a legend is added to the plot.
         """
+        df_plot = df.copy()
+        index_column = df_plot.columns[0]
+        df_plot.set_index(index_column, inplace=True)
+
+        admixture_columns = df_plot.columns.tolist()
+        k_value = len(admixture_columns)
+
+        # If colors is None or len(colors) < k_value:
+        if colors is None or len(colors) < k_value:
+            cmap = plt.get_cmap("tab10")
+            colors = [cmap(i) for i in range(k_value)]
+
         for spine in ["right", "top"]:
             ax.spines[spine].set_visible(False)
         ax.set_axisbelow(True)
@@ -629,19 +640,31 @@ class Plotter:
         if font_size is not None:
             plt.rcParams.update({"font.size": font_size})
 
-        index_column = df.columns[0]  # первая колонка как индекс ('Sample_ID')
-        df.set_index(index_column, inplace=True)
-
-        stacked_data = df[admixture_columns]
-        stacked_data.plot(kind="bar", stacked=True, width=0.8, color=colors, ax=ax, legend=show_legend)
+        # 4. Отрисовка
+        df_plot.plot(
+            kind="bar",
+            stacked=True,
+            width=0.9,
+            color=colors,
+            ax=ax,
+            legend=False
+        )
 
         if show_legend:
-            ax.legend(loc=legend_loc, ncol=legend_ncol, frameon=True)
+            ncol = legend_ncol if legend_ncol else min(k_value, 4)
+            ax.legend(
+                admixture_columns,
+                loc=legend_loc,
+                ncol=ncol,
+                # bbox_to_anchor=(1.0, 1.0)
+            )
 
-        ax.set_xlim(right=len(stacked_data) - 0.5)
-        ax.set_xticklabels(df.index, ha="right", rotation=rotation)
+        ax.set_xlim(-0.5, len(df_plot) - 0.5)
+        ax.set_xticklabels(df_plot.index, ha="right", rotation=rotation)
         ax.set_xlabel(xlabel)
         ax.set_yticks(yticks)
+        ax.set_ylim(0, 1)
+
 
     def legend_half_patch(self, color1, color2):
         class SplitPatchHandler(HandlerPatch):
@@ -1891,14 +1914,18 @@ class Plotter:
         else:
             if type(colorlist) is str:
                 colorlist = sns.color_palette(colorlist, len(diploid_data))
-            elif type(colorlist) is list:
+            elif type(colorlist) is list or type(colorlist) is dict:
                 colorlist = colorlist
 
         for i, diploid in enumerate(diploid_data):
             sample_name = diploid.split("/")[-1].split(".")[0] if ids is None else ids[i]
             data = pd.read_csv(diploid, names=["x", "y", "z", "w", "h"], sep="\t")
             data = data[data["x"] >= 0]
-            ax.step(data["x"], data["y"], where="post", color=colorlist[i], linewidth=2, label=sample_name)
+            if type(colorlist) is dict:
+                color = colorlist[sample_name]
+            else:
+                color = colorlist[i]
+            ax.step(data["x"], data["y"], where="post", color=color, linewidth=2, label=sample_name)
 
         if round_data is not None:
             for round, color in zip(round_data, colorlist):
@@ -2044,7 +2071,7 @@ class Plotter:
                     ax=ax,
                     only_move={'points': 'xy', 'text': 'xy'},
                     arrowprops=dict(arrowstyle='-', color='gray', lw=0.5),
-                    force_text=1.0
+                    # force_text=1.0
                 )
 
         # 5. Кастомизация графика
@@ -2055,7 +2082,7 @@ class Plotter:
         ax.set_ylabel(f"Principal Component 2 ({explained_variance[1]:.2f}%)")
 
         if show_legend:
-            ax.legend(loc=legend_loc, ncol=legend_ncol, handlelength=0.8, frameon=True)
+            ax.legend(loc=legend_loc, ncol=legend_ncol, handlelength=0.8, frameon=True, fontsize=8)
 
         if figure_grid:
             ax.set_axisbelow(True)
