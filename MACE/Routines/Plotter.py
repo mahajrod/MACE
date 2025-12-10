@@ -197,7 +197,6 @@ class Plotter:
             id = file_name.split(".")[0]
 
             if removed_chrX:
-                # If removed_chrX is a list, remove the specified chromosomes; otherwise, remove a single string
                 if isinstance(removed_chrX, list):
                     for chrX in removed_chrX:
                         if chrX is not None:
@@ -796,6 +795,7 @@ class Plotter:
         ax,
         data,
         genome_length,
+        removed_chrX=None,
         colors=None,
         xlim=(10e4, 150e6),
         ylim=(0, 0.35),
@@ -878,8 +878,15 @@ class Plotter:
 
         for count, f in enumerate(data):
             df = pd.read_csv(f, sep="\t", header=None, names=["scaffold", "start", "end", "length"])
-            df.sort_values(by=["length"], inplace=True, ignore_index=True)
+            if removed_chrX:
+                if isinstance(removed_chrX, list):
+                    for chrX in removed_chrX:
+                        if chrX is not None:
+                            df = df[~df["scaffold"].str.contains(chrX)]
+                else:
+                    df = df[~df["scaffold"].str.contains(removed_chrX)]
 
+            df.sort_values(by=["length"], inplace=True, ignore_index=True)
             df["cumsum"] = np.cumsum(df["length"]) / genome_length
 
             label = f.split("/")[-1].split(".")[0]
@@ -1134,6 +1141,7 @@ class Plotter:
         ax,
         data,
         genome_length,
+        removed_chrX=None,
         colors={"N": "#23b4e8", "S": "#008dbf", "L": "#fbbc04", "UL": "#ea4335"},
         xticks=[50, 60, 70, 80, 90, 100],
         xlim=(45, 100),
@@ -1220,6 +1228,14 @@ class Plotter:
             sample = os.path.basename(file_path).split(".")[0]
             sample_names.append(sample)
             df = pd.read_csv(file_path, sep="\t", header=None, names=["scaffold", "start", "end", "length"])
+            if removed_chrX is not None:
+                if isinstance(removed_chrX, list):
+                    for chrX in removed_chrX:
+                        if chrX is not None:
+                            df = df[~df["scaffold"].str.contains(chrX)]
+                else:
+                    df = df[~df["scaffold"].str.contains(removed_chrX)]
+
             df["classification"] = df["length"].apply(self.classify_roh)
             total = df.groupby("classification")["length"].sum().to_dict()
 
