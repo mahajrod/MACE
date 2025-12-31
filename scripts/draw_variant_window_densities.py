@@ -17,7 +17,7 @@ from MACE.Routines import Visualization, StatsVCF
 
 
 def read_series(s):
-    return pd.read_csv(s, header=None).squeeze("columns") if os.path.exists(s) else pd.Series(s.split(","))
+    return pd.read_csv(s, header=None, dtype=str).squeeze("columns") if os.path.exists(s) else pd.Series(s.split(","))
 
 
 def rgb_tuple_to_hex(rgb_tuple):
@@ -228,10 +228,12 @@ if args.custom_color_list is not None:
 
 variants = CollectionVCF(args.input, parsing_mode="only_coordinates")
 
-chr_len_df = pd.read_csv(args.scaffold_length_file, sep='\t', header=None, index_col=0) if args.scaffold_length_file else deepcopy(variants.scaffold_length)
+chr_len_df = pd.read_csv(args.scaffold_length_file, sep='\t', header=None, index_col=0,
+                         dtype={0: str, 1: int}) if args.scaffold_length_file else deepcopy(variants.scaffold_length)
 chr_len_df.index = pd.Index(list(map(str, chr_len_df.index)))
 chr_len_df.index.name = "scaffold"
 chr_len_df.columns = ["length"]
+
 
 chr_syn_dict = SynDict(filename=args.scaffold_syn_file,
                        key_index=args.syn_file_key_column,
@@ -242,7 +244,8 @@ if args.centromere_bed:
                                 usecols=(0, 1, 2),
                                 index_col=0,
                                 header=None,
-                                sep="\t", names=["scaffold_id", "start", "end"])
+                                sep="\t", names=["scaffold_id", "start", "end"],
+                                dtype={"scaffold_id": str, "start": int, "end": int})
     centromere_df.rename(index=chr_syn_dict, inplace=True)
 else:
     centromere_df = None
