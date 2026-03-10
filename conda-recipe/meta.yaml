@@ -21,18 +21,17 @@ requirements:
     - venn
     - routoolpa
   run:
-    - python
-    - scipy
-    - numpy
-    - pandas
-    - matplotlib
-    - statsmodels
-    - pyparsing
-    - xmltodict
-    - biopython
-    - venn
-    - xlsxwriter
-    - routoolpa
-
+    - 'python'
+    - 'scipy'
+    - 'numpy'
+    - 'pandas'
+    - 'matplotlib'
+    - 'statsmodels'
+    - 'pyparsing'
+    - 'xmltodict'
+    - 'biopython'
+    - 'venn'
+    - 'xlsxwriter'
+    - 'routoolpa'
 build:
   script: python setup.py install
