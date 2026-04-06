@@ -7,13 +7,13 @@
 </p>
 
 # Disclaimer
-<p style="text-indent: 2em;">
+
 **MACE** is still in a pre-alpha stage and under heavy development.
 The documentation has many gaps and scripts likely have many bugs or are not user-friendly yet. 
 I highly encourage everyone to report any observed bugs, problems and suggestions in the _Issues_ tab.
 Suggestion on new scripts and plots are very welcome too.
 For specific requests or collaboration (especially projects on Mustelidae genomics), please email to _sergei.kliver@sund.ku.dk_ or _mahajrod@gmail.com_
-</p>
+
 
 # Installation
 _As of 06.04.2026 the latest MACE version was **1.1.38**._
