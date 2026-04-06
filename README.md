@@ -10,9 +10,9 @@
 
 **MACE** is still in a pre-alpha stage and under heavy development.
 The documentation has many gaps and scripts likely have many bugs or are not user-friendly yet. 
-I highly encourage everyone to report any observed bugs, problems and suggestions in the _Issues_ tab.
+I highly encourage everyone to report any observed bugs, problems and suggestions by opening an issue in the MACE repository. 
 Suggestion on new scripts and plots are very welcome too.
-For specific requests or collaboration (especially projects on Mustelidae genomics), please email to _sergei.kliver@sund.ku.dk_ or _mahajrod@gmail.com_
+For specific requests or collaboration (projects on Mustelidae genomics are very welcome), please email to _sergei.kliver@sund.ku.dk_ or _mahajrod@gmail.com_
 
 
 # Installation
@@ -28,7 +28,7 @@ This option makes MACE scrips available globally.
 mamba install -c mahajrod routoolpa mace
 ```
 
-**Option 2**: install semi manually from github to get latest version of MACE.
+**Option 2**: install semi manually from github to get the latest version of MACE.
 
 ```shell
 # Step1: install MACE and RouToolPa dependencies
@@ -41,23 +41,33 @@ git clone https://github.com/mahajrod/MACE
 
 # Step3: add RouToolPa and MACE folders to PYTHONPATH environment variable to your ~/.bashrc file         
 ```
-_Option 2_ makes MACE scrips available locally from MACE/scripts folder.
+**Option 2** makes MACE scripts available locally from MACE/scripts folder.
 
 # Important scripts
+The documentation is under development, please, read help of scripts carefully. Most options have a good descriptions.
+In case of uncertainty or problems, open an issue in the MACE repository.
 
-1. **draw_features.py**
-2. **draw_variant_window_densities.py**
-3. **draw_synteny.py**
-4. **draw_macrosynteny.py**
+1. **draw_features.py** - visualizes  precomputed tracks in various formats on chromosomes
+2. **draw_variant_window_densities.py** - calculates and visualizes  densities of variants from VCF file on chromosomes
+3. **draw_coverage.py** - visualizes  precomputed coverage on chromosomes
+4. **draw_synteny.py** - visualizes  pairwise synteny on chromosomes of target genome
+5. **draw_macrosynteny.py** - visualizes whole genome alignments
+
 
 # Documentation
-_Wiki is under development_
+_Wiki for scripts is under development_
+
+# API
+MACE is mostly developed according to _library + wrapping scripts_ scheme. 
+_API documentation is under development_
+Some library related code is still present in scripts, but eventually it will migrate.
+
 
 # How to cite MACE
 
 MACE is still in a pre-alpha stage and far from being published.
 However, three already published articles on genomics of Mustelidae have significantly affected development of the MACE scripts.
-Please, cite the **MACE repository** (https://github.com/mahajrod/MACE) and one or several of articles from the list below, depending on what scripts have you used.
+Please, cite the **MACE repository** (https://github.com/mahajrod/MACE) and one or several of **articles from the list below**, depending on what scripts have you used.
 
 1. **draw_features.py** or **draw_variant_window_densities.py**:  
 Tomarovsky AA, Totikov AA, Bulyonkova TM, Perelman PL, Abramov AV, Serdyukova NA, ..., and Kliver S. 2026. Genomics of Sable (_Martes zibellina_) × Pine Marten (_Martes martes_) Hybridization. _Genome Biol Evol_ 18:evag018. https://doi.org/10.1093/gbe/evag018
@@ -67,6 +77,6 @@ Totikov AA, Tomarovsky AA, Perelman PL, Bulyonkova TM, Serdyukova NA, Yakupova A
 Kliver S, Houck ML, Perelman PL, Totikov A, Tomarovsky A, Dudchenko O, ..., and Koepfli K-P 2023. Chromosome-length genome assembly and karyotype of the endangered black-footed ferret (_Mustela nigripes_). _Journal of Heredity_:esad035. https://doi.org/10.1093/jhered/esad035
 
 
-Happy drawing! 
+Happy visualization! 
 
 Sergei Kliver
