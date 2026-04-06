@@ -48,17 +48,35 @@ The documentation is under development, please, read help of scripts carefully. 
 In case of uncertainty or problems, open an issue in the MACE repository.
 
 1. **draw_features.py** - visualizes  precomputed tracks in various formats on chromosomes
+<p align="center">
+    <img src="readme_images/example_01.features.png" width="600"><br>
+<em>Figure 1: Runs of homozigosity for Martes zibelina (sable) individual 10xmzib. From Tomarovsky et al, 2026  </em>
+</p>
+
 2. **draw_variant_window_densities.py** - calculates and visualizes  densities of variants from VCF file on chromosomes
+<p align="center">
+    <img src="readme_images/example_02.window_densities.png" width="600"><br>
+<em>Figure 2:   </em>
+</p>
+
 3. **draw_coverage.py** - visualizes  precomputed coverage on chromosomes
+<p align="center">
+    <img src="readme_images/example_03.coverage.png" width="600"><br>
+<em>Figure 3:   </em>
+</p>
+
 4. **draw_synteny.py** - visualizes  pairwise synteny on chromosomes of target genome
 
 <p align="center">
     <img src="readme_images/example_04.synteny.png" width="600"><br>
-<em>Figure 4: Synteny plot between _Mustela putorius_ (domestic ferret genome, target) and _Mustela nigripes_ (black-footed ferret, reference). From Kliver et al, 2023.  </em>
+<em>Figure 4: Synteny plot between Mustela putorius (domestic ferret genome, target, 2n=40) and Mustela nigripes (black-footed ferret, reference, 2n=38). From Kliver et al, 2023.  </em>
 </p>
 
 5. **draw_macrosynteny.py** - visualizes whole genome alignments
-
+<p align="center">
+    <img src="readme_images/example_05.macrosynteny.png" width="600"><br>
+<em>Figure 5:   </em>
+</p>
 
 # Documentation
 _Wiki for scripts is under development_
@@ -81,7 +99,8 @@ Tomarovsky AA, Totikov AA, Bulyonkova TM, Perelman PL, Abramov AV, Serdyukova NA
 Totikov AA, Tomarovsky AA, Perelman PL, Bulyonkova TM, Serdyukova NA, Yakupova AR, ..., and Kliver S. 2026. Comparative Genomics and Phylogenomics of the Mustelinae Lineage (Mustelidae, Carnivora). _Genome Biol Evol_ 18:evag014. https://doi.org/10.1093/gbe/evag014
 3. **draw_synteny.py**:  
 Kliver S, Houck ML, Perelman PL, Totikov A, Tomarovsky A, Dudchenko O, ..., and Koepfli K-P 2023. Chromosome-length genome assembly and karyotype of the endangered black-footed ferret (_Mustela nigripes_). _Journal of Heredity_:esad035. https://doi.org/10.1093/jhered/esad035
-
+4. **draw_coverage.py**
+Any of above articles
 
 Happy visualization! 
 
