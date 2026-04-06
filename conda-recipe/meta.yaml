@@ -1,6 +1,6 @@
 package:
   name: "mace"
-  version: '1.1.32'
+  version: '1.1.38'
 about:
   summary: "MACE"
 source:
@@ -11,7 +11,7 @@ requirements:
     - pip
     - setuptools
     - scipy
-    - numpy
+    - "numpy>=1.26"
     - pandas
     - matplotlib
     - statsmodels
@@ -19,18 +19,19 @@ requirements:
     - pyparsing
     - xmltodict
     - venn
+    - 'routoolpa>=0.126'
   run:
-    - python
-    - scipy
-    - numpy
-    - pandas
-    - matplotlib
-    - statsmodels
-    - pyparsing
-    - xmltodict
-    - biopython
-    - venn
-    - xlsxwriter
-
+    - 'python'
+    - 'scipy'
+    - "numpy>=1.26"
+    - 'pandas'
+    - 'matplotlib'
+    - 'statsmodels'
+    - 'pyparsing'
+    - 'xmltodict'
+    - 'biopython'
+    - 'venn'
+    - 'xlsxwriter'
+    - 'routoolpa>=0.126'
 build:
   script: python setup.py install

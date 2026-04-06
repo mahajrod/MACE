@@ -14,11 +14,13 @@ class ChromosomePolygon(Polygon):
                  centromere_start: (None, float) = None, centromere_end: (None, float) = None,
                  show_centromere: (None, bool) = None,
                  arc_point_number: int = 100, x_scale_factor: float = 1,
-                 edgecolor: str = "grey",
-                 facecolor: str = "grey",
+                 edgecolor: str or None = "grey",
+                 facecolor: str or None = "grey",
+                 outercolor: str or None = None,
                  alpha: float = 0.3,
-                 fill: bool = True,
+                 fill: bool or None = True,
                  zorder=None,
+                 outer_zorder=None,
                  linewidth=None
                  ):
         self.x_start = x_start
@@ -88,9 +90,6 @@ class ChromosomePolygon(Polygon):
         self.centromere_left_bottom_point = None
 
         self.left_right_overlap = None
-        self.left_middle_overlap = None
-        self.right_middle_overlap = None
-
         self.left_centromere_middle_overlap = None
         self.right_centromere_middle_overlap = None
         self.left_centromere_overlap = None
@@ -100,11 +99,27 @@ class ChromosomePolygon(Polygon):
         self.masking_point_array_dict = {}
         self.masking_point_array = []
         self.init_point_array()
+
+        self.outercolor = outercolor
         
         Polygon.__init__(self, self.point_array, edgecolor=edgecolor, linewidth=linewidth, facecolor=facecolor,
                          fill=fill, alpha=alpha, zorder=zorder)
-        
+
+        self.masking_point_array_dict = {masking_patch: Polygon(self.masking_point_array_dict[masking_patch],
+                                                                fill=True if self.outercolor else False,
+                                                                edgecolor=self.outercolor,
+                                                                facecolor=self.outercolor,
+                                                                linewidth=linewidth,
+                                                                zorder=outer_zorder) for masking_patch in self.masking_point_array_dict}
+
     def init_coordinates(self):
+        """
+        Abstract method to be defined in each custom polygon class
+        :return:
+        """
+        pass
+
+    def init_point_array(self):
         """
         Abstract method to be defined in each custom polygon class
         :return:
@@ -123,7 +138,7 @@ class LinearChromosome(ChromosomePolygon):
         self.right_top_outer_point = np.array([self.x_end, self.y_start + self.height])
         self.right_bottom_outer_point = np.array([self.x_end, self.y_start])
 
-        #center of the chromosome
+        # center of the chromosome
         self.center_point = np.array([(self.x_end + self.x_start) / 2, self.y_start + self.height / 2])
 
         self.general_x_smooth_element_len = self.height / 2 * self.x_scale_factor
@@ -191,10 +206,8 @@ class LinearChromosome(ChromosomePolygon):
             # check overlaps with centromere
             self.left_centromere_middle_overlap = True if centromere_middle < self.left_top_point[0] else False
             self.right_centromere_middle_overlap = True if centromere_middle > self.right_top_point[0] else False
-            self.left_centromere_overlap = True if self.centromere_left_top_point[0] < self.left_top_point[
-                0] else False
-            self.right_centromere_overlap = True if self.centromere_right_top_point[0] > self.right_top_point[
-                0] else False
+            self.left_centromere_overlap = True if self.centromere_left_top_point[0] < self.left_top_point[0] else False
+            self.right_centromere_overlap = True if self.centromere_right_top_point[0] > self.right_top_point[0] else False
 
             if self.left_centromere_middle_overlap:
                 self.left_x_radius = (centromere_middle - self.left_middle_point[0]) / 2
@@ -360,14 +373,14 @@ class LinearChromosome(ChromosomePolygon):
                                     [self.right_middle_point],
                                     [self.right_bottom_outer_point],
                                     ]
-                self.masking_point_array_dict = {"left": np.concatenate([[self.left_bottom_point],
-                                                                         [self.left_middle_point],
-                                                                         [self.left_bottom_outer_point]
-                                                                         ]),
-                                                 "right": np.concatenate([[self.right_top_point],
-                                                                          [self.right_middle_point],
-                                                                          [self.right_top_outer_point]
-                                                                          ])
+                self.masking_point_array_dict = {"left_masking": np.concatenate([[self.left_bottom_point],
+                                                                                 [self.left_middle_point],
+                                                                                 [self.left_bottom_outer_point]
+                                                                                 ]),
+                                                 "right_masking": np.concatenate([[self.right_top_point],
+                                                                                  [self.right_middle_point],
+                                                                                  [self.right_top_outer_point]
+                                                                                  ])
                                                  }
             else:
                 left_point_list = [[self.left_bottom_outer_point],
@@ -398,8 +411,8 @@ class LinearChromosome(ChromosomePolygon):
                 bottom_middle_point_list = [[self.centromere_right_bottom_point],
                                             [self.centromere_middle_point],
                                             [self.centromere_left_bottom_point]]
-                self.masking_point_array_dict["top_centromere"] = np.concatenate(top_middle_point_list)
-                self.masking_point_array_dict["bottom_centromere"] = np.concatenate(bottom_middle_point_list)
+                self.masking_point_array_dict["top_centromere_masking"] = np.concatenate(top_middle_point_list)
+                self.masking_point_array_dict["bottom_centromere_masking"] = np.concatenate(bottom_middle_point_list)
 
         self.point_array = np.concatenate(left_point_list + top_middle_point_list + right_point_list + bottom_middle_point_list)
         

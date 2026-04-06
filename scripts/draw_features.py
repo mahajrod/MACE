@@ -3,15 +3,17 @@ __author__ = 'Sergei F. Kliver'
 import os
 
 import argparse
+import textwrap
 
 import pandas as pd
 from copy import deepcopy
-import numpy as np
+
 from RouToolPa.Parsers.STR import CollectionSTR
 from RouToolPa.Parsers.GFF import CollectionGFF
 from RouToolPa.Parsers.BLAST import CollectionBLAST
 from RouToolPa.Parsers.BED import CollectionBED
 from RouToolPa.Collections.General import SynDict, IdList
+
 from MACE.Routines import Visualization, StatsVCF
 
 
@@ -19,48 +21,95 @@ def read_series(s):
     return pd.read_csv(s, header=None).squeeze("columns") if os.path.exists(s) else pd.Series(s.split(","))
 
 
-parser = argparse.ArgumentParser()
+class NewlinePreservingFormatter(argparse.HelpFormatter):
+    def _fill_text(self, text, width, indent):
+        # Split on explicit newlines, but wrap each paragraph normally
+        lines = text.splitlines()
+        wrapped = [textwrap.fill(line, width, initial_indent=indent, subsequent_indent=indent) for line in lines]
+        return "\n".join(wrapped)
+
+    def _split_lines(self, text, width):
+        lines = text.splitlines()
+        wrapped_lines = []
+        for line in lines:
+            wrapped_lines.extend(textwrap.wrap(line, width))
+            if not line:
+                wrapped_lines.append("")
+        return wrapped_lines + [""]
+
+
+parser = argparse.ArgumentParser(formatter_class=NewlinePreservingFormatter)
 
 parser.add_argument("-i", "--input", action="store", dest="input", required=True,
                     help="Input file with selected features")
-parser.add_argument("-t", "--input_type", action="store", dest="input_type", default="str",
-                    help="Type of input file. Allowed: str (default), gff, tab6, tab6_colored, bed, bedgraph")
-parser.add_argument("-r", "--header", action="store_true", dest="header", default=None,
-                    help="Header is present in input file. Default: False")
+parser.add_argument("-t", "--input_type", action="store", dest="input_type", default="bed",
+                    help="Type of input file. Allowed: 'bed' (default), 'bed_colored', 'bed_track', 'bedgraph', 'bedgraph_colored', "
+                         " 'bed_with_header', 'table', 'table_colored', 'gff' 'tab6', 'tab6_colored', 'STR'. All bed-like formats must have no track lines.\n"
+                         "\t'bed': BED format. All columns except first three are ignored. Comment lines are allowed and must start from '#'. NO HEADER!\n"
+                         "\t'bed_colored': BED format with four columns: 'scaffold', 'start', 'end', 'color'. Comment lines are not allowed. NO HEADER!\n"
+                         "\t'bed_track': BED format with five columns: 'scaffold', 'start', 'end', 'value', 'color'. Comment lines are not allowed. NO HEADER!\n"
+                         "\t'bedgraph': a synonym to 'bed'. Fourth column of bedgraph is ignored.\n"
+                         "\t'bedgraph_colored': a synonym to 'bed_track'.\n"
+                         "\t'bed_with_header': 'BED' format without track lines, but WITH a header line. Not a true BED!\n"
+                         "\t'table': a tab separated table WITH a header line. Scaffold, start and end columns must be set via script options. "
+                            "Other columns are ignored."
+                            "Comment lines are allowed and must start from '#'.\n"
+                            "If it is one-based like GFF, set '--one_based_coordinates' script option. Otherwise it will be treated as zero-based like BED."
+                         "\t'table_colored': A tab separated table with a header line. Scaffold, start, end and color columns must be set via script options. "
+                            "Other columns are ignored."
+                            "Comment lines are  NOT ALLOWED.\n"
+                            "If it is one-based like GFF, set '--one_based_coordinates' script option. Otherwise it will be treated as zero-based like BED."
+                         "\t'gff': GFF format. Only coordinates are used. Comment lines are allowed and must start from '#'.\n"
+                         "\t'tab6': BLAST tab6 format.\n"
+                         "\t'tab6_colored': BLAST tab6 format with header and additional color column. Set color column via script options. Names of other columns are ignored\n"
+                         "\t'STR': a very specific format related to STRs and in silico PCR. Highly likely you don't need it")
+
 parser.add_argument("-g", "--legend", action="store", dest="legend",
                     help="File with legend for feature colors containing two columns with color and legend text")
 parser.add_argument("-o", "--output_prefix", action="store", dest="output_prefix", required=True,
                     help="Prefix of output files")
 parser.add_argument("-e", "--output_formats", action="store", dest="output_formats", type=lambda s: s.split(","),
                     default=("png", "svg"),
-                    help="Comma-separated list of formats (supported by matlotlib) of "
-                         "output figure.Default: svg,png")
+                    help="Comma-separated list of formats (supported by matplotlib) of "
+                         "output figure. Default: svg,png")
 
 parser.add_argument("-l", "--title", action="store", dest="title", default="Coverage",
                     help="Suptitle of figure. Default: 'Coverage'")
 
-parser.add_argument("--scaffold_column_name", action="store", dest="scaffold_column_name",
+parser.add_argument("--scaffold_column_name", action="store", dest="scaffold_column_name", default="scaffold",
                     help="Name of column in feature file with scaffold ids . Default: dependent on format of the file")
-parser.add_argument("--start_column_name", action="store", dest="start_column_name",
+parser.add_argument("--start_column_name", action="store", dest="start_column_name", default="start",
                     help="Name of column in feature file with starts. Default: dependent on format of the file")
-parser.add_argument("--end_column_name", action="store", dest="end_column_name",
+parser.add_argument("--end_column_name", action="store", dest="end_column_name", default="end",
                     help="Name of column in feature file with ends. Default: dependent on format of the file")
-parser.add_argument("--color_column_name", action="store", dest="color_column_name",
+parser.add_argument("--color_column_name", action="store", dest="color_column_name",  default="color",
                     help="Name of column in feature file with color. Default: not set")
+parser.add_argument("--one_based_coordinates", action="store_true", dest="one_based_coordinates", default=False,
+                    help="Input uses one-based coordinate system (like GFF format). "
+                         "This option affects only 'table' input format and its derivatives like 'table_colored'. "
+                         "For other formats input coordinate system is set according to the specification of corresponding format. "
+                         "Internally the script and related libraries use zero-based coordinate system (like in BED format), which is also set as a default. "
+                         "Default: False")
 parser.add_argument("--default_color", action="store", dest="default_color", default="red",
                     help="Default color used for all features if color column is not set. Default: red")
+parser.add_argument("--enforce_default_color", action="store_true", dest="enforce_default_color", default=False,
+                    help="Enforce default color even if input format must natively have color column. Default: False")
+
 parser.add_argument("-a", "--scaffold_white_list", action="store", dest="scaffold_white_list",
                     default=pd.Series(dtype=str),
                     type=read_series,
-                    help="Comma-separated list of the only scaffolds to draw. Default: all")
-
+                    help="Comma-separated list of the only scaffolds to draw. Default: not set, number of longest scaffolds to show is controlled by '--max_scaffolds'")
+parser.add_argument("--max_scaffolds", action="store", dest="max_scaffolds",
+                    default=50,
+                    type=int,
+                    help="Maximal number of longest scaffolds from input file to show. This option works only if --scaffold_white_list is not set. Default: 50")
 parser.add_argument("-b", "--scaffold_black_list", action="store", dest="scaffold_black_list",
                     default=pd.Series(dtype=str),
                     type=read_series,
                     help="Comma-separated list of scaffolds to skip at drawing. Default: not set")
 
 parser.add_argument("-y", "--sort_scaffolds", action="store_true", dest="sort_scaffolds", default=False,
-                    help="Order  scaffolds according to their names. Default: False")
+                    help="Order scaffolds according to their names. Default: False")
 
 parser.add_argument("-z", "--scaffold_ordered_list", action="store", dest="scaffold_ordered_list",
                     default=pd.Series(dtype=str),
@@ -81,10 +130,8 @@ parser.add_argument("--syn_file_value_column", action="store", dest="syn_file_va
                     default=1, type=int,
                     help="Column(0-based) with value(synonym id) for scaffolds in synonym file synonym. Default: 1")
 
-
 parser.add_argument("--colormap", action="store", dest="colormap", default="jet",
                     help="Matplotlib colormap to use for SNP densities. Default: jet")
-
 
 parser.add_argument("--hide_track_label", action="store_true", dest="hide_track_label", default=False,
                     help="Hide track label. Default: False")
@@ -94,16 +141,6 @@ parser.add_argument("--x_tick_type", action="store", dest="x_tick_type", default
 parser.add_argument("--feature_shape", action="store", dest="feature_shape", default="rectangle",
                     help="Shape of features. Allowed: rectangle(default), circle, ellipse")
 
-parser.add_argument("--subplots_adjust_left", action="store", dest="subplots_adjust_left", type=float,
-                    help="Adjust left border of subplots on the figure. Default: matplotlib defaults")
-parser.add_argument("--subplots_adjust_top", action="store", dest="subplots_adjust_top", type=float,
-                    help="Adjust top border of subplots on the figure. Default: matplotlib defaults")
-parser.add_argument("--subplots_adjust_right", action="store", dest="subplots_adjust_right", type=float,
-                    help="Adjust right border of subplots on the figure. Default: matplotlib defaults")
-parser.add_argument("--subplots_adjust_bottom", action="store", dest="subplots_adjust_bottom", type=float,
-                    help="Adjust bottom border of subplots on the figure. Default: matplotlib defaults")
-parser.add_argument("--figure_width", action="store", dest="figure_width", type=float, default=10,
-                    help="Width of figure in inches. Default: 15")
 parser.add_argument("--figure_header_height", action="store", dest="figure_header_height",
                     type=float, default=0.0,
                     help="Height of figure header. Default: 0.0")
@@ -141,6 +178,20 @@ parser.add_argument("--highlight_file", action="store", dest="highlight_file",
 parser.add_argument("--title_fontsize", action="store", dest="title_fontsize", default=20, type=int,
                     help="Fontsize of the figure. Default: 20")
 
+parser.add_argument("--manual_figure_adjustment", action="store_true", dest="manual_figure_adjustment", default=False,
+                    help="Adjust borders of figure manually using options below. Default: False, i.e. scaling is done automatically.")
+parser.add_argument("--subplots_adjust_left", action="store", dest="subplots_adjust_left", type=float,
+                    help="Adjust left border of subplots on the figure. Default: matplotlib defaults")
+parser.add_argument("--subplots_adjust_top", action="store", dest="subplots_adjust_top", type=float,
+                    help="Adjust top border of subplots on the figure. Default: matplotlib defaults")
+parser.add_argument("--subplots_adjust_right", action="store", dest="subplots_adjust_right", type=float,
+                    help="Adjust right border of subplots on the figure. Default: matplotlib defaults")
+parser.add_argument("--subplots_adjust_bottom", action="store", dest="subplots_adjust_bottom", type=float,
+                    help="Adjust bottom border of subplots on the figure. Default: matplotlib defaults")
+parser.add_argument("--figure_width", action="store", dest="figure_width", type=float, default=10,
+                    help="Width of figure in inches. Default: 15")
+
+
 args = parser.parse_args()
 
 chr_syn_dict = SynDict(filename=args.scaffold_syn_file,
@@ -168,84 +219,104 @@ if args.centromere_bed:
 else:
     centromere_df = None
 try:
-    if args.input_type == "str":
+    feature_start_column_id = "start"
+    feature_end_column_id = "end"
+    feature_color_column_id = None
+
+    if args.input_type == "gff":  # GFF format. Only coordinates are used. Comment lines are allowed and must start from '#'
+        feature_df = CollectionGFF(in_file=args.input, parsing_mode="only_coordinates")
+
+    elif args.input_type in ["bed", "bedgraph"]:  # Bed format without track lines. All columns except first three are ignored. Comment lines are allowed and must start from '#'
+        feature_df = CollectionBED(in_file=args.input, parsing_mode="coordinates_only", format="bed")
+
+    elif args.input_type in ["bed_colored"]:  # Four column bed with following fields: "scaffold", start", "end", "color". Comment lines are not allowed.
+        feature_df = CollectionBED(in_file=args.input, parsing_mode="complete", format="bed_colored")
+        #feature_df.records.columns = pd.Index(["start", "end", "color"])
+        #feature_df.records.index.name = "scaffold"
+        feature_color_column_id = "color" if not args.enforce_default_color else None
+
+    elif args.input_type in ["bed_track", "bedgraph_colored"]:  # Five-column bed with following fields: "scaffold", start", "end", "value", "color". The 'value' field is ignored. Comment lines are  NOT ALLOWED...
+        feature_df = CollectionBED(in_file=args.input, parsing_mode="all", format="bed_track",)
+        feature_color_column_id = "color" if not args.enforce_default_color else None
+
+    elif args.input_type == "bed_with_header":  # 'BED' format without track lines, but WITH a header line. Not a true BED!
+        feature_df = CollectionBED(in_file=args.input, parsing_mode="coordinates_only", format="bed",
+                                   header_in_file=True)
+
+    elif args.input_type == "table":  # A tab separated table WITH a header line. Scaffold, start and end columns must be set via script options. Comment lines are allowed and must start from '#'
+        feature_df = CollectionBED(in_file=args.input, parsing_mode="coordinates_only", format="table",
+                                   header_in_file=True,
+                                   scaffold_column_name=args.scaffold_column_name,
+                                   start_column_name=args.start_column_name,
+                                   end_column_name=args.end_column_name,
+                                   one_based_coordinates=args.one_based_coordinates)
+
+    elif args.input_type == "table_colored":  # A tab separated table with a header line. Scaffold, start, end and color columns must be set via script options. Comment lines are  NOT ALLOWED.
+        feature_df = CollectionBED(in_file=args.input, parsing_mode="colored", format="table",
+                                   header_in_file=True,
+                                   scaffold_column_name=args.scaffold_column_name,
+                                   start_column_name=args.start_column_name,
+                                   end_column_name=args.end_column_name,
+                                   color_column_name=args.color_column_name,
+                                   one_based_coordinates=args.one_based_coordinates
+                                   )
+        feature_color_column_id = "color" if not args.enforce_default_color else None
+
+    elif args.input_type == "tab6":  # BLAST tab6 format
+        feature_df = CollectionBLAST(in_file=args.input, parsing_mode="complete")
+        feature_df.records.reset_index(level="query_id", inplace=True)
+        feature_start_column_id = "target_start"
+        feature_end_column_id = "target_end"
+
+    elif args.input_type == "tab6_colored":  # BLAST tab6 format with header and additional color column
+        feature_df = CollectionBLAST(in_file=args.input, parsing_mode="complete", format="tab6_colored", header=True)
+        feature_df.records.reset_index(level="query_id", inplace=True)
+        feature_start_column_id = "target_start"
+        feature_end_column_id = "target_end"
+        feature_color_column_id = args.color_column_name
+
+    elif args.input_type == "STR": #
         feature_df = CollectionSTR(in_file=args.input, records=None, format="filtered_str", parsing_mode="all",
                                    black_list=(), white_list=(),
                                    syn_dict=chr_syn_dict)
 
         feature_df.records.set_index("scaffold_id", inplace=True)
-
-        feature_start_column_id = args.start_column_name if args.start_column_name else "start"
-        feature_end_column_id = args.end_column_name if args.end_column_name else "end"
-
-    elif args.input_type == "gff":
-        feature_df = CollectionGFF(in_file=args.input, parsing_mode="only_coordinates")
-
-        feature_start_column_id = args.start_column_name if args.start_column_name else "start"
-        feature_end_column_id = args.end_column_name if args.end_column_name else "end"
-
-    elif args.input_type == "bed":
-        feature_df = CollectionBED(in_file=args.input, parsing_mode="coordinates_only", format="bed")
-
-        feature_start_column_id = "start"
-        feature_end_column_id = "end"
-
-    elif args.input_type == "bedgraph":
-        feature_df = CollectionBED(in_file=args.input, parsing_mode="all", format="bed")
-        feature_df.records.columns = pd.Index(["start", "end", "value"])
         feature_df.records.index.name = "scaffold"
-        feature_start_column_id = "start"
-        feature_end_column_id = "end"
 
-    elif args.input_type == "tab6":
-        feature_df = CollectionBLAST(in_file=args.input, parsing_mode="complete")
-        feature_df.records.reset_index(level="query_id", inplace=True)
-        feature_start_column_id = args.start_column_name if args.start_column_name else "target_start"
-        feature_end_column_id = args.end_column_name if args.end_column_name else "target_end"
-    elif args.input_type == "tab6_colored":
-        feature_df = CollectionBLAST(in_file=args.input, parsing_mode="complete", format="tab6_colored", header=args.header)
-        feature_df.records.reset_index(level="query_id", inplace=True)
-        feature_start_column_id = args.start_column_name if args.start_column_name else "target_start"
-        feature_end_column_id = args.end_column_name if args.end_column_name else "target_end"
     else:
-        raise ValueError("ERROR!!! Unrecognized input type ({}). ".format(args.input_type))
+        raise ValueError(f"ERROR!!! Unrecognized input type ({args.input_type}). ")
+
 except pd.errors.EmptyDataError:
     print("Empty input file. Silent exit.")   # try-except added to handle case when input file is empty without raising exception. For use in snakemake
     exit(0)
 
 legend_df = pd.read_csv(args.legend, header=None, index_col=0, sep="\t") if args.legend else None
 
+chr_len_df = pd.read_csv(args.scaffold_length_file, sep='\t', header=None, names=("scaffold", "length"), index_col=0)
+chr_len_df.index = pd.Index(list(map(str, chr_len_df.index)))
+
+record_chr_df = chr_len_df.loc[feature_df.records.index.unique()].sort_values(by="length", ascending=False)
+
+if args.scaffold_white_list.empty:
+    args.scaffold_white_list = pd.Series(record_chr_df.iloc[0:args.max_scaffolds].index.unique())
 
 scaffold_to_keep = StatsVCF.get_filtered_entry_list(feature_df.records.index.get_level_values(level=0).unique().to_list(),
                                                     entry_white_list=args.scaffold_white_list)
 
-#print(scaffold_to_keep)
-# remove redundant scaffolds
-#print(args.scaffold_white_list)
-#print(feature_df.records)
-#print(scaffold_to_keep)
 feature_df.records = feature_df.records[feature_df.records.index.isin(scaffold_to_keep)]
-args.scaffold_ordered_list = args.scaffold_ordered_list[args.scaffold_ordered_list.isin(pd.Series(args.scaffold_white_list).replace(chr_syn_dict))]
-#print(scaffold_to_keep)
-#print(pd.Series(scaffold_to_keep).replace(chr_syn_dict))
-chr_len_df = pd.read_csv(args.scaffold_length_file, sep='\t', header=None, names=("scaffold", "length"), index_col=0)
-chr_len_df.index = pd.Index(list(map(str, chr_len_df.index)))
 
-#print(chr_len_df)
+if not args.scaffold_white_list.empty:
+    if args.scaffold_ordered_list.empty:
+        args.scaffold_ordered_list = args.scaffold_white_list.replace(chr_syn_dict)[::-1]
+    else:
+        args.scaffold_ordered_list = args.scaffold_ordered_list[args.scaffold_ordered_list.isin(pd.Series(args.scaffold_white_list).replace(chr_syn_dict))]
 
-#print(feature_df.records)
 if args.scaffold_syn_file:
     chr_len_df.rename(index=chr_syn_dict, inplace=True)
     feature_df.records.rename(index=chr_syn_dict, inplace=True)
 if args.verbose:
     print(chr_syn_dict)
     print(feature_df.records)
-
-
-print(chr_len_df)
-#print(feature_df.records.columns)
-#print(feature_df.records)
-#print(chr_len_df)
 
 Visualization.draw_features({"features": feature_df}, chr_len_df,
                             args.scaffold_ordered_list,
@@ -265,7 +336,7 @@ Visualization.draw_features({"features": feature_df}, chr_len_df,
                             feature_shape=args.feature_shape,
                             feature_start_column_id=feature_start_column_id,
                             feature_end_column_id=feature_end_column_id,
-                            feature_color_column_id=args.color_column_name,
+                            feature_color_column_id=feature_color_column_id,
                             feature_length_column_id="length",
                             subplots_adjust_left=args.subplots_adjust_left,
                             subplots_adjust_bottom=args.subplots_adjust_bottom,
@@ -284,7 +355,5 @@ Visualization.draw_features({"features": feature_df}, chr_len_df,
                             subplot_title_fontsize=args.title_fontsize,
                             subplot_title_fontweight='bold',
                             x_tick_type=args.x_tick_type,
+                            autoscale_figure=False if args.manual_figure_adjustment else True,
                             )
-
-
-

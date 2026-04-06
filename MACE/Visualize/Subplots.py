@@ -105,9 +105,8 @@ class Subplot(OrderedDict):
             pass
 
     def draw(self, axes=None):
-        axes_to_use = axes if axes is not None else self.axes if self.axes else plt.gca()
+        axes_to_use = axes if axes else self.axes if self.axes else plt.gca()
         self.axes = axes_to_use
-
         self.init_coordinates()
 
         for track_group in self:
@@ -118,17 +117,15 @@ class Subplot(OrderedDict):
 
         self.style.apply(x_max=self.x_end, y_max=self.y_end, axes=axes_to_use)
 
-        axes_to_use.set_xlim(xmin=self.x_start - (self.x_end * self.xmin_multiplier), xmax=self.x_end )
-        axes_to_use.set_ylim(ymin=self.y_start - (self.y_end * self.ymin_multiplier), ymax=self.y_end * self.ymax_multiplier)
+        plt.xlim(xmin=self.x_start - (self.x_end * self.xmin_multiplier), xmax=self.x_end )
+        plt.ylim(ymin=self.y_start - (self.y_end * self.ymin_multiplier), ymax=self.y_end * self.ymax_multiplier)
 
         if self.title:
-            axes_to_use.set_title(self.title, fontsize=self.style.title_fontsize, fontweight=self.style.title_fontweight)
+            plt.title(self.title, fontsize=self.style.title_fontsize, fontweight=self.style.title_fontweight)
 
         if self.legend:
-            self.legend.draw(axes=axes_to_use)
+            self.legend.draw()
 
     def hide(self, axes=None):
         axes_to_use = axes if axes else self.axes if self.axes else plt.gca()
         axes_to_use.set_axis_off()
-        #axes_to_use.get_xaxis().set_visible(False)
-        #axes_to_use.get_yaxis().set_visible(False)

@@ -16,6 +16,8 @@ from matplotlib.patches import Rectangle
 from RouToolPa.Collections.General import TwoLvlDict
 from RouToolPa.Routines.Drawing import DrawingRoutines
 
+from MACE.Data.DataTypes import *
+
 from MACE.Visualization.Tracks import *
 from MACE.Visualization.TrackGroups import *
 from MACE.Visualization.Subplots import *
@@ -348,7 +350,9 @@ class Visualization(DrawingRoutines):
         return None if test_colormaps else fig
 
     @staticmethod
-    def color_threshold_expression(value, thresholds, colors, background):
+    def color_threshold_expression(value, thresholds, colors, background, interval_type="left_open",
+                                   skip_top_interval=False, skip_bottom_interval=False):
+        # allowed_type: left_open, right_open
         # TODO: Needs at least partial implementation as ColorStyle
         """
         :param value:
@@ -361,16 +365,43 @@ class Visualization(DrawingRoutines):
         # thresholds=np.array((0.0, 0.1, 0.5, 0.75, 1.0, 1.25, 1.5, 2.0, 2.5)),
         # colors=("white", "#333a97", "#3d3795", "#5d3393","#813193", "#9d2d7f", "#b82861",
         #         "#d33845", "#ea2e2e", "#f5ae27")):
-        if value <= thresholds[0]:
-            return background
-        if value > thresholds[-1]:
-            return colors[-1]
-        for i in range(0, len(thresholds) - 1):
-            if thresholds[i] < value <= thresholds[i + 1]:
-                # print(i)
-                # print(self.style.colors)
-                # print(self.style.thresholds)
-                return colors[i]
+        if interval_type == "left_open":
+            if value <= thresholds[0]:
+                if not skip_bottom_interval:
+                    return background
+                else:
+                    return colors[0]
+            if value > thresholds[-1]:
+                if not skip_top_interval:
+                    return colors[-1]
+                else:
+                    return colors[len(thresholds) - 2]
+            for i in range(0, len(thresholds) - 1):
+                if thresholds[i] < value <= thresholds[i + 1]:
+                    # print(i)
+                    # print(self.style.colors)
+                    # print(self.style.thresholds)
+                    return colors[i]
+
+        elif interval_type == "right_open":
+            if value < thresholds[0]:
+                if not skip_bottom_interval:
+                    return background
+                else:
+                    return colors[0]
+            if value >= thresholds[-1]:
+                if not skip_top_interval:
+                    return colors[-1]
+                else:
+                    return colors[len(thresholds) - 2]
+            for i in range(0, len(thresholds) - 1):
+                if thresholds[i] <= value < thresholds[i + 1]:
+                    # print(i)
+                    # print(self.style.colors)
+                    # print(self.style.thresholds)
+                    return colors[i]
+        else:
+            raise ValueError("ERROR!!! Unrecognized interval type ({0})!".format(interval_type))
 
     @staticmethod
     def add_color_to_track_df(track_df, expression, value_column_index=-1, value_column_name=None,
@@ -385,8 +416,38 @@ class Visualization(DrawingRoutines):
         return output_df
 
     @staticmethod
-    def density_legend(colors, thresholds, colormap=None, feature_name="SNPs"):
-        return DensityLegend(colors=colors, colormap=colormap, thresholds=thresholds, feature_name=feature_name)
+    def apply_masking_to_track_df(track_df, masking_df, masking_color=None):
+        #print(track_df)
+        output_df_columns = list(track_df.columns)
+        output_df = track_df.copy().reset_index(drop=False).set_index(["scaffold", "start", "end"])
+        tmp_masking_df = masking_df.reset_index(drop=False).set_index(["scaffold", "start", "end"])
+        if "color" not in output_df.columns:
+            raise ValueError("ERROR!!! 'color' column is absent in track dataframe. Mask must be added after coloring dataframe!")
+
+        #check index overlap
+        overlap_sr = tmp_masking_df.index.isin(output_df.index)
+        if sum(overlap_sr) != len(overlap_sr):
+            #print(overlap_sr)
+            print("WARNING!!! Not all windows from masking track are present in track df:")
+            print(tmp_masking_df[~overlap_sr])
+
+        # apply masking
+        index_intersection = tmp_masking_df.index.intersection(output_df.index)
+        output_df.loc[index_intersection, "color"] = tmp_masking_df[index_intersection, "color"] if masking_color is None else masking_color
+        output_df["color"].astype('category', copy=False)
+        output_df = output_df.reset_index(drop=False).set_index("scaffold")
+        output_df = output_df[output_df_columns]
+        #print(output_df)
+
+        return output_df
+
+    @staticmethod
+    def density_legend(colors, thresholds, colormap=None, feature_name="SNPs", interval_type='left_open',
+                       skip_top_interval=False, skip_bottom_interval=False, masking_color='grey'):
+        return DensityLegend(colors=colors, colormap=colormap, thresholds=thresholds, feature_name=feature_name,
+                             interval_type=interval_type,
+                             skip_top_interval=skip_top_interval, skip_bottom_interval=skip_bottom_interval,
+                             masked=masking_color)
 
     @staticmethod
     def coverage_legend(colormap, thresholds):
@@ -398,8 +459,8 @@ class Visualization(DrawingRoutines):
                                 scaffold_order_list=reference_scaffold_order_list)
 
     @staticmethod
-    def feature_legend(legend_df, colormap):
-        return FeatureLegend(legend_df, colormap=colormap, ) if legend_df is not None else None
+    def feature_legend(legend_df, colormap, masking_color='grey'):
+        return FeatureLegend(legend_df, colormap=colormap, masked=masking_color) if legend_df is not None else None
 
     def draw_features(self, bed_collection_dict, scaffold_length_df, scaffold_order_list, #species_color_df_dict,
                       output_prefix,
@@ -442,10 +503,13 @@ class Visualization(DrawingRoutines):
                       xmax_multiplier=1.1, ymax_multiplier=1.1,
                       xtick_fontsize=None,
                       subplot_title_fontsize=None,
-                      subplot_title_fontweight='bold'
+                      subplot_title_fontweight='bold',
+                      axes=None,
+                      autoscale_figure=True
                       ):
-
+        #print(bed_collection_dict)
         track_group_dict = OrderedDict()
+        #print(scaffold_order_list)
         #print(scaffold_order_list)
         scaffolds = scaffold_order_list.to_list() if isinstance(scaffold_order_list, (pd.Series, pd.Index)) else scaffold_order_list  # scaffold_order_list[::-1] if scaffold_order_list else collection_gff.records.index.get_level_values(level=0).unique().to_list()
         scaffold_number = len(scaffolds)
@@ -459,7 +523,7 @@ class Visualization(DrawingRoutines):
                                                  centromere=True if centromere_df is not None else False)
 
         feature_height = 5 if stranded_tracks else 10
-
+        #print(feature_shape)
         if feature_shape == "rectangle":
             feature_style = FeatureStyle(patch_type="rectangle", height=feature_height, label_fontsize=10,
                                          face_color=default_color)
@@ -476,8 +540,9 @@ class Visualization(DrawingRoutines):
 
         #feature_style = FeatureStyle(patch_type="rectangle", height=feature_height, label_fontsize=10)
         track_number = 0
+        #print(bed_collection_dict)
+        #print(scaffolds)
         for chr in scaffolds:  # count_df.index.get_level_values(level=0).unique():
-
             highlight = False
             highlight_color = None
             if (highlight_df is not None) and (not highlight_df.empty):
@@ -487,7 +552,8 @@ class Visualization(DrawingRoutines):
 
             track_group_style = TrackGroupStyle(label_fontstyle=track_group_label_fontstyle,
                                                 distance=track_group_distance,
-                                                highlight_color=highlight_color)
+                                                highlight_color=highlight_color,
+                                                )
 
             track_group_dict[chr] = TrackGroup(label=chr if show_trackgroup_label else None,
                                                style=track_group_style,
@@ -500,8 +566,12 @@ class Visualization(DrawingRoutines):
                     #print(chr)
                     centromere_start = centromere_df.loc[chr, "start"]
                     centromere_end = centromere_df.loc[chr, "end"]
-
+            #print("DDDDD")
+            #print(list(bed_collection_dict.keys()))
+            #print("CCCCCCCCcc")
             for species in bed_collection_dict:
+                #print("AAAAa")
+                #print(species)
                 records = bed_collection_dict[species].records if hasattr(bed_collection_dict[species], "records") else bed_collection_dict[species]
 
                 # print(species)
@@ -526,6 +596,7 @@ class Visualization(DrawingRoutines):
                     middle_break=middle_break,
                     centromere_start=centromere_start,
                     centromere_end=centromere_end)
+                #print(track_group_dict[chr][species].feature_style.patch_type)
                 track_number += 1
                 # print(track_group_dict[chr][species].records)
                 #if feature_color_column_id not in records.columns:
@@ -547,18 +618,25 @@ class Visualization(DrawingRoutines):
         #print((figure_width,
         #                       max(1, int(scaffold_number * figure_height_per_scaffold + figure_header_height))))
         #print((scaffold_number, figure_height_per_scaffold, figure_header_height))
-        plt.figure(1, figsize=(figure_width,
+        figure = plt.figure(1, figsize=(figure_width,
                                max(1, int(track_number * figure_height_per_scaffold + figure_header_height))), dpi=dpi)
+        #print(track_number)
+        #print(max(1, int(track_number * figure_height_per_scaffold + figure_header_height)))
 
-        chromosome_subplot.draw()
+        chromosome_subplot.draw(axes=axes)
         plt.subplots_adjust(left=subplots_adjust_left, right=subplots_adjust_right,
                             top=subplots_adjust_top, bottom=subplots_adjust_bottom)
 
         for ext in extensions:
-            plt.savefig("%s.%s" % (output_prefix, ext))
-
+            if autoscale_figure:
+                plt.savefig("%s.%s" % (output_prefix, ext), bbox_inches="tight", dpi=dpi)
+            else:
+                plt.savefig("%s.%s" % (output_prefix, ext))
         if close_figure:
             plt.close(1)
+            return None
+        else:
+            return figure
     """
     def draw_features(self, collection_gff, scaffold_length_df,
                       output_prefix,
