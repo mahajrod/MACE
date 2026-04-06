@@ -8,7 +8,7 @@
 
 # Disclaimer
 
-**MACE** is still in a pre-alpha stage and under heavy development.
+**MACE** is still in a pre-alpha stage and under a heavy development.
 The documentation has many gaps and scripts likely have many bugs or are not user-friendly yet. 
 I highly encourage everyone to report any observed bugs, problems and suggestions by opening an issue in the MACE repository. 
 Suggestion on new scripts and plots are very welcome too.
