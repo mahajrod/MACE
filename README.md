@@ -62,7 +62,7 @@ In case of uncertainty or problems, open an issue in the MACE repository.
 3. **draw_coverage.py** - visualizes  precomputed coverage on chromosomes
 <p align="center">
     <img src="readme_images/example_03.coverage.png" width="600"><br>
-<em>Figure 3:   </em>
+<em>Figure 3: Coverage of the Mustela nivalis (the least weasel) individual S8606. From Totikov et al, 2026. </em>
 </p>
 
 4. **draw_synteny.py** - visualizes  pairwise synteny on chromosomes of target genome
