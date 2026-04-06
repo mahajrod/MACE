@@ -43,7 +43,7 @@ git clone https://github.com/mahajrod/MACE
 ```
 **Option 2** makes MACE scripts available locally from MACE/scripts folder.
 
-# Important scripts
+# Important MACE scripts
 The documentation is under development, please, read help of scripts carefully. Most options have a good descriptions.
 In case of uncertainty or problems, open an issue in the MACE repository.
 
@@ -53,9 +53,9 @@ In case of uncertainty or problems, open an issue in the MACE repository.
 <em>Figure 1: Runs of homozigosity for Martes zibelina (sable) individual 10xmzib. From Tomarovsky et al, 2026.  </em>
 </p>
 
-2. **draw_variant_window_densities.py** - calculates and visualizes  densities of variants from VCF file on chromosomes
+2. **draw_variant_window_densities.py** - calculates and visualizes on chromosomes densities of variants from VCF file
 <p align="center">
-    <img src="readme_images/example_02.window_densities.png" width="600"><br>
+    <img src="readme_images/example_02.window_densities.png" width="700"><br>
 <em>Figure 2: Density of heterozygous SNPs for kidas (Martes zibelina x Martes martes) individual T87. From Tomarovsky et al, 2026. </em>
 </p>
 
@@ -83,7 +83,7 @@ _Wiki for scripts is under development_
 
 # API
 MACE is mostly developed according to _library + wrapping scripts_ scheme. 
-_API documentation is under development_
+_API documentation is under development._
 Some library related code is still present in scripts, but eventually it will migrate.
 
 
