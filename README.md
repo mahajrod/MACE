@@ -73,10 +73,7 @@ In case of uncertainty or problems, open an issue in the MACE repository.
 </p>
 
 5. **draw_macrosynteny.py** - visualizes whole genome alignments
-<p align="center">
-    <img src="readme_images/example_05.macrosynteny.jpg" width="800"><br>
-<em>Figure 5: Macrosynteny between Mustelinae species (MNIG - NVIS) and some other Mustelidae (ELUT and MFOI). From Totikov et al, 2026.</em>
-</p>
+
 
 # Documentation
 _Wiki for scripts is under development_
