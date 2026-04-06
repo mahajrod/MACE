@@ -50,13 +50,13 @@ In case of uncertainty or problems, open an issue in the MACE repository.
 1. **draw_features.py** - visualizes  precomputed tracks in various formats on chromosomes
 <p align="center">
     <img src="readme_images/example_01.features.png" width="600"><br>
-<em>Figure 1: Runs of homozigosity for Martes zibelina (sable) individual 10xmzib. From Tomarovsky et al, 2026  </em>
+<em>Figure 1: Runs of homozigosity for Martes zibelina (sable) individual 10xmzib. From Tomarovsky et al, 2026.  </em>
 </p>
 
 2. **draw_variant_window_densities.py** - calculates and visualizes  densities of variants from VCF file on chromosomes
 <p align="center">
     <img src="readme_images/example_02.window_densities.png" width="600"><br>
-<em>Figure 2:   </em>
+<em>Figure 2: Density of heterozygous SNPs for kidas (Martes zibelina x Martes martes) individual T87. From Tomarovsky et al, 2026. </em>
 </p>
 
 3. **draw_coverage.py** - visualizes  precomputed coverage on chromosomes
