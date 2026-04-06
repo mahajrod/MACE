@@ -57,7 +57,7 @@ _Wiki is under development_
 
 MACE is still in a pre-alpha stage and far from being published.
 However, three already published articles on genomics of Mustelidae have significantly affected development of the MACE scripts.
-Please, cite the MACE repository and one or several of articles from the list below, depending on what scripts have you used.
+Please, cite the **MACE repository** (https://github.com/mahajrod/MACE) and one or several of articles from the list below, depending on what scripts have you used.
 
 1. **draw_features.py** or **draw_variant_window_densities.py**:  
 Tomarovsky AA, Totikov AA, Bulyonkova TM, Perelman PL, Abramov AV, Serdyukova NA, ..., and Kliver S. 2026. Genomics of Sable (_Martes zibellina_) × Pine Marten (_Martes martes_) Hybridization. _Genome Biol Evol_ 18:evag018. https://doi.org/10.1093/gbe/evag018
