@@ -16,7 +16,7 @@ For specific requests or collaboration (projects on Mustelidae genomics are very
 
 
 # Installation
-_As of 06.04.2026 the latest MACE version was **1.1.38**._
+_As of 06 April 2026, the latest version of MACE was **1.1.38**._
 
 There are two recommended ways to install MACE.
 
