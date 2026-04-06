@@ -51,7 +51,11 @@ In case of uncertainty or problems, open an issue in the MACE repository.
 2. **draw_variant_window_densities.py** - calculates and visualizes  densities of variants from VCF file on chromosomes
 3. **draw_coverage.py** - visualizes  precomputed coverage on chromosomes
 4. **draw_synteny.py** - visualizes  pairwise synteny on chromosomes of target genome
-<img src="readme_images/example_04.synteny.png" width="500">
+
+<p align="center">
+    <img src="readme_images/example_04.synteny.png" width="600"><br>
+<em>Figure 4: Synteny plot between _Mustela putorius_ (domestic ferret genome, target) and _Mustela nigripes_ (black-footed ferret, reference). From Kliver et al, 2023.  </em>
+</p>
 
 5. **draw_macrosynteny.py** - visualizes whole genome alignments
 
