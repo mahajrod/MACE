@@ -71,6 +71,8 @@ class ChromosomePolygon(Polygon):
         self.right_top_point = None
         self.right_bottom_point = None
 
+        self.center_point = None
+
         self.arc_point_number = arc_point_number
         self.arc_angles_dict = {}
         self.arc_center_dict = {}
@@ -86,6 +88,9 @@ class ChromosomePolygon(Polygon):
         self.centromere_left_bottom_point = None
 
         self.left_right_overlap = None
+        self.left_middle_overlap = None
+        self.right_middle_overlap = None
+
         self.left_centromere_middle_overlap = None
         self.right_centromere_middle_overlap = None
         self.left_centromere_overlap = None
@@ -118,10 +123,21 @@ class LinearChromosome(ChromosomePolygon):
         self.right_top_outer_point = np.array([self.x_end, self.y_start + self.height])
         self.right_bottom_outer_point = np.array([self.x_end, self.y_start])
 
+        #center of the chromosome
+        self.center_point = np.array([(self.x_end + self.x_start) / 2, self.y_start + self.height / 2])
+
         self.general_x_smooth_element_len = self.height / 2 * self.x_scale_factor
         self.left_x_smooth_element_len = self.general_x_smooth_element_len
         self.right_x_smooth_element_len = self.general_x_smooth_element_len
         self.centromere_x_smooth_element_len = self.general_x_smooth_element_len
+
+        # check for overlap with the middle of the chromosome and correct the length of the smooth element
+        # TODO: take into account overlap with the centromere
+        if self.x_start + self.left_x_smooth_element_len > self.center_point[0]:
+            self.left_x_smooth_element_len = self.center_point[0] - self.x_start
+
+        if self.x_end - self.right_x_smooth_element_len < self.center_point[0]:
+            self.right_x_smooth_element_len = self.x_end - self.center_point[0]
 
         self.y_radius = float(self.height) / 2
         self.left_x_radius = self.left_x_smooth_element_len

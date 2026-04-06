@@ -190,6 +190,7 @@ class Visualization(DrawingRoutines):
                     subplots_adjust_bottom=None,
                     subplots_adjust_right=None,
                     subplots_adjust_top=None,
+                    autoscale_figure=True
                     ):
         vertical_track_group_number = len(track_dict)
         vertical_track_group_number_dict = {vertical_track_group: len(track_dict[vertical_track_group]) for vertical_track_group in track_dict}
@@ -317,7 +318,10 @@ class Visualization(DrawingRoutines):
             if output_prefix is None:
                 raise ValueError("ERROR!!! Can't save figure - output prefix is not set")
             for ext in extensions:
-                plt.savefig("%s.%s" % (output_prefix, ext))
+                if autoscale_figure:
+                    plt.savefig("%s.%s" % (output_prefix, ext), bbox_inches="tight", dpi=dpi)
+                else:
+                    plt.savefig(f"{output_prefix}.{ext}")
 
         if (current_figure is not None) and close_figure:
             plt.close(current_figure.number)

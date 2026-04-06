@@ -111,6 +111,9 @@ parser.add_argument("--hide_track_label", action="store_true", dest="hide_track_
 
 parser.add_argument("--absolute_coverage_values", action="store_true", dest="absolute_coverage_values",
                     help="Use absolute coverage values. Default: False")
+
+parser.add_argument("--manual_figure_adjustment", action="store_true", dest="manual_figure_adjustment", default=False,
+                    help="Adjust borders of figure manually using options below. Default: False, i.e. scaling is done automatically.")
 parser.add_argument("--subplots_adjust_left", action="store", dest="subplots_adjust_left", type=float,
                     help="Adjust left border of subplots on the figure. Default: matplotlib defaults")
 parser.add_argument("--subplots_adjust_top", action="store", dest="subplots_adjust_top", type=float,
@@ -119,6 +122,7 @@ parser.add_argument("--subplots_adjust_right", action="store", dest="subplots_ad
                     help="Adjust right border of subplots on the figure. Default: matplotlib defaults")
 parser.add_argument("--subplots_adjust_bottom", action="store", dest="subplots_adjust_bottom", type=float,
                     help="Adjust bottom border of subplots on the figure. Default: matplotlib defaults")
+
 parser.add_argument("--figure_width", action="store", dest="figure_width", type=float, default=15,
                     help="Width of figure in inches. Default: 15")
 parser.add_argument("--figure_height_per_scaffold", action="store", dest="figure_height_per_scaffold",
@@ -270,7 +274,8 @@ Visualization.draw_features(track_df_dict,
                             stranded_end_tracks=args.stranded_end,
                             xtick_fontsize=args.x_tick_fontsize,
                             subplot_title_fontsize=args.title_fontsize,
-                            subplot_title_fontweight='bold'
+                            subplot_title_fontweight='bold',
+                            autoscale_figure=False if args.manual_figure_adjustment else True,
                             )
 """    
 Visualization.draw_coverage_windows(coverage_df, args.window_size, args.window_step, chr_len_df,

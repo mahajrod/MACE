@@ -191,16 +191,18 @@ parser.add_argument("--chromosome_height", action="store", dest="chromosome_heig
                          "thicker or thinner. Default: 9")
 parser.add_argument("--hide_chromosome_labels", action="store_true", dest="hide_chromosome_labels", default=False,
                     help="Hide chromosome labels. Default: False")
+
+parser.add_argument("--manual_figure_adjustment", action="store_true", dest="manual_figure_adjustment", default=False,
+                    help="Adjust borders of figure manually using options below. Default: False, i.e. scaling is done automatically.")
 parser.add_argument("--subplots_adjust_left", action="store", dest="subplots_adjust_left", type=float, default=0.05,
                     help="Adjust left border of subplots on the figure. Default: matplotlib defaults")
-
 parser.add_argument("--subplots_adjust_right", action="store", dest="subplots_adjust_right", type=float, default=0.98,
                     help="Adjust right border of subplots on the figure. Default: matplotlib defaults")
-
 parser.add_argument("--subplots_adjust_top", action="store", dest="subplots_adjust_top", type=float, default=0.90,
                     help="Adjust top border of subplots on the figure. Default: matplotlib defaults")
 parser.add_argument("--subplots_adjust_bottom", action="store", dest="subplots_adjust_bottom", type=float, default=0.05,
                     help="Adjust bottom border of subplots on the figure. Default: matplotlib defaults")
+
 parser.add_argument("--figure_width", action="store", dest="figure_width", type=float, default=8,
                     help="Width of figure in inches. Default: 8")
 parser.add_argument("--figure_height_per_genome", action="store", dest="figure_height_per_genome",
@@ -1118,7 +1120,7 @@ def patch_function(row): #centromere_df):
     #print("BBBBBBBBbb")
     #print((row.iloc[5] + row.iloc[1]) if not pd.isna(row.iloc[5]) else None)
     #print((row.iloc[6] + row.iloc[1]) if not pd.isna(row.iloc[5]) else None)
-    return LinearChromosome(row.iloc[1], row.iloc[2], row.iloc[0], height, rounded=True,
+    return LinearChromosome(row.iloc[1], row.iloc[2], row.iloc[0], height, rounded=True, #stranded=True,
                             x_scale_factor=args.smooth_multiplicator * maximal_x/10 / maximal_y, #maximal_x/10 / maximal_y,
                             zorder=zorder_dict["chromosomes"],
                             edgecolor=row.iloc[3],
@@ -1273,5 +1275,11 @@ for genome, genome_index in zip(genome_orderlist[:-1], range(0, len(genome_order
 plt.subplots_adjust(left=args.subplots_adjust_left, right=args.subplots_adjust_right, bottom=args.subplots_adjust_bottom,
                     top=args.subplots_adjust_top)
 plt.title(args.title, fontsize=args.title_fontsize)
+
 for ext in args.output_formats:
-    plt.savefig("{0}.{1}".format(args.output_prefix, ext))
+    if args.manual_figure_adjustment:
+        plt.savefig(f"{args.output_prefix}.{ext}")
+    else:
+        plt.savefig(f"{args.output_prefix}.{ext}", bbox_inches="tight",)
+
+

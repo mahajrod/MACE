@@ -336,14 +336,6 @@ parser.add_argument("--hide_track_label", action="store_true", dest="hide_track_
 parser.add_argument("--feature_shape", action="store", dest="feature_shape", default="rectangle",
                     help="Shape of features. Allowed: rectangle(default), circle, ellipse")
 
-parser.add_argument("--subplots_adjust_left", action="store", dest="subplots_adjust_left", type=float, default=0.2,
-                    help="Adjust left border of subplots on the figure. Default: matplotlib defaults")
-parser.add_argument("--subplots_adjust_top", action="store", dest="subplots_adjust_top", type=float,
-                    help="Adjust top border of subplots on the figure. Default: matplotlib defaults")
-parser.add_argument("--subplots_adjust_right", action="store", dest="subplots_adjust_right", type=float,
-                    help="Adjust right border of subplots on the figure. Default: matplotlib defaults")
-parser.add_argument("--subplots_adjust_bottom", action="store", dest="subplots_adjust_bottom", type=float,
-                    help="Adjust bottom border of subplots on the figure. Default: matplotlib defaults")
 parser.add_argument("--figure_width", action="store", dest="figure_width", type=float, default=15,
                     help="Width of figure in inches. Default: 15")
 parser.add_argument("--figure_height_per_scaffold", action="store", dest="figure_height_per_scaffold",
@@ -369,6 +361,18 @@ parser.add_argument("--invert_coordinates_for_target_negative_strand", action="s
                     help="Invert coordinates for target negative strand. Default: False")
 parser.add_argument("-x", "--expand_paths", action="store_true", dest="expand_paths", default=False,
                     help="Expand paths by following regular expressions")
+
+parser.add_argument("--manual_figure_adjustment", action="store_true", dest="manual_figure_adjustment", default=False,
+                    help="Adjust borders of figure manually using options below. Default: False, i.e. scaling is done automatically.")
+parser.add_argument("--subplots_adjust_left", action="store", dest="subplots_adjust_left", type=float, default=0.2,
+                    help="Adjust left border of subplots on the figure. Default: matplotlib defaults")
+parser.add_argument("--subplots_adjust_top", action="store", dest="subplots_adjust_top", type=float,
+                    help="Adjust top border of subplots on the figure. Default: matplotlib defaults")
+parser.add_argument("--subplots_adjust_right", action="store", dest="subplots_adjust_right", type=float,
+                    help="Adjust right border of subplots on the figure. Default: matplotlib defaults")
+parser.add_argument("--subplots_adjust_bottom", action="store", dest="subplots_adjust_bottom", type=float,
+                    help="Adjust bottom border of subplots on the figure. Default: matplotlib defaults")
+
 
 args = parser.parse_args()
 
@@ -639,6 +643,7 @@ for min_block_length in args.initial_min_block_len_list:
                                 subplots_adjust_bottom=args.subplots_adjust_bottom,
                                 subplots_adjust_right=args.subplots_adjust_right,
                                 subplots_adjust_top=args.subplots_adjust_top,
+                                autoscale_figure=False if args.manual_figure_adjustment else True,
                                 show_track_label=not args.hide_track_label,
                                 show_trackgroup_label=True,
                                 close_figure=True,
@@ -652,7 +657,7 @@ for min_block_length in args.initial_min_block_len_list:
                                 stranded_end_tracks=args.stranded_end,
                                 xtick_fontsize=args.x_tick_fontsize,
                                 subplot_title_fontsize=args.title_fontsize,
-                                subplot_title_fontweight='bold'
+                                subplot_title_fontweight='bold',
                                 )
     bed_dict_to_xlsx(prefiltered_bed_col_dict, '{0}.initial_min_block_len_{1}'.format(args.output_prefix, min_block_length))
 
@@ -703,6 +708,7 @@ for min_block_length in args.initial_min_block_len_list:
                                         subplots_adjust_bottom=args.subplots_adjust_bottom,
                                         subplots_adjust_right=args.subplots_adjust_right,
                                         subplots_adjust_top=args.subplots_adjust_top,
+                                        autoscale_figure=False if args.manual_figure_adjustment else True,
                                         show_track_label=not args.hide_track_label,
                                         show_trackgroup_label=True,
                                         close_figure=True,
@@ -765,6 +771,7 @@ for min_block_length in args.initial_min_block_len_list:
                                             subplots_adjust_bottom=args.subplots_adjust_bottom,
                                             subplots_adjust_right=args.subplots_adjust_right,
                                             subplots_adjust_top=args.subplots_adjust_top,
+                                            autoscale_figure=False if args.manual_figure_adjustment else True,
                                             show_track_label=not args.hide_track_label,
                                             show_trackgroup_label=True,
                                             close_figure=True,
@@ -830,6 +837,7 @@ for min_block_length in args.initial_min_block_len_list:
                                                 subplots_adjust_bottom=args.subplots_adjust_bottom,
                                                 subplots_adjust_right=args.subplots_adjust_right,
                                                 subplots_adjust_top=args.subplots_adjust_top,
+                                                autoscale_figure=False if args.manual_figure_adjustment else True,
                                                 show_track_label=not args.hide_track_label,
                                                 show_trackgroup_label=True,
                                                 close_figure=True,

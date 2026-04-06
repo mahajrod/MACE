@@ -505,6 +505,7 @@ class Visualization(DrawingRoutines):
                       subplot_title_fontsize=None,
                       subplot_title_fontweight='bold',
                       axes=None,
+                      autoscale_figure=True
                       ):
         #print(bed_collection_dict)
         track_group_dict = OrderedDict()
@@ -551,7 +552,8 @@ class Visualization(DrawingRoutines):
 
             track_group_style = TrackGroupStyle(label_fontstyle=track_group_label_fontstyle,
                                                 distance=track_group_distance,
-                                                highlight_color=highlight_color)
+                                                highlight_color=highlight_color,
+                                                )
 
             track_group_dict[chr] = TrackGroup(label=chr if show_trackgroup_label else None,
                                                style=track_group_style,
@@ -616,7 +618,7 @@ class Visualization(DrawingRoutines):
         #print((figure_width,
         #                       max(1, int(scaffold_number * figure_height_per_scaffold + figure_header_height))))
         #print((scaffold_number, figure_height_per_scaffold, figure_header_height))
-        plt.figure(1, figsize=(figure_width,
+        figure = plt.figure(1, figsize=(figure_width,
                                max(1, int(track_number * figure_height_per_scaffold + figure_header_height))), dpi=dpi)
         #print(track_number)
         #print(max(1, int(track_number * figure_height_per_scaffold + figure_header_height)))
@@ -626,10 +628,15 @@ class Visualization(DrawingRoutines):
                             top=subplots_adjust_top, bottom=subplots_adjust_bottom)
 
         for ext in extensions:
-            plt.savefig("%s.%s" % (output_prefix, ext))
-
+            if autoscale_figure:
+                plt.savefig("%s.%s" % (output_prefix, ext), bbox_inches="tight", dpi=dpi)
+            else:
+                plt.savefig("%s.%s" % (output_prefix, ext))
         if close_figure:
             plt.close(1)
+            return None
+        else:
+            return figure
     """
     def draw_features(self, collection_gff, scaffold_length_df,
                       output_prefix,
