@@ -74,7 +74,7 @@ In case of uncertainty or problems, open an issue in the MACE repository.
 
 5. **draw_macrosynteny.py** - visualizes whole genome alignments
 <p align="center">
-    <img src="readme_images/example_05.macrosynteny.png" width="600"><br>
+    <img src="readme_images/example_05.macrosynteny.jpg" width="800"><br>
 <em>Figure 5:   </em>
 </p>
 
