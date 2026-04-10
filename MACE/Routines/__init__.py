@@ -7,5 +7,5 @@ from MACE.Routines.Visualization import VisualizationRoutines
 Circos = Circos()
 StatsVCF = StatsVCF()
 Drawing = DrawingRoutines()
-ParsingRoutines = ParsingRoutines()
+Parsing = ParsingRoutines()
 Visualization = VisualizationRoutines()

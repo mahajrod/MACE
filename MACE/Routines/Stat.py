@@ -221,7 +221,7 @@ class StatsVCF(FileRoutines):
         def count_windows(scaffold_length):
             return self.count_window_number_in_scaffold(scaffold_length, window_size, window_stepppp)
 
-        number_of_windows_df = ref_scaf_len_df.applymap(count_windows)
+        number_of_windows_df = ref_scaf_len_df.map(count_windows)  # 'applymap' method was replaced by 'map' method according to pandas deprecation warning
         number_of_windows_df.columns = ["WINDOW"]
 
         short_scaffolds_ids = number_of_windows_df[number_of_windows_df['WINDOW'] == 0]
