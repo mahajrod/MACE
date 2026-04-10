@@ -35,14 +35,22 @@ class DrawingRoutines:
         return '%1.1fGbp' % (x*1e-9)
 
     @staticmethod
+    def rgb_tuple_to_hex(rgb_tuple):
+        color_code = "#"
+        for i in [0, 1, 2]:
+            color_code += "{:02X}".format(int(255 * rgb_tuple[i]))
+
+        return color_code
+
+    @staticmethod
     def get_filtered_scaffold_list(count_dict,
-                                   scaffold_black_list=[],
+                                   scaffold_blacklist=[],
                                    sort_scaffolds=False,
-                                   scaffold_ordered_list=None,
-                                   scaffold_white_list=[],
+                                   scaffold_orderlist=None,
+                                   scaffold_whitelist=[],
                                    sample_level=True):
-        white_set = set(scaffold_white_list)
-        black_set = set(scaffold_black_list)
+        white_set = set(scaffold_whitelist)
+        black_set = set(scaffold_blacklist)
 
         scaffold_set = set()
         if sample_level:
@@ -76,8 +84,8 @@ class DrawingRoutines:
 
         final_scaffold_list = []
 
-        if scaffold_ordered_list:
-            for entry in scaffold_ordered_list:
+        if scaffold_orderlist:
+            for entry in scaffold_orderlist:
                 if entry in scaffold_list:
                     final_scaffold_list.append(entry)
                     scaffold_list.remove(entry)
@@ -96,8 +104,8 @@ class DrawingRoutines:
                                       label_fontsize=13, left_offset=0.2, figure_width=12,
                                       figure_height_scale_factor=0.5, scaffold_synonym_dict=None,
                                       id_replacement_mode="partial", suptitle=None, density_multiplicator=1000,
-                                      scaffold_black_list=[], sort_scaffolds=False, scaffold_ordered_list=None,
-                                      scaffold_white_list=[], add_sample_name_to_labels=False,
+                                      scaffold_blacklist=[], sort_scaffolds=False, scaffold_orderlist=None,
+                                      scaffold_whitelist=[], add_sample_name_to_labels=False,
                                       dist_between_scaffolds_scaling_factor=1,
                                       gap_color="grey",
                                       masked_color="grey", no_snp_color="white",
@@ -114,10 +122,10 @@ class DrawingRoutines:
             raise ValueError("Scaling factor for distance between scaffolds have to be >=1.0")
 
         final_scaffold_list = self.get_filtered_scaffold_list(count_dict,
-                                                              scaffold_black_list=scaffold_black_list,
+                                                              scaffold_blacklist=scaffold_blacklist,
                                                               sort_scaffolds=sort_scaffolds,
-                                                              scaffold_ordered_list=scaffold_ordered_list,
-                                                              scaffold_white_list=scaffold_white_list)
+                                                              scaffold_orderlist=scaffold_orderlist,
+                                                              scaffold_whitelist=scaffold_whitelist)
         scaffold_number = len(final_scaffold_list)
         max_scaffold_length = max([scaffold_length_dict[scaf] for scaf in final_scaffold_list])
         #max_scaffold_length = max(scaffold_length_dict.values())
@@ -168,7 +176,7 @@ class DrawingRoutines:
             for sample in count_dict:
                 masked_windows_count_dict[sample][scaffold] = 0
                 no_snps_windows_count_dict[sample][scaffold] = 0
-                #if scaffold in scaffold_black_list:
+                #if scaffold in scaffold_blacklist:
                 #    continue
                 #print gap_coords_list, gap_len_list
 
@@ -350,8 +358,8 @@ class DrawingRoutines:
                                          density_multiplicator=1000,
                                          number_of_bins=None, width_of_bins=None,
                                          max_threshold=None, min_threshold=None,
-                                         scaffold_black_list=[], scaffold_white_list=[],
-                                         sort_scaffolds=False, scaffold_ordered_list=None, subplot_size=4,
+                                         scaffold_blacklist=[], scaffold_whitelist=[],
+                                         sort_scaffolds=False, scaffold_orderlist=None, subplot_size=4,
                                          per_scaffold_histo_dir="per_scaffold_histo_dir/",
                                          subplot_tuple=None, share_x_axis=True, share_y_axis=True,
                                          extensions=("png",), show_mean_and_median=True):
@@ -360,10 +368,10 @@ class DrawingRoutines:
         """
         samples_list = count_dict.keys()
         final_scaffold_list = self.get_filtered_scaffold_list(count_dict,
-                                                              scaffold_black_list=scaffold_black_list,
+                                                              scaffold_blacklist=scaffold_blacklist,
                                                               sort_scaffolds=sort_scaffolds,
-                                                              scaffold_ordered_list=scaffold_ordered_list,
-                                                              scaffold_white_list=scaffold_white_list)
+                                                              scaffold_orderlist=scaffold_orderlist,
+                                                              scaffold_whitelist=scaffold_whitelist)
 
         scaffold_number = len(final_scaffold_list)
 
@@ -778,15 +786,15 @@ class DrawingRoutines:
                                       record_style=None, ext_list=("svg", "png"),
                                       label_fontsize=13, left_offset=0.2, figure_width=8, scaffold_synonym_dict=None,
                                       id_replacement_mode="partial", suptitle=None, density_multiplicator=1000,
-                                      scaffold_black_list=[], sort_scaffolds=False, scaffold_ordered_list=None,
-                                      scaffold_white_list=[],
+                                      scaffold_blacklist=[], sort_scaffolds=False, scaffold_orderlist=None,
+                                      scaffold_whitelist=[],
                                       gap_color="grey",
                                       colormap_tuple_list=((0.0, "#333a97"), (0.1, "#3d3795"), (0.5, "#5d3393"),
                                                            (0.75, "#813193"), (1.0, "#9d2d7f"), (1.25, "#b82861"),
                                                            (1.5, "#d33845"), (2.0, "#ea2e2e"), (2.5, "#f5ae27"))):
 
-        white_set = set(scaffold_white_list)
-        black_set = set(scaffold_black_list)
+        white_set = set(scaffold_whitelist)
+        black_set = set(scaffold_blacklist)
         scaffold_set = set(count_dict)
 
         if white_set:
@@ -801,8 +809,8 @@ class DrawingRoutines:
             scaffold_list.sort()
 
         final_scaffold_list = []
-        if scaffold_ordered_list:
-            for entry in scaffold_ordered_list:
+        if scaffold_orderlist:
+            for entry in scaffold_orderlist:
                 final_scaffold_list.append(entry)
                 scaffold_list.remove(entry)
             final_scaffold_list = final_scaffold_list + scaffold_list
@@ -841,7 +849,7 @@ class DrawingRoutines:
         #normalize_colors = colors.Normalize(vmin=boundaries_for_colormap[0], vmax=boundaries_for_colormap[-1])
 
         for scaffold in final_scaffold_list:
-            #if scaffold in scaffold_black_list:
+            #if scaffold in scaffold_blacklist:
             #    continue
             #print gap_coords_list, gap_len_list
 

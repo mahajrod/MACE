@@ -1,7 +1,11 @@
 from MACE.Routines.Stat import StatsVCF
-from MACE.Routines.Circos import Circos
-from MACE.Routines.Visualization import Visualization
+from MACE.Routines.Legacy.Circos import Circos
+from MACE.Routines.Drawing import DrawingRoutines
+from MACE.Routines.Parsing import ParsingRoutines
+from MACE.Routines.Visualization import VisualizationRoutines
 
 Circos = Circos()
 StatsVCF = StatsVCF()
-Visualization = Visualization()
+Drawing = DrawingRoutines()
+ParsingRoutines = ParsingRoutines()
+Visualization = VisualizationRoutines()

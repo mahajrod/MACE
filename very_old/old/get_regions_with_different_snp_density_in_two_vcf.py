@@ -30,15 +30,15 @@ parser.add_argument("-s", "--window_step", action="store", dest="window_step", d
 parser.add_argument("-p", "--parsing_mode", action="store", dest="parsing_mode", default="index_db",
                     help="Parsing mode for input sequence file. "
                          "Possible variants: 'index_db'(default), 'index', 'parse'")
-parser.add_argument("-x", "--scaffold_white_list", action="store", dest="scaffold_white_list", default=[],
+parser.add_argument("-x", "--scaffold_whitelist", action="store", dest="scaffold_whitelist", default=[],
                     type=lambda s: s.split(","),
                     help="Comma-separated list of the only scaffolds to draw. Default: all")
-parser.add_argument("-u", "--scaffold_black_list", action="store", dest="scaffold_black_list", default=[],
+parser.add_argument("-u", "--scaffold_blacklist", action="store", dest="scaffold_blacklist", default=[],
                     type=lambda s: s.split(","),
                     help="Comma-separated list of scaffolds to skip at drawing. Default: not set")
 parser.add_argument("-y", "--sort_scaffolds", action="store_true", dest="sort_scaffolds", default=False,
                     help="Order  scaffolds according to their names. Default: False")
-parser.add_argument("-z", "--scaffold_ordered_list", action="store", dest="scaffold_ordered_list", default=[],
+parser.add_argument("-z", "--scaffold_orderlist", action="store", dest="scaffold_orderlist", default=[],
                     type=lambda s: s.split(","),
                     help="Comma-separated list of scaffolds to draw first and exactly in same order. "
                          "Scaffolds absent in this list are drawn last and in order according to vcf file . "
@@ -69,8 +69,8 @@ for sample_name, vcf_file in ((args.name_a, args.vcf_a), (args.name_b, args.vcf_
                                                                                                                                      output_prefix="%s.%s" % (args.output_prefix, sample_name),
                                                                                                                                      skip_empty_windows=False)
 
-white_set = set(args.scaffold_white_list)
-black_set = set(args.scaffold_black_list)
+white_set = set(args.scaffold_whitelist)
+black_set = set(args.scaffold_blacklist)
 
 scaffold_set = set()
 for sample in count_dict:
@@ -89,8 +89,8 @@ if args.sort_scaffolds:
 
 final_scaffold_list = []
 
-if args.scaffold_ordered_list:
-    for entry in args.scaffold_ordered_list:
+if args.scaffold_orderlist:
+    for entry in args.scaffold_orderlist:
         final_scaffold_list.append(entry)
         scaffold_list.remove(entry)
     final_scaffold_list = final_scaffold_list + scaffold_list

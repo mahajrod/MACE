@@ -8,9 +8,9 @@ for LEN in 50000;
   do 
     ${SCRIPT_DIR}/draw_synteny.py -i ${PSL_DIR}/martes_martes.to.martes_foina.${LEN}.psl.gz,${PSL_DIR}/martes_zibellina.to.martes_foina.${LEN}.psl.gz \
                                   --query_labels MMAR,MZIB \
-                                  --query_scaffold_white_lists ${SYN_DIR}/mmar.min_150.pseudohap2.1_HiC.purged.whitelist,${SYN_DIR}/mzib.min_150.pseudohap2.1_HiC.purged.whitelist \
+                                  --query_scaffold_whitelists ${SYN_DIR}/mmar.min_150.pseudohap2.1_HiC.purged.whitelist,${SYN_DIR}/mzib.min_150.pseudohap2.1_HiC.purged.whitelist \
                                   --reference_label MFOI \
-                                  --reference_scaffold_white_list ${SYN_DIR}/mfoi.min_150.pseudohap2.1_HiC.whitelist \
+                                  --reference_scaffold_whitelist ${SYN_DIR}/mfoi.min_150.pseudohap2.1_HiC.whitelist \
                                   --query_scaffold_syn_files ${SYN_DIR}/mmar.min_150.pseudohap2.1_HiC.purged.syn,${SYN_DIR}/mzib.min_150.pseudohap2.1_HiC.purged.syn \
                                   --syn_file_key_column 0 \
                                   --syn_file_value_column 1 \
@@ -37,9 +37,9 @@ for LEN in 100000 1000000;
     ${SCRIPT_DIR}/draw_synteny.py -i ${PSL_DIR}/martes_martes.to.martes_foina.${LEN}.psl.gz,${PSL_DIR}/martes_zibellina.to.martes_foina.${LEN}.psl.gz \
                                   --query_labels MMAR,MZIB \
                                   --query_color_filelist syntheny.rounded.stranded.50000.MMAR.chr_colors.tsv,syntheny.rounded.stranded.50000.MZIB.chr_colors.tsv \
-                                  --query_scaffold_white_lists ${SYN_DIR}/mmar.min_150.pseudohap2.1_HiC.purged.whitelist,${SYN_DIR}/mzib.min_150.pseudohap2.1_HiC.purged.whitelist \
+                                  --query_scaffold_whitelists ${SYN_DIR}/mmar.min_150.pseudohap2.1_HiC.purged.whitelist,${SYN_DIR}/mzib.min_150.pseudohap2.1_HiC.purged.whitelist \
                                   --reference_label MFOI \
-                                  --reference_scaffold_white_list ${SYN_DIR}/mfoi.min_150.pseudohap2.1_HiC.whitelist \
+                                  --reference_scaffold_whitelist ${SYN_DIR}/mfoi.min_150.pseudohap2.1_HiC.whitelist \
                                   --query_scaffold_syn_files ${SYN_DIR}/mmar.min_150.pseudohap2.1_HiC.purged.syn,${SYN_DIR}/mzib.min_150.pseudohap2.1_HiC.purged.syn \
                                   --syn_file_key_column 0 \
                                   --syn_file_value_column 1 \
@@ -66,9 +66,9 @@ for LEN in 100000 1000000;
     ${SCRIPT_DIR}/draw_synteny.py -i ${PSL_DIR}/martes_martes.to.martes_foina.${LEN}.psl.gz,${PSL_DIR}/martes_zibellina.to.martes_foina.${LEN}.psl.gz \
                                   --query_labels MMAR,MZIB \
                                   --query_color_filelist syntheny.rounded.stranded.50000.MMAR.chr_colors.tsv,syntheny.rounded.stranded.50000.MZIB.chr_colors.tsv \
-                                  --query_scaffold_white_lists ${SYN_DIR}/mmar.min_150.pseudohap2.1_HiC.purged.whitelist,${SYN_DIR}/mzib.min_150.pseudohap2.1_HiC.purged.whitelist \
+                                  --query_scaffold_whitelists ${SYN_DIR}/mmar.min_150.pseudohap2.1_HiC.purged.whitelist,${SYN_DIR}/mzib.min_150.pseudohap2.1_HiC.purged.whitelist \
                                   --reference_label MFOI \
-                                  --reference_scaffold_white_list ${SYN_DIR}/mfoi.min_150.pseudohap2.1_HiC.whitelist \
+                                  --reference_scaffold_whitelist ${SYN_DIR}/mfoi.min_150.pseudohap2.1_HiC.whitelist \
                                   --query_scaffold_syn_files ${SYN_DIR}/mmar.min_150.pseudohap2.1_HiC.purged.syn,${SYN_DIR}/mzib.min_150.pseudohap2.1_HiC.purged.syn \
                                   --syn_file_key_column 0 \
                                   --syn_file_value_column 1 \

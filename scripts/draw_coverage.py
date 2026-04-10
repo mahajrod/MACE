@@ -11,14 +11,6 @@ from RouToolPa.Collections.General import SynDict, IdList
 from MACE.Routines import Visualization, StatsVCF
 
 
-def rgb_tuple_to_hex(rgb_tuple):
-    color_code = "#"
-    for i in [0, 1, 2]:
-        color_code += "{:02X}".format(int(255 * rgb_tuple[i]))
-
-    return color_code
-
-
 def read_series(s):
     return pd.read_csv(s, header=None).squeeze("columns") if os.path.exists(s) else pd.Series(s.split(","))
 
@@ -60,20 +52,15 @@ parser.add_argument("-w", "--window_size", action="store", dest="window_size", d
 parser.add_argument("-s", "--window_step", action="store", dest="window_step", default=None, type=int,
                     help="Step of the sliding windows. Default: window size, i.e windows are staking")
 
-parser.add_argument("-a", "--scaffold_white_list", action="store", dest="scaffold_white_list",
+parser.add_argument("-a", "--scaffold_whitelist", action="store", dest="scaffold_whitelist",
                     default=pd.Series(dtype=str),
                     type=read_series,
                     help="Comma-separated list of the only scaffolds to draw. Default: all")
 
-parser.add_argument("-b", "--scaffold_black_list", action="store", dest="scaffold_black_list",
-                    default=pd.Series(dtype=str),
-                    type=read_series,
-                    help="Comma-separated list of scaffolds to skip at drawing. Default: not set")
-
 parser.add_argument("-y", "--sort_scaffolds", action="store_true", dest="sort_scaffolds", default=False,
                     help="Order  scaffolds according to their names. Default: False")
 
-parser.add_argument("-z", "--scaffold_ordered_list", action="store", dest="scaffold_ordered_list",
+parser.add_argument("-z", "--scaffold_orderlist", action="store", dest="scaffold_orderlist",
                     default=pd.Series(dtype=str),
                     type=read_series,
                     help="Comma-separated list of scaffolds to draw first and exactly in same order. "
@@ -156,16 +143,16 @@ chr_syn_dict = SynDict(filename=args.scaffold_syn_file,
                        key_index=args.syn_file_key_column,
                        value_index=args.syn_file_value_column)
 
-if isinstance(args.scaffold_ordered_list, list):
-    if not args.scaffold_ordered_list:
-        args.scaffold_ordered_list = deepcopy(args.scaffold_white_list)
-        args.scaffold_ordered_list.replace(chr_syn_dict, inplace=True)
+if isinstance(args.scaffold_orderlist, list):
+    if not args.scaffold_orderlist:
+        args.scaffold_orderlist = deepcopy(args.scaffold_whitelist)
+        args.scaffold_orderlist.replace(chr_syn_dict, inplace=True)
 else:
-    if args.scaffold_ordered_list.empty:
-        args.scaffold_ordered_list = deepcopy(args.scaffold_white_list)
-        args.scaffold_ordered_list.replace(chr_syn_dict, inplace=True)
+    if args.scaffold_orderlist.empty:
+        args.scaffold_orderlist = deepcopy(args.scaffold_whitelist)
+        args.scaffold_orderlist.replace(chr_syn_dict, inplace=True)
 
-args.scaffold_ordered_list = args.scaffold_ordered_list[::-1]
+args.scaffold_orderlist = args.scaffold_orderlist[::-1]
 
 if args.centromere_bed:
     centromere_df = pd.read_csv(args.centromere_bed,
@@ -189,9 +176,9 @@ if args.verbose:
     print("Coverage df index")
     print(coverage_df.index.get_level_values(level=0))
     print("Whitelist")
-    print(args.scaffold_white_list)
+    print(args.scaffold_whitelist)
 scaffold_to_keep = StatsVCF.get_filtered_entry_list(coverage_df.index.get_level_values(level=0).unique().to_list(),
-                                                    entry_white_list=args.scaffold_white_list)
+                                                    entry_white_list=args.scaffold_whitelist)
 
 coverage_df = coverage_df[coverage_df.index.isin(scaffold_to_keep, level=0)]
 chr_len_df = pd.read_csv(args.scaffold_length_file, sep='\t', header=None, names=("scaffold", "length"), index_col=0,
@@ -219,7 +206,7 @@ args.coverage_thresholds = (0.0, 0.125, 0.25, 0.375, 0.5, 0.625, 0.75,
 
 track_df_dict = {}
 cmap = plt.get_cmap(args.colormap, len(args.coverage_thresholds))
-colors = [rgb_tuple_to_hex(cmap(i)[:3]) for i in range(0, len(args.coverage_thresholds))]
+colors = [Visualization.rgb_tuple_to_hex(cmap(i)[:3]) for i in range(0, len(args.coverage_thresholds))]
 
 
 for mean_coverage, track_label in zip(args.mean_coverage_list, args.coverage_column_name_list):
@@ -234,70 +221,46 @@ for mean_coverage, track_label in zip(args.mean_coverage_list, args.coverage_col
                                background="white")
 
     track_with_colors_df = Visualization.add_color_to_track_df(track_df,
-                                                               color_expression,
-                                                               value_column_index=-1 # TODO fix it, add support for multiple tracks in the file
-                                                               )
+                                                                       color_expression,
+                                                                       value_column_index=-1  # TODO fix it, add support for multiple tracks in the file
+                                                                       )
     #print(track_with_colors_df)
     track_df_dict[track_label] = track_with_colors_df
 #print(track_df_dict)
 Visualization.draw_features(track_df_dict,
-                            chr_len_df,
-                            args.scaffold_ordered_list,
-                            args.output_prefix,
-                            legend=Visualization.coverage_legend(colormap=args.colormap, thresholds=args.coverage_thresholds), #Visualization.density_legend(colors, args.coverage_thresholds),
-                            # query_species_color_df_dict,
-                            centromere_df=centromere_df,
-                            highlight_df=args.highlight_file,
-                            figure_width=args.figure_width,
-                            figure_height_per_scaffold=args.figure_height_per_scaffold,
-                            dpi=300,
-                            default_color="red",
-                            title=args.title,
-                            extensions=args.output_formats,
-                            feature_start_column_id="start",
-                            feature_end_column_id="end",
-                            feature_color_column_id="color",
-                            feature_length_column_id="length",
-                            subplots_adjust_left=args.subplots_adjust_left,
-                            subplots_adjust_bottom=args.subplots_adjust_bottom,
-                            subplots_adjust_right=args.subplots_adjust_right,
-                            subplots_adjust_top=args.subplots_adjust_top,
-                            show_track_label=not args.hide_track_label,
-                            show_trackgroup_label=True,
-                            close_figure=True,
-                            subplot_scale=False,
-                            track_group_scale=False,
-                            track_group_distance=2,
-                            xmax_multiplier=1.3, ymax_multiplier=1.00,
-                            stranded_tracks=args.stranded,
-                            rounded_tracks=args.rounded,
-                            stranded_end_tracks=args.stranded_end,
-                            xtick_fontsize=args.x_tick_fontsize,
-                            subplot_title_fontsize=args.title_fontsize,
-                            subplot_title_fontweight='bold',
-                            autoscale_figure=False if args.manual_figure_adjustment else True,
-                            )
-"""    
-Visualization.draw_coverage_windows(coverage_df, args.window_size, args.window_step, chr_len_df,
-                                    average_coverage_dict,
+                                    chr_len_df,
+                                    args.scaffold_orderlist,
                                     args.output_prefix,
+                                    legend=Visualization.coverage_legend(colormap=args.colormap, thresholds=args.coverage_thresholds),  #Visualization.density_legend(colors, args.coverage_thresholds),
+                                    # query_species_color_df_dict,
+                                    centromere_df=centromere_df,
+                                    highlight_df=args.highlight_file,
                                     figure_width=args.figure_width,
-                                    figure_height_per_scaffold=args.figure_height_per_scaffold, dpi=300,
-                                    colormap=args.colormap, title=args.title,
+                                    figure_height_per_scaffold=args.figure_height_per_scaffold,
+                                    dpi=300,
+                                    default_color="red",
+                                    title=args.title,
                                     extensions=args.output_formats,
-                                    scaffold_order_list=args.scaffold_ordered_list,
-                                    test_colormaps=args.test_colormaps,
-                                    thresholds=(0.0, 0.125, 0.25, 0.375, 0.5, 0.625, 0.75,
-                                                0.875, 1.0, 1.125, 1.25, 1.375, 1.5, 1.625,
-                                                1.75, 1.875, 2.0, 2.125, 2.25) if args.split_coverage_thresholds else args.coverage_thresholds,
-                                    absolute_coverage_values=args.absolute_coverage_values,
+                                    feature_start_column_id="start",
+                                    feature_end_column_id="end",
+                                    feature_color_column_id="color",
+                                    feature_length_column_id="length",
                                     subplots_adjust_left=args.subplots_adjust_left,
                                     subplots_adjust_bottom=args.subplots_adjust_bottom,
                                     subplots_adjust_right=args.subplots_adjust_right,
                                     subplots_adjust_top=args.subplots_adjust_top,
                                     show_track_label=not args.hide_track_label,
-                                    show_trackgroup_label=True
+                                    show_trackgroup_label=True,
+                                    close_figure=True,
+                                    subplot_scale=False,
+                                    track_group_scale=False,
+                                    track_group_distance=2,
+                                    xmax_multiplier=1.3, ymax_multiplier=1.00,
+                                    stranded_tracks=args.stranded,
+                                    rounded_tracks=args.rounded,
+                                    stranded_end_tracks=args.stranded_end,
+                                    xtick_fontsize=args.x_tick_fontsize,
+                                    subplot_title_fontsize=args.title_fontsize,
+                                    subplot_title_fontweight='bold',
+                                    autoscale_figure=False if args.manual_figure_adjustment else True,
                                     )
-
-"""
-

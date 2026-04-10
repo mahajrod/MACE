@@ -50,15 +50,15 @@ parser.add_argument("-s", "--window_step", action="store", dest="window_step", d
 parser.add_argument("-p", "--parsing_mode", action="store", dest="parsing_mode", default="index_db",
                     help="Parsing mode for input sequence file. "
                          "Possible variants: 'index_db'(default), 'index', 'parse'")
-parser.add_argument("-a", "--scaffold_white_list", action="store", dest="scaffold_white_list", default=[],
+parser.add_argument("-a", "--scaffold_whitelist", action="store", dest="scaffold_whitelist", default=[],
                     type=lambda s: s.split(","),
                     help="Comma-separated list of the only scaffolds to draw. Default: all")
-parser.add_argument("-b", "--scaffold_black_list", action="store", dest="scaffold_black_list", default=[],
+parser.add_argument("-b", "--scaffold_blacklist", action="store", dest="scaffold_blacklist", default=[],
                     type=lambda s: s.split(","),
                     help="Comma-separated list of scaffolds to skip at drawing. Default: not set")
 parser.add_argument("-y", "--sort_scaffolds", action="store_true", dest="sort_scaffolds", default=False,
                     help="Order  scaffolds according to their names. Default: False")
-parser.add_argument("-z", "--scaffold_ordered_list", action="store", dest="scaffold_ordered_list", default=[],
+parser.add_argument("-z", "--scaffold_orderlist", action="store", dest="scaffold_orderlist", default=[],
                     type=lambda s: s.split(","),
                     help="Comma-separated list of scaffolds to draw first and exactly in same order. "
                          "Scaffolds absent in this list are drawn last and in order according to vcf file . "
@@ -139,10 +139,10 @@ DrawingRoutines.draw_variant_window_densities(count_dict, reference.region_lengt
                                               figure_height_scale_factor=args.figure_height_scale_factor,
                                               scaffold_synonym_dict=None,
                                               id_replacement_mode="partial", suptitle=None, density_multiplicator=1000,
-                                              scaffold_black_list=args.scaffold_black_list,
+                                              scaffold_blacklist=args.scaffold_blacklist,
                                               sort_scaffolds=args.sort_scaffolds,
-                                              scaffold_ordered_list=args.scaffold_ordered_list,
-                                              scaffold_white_list=args.scaffold_white_list,
+                                              scaffold_orderlist=args.scaffold_orderlist,
+                                              scaffold_whitelist=args.scaffold_whitelist,
                                               add_sample_name_to_labels=True,
                                               gap_color="grey",
                                               dist_between_scaffolds_scaling_factor=args.dist_between_scaffolds_scaling_factor,
@@ -160,10 +160,10 @@ DrawingRoutines.draw_window_density_distribution(count_dict, args.window_size, o
                                                  number_of_bins=args.number_of_bins, width_of_bins=None,
                                                  max_threshold=args.max_threshold,
                                                  min_threshold=args.min_threshold,
-                                                 scaffold_black_list=args.scaffold_white_list,
-                                                 scaffold_white_list=args.scaffold_white_list,
+                                                 scaffold_blacklist=args.scaffold_whitelist,
+                                                 scaffold_whitelist=args.scaffold_whitelist,
                                                  sort_scaffolds=args.sort_scaffolds,
-                                                 scaffold_ordered_list=args.scaffold_ordered_list,
+                                                 scaffold_orderlist=args.scaffold_orderlist,
                                                  subplot_size=args.subplot_size,
                                                  per_scaffold_histo_dir="per_scaffold_histo_dir/",
                                                  subplot_tuple=None, share_x_axis=True, share_y_axis=True,
@@ -194,10 +194,10 @@ variants.draw_variant_window_densities(args.reference, args.output_prefix, args.
                                        masking=None, parsing_mode=args.parsing_mode, min_gap_length=10,
                                        masked_region_color="grey", gap_color="white",
                                        ignore_scaffolds_shorter_than_window=True,
-                                       skip_empty_windows=False, scaffold_black_list=args.scaffold_black_list,
+                                       skip_empty_windows=False, scaffold_blacklist=args.scaffold_blacklist,
                                        sort_scaffolds=args.sort_scaffolds,
-                                       scaffold_ordered_list=args.scaffold_ordered_list,
-                                       scaffold_white_list=args.scaffold_white_list,
+                                       scaffold_orderlist=args.scaffold_orderlist,
+                                       scaffold_whitelist=args.scaffold_whitelist,
                                        figure_extensions=args.output_formats,
                                        add_sample_name_to_labels=False,
                                        sample_label="SampleZZZ",)

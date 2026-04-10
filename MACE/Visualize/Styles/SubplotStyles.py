@@ -3,7 +3,7 @@ from collections import OrderedDict
 import matplotlib.pyplot as plt
 from matplotlib.ticker import FuncFormatter
 
-#from MACE.Visualization.Styles.TrackGroup import *
+#from MACE.VisualizationRoutines.Styles.TrackGroup import *
 
 
 class SubplotStyle:
