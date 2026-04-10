@@ -16,7 +16,7 @@ from RouToolPa.Parsers.VCF import CollectionVCF
 from RouToolPa.Parsers.BED import CollectionBED
 
 from MACE.Routines import Visualization, StatsVCF
-from MACE.Routines import ParsingRoutines
+from MACE.Routines import Parsing
 from MACE.Routines.Parsing import NewlinePreservingArgParserHelpFormatter
 
 
@@ -221,19 +221,19 @@ parser.add_argument("-v", "--verbose", action="store_true", dest="verbose",
 # ---- End of Common options ----
 
 args = parser.parse_args()
-auxiliary_dict = ParsingRoutines.read_mace_auxiliary_input(len_file=args.scaffold_length_file,
-                                                           whitelist_file=args.scaffold_whitelist,
-                                                           max_scaffolds=args.max_scaffolds,
-                                                           orderlist_file=args.scaffold_orderlist,
-                                                           syn_file=args.scaffold_syn_file,
-                                                           syn_file_key_column=args.syn_file_key_column,
-                                                           syn_file_value_column=args.syn_file_value_column,
-                                                           centromere_bed=args.centromere_bed,
-                                                           highlight_bed=args.highlight_file,
-                                                           legend_file=args.highlight_file,
-                                                           vert_track_group_file=None,
-                                                           hor_track_group_file=None,
-                                                           hor_track_subgroup_file=None)
+auxiliary_dict = Parsing.read_mace_auxiliary_input(len_file=args.scaffold_length_file,
+                                                   whitelist_file=args.scaffold_whitelist,
+                                                   max_scaffolds=args.max_scaffolds,
+                                                   orderlist_file=args.scaffold_orderlist,
+                                                   syn_file=args.scaffold_syn_file,
+                                                   syn_file_key_column=args.syn_file_key_column,
+                                                   syn_file_value_column=args.syn_file_value_column,
+                                                   centromere_bed=args.centromere_bed,
+                                                   highlight_bed=args.highlight_file,
+                                                   legend_file=args.highlight_file,
+                                                   vert_track_group_file=None,
+                                                   hor_track_group_file=None,
+                                                   hor_track_subgroup_file=None)
 
 if args.custom_color_list is not None:
     if len(args.custom_color_list) != len(args.density_thresholds):
@@ -266,7 +266,7 @@ elif args.input_type in ["bedgraph"]:  # Bed format without track lines. All col
     # if args.scaffold_syn_file:
     #     track_df.rename(index=chr_syn_dict, inplace=True)
 
-track_df = ParsingRoutines.resolve_mace_single_genome_input(track_df, auxiliary_dict)
+track_df = Parsing.resolve_mace_single_genome_input(track_df, auxiliary_dict)
 #print(track_df)
 if track_df.index.nlevels > 1:
     #drop second level of index if it was added by groupby

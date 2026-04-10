@@ -10,6 +10,8 @@ from RouToolPa.Parsers.STR import CollectionSTR
 from RouToolPa.Parsers.BED import CollectionBED
 from RouToolPa.Parsers.GFF import CollectionGFF
 from RouToolPa.Parsers.BLAST import CollectionBLAST
+from RouToolPa.Parsers.Sequence import CollectionSequence
+from RouToolPa.Parsers.TableIndex import CollectionTableIndex
 from RouToolPa.Collections.General import SynDict, IdList
 
 
@@ -101,8 +103,13 @@ class ParsingRoutines:
         if len_file is not None:
             if os.path.exists(len_file):
                 try:  # len_file might be empty
-                    auxiliary_dict["len_df"] = pd.read_csv(len_file, sep='\t', header=None, names=("scaffold", "length"),
-                                                        index_col=0, dtype={"scaffold": str, "length": int})
+                    if len_file[-6:] == ".fasta":  # check if len_file is fasta
+                        auxiliary_dict["len_df"] = CollectionSequence(in_file=len_file, format="fasta", parsing_mode="parse", get_stats=True).seq_lengths
+                    elif len_file[-4:] == ".fai":  # check if len_file is fai
+                        auxiliary_dict["len_df"] = CollectionTableIndex(in_file=len_file, format="fai", parsing_mode="length_only").records
+                    else: # treat other extensions as .len file
+                        auxiliary_dict["len_df"] = pd.read_csv(len_file, sep='\t', header=None, names=("scaffold", "length"),
+                                                               index_col=0, dtype={"scaffold": str, "length": int})
                     #len_df.index = pd.Index(list(map(str, len_df.index)))
                 except pd.errors.EmptyDataError:
                     auxiliary_dict["len_df"] = None

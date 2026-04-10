@@ -624,8 +624,11 @@ class VisualizationRoutines(DrawingRoutines):
 
 
         # calculate ratio of legend height to track height * track_number
-        legend_height = (len(legend.thresholds) + 3) * legend.element_size
-        legend_track_ratio = legend_height / feature_height / track_number
+        if legend:
+            legend_height = (len(legend.thresholds) + 3) * legend.element_size
+            legend_track_ratio = legend_height / feature_height / track_number
+        else:
+            legend_track_ratio = 0
         #print((figure_width,
         #                       max(1, int(scaffold_number * figure_height_per_scaffold + figure_header_height))))
         #print((scaffold_number, figure_height_per_scaffold, figure_header_height))
