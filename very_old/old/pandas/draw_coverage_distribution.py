@@ -26,10 +26,10 @@ parser.add_argument("-w", "--bin_width", action="store", dest="bin_width",
 parser.add_argument("--verbose", action="store_true", dest="verbose",
                     help="Verbose stdout")
 """
-parser.add_argument("-a", "--scaffold_white_list", action="store", dest="scaffold_white_list", default=[],
+parser.add_argument("-a", "--scaffold_whitelist", action="store", dest="scaffold_whitelist", default=[],
                     type=lambda s: s.split(","),
                     help="Comma-separated list of the only scaffolds to draw. Default: all")
-parser.add_argument("-b", "--scaffold_black_list", action="store", dest="scaffold_black_list", default=[],
+parser.add_argument("-b", "--scaffold_blacklist", action="store", dest="scaffold_blacklist", default=[],
                     type=lambda s: s.split(","),
                     help="Comma-separated list of scaffolds to skip at drawing. Default: not set")
 """

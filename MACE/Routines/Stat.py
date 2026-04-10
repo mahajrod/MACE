@@ -195,7 +195,7 @@ class StatsVCF(FileRoutines):
     def count_variants_in_windows(self, collection_vcf, window_size, window_step, reference_scaffold_lengths=None,
                                   ignore_scaffolds_shorter_than_window=True, output_prefix=None,
                                   skip_empty_windows=False, expression=None, per_sample_output=False,
-                                  scaffold_black_list=None, scaffold_white_list=None,
+                                  scaffold_blacklist=None, scaffold_whitelist=None,
                                   scaffold_syn_dict=None
                                   ):
         # TODO: rewrite tosimplify this function
@@ -314,10 +314,10 @@ class StatsVCF(FileRoutines):
             # window_index_df = step_index_df.applymap(get_overlapping_window_indexes)
             pass
 
-        #if ((scaffold_black_list is not None) and (not scaffold_black_list.empty)) or (scaffold_white_list is not None and (not scaffold_white_list.empty)):
+        #if ((scaffold_blacklist is not None) and (not scaffold_blacklist.empty)) or (scaffold_whitelist is not None and (not scaffold_whitelist.empty)):
         scaffold_to_keep = self.get_filtered_entry_list(count_df.index.get_level_values(level=0).unique().to_list(),
-                                                        entry_black_list=scaffold_black_list,
-                                                        entry_white_list=scaffold_white_list)
+                                                        entry_black_list=scaffold_blacklist,
+                                                        entry_white_list=scaffold_whitelist)
         count_df = count_df[count_df.index.isin(scaffold_to_keep, level=0)]
 
         if scaffold_syn_dict:
@@ -372,7 +372,7 @@ class StatsVCF(FileRoutines):
                                         reference_scaffold_length_df,
                                         ignore_scaffolds_shorter_than_window=True, output_prefix=None,
                                         skip_empty_windows=False, expression=None, per_sample_output=False,
-                                        scaffold_black_list=(), scaffold_white_list=(),
+                                        scaffold_blacklist=(), scaffold_whitelist=(),
                                         scaffold_syn_dict=None):
         window_stepppp = window_size if window_step is None else window_step
 
@@ -629,8 +629,8 @@ class StatsVCF(FileRoutines):
                       ref_genome=None, min_masking_length=10, suptitle=None,
                       masking_color="#777777", logbase=2,
                       extension_list=("pdf", "png"),
-                      scaffold_black_list=None, scaffold_white_list=None,
-                      scaffold_ordered_list=None, sort_scaffolds=False,
+                      scaffold_blacklist=None, scaffold_whitelist=None,
+                      scaffold_orderlist=None, sort_scaffolds=False,
                       color_expression=None,
                       default_point_color='blue',
                       dot_size=None,
@@ -652,8 +652,8 @@ class StatsVCF(FileRoutines):
         :param masked_scaffolds_color:
         :param logbase:
         :param extension_list:
-        :param scaffold_black_list:
-        :param scaffold_white_list=:
+        :param scaffold_blacklist:
+        :param scaffold_whitelist=:
         :param scaffold_order_list=None
         :return:
 
@@ -670,10 +670,10 @@ class StatsVCF(FileRoutines):
         index = 1
 
         final_scaffold_list = DrawingRoutines.get_filtered_scaffold_list(self.scaffold_list,
-                                                                         scaffold_black_list=scaffold_black_list,
+                                                                         scaffold_blacklist=scaffold_blacklist,
                                                                          sort_scaffolds=sort_scaffolds,
-                                                                         scaffold_ordered_list=scaffold_ordered_list,
-                                                                         scaffold_white_list=scaffold_white_list,
+                                                                         scaffold_orderlist=scaffold_orderlist,
+                                                                         scaffold_whitelist=scaffold_whitelist,
                                                                          sample_level=False)
         num_of_scaffolds = len(final_scaffold_list)
         distances_dict = OrderedDict()

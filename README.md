@@ -39,7 +39,7 @@ mamba install 'python>=3.9' 'pandas' 'scipy' 'numpy>=1.26' 'matplotlib' 'biopyth
 git clone https://github.com/mahajrod/RouToolPa
 git clone https://github.com/mahajrod/MACE
 
-# Step3: add RouToolPa and MACE folders to PYTHONPATH environment variable to your ~/.bashrc file         
+# Step3: add RouToolPa and MACE folders to PYTHONPATH environment variable in your ~/.bashrc file         
 ```
 **Option 2** makes MACE scripts available locally from MACE/scripts folder.
 

@@ -357,13 +357,13 @@ for genome in genome_orderlist:
         except pd.errors.EmptyDataError:
             syn_df_dict[genome] = pd.DataFrame(columns=["syn"])
 
-    # centromere.bed might be empty or absent
-    if get_filenames_for_extension(data_dir_path / genome, extension_list=["centromere.bed"]) is None:
+    # scaffold.centromere.bed might be empty or absent
+    if get_filenames_for_extension(data_dir_path / genome, extension_list=["scaffold.centromere.bed"]) is None:
         centromere_df_dict[genome] = pd.DataFrame(columns=["scaffold_id", "start", "end"])
         centromere_df_dict[genome].set_index("scaffold_id", inplace=True)
     else:
         try:
-            centromere_df_dict[genome] = pd.read_csv(get_filenames_for_extension(data_dir_path / genome, extension_list=["centromere.bed"]),
+            centromere_df_dict[genome] = pd.read_csv(get_filenames_for_extension(data_dir_path / genome, extension_list=["scaffold.centromere.bed"]),
                                                      usecols=(0, 1, 2),
                                                      index_col=0,
                                                      header=None,

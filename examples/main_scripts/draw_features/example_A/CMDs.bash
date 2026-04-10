@@ -33,9 +33,35 @@ draw_features.py -i records_header.bed -n scaffold.len -t table -o example_A6 \
            --hide_track_label --rounded  --scaffold_syn_file scaffold.syn \
            --syn_file_key_column 0 --syn_file_value_column 1
 
-echo -e "\nExample A7. Added centromere bed...\n"
+echo -e "\nExample A7. Syn file and centromere bed...\n"
 
 draw_features.py -i records.bed -n scaffold.len -t bed \
          --centromere_bed scaffold.centromere.bed -o example_A7 \
          --hide_track_label --rounded  --scaffold_syn_file scaffold.syn \
          --syn_file_key_column 0 --syn_file_value_column 1
+
+echo -e "\nExample A8. Syn file, centromere bed and orderlist...\n"
+
+draw_features.py -i records.bed -n scaffold.len -t bed \
+         --centromere_bed scaffold.centromere.bed -o example_A8 \
+         --hide_track_label --rounded  --scaffold_syn_file scaffold.syn \
+         --syn_file_key_column 0 --syn_file_value_column 1 \
+         --scaffold_orderlist scaffold.orderlist
+
+echo -e "\nExample A9. Syn file, centromere bed, orderlist and whitelist_1...\n"
+
+draw_features.py -i records.bed -n scaffold.len -t bed \
+         --centromere_bed scaffold.centromere.bed -o example_A99 \
+         --hide_track_label --rounded  --scaffold_syn_file scaffold.syn \
+         --syn_file_key_column 0 --syn_file_value_column 1 \
+         --scaffold_orderlist scaffold.orderlist \
+         --scaffold_whitelist scaffold_1.whitelist
+
+echo -e "\nExample A10. Syn file, centromere bed, orderlist and whitelist_2...\n"
+
+draw_features.py -i records.bed -n scaffold.len -t bed \
+         --centromere_bed scaffold.centromere.bed -o example_A10 \
+         --hide_track_label --rounded  --scaffold_syn_file scaffold.syn \
+         --syn_file_key_column 0 --syn_file_value_column 1 \
+         --scaffold_orderlist scaffold.orderlist \
+         --scaffold_whitelist scaffold_2.whitelist

@@ -31,7 +31,7 @@ from MACE.Visualization.Styles.Feature import *
 from MACE.Visualization.Styles.Track import *
 
 
-class Visualization(DrawingRoutines):
+class VisualizationRoutines(DrawingRoutines):
 
     def __init__(self):
         DrawingRoutines.__init__(self)
@@ -57,6 +57,14 @@ class Visualization(DrawingRoutines):
                                                             'gist_ncar']})
         """
 
+    @staticmethod
+    def rgb_tuple_to_hex(rgb_tuple):
+        color_code = "#"
+        for i in [0, 1, 2]:
+            color_code += "{:02X}".format(int(255 * rgb_tuple[i]))
+
+        return color_code
+    
     @staticmethod
     def zygoty_bar_plot(zygoty_counts, output_prefix, extension_list=("png",),
                         figsize=(5, 5), dpi=200, title=None, color_dict=None):
@@ -507,9 +515,7 @@ class Visualization(DrawingRoutines):
                       axes=None,
                       autoscale_figure=True
                       ):
-        #print(bed_collection_dict)
         track_group_dict = OrderedDict()
-        #print(scaffold_order_list)
         #print(scaffold_order_list)
         scaffolds = scaffold_order_list.to_list() if isinstance(scaffold_order_list, (pd.Series, pd.Index)) else scaffold_order_list  # scaffold_order_list[::-1] if scaffold_order_list else collection_gff.records.index.get_level_values(level=0).unique().to_list()
         scaffold_number = len(scaffolds)
@@ -566,6 +572,7 @@ class Visualization(DrawingRoutines):
                     #print(chr)
                     centromere_start = centromere_df.loc[chr, "start"]
                     centromere_end = centromere_df.loc[chr, "end"]
+                    #print(centromere_start, centromere_end)
             #print("DDDDD")
             #print(list(bed_collection_dict.keys()))
             #print("CCCCCCCCcc")
@@ -573,7 +580,6 @@ class Visualization(DrawingRoutines):
                 #print("AAAAa")
                 #print(species)
                 records = bed_collection_dict[species].records if hasattr(bed_collection_dict[species], "records") else bed_collection_dict[species]
-
                 # print(species)
                 #print(scaffold_length_df)
                 #print(scaffold_length_df)
@@ -615,11 +621,17 @@ class Visualization(DrawingRoutines):
                                      auto_scale=True,
                                      figure_x_y_ratio=figure_width / max(1, int(track_number * figure_height_per_scaffold + figure_header_height)),
                                      xmax_multiplier=xmax_multiplier, ymax_multiplier=ymax_multiplier)
+
+
+        # calculate ratio of legend height to track height * track_number
+        legend_height = (len(legend.thresholds) + 3) * legend.element_size
+        legend_track_ratio = legend_height / feature_height / track_number
         #print((figure_width,
         #                       max(1, int(scaffold_number * figure_height_per_scaffold + figure_header_height))))
         #print((scaffold_number, figure_height_per_scaffold, figure_header_height))
-        figure = plt.figure(1, figsize=(figure_width,
-                               max(1, int(track_number * figure_height_per_scaffold + figure_header_height))), dpi=dpi)
+
+        figure_height = max(1, int(track_number * figure_height_per_scaffold * max(1, legend_track_ratio/2.5) + figure_header_height))  # legend multiplier add for case when legend is higher than all tracks together
+        figure = plt.figure(1, figsize=(figure_width, figure_height), dpi=dpi)
         #print(track_number)
         #print(max(1, int(track_number * figure_height_per_scaffold + figure_header_height)))
 
@@ -855,18 +867,18 @@ class Visualization(DrawingRoutines):
 
     """
     self.get_filtered_scaffold_list(last_collection.target_scaffold_list,
-                                                               scaffold_black_list=target_black_list,
+                                                               scaffold_blacklist=target_black_list,
                                                                sort_scaffolds=False,
-                                                               scaffold_ordered_list=target_ordered_list,
-                                                               scaffold_white_list=target_white_list)
+                                                               scaffold_orderlist=target_ordered_list,
+                                                               scaffold_whitelist=target_white_list)
     """
 
     def draw_window_density_distribution(self, count_dict, window_size, output_prefix=None, suptitle="SNP density distribution",
                                          density_multiplicator=1000,
                                          number_of_bins=None, width_of_bins=None,
                                          max_threshold=None, min_threshold=None,
-                                         scaffold_black_list=[], scaffold_white_list=[],
-                                         sort_scaffolds=False, scaffold_ordered_list=None, subplot_size=4,
+                                         scaffold_blacklist=[], scaffold_whitelist=[],
+                                         sort_scaffolds=False, scaffold_orderlist=None, subplot_size=4,
                                          per_scaffold_histo_dir="per_scaffold_histo_dir/",
                                          subplot_tuple=None, share_x_axis=True, share_y_axis=True,
                                          extensions=("png",), show_mean_and_median=True):
@@ -875,10 +887,10 @@ class Visualization(DrawingRoutines):
         """
         samples_list = count_dict.keys()
         final_scaffold_list = self.get_filtered_scaffold_list(count_dict,
-                                                              scaffold_black_list=scaffold_black_list,
+                                                              scaffold_blacklist=scaffold_blacklist,
                                                               sort_scaffolds=sort_scaffolds,
-                                                              scaffold_ordered_list=scaffold_ordered_list,
-                                                              scaffold_white_list=scaffold_white_list)
+                                                              scaffold_orderlist=scaffold_orderlist,
+                                                              scaffold_whitelist=scaffold_whitelist)
 
         scaffold_number = len(final_scaffold_list)
 

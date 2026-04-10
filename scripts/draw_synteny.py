@@ -13,10 +13,11 @@ import numpy as np
 from distinctipy import distinctipy
 from functools import partial
 
-from MACE.Routines import Visualization, StatsVCF
-
 from RouToolPa.Parsers.PSL import CollectionPSL
 from RouToolPa.Parsers.BED import CollectionBED
+
+from MACE.Routines import VisualizationRoutines, StatsVCF
+from MACE.Routines import ParsingRoutines
 
 
 def expand_path(path_template: str, skip=False):
@@ -271,12 +272,12 @@ parser.add_argument("--reference_highlight_file", action="store", dest="referenc
 #parser.add_argument("--reference_centromere_bed", action="store", dest="reference_centromere_bed", required=False,
 #                    type=str,
 #                    help="Bed file with coordinates of centromeres in reference")
-parser.add_argument("--reference_scaffold_white_list", action="store", dest="reference_scaffold_white_list", default=None,
+parser.add_argument("--reference_scaffold_whitelist", action="store", dest="reference_scaffold_whitelist", default=None,
                     #type=lambda s: pd.read_csv(s, header=None, squeeze=True)) if os.path.exists(s) else pd.Series(s.split(",")),
-                    type=lambda s: pd.read_csv(s, header=None).squeeze("columns") if os.path.exists(s) else pd.Series(s.split(",")),
+                    type=ParsingRoutines.read_str_series,
                     help="Comma-separated list of the only scaffolds to draw (reference white list). Default: use  .whitelist from reference genome folder")
 parser.add_argument("-z", "--reference_scaffold_order_list", action="store", dest="reference_scaffold_order_list",
-                    type=lambda s: pd.read_csv(s, header=None).squeeze("columns") if os.path.exists(s) else pd.Series(s.split(",")),
+                    type=ParsingRoutines.read_str_series,
                     help="Comma-separated list of scaffolds to draw first and exactly in same order. "
                          "Default: not set")
 parser.add_argument("--syn_file_key_column", action="store", dest="syn_file_key_column",
@@ -401,8 +402,8 @@ for genome in genome_list:
 
 whitelist_series_dict = {genome: pd.read_csv(get_filenames_for_extension(data_dir_path / genome, extension_list=["whitelist"]),
                                              sep="\t", header=None, comment="#").squeeze("columns") for genome in genome_list}
-if args.reference_scaffold_white_list is not None:
-    whitelist_series_dict[reference] = args.reference_scaffold_white_list
+if args.reference_scaffold_whitelist is not None:
+    whitelist_series_dict[reference] = args.reference_scaffold_whitelist
 
 # orderlist might be absent in folders
 orderlist_series_dict = {genome: pd.read_csv(get_filenames_for_extension(data_dir_path / genome, extension_list=["orderlist"]),
@@ -442,10 +443,10 @@ species_chr_syn_dict[reference] = pd.read_csv(expand_path(args.reference_scaffol
                                               sep="\t", index_col=args.syn_file_key_column).squeeze("columns") if args.reference_scaffold_syn_file else None
 """
 
-if get_filenames_for_extension(data_dir_path / reference, extension_list=["centromere.bed"]) is None:
+if get_filenames_for_extension(data_dir_path / reference, extension_list=["scaffold.centromere.bed"]) is None:
     centromere_df = None
 else:
-    centromere_df = pd.read_csv(get_filenames_for_extension(data_dir_path / reference, extension_list=["centromere.bed"]),
+    centromere_df = pd.read_csv(get_filenames_for_extension(data_dir_path / reference, extension_list=["scaffold.centromere.bed"]),
                                 usecols=(0, 1, 2),
                                 index_col=0,
                                 header=None,
@@ -467,21 +468,21 @@ else:
 print("Coordinates of centromere:")
 print(centromere_df)
 """
-if args.query_scaffold_white_lists:
+if args.query_scaffold_whitelists:
     species_white_list_dict = {query: pd.read_csv(expand_path(white_list_file, skip=not args.expand_paths),
-                                                  header=None).squeeze("columns") if white_list_file else None for query, white_list_file in zip(query_list, args.query_scaffold_white_lists)}
+                                                  header=None).squeeze("columns") if white_list_file else None for query, white_list_file in zip(query_list, args.query_scaffold_whitelists)}
 else:
     species_white_list_dict = {query: None for query in query_list}
 
-species_white_list_dict[reference] = args.reference_scaffold_white_list #pd.read_csv(args.reference_scaffold_white_list, header=None, squeeze=True) if args.reference_scaffold_white_list else None
+species_white_list_dict[reference] = args.reference_scaffold_whitelist #pd.read_csv(args.reference_scaffold_whitelist, header=None, squeeze=True) if args.reference_scaffold_whitelist else None
 
-if args.query_scaffold_black_lists:
+if args.query_scaffold_blacklists:
     species_black_list_dict = {query: pd.read_csv(expand_path(black_list_file, skip=not args.expand_paths),
-                                                  header=None).squeeze("columns") if black_list_file else None for query, black_list_file in zip(query_list, args.query_scaffold_black_lists)}
+                                                  header=None).squeeze("columns") if black_list_file else None for query, black_list_file in zip(query_list, args.query_scaffold_blacklists)}
 else:
     species_black_list_dict = {query: None for query in query_list}
 
-species_black_list_dict[reference] = args.reference_scaffold_black_list #pd.read_csv(args.reference_scaffold_black_list, header=None, squeeze=True) if args.reference_scaffold_black_list else None
+species_black_list_dict[reference] = args.reference_scaffold_blacklist #pd.read_csv(args.reference_scaffold_blacklist, header=None, squeeze=True) if args.reference_scaffold_blacklist else None
 species_orderlist_dict = {query: pd.read_csv(expand_path(orderlist_file, skip=not args.expand_paths),
                                              header=None).squeeze("columns").iloc[::-1] for query, orderlist_file in zip (query_list, args.query_scaffold_order_lists)}
 species_orderlist_dict[reference] = args.reference_scaffold_order_list[::-1]
@@ -620,45 +621,45 @@ for min_block_length in args.initial_min_block_len_list:
                                                       header=True, index=True)
         # -----
 
-    Visualization.draw_features(prefiltered_bed_col_dict,
-                                lenlist_df_dict[reference],#reference_scaffold_length_df,
-                                orderlist_series_dict[reference],
+    VisualizationRoutines.draw_features(prefiltered_bed_col_dict,
+                                        lenlist_df_dict[reference],  #reference_scaffold_length_df,
+                                        orderlist_series_dict[reference],
                                 "{0}.initial_min_block_len_{1}".format(args.output_prefix, min_block_length),
-                                legend=None if args.hide_legend else Visualization.chromosome_legend(query_species_color_df_dict,
-                                                                       orderlist_series_dict[reference]),
-                                centromere_df=centromere_df,
-                                highlight_df=args.reference_highlight_file,
-                                figure_width=args.figure_width, figure_height_per_scaffold=args.figure_height_per_scaffold,
-                                dpi=300,
-                                #colormap=None, thresholds=None, colors=None, background=None,
-                                default_color="red",  # TODO: check if it is possible to remove it
-                                title=args.title,
-                                extensions=args.output_formats,
-                                feature_start_column_id="start",
-                                feature_end_column_id="end",
-                                feature_color_column_id="color",
-                                feature_length_column_id="length",
-                                feature_height_fraction=0.7,
-                                subplots_adjust_left=args.subplots_adjust_left,
-                                subplots_adjust_bottom=args.subplots_adjust_bottom,
-                                subplots_adjust_right=args.subplots_adjust_right,
-                                subplots_adjust_top=args.subplots_adjust_top,
-                                autoscale_figure=False if args.manual_figure_adjustment else True,
-                                show_track_label=not args.hide_track_label,
-                                show_trackgroup_label=True,
-                                close_figure=True,
-                                subplot_scale=False,
-                                track_group_scale=False,
-                                track_group_distance=2,
-                                xmax_multiplier=1.3, ymax_multiplier=args.ymax_multiplier,
-                                figure_header_height=args.figure_header_height,
-                                stranded_tracks=args.stranded,
-                                rounded_tracks=args.rounded,
-                                stranded_end_tracks=args.stranded_end,
-                                xtick_fontsize=args.x_tick_fontsize,
-                                subplot_title_fontsize=args.title_fontsize,
-                                subplot_title_fontweight='bold',
-                                )
+                                        legend=None if args.hide_legend else VisualizationRoutines.chromosome_legend(query_species_color_df_dict,
+                                                                                                                     orderlist_series_dict[reference]),
+                                        centromere_df=centromere_df,
+                                        highlight_df=args.reference_highlight_file,
+                                        figure_width=args.figure_width, figure_height_per_scaffold=args.figure_height_per_scaffold,
+                                        dpi=300,
+                                        #colormap=None, thresholds=None, colors=None, background=None,
+                                        default_color="red",  # TODO: check if it is possible to remove it
+                                        title=args.title,
+                                        extensions=args.output_formats,
+                                        feature_start_column_id="start",
+                                        feature_end_column_id="end",
+                                        feature_color_column_id="color",
+                                        feature_length_column_id="length",
+                                        feature_height_fraction=0.7,
+                                        subplots_adjust_left=args.subplots_adjust_left,
+                                        subplots_adjust_bottom=args.subplots_adjust_bottom,
+                                        subplots_adjust_right=args.subplots_adjust_right,
+                                        subplots_adjust_top=args.subplots_adjust_top,
+                                        autoscale_figure=False if args.manual_figure_adjustment else True,
+                                        show_track_label=not args.hide_track_label,
+                                        show_trackgroup_label=True,
+                                        close_figure=True,
+                                        subplot_scale=False,
+                                        track_group_scale=False,
+                                        track_group_distance=2,
+                                        xmax_multiplier=1.3, ymax_multiplier=args.ymax_multiplier,
+                                        figure_header_height=args.figure_header_height,
+                                        stranded_tracks=args.stranded,
+                                        rounded_tracks=args.rounded,
+                                        stranded_end_tracks=args.stranded_end,
+                                        xtick_fontsize=args.x_tick_fontsize,
+                                        subplot_title_fontsize=args.title_fontsize,
+                                        subplot_title_fontweight='bold',
+                                        )
     bed_dict_to_xlsx(prefiltered_bed_col_dict, '{0}.initial_min_block_len_{1}'.format(args.output_prefix, min_block_length))
 
     for secondary_min_block_len in args.secondary_min_block_len_list:
@@ -685,141 +686,12 @@ for min_block_length in args.initial_min_block_len_list:
                     header=True, index=True)
                 # -----
 
-            Visualization.draw_features(filtered_bed_col_dict,
-                                        lenlist_df_dict[reference],
-                                        orderlist_series_dict[reference],
-                                        "{0}.{1}".format(args.output_prefix,second_stage_output_suffix),
-                                        legend=None if args.hide_legend else Visualization.chromosome_legend(query_species_color_df_dict,
-                                                                                                             orderlist_series_dict[reference]),
-                                        centromere_df=centromere_df,
-                                        highlight_df=args.reference_highlight_file,
-                                        figure_width=args.figure_width,
-                                        figure_height_per_scaffold=args.figure_height_per_scaffold,
-                                        dpi=300,
-                                        # colormap=None, thresholds=None, colors=None, background=None,
-                                        default_color="red",  # TODO: check if it is possible to remove it
-                                        title=args.title,
-                                        extensions=args.output_formats,
-                                        feature_start_column_id="start",
-                                        feature_end_column_id="end",
-                                        feature_color_column_id="color",
-                                        feature_length_column_id="length",
-                                        subplots_adjust_left=args.subplots_adjust_left,
-                                        subplots_adjust_bottom=args.subplots_adjust_bottom,
-                                        subplots_adjust_right=args.subplots_adjust_right,
-                                        subplots_adjust_top=args.subplots_adjust_top,
-                                        autoscale_figure=False if args.manual_figure_adjustment else True,
-                                        show_track_label=not args.hide_track_label,
-                                        show_trackgroup_label=True,
-                                        close_figure=True,
-                                        subplot_scale=False,
-                                        track_group_scale=False,
-                                        track_group_distance=2,
-                                        xmax_multiplier=1.3, ymax_multiplier=args.ymax_multiplier,
-                                        figure_header_height=args.figure_header_height,
-                                        stranded_tracks=args.stranded,
-                                        rounded_tracks=args.rounded,
-                                        stranded_end_tracks=args.stranded_end,
-                                        xtick_fontsize=args.x_tick_fontsize,
-                                        subplot_title_fontsize=args.title_fontsize,
-                                        subplot_title_fontweight='bold'
-                                        )
-            bed_dict_to_xlsx(filtered_bed_col_dict,
-                             "{0}.{1}".format(args.output_prefix,
-                                              second_stage_output_suffix))
-
-            for max_dist_between_blocks in args.max_dist_between_blocks_list:
-                for species in filtered_bed_col_dict:
-                    filtered_bed_col_dict[species].records = merge_adjacent_blocks(filtered_bed_col_dict[species].records,
-                                                                                   max_dist_between_blocks=max_dist_between_blocks)
-                    #filtered_bed_col_dict[species].records["color"] =
-                third_stage_output_suffix = "max_dist_between_adjacent_blocks_{0}".format(max_dist_between_blocks)
-
-                for species in filtered_bed_col_dict:  # bed_col_dict:
-                    # ---- save original blocks to bed ----
-                    filtered_bed_col_dict[species].records.to_csv("{0}.{1}.to.{2}.{3}.{4}.tsv".format(args.output_prefix,
-                                                                                                      species,
-                                                                                                      reference,
-                                                                                                      second_stage_output_suffix,
-                                                                                                      third_stage_output_suffix),
-                                                                  sep="\t",
-                                                                  header=True, index=True)
-                    # -----
-
-                Visualization.draw_features(filtered_bed_col_dict,
-                                            lenlist_df_dict[reference],
-                                            orderlist_series_dict[reference],
-                                            "{0}.{1}.{2}".format(args.output_prefix,
-                                                                 second_stage_output_suffix,
-                                                                 third_stage_output_suffix),
-                                            legend=None if args.hide_legend else Visualization.chromosome_legend(query_species_color_df_dict,
-                                                                                                                 orderlist_series_dict[reference]),
-                                            centromere_df=centromere_df,
-                                            highlight_df=args.reference_highlight_file,
-                                            figure_width=args.figure_width,
-                                            figure_height_per_scaffold=args.figure_height_per_scaffold,
-                                            dpi=300,
-                                            # colormap=None, thresholds=None, colors=None, background=None,
-                                            default_color="red",  # TODO: check if it is possible to remove it
-                                            title=args.title,
-                                            extensions=args.output_formats,
-                                            feature_start_column_id="start",
-                                            feature_end_column_id="end",
-                                            feature_color_column_id="color",
-                                            feature_length_column_id="length",
-                                            subplots_adjust_left=args.subplots_adjust_left,
-                                            subplots_adjust_bottom=args.subplots_adjust_bottom,
-                                            subplots_adjust_right=args.subplots_adjust_right,
-                                            subplots_adjust_top=args.subplots_adjust_top,
-                                            autoscale_figure=False if args.manual_figure_adjustment else True,
-                                            show_track_label=not args.hide_track_label,
-                                            show_trackgroup_label=True,
-                                            close_figure=True,
-                                            subplot_scale=False,
-                                            track_group_scale=False,
-                                            track_group_distance=2,
-                                            xmax_multiplier=1.3, ymax_multiplier=args.ymax_multiplier,
-                                            stranded_tracks=False,
-                                            rounded_tracks=args.rounded,
-                                            stranded_end_tracks=False,
-                                            xtick_fontsize=args.x_tick_fontsize,
-                                            subplot_title_fontsize=args.title_fontsize,
-                                            subplot_title_fontweight='bold',
-                                            figure_header_height=args.figure_header_height
-                                            )
-                bed_dict_to_xlsx(filtered_bed_col_dict,
-                                 "{0}.{1}.{2}".format(args.output_prefix,
-                                                      second_stage_output_suffix,
-                                                      third_stage_output_suffix))
-
-                for final_min_block_len in args.final_min_block_len_list:
-                    for species in filtered_bed_col_dict:
-                        filtered_bed_col_dict[species].records = filtered_bed_col_dict[species].records[filtered_bed_col_dict[species].records["end"] - filtered_bed_col_dict[species].records["start"] > final_min_block_len]
-
-                    forth_stage_output_suffix = "final_min_block_len_{0}".format(final_min_block_len)
-
-                    for species in filtered_bed_col_dict:  # bed_col_dict:
-                        # ---- save original blocks to bed ----
-                        filtered_bed_col_dict[species].records.to_csv(
-                            "{0}.{1}.to.{2}.{3}.{4}.{5}.tsv".format(args.output_prefix,
-                                                                    species,
-                                                                    reference,
-                                                                    second_stage_output_suffix,
-                                                                    third_stage_output_suffix,
-                                                                    forth_stage_output_suffix),
-                            sep="\t",
-                            header=True, index=True)
-                        # -----
-
-                    Visualization.draw_features(filtered_bed_col_dict,
+            VisualizationRoutines.draw_features(filtered_bed_col_dict,
                                                 lenlist_df_dict[reference],
                                                 orderlist_series_dict[reference],
-                                                "{0}.{1}.{2}.{3}".format(args.output_prefix,
-                                                                         second_stage_output_suffix,
-                                                                         third_stage_output_suffix,
-                                                                         forth_stage_output_suffix),
-                                                legend=None if args.hide_legend else Visualization.chromosome_legend(query_species_color_df_dict,
-                                                                                                                     orderlist_series_dict[reference]),
+                                        "{0}.{1}".format(args.output_prefix,second_stage_output_suffix),
+                                                legend=None if args.hide_legend else VisualizationRoutines.chromosome_legend(query_species_color_df_dict,
+                                                                                                                             orderlist_series_dict[reference]),
                                                 centromere_df=centromere_df,
                                                 highlight_df=args.reference_highlight_file,
                                                 figure_width=args.figure_width,
@@ -846,13 +718,141 @@ for min_block_length in args.initial_min_block_len_list:
                                                 track_group_distance=2,
                                                 xmax_multiplier=1.3, ymax_multiplier=args.ymax_multiplier,
                                                 figure_header_height=args.figure_header_height,
-                                                stranded_tracks=False,
+                                                stranded_tracks=args.stranded,
                                                 rounded_tracks=args.rounded,
-                                                stranded_end_tracks=False,
+                                                stranded_end_tracks=args.stranded_end,
                                                 xtick_fontsize=args.x_tick_fontsize,
                                                 subplot_title_fontsize=args.title_fontsize,
                                                 subplot_title_fontweight='bold'
                                                 )
+            bed_dict_to_xlsx(filtered_bed_col_dict,
+                             "{0}.{1}".format(args.output_prefix,
+                                              second_stage_output_suffix))
+
+            for max_dist_between_blocks in args.max_dist_between_blocks_list:
+                for species in filtered_bed_col_dict:
+                    filtered_bed_col_dict[species].records = merge_adjacent_blocks(filtered_bed_col_dict[species].records,
+                                                                                   max_dist_between_blocks=max_dist_between_blocks)
+                    #filtered_bed_col_dict[species].records["color"] =
+                third_stage_output_suffix = "max_dist_between_adjacent_blocks_{0}".format(max_dist_between_blocks)
+
+                for species in filtered_bed_col_dict:  # bed_col_dict:
+                    # ---- save original blocks to bed ----
+                    filtered_bed_col_dict[species].records.to_csv("{0}.{1}.to.{2}.{3}.{4}.tsv".format(args.output_prefix,
+                                                                                                      species,
+                                                                                                      reference,
+                                                                                                      second_stage_output_suffix,
+                                                                                                      third_stage_output_suffix),
+                                                                  sep="\t",
+                                                                  header=True, index=True)
+                    # -----
+
+                VisualizationRoutines.draw_features(filtered_bed_col_dict,
+                                                    lenlist_df_dict[reference],
+                                                    orderlist_series_dict[reference],
+                                            "{0}.{1}.{2}".format(args.output_prefix,
+                                                                 second_stage_output_suffix,
+                                                                 third_stage_output_suffix),
+                                                    legend=None if args.hide_legend else VisualizationRoutines.chromosome_legend(query_species_color_df_dict,
+                                                                                                                                 orderlist_series_dict[reference]),
+                                                    centromere_df=centromere_df,
+                                                    highlight_df=args.reference_highlight_file,
+                                                    figure_width=args.figure_width,
+                                                    figure_height_per_scaffold=args.figure_height_per_scaffold,
+                                                    dpi=300,
+                                                    # colormap=None, thresholds=None, colors=None, background=None,
+                                                    default_color="red",  # TODO: check if it is possible to remove it
+                                                    title=args.title,
+                                                    extensions=args.output_formats,
+                                                    feature_start_column_id="start",
+                                                    feature_end_column_id="end",
+                                                    feature_color_column_id="color",
+                                                    feature_length_column_id="length",
+                                                    subplots_adjust_left=args.subplots_adjust_left,
+                                                    subplots_adjust_bottom=args.subplots_adjust_bottom,
+                                                    subplots_adjust_right=args.subplots_adjust_right,
+                                                    subplots_adjust_top=args.subplots_adjust_top,
+                                                    autoscale_figure=False if args.manual_figure_adjustment else True,
+                                                    show_track_label=not args.hide_track_label,
+                                                    show_trackgroup_label=True,
+                                                    close_figure=True,
+                                                    subplot_scale=False,
+                                                    track_group_scale=False,
+                                                    track_group_distance=2,
+                                                    xmax_multiplier=1.3, ymax_multiplier=args.ymax_multiplier,
+                                                    stranded_tracks=False,
+                                                    rounded_tracks=args.rounded,
+                                                    stranded_end_tracks=False,
+                                                    xtick_fontsize=args.x_tick_fontsize,
+                                                    subplot_title_fontsize=args.title_fontsize,
+                                                    subplot_title_fontweight='bold',
+                                                    figure_header_height=args.figure_header_height
+                                                    )
+                bed_dict_to_xlsx(filtered_bed_col_dict, "{0}.{1}.{2}".format(args.output_prefix,
+                                                                              second_stage_output_suffix,
+                                                                              third_stage_output_suffix))
+
+                for final_min_block_len in args.final_min_block_len_list:
+                    for species in filtered_bed_col_dict:
+                        filtered_bed_col_dict[species].records = filtered_bed_col_dict[species].records[filtered_bed_col_dict[species].records["end"] - filtered_bed_col_dict[species].records["start"] > final_min_block_len]
+
+                    forth_stage_output_suffix = "final_min_block_len_{0}".format(final_min_block_len)
+
+                    for species in filtered_bed_col_dict:  # bed_col_dict:
+                        # ---- save original blocks to bed ----
+                        filtered_bed_col_dict[species].records.to_csv(
+                            "{0}.{1}.to.{2}.{3}.{4}.{5}.tsv".format(args.output_prefix,
+                                                                    species,
+                                                                    reference,
+                                                                    second_stage_output_suffix,
+                                                                    third_stage_output_suffix,
+                                                                    forth_stage_output_suffix),
+                            sep="\t",
+                            header=True, index=True)
+                        # -----
+
+                    VisualizationRoutines.draw_features(filtered_bed_col_dict,
+                                                        lenlist_df_dict[reference],
+                                                        orderlist_series_dict[reference],
+                                                "{0}.{1}.{2}.{3}".format(args.output_prefix,
+                                                                         second_stage_output_suffix,
+                                                                         third_stage_output_suffix,
+                                                                         forth_stage_output_suffix),
+                                                        legend=None if args.hide_legend else VisualizationRoutines.chromosome_legend(query_species_color_df_dict,
+                                                                                                                                     orderlist_series_dict[reference]),
+                                                        centromere_df=centromere_df,
+                                                        highlight_df=args.reference_highlight_file,
+                                                        figure_width=args.figure_width,
+                                                        figure_height_per_scaffold=args.figure_height_per_scaffold,
+                                                        dpi=300,
+                                                        # colormap=None, thresholds=None, colors=None, background=None,
+                                                        default_color="red",  # TODO: check if it is possible to remove it
+                                                        title=args.title,
+                                                        extensions=args.output_formats,
+                                                        feature_start_column_id="start",
+                                                        feature_end_column_id="end",
+                                                        feature_color_column_id="color",
+                                                        feature_length_column_id="length",
+                                                        subplots_adjust_left=args.subplots_adjust_left,
+                                                        subplots_adjust_bottom=args.subplots_adjust_bottom,
+                                                        subplots_adjust_right=args.subplots_adjust_right,
+                                                        subplots_adjust_top=args.subplots_adjust_top,
+                                                        autoscale_figure=False if args.manual_figure_adjustment else True,
+                                                        show_track_label=not args.hide_track_label,
+                                                        show_trackgroup_label=True,
+                                                        close_figure=True,
+                                                        subplot_scale=False,
+                                                        track_group_scale=False,
+                                                        track_group_distance=2,
+                                                        xmax_multiplier=1.3, ymax_multiplier=args.ymax_multiplier,
+                                                        figure_header_height=args.figure_header_height,
+                                                        stranded_tracks=False,
+                                                        rounded_tracks=args.rounded,
+                                                        stranded_end_tracks=False,
+                                                        xtick_fontsize=args.x_tick_fontsize,
+                                                        subplot_title_fontsize=args.title_fontsize,
+                                                        subplot_title_fontweight='bold'
+                                                        )
                     bed_dict_to_xlsx(filtered_bed_col_dict,
                                      "{0}.{1}.{2}.{3}".format(args.output_prefix,
                                                               second_stage_output_suffix,

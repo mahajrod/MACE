@@ -1,2 +1,0 @@
-SUPER_1	chr1
-SUPER_2	chr2

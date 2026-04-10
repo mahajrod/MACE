@@ -27,10 +27,10 @@ parser.add_argument("-l", "--title", action="store", dest="title",
                     help="Title of figure. Default: Unique variants")
 
 """
-parser.add_argument("-a", "--scaffold_white_list", action="store", dest="scaffold_white_list", default=[],
+parser.add_argument("-a", "--scaffold_whitelist", action="store", dest="scaffold_whitelist", default=[],
                     type=lambda s: s.split(","),
                     help="Comma-separated list of the only scaffolds to draw. Default: all")
-parser.add_argument("-b", "--scaffold_black_list", action="store", dest="scaffold_black_list", default=[],
+parser.add_argument("-b", "--scaffold_blacklist", action="store", dest="scaffold_blacklist", default=[],
                     type=lambda s: s.split(","),
                     help="Comma-separated list of scaffolds to skip at drawing. Default: not set")
 """

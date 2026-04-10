@@ -10,7 +10,7 @@ import numpy as np
 from distinctipy import distinctipy
 from functools import partial
 from RouToolPa.Collections.General import SynDict, IdList
-from MACE.Routines import Visualization, StatsVCF
+from MACE.Routines import VisualizationRoutines, StatsVCF
 
 from RouToolPa.Parsers.PSL import CollectionPSL
 from RouToolPa.Parsers.BED import CollectionBED
@@ -36,20 +36,20 @@ parser.add_argument("-i", "--input", action="store", dest="input", required=True
 parser.add_argument("--query_labels", action="store", dest="query_labels", required=True,
                     type=split_comma_separated_list,
                     help="Comma-separated list of labels for query genomes. Must follow the same order as for psl files")
-parser.add_argument("--query_scaffold_white_lists", action="store", dest="query_scaffold_white_lists", default=None,
+parser.add_argument("--query_scaffold_whitelists", action="store", dest="query_scaffold_whitelists", default=None,
                     type=split_comma_separated_list,
                     help="Comma-separated list of files containing the only scaffolds from query genomes to include."
                          " Default: all")
-parser.add_argument("--query_scaffold_black_lists", action="store", dest="query_scaffold_black_lists", default=None,
+parser.add_argument("--query_scaffold_blacklists", action="store", dest="query_scaffold_blacklists", default=None,
                     type=split_comma_separated_list,
                     help="Comma-separated list of files containing scaffolds from query genomes to skip at drawing. "
                          "Default: not set")
 parser.add_argument("--reference_label", action="store", dest="reference_label", required=True, type=str,
                     help="Label of reference genome")
-parser.add_argument("--reference_scaffold_white_list", action="store", dest="reference_scaffold_white_list", default=None,
+parser.add_argument("--reference_scaffold_whitelist", action="store", dest="reference_scaffold_whitelist", default=None,
                     type=lambda s: pd.read_csv(s, header=None, squeeze=True) if os.path.exists(s) else pd.Series(s.split(",")),
                     help="Comma-separated list of the only scaffolds to draw (reference white list). Default: all")
-parser.add_argument("--reference_scaffold_black_list", action="store", dest="reference_scaffold_black_list", default=None,
+parser.add_argument("--reference_scaffold_blacklist", action="store", dest="reference_scaffold_blacklist", default=None,
                     type=lambda s: pd.read_csv(s, header=None, squeeze=True) if os.path.exists(s) else pd.Series(s.split(",")),
                     help="Comma-separated list of scaffolds to skip at drawing (reference black list). Default: not set")
 
@@ -129,19 +129,19 @@ species_chr_syn_dict[reference] = pd.read_csv(args.reference_scaffold_syn_file,
                                               header=None,
                                               sep="\t", squeeze=True, index_col=args.syn_file_key_column) if args.reference_scaffold_syn_file else None
 
-if args.query_scaffold_white_lists:
-    species_white_list_dict = {query: pd.read_csv(white_list_file, header=None, squeeze=True) if white_list_file else None for query, white_list_file in zip(query_list, args.query_scaffold_white_lists)}
+if args.query_scaffold_whitelists:
+    species_white_list_dict = {query: pd.read_csv(white_list_file, header=None, squeeze=True) if white_list_file else None for query, white_list_file in zip(query_list, args.query_scaffold_whitelists)}
 else:
     species_white_list_dict = {query: None for query in query_list}
 
-species_white_list_dict[reference] = args.reference_scaffold_white_list #pd.read_csv(args.reference_scaffold_white_list, header=None, squeeze=True) if args.reference_scaffold_white_list else None
+species_white_list_dict[reference] = args.reference_scaffold_whitelist #pd.read_csv(args.reference_scaffold_whitelist, header=None, squeeze=True) if args.reference_scaffold_whitelist else None
 
-if args.query_scaffold_black_lists:
-    species_black_list_dict = {query: pd.read_csv(black_list_file, header=None, squeeze=True) if black_list_file else None for query, black_list_file in zip(query_list, args.query_scaffold_black_lists)}
+if args.query_scaffold_blacklists:
+    species_black_list_dict = {query: pd.read_csv(black_list_file, header=None, squeeze=True) if black_list_file else None for query, black_list_file in zip(query_list, args.query_scaffold_blacklists)}
 else:
     species_black_list_dict = {query: None for query in query_list}
 
-species_black_list_dict[reference] = args.reference_scaffold_black_list #pd.read_csv(args.reference_scaffold_black_list, header=None, squeeze=True) if args.reference_scaffold_black_list else None
+species_black_list_dict[reference] = args.reference_scaffold_blacklist #pd.read_csv(args.reference_scaffold_blacklist, header=None, squeeze=True) if args.reference_scaffold_blacklist else None
 
 print(args.input)
 for query in query_list + [reference]:
@@ -187,31 +187,31 @@ for species in query_list:
 query_species_color_df_dict = {sp: species_color_df_dict[sp] for sp in query_list}
 
 
-Visualization.draw_synteny(bed_col_dict, reference_scaffold_length_df, species_orderlist_dict[reference],
-                           query_species_color_df_dict,
-                           args.output_prefix,
-                           figure_width=args.figure_width, figure_height_per_scaffold=args.figure_height_per_scaffold,
-                           dpi=300,
-                           colormap=None, thresholds=None, colors=None, background=None,
-                           default_color="red",
-                           title=args.title,
-                           extensions=args.output_formats,
-                           feature_start_column_id="start",
-                           feature_end_column_id="end",
-                           feature_color_column_id="color",
-                           feature_length_column_id="length",
-                           subplots_adjust_left=args.subplots_adjust_left,
-                           subplots_adjust_bottom=args.subplots_adjust_bottom,
-                           subplots_adjust_right=args.subplots_adjust_right,
-                           subplots_adjust_top=args.subplots_adjust_top,
-                           show_track_label=not args.hide_track_label,
-                           show_trackgroup_label=True,
-                           close_figure=True,
-                           subplot_scale=False,
-                           track_group_scale=False,
-                           track_group_distance=5,
-                           xmax_multiplier=1.3, ymax_multiplier=1.00
-                           )
+VisualizationRoutines.draw_synteny(bed_col_dict, reference_scaffold_length_df, species_orderlist_dict[reference],
+                                   query_species_color_df_dict,
+                                   args.output_prefix,
+                                   figure_width=args.figure_width, figure_height_per_scaffold=args.figure_height_per_scaffold,
+                                   dpi=300,
+                                   colormap=None, thresholds=None, colors=None, background=None,
+                                   default_color="red",
+                                   title=args.title,
+                                   extensions=args.output_formats,
+                                   feature_start_column_id="start",
+                                   feature_end_column_id="end",
+                                   feature_color_column_id="color",
+                                   feature_length_column_id="length",
+                                   subplots_adjust_left=args.subplots_adjust_left,
+                                   subplots_adjust_bottom=args.subplots_adjust_bottom,
+                                   subplots_adjust_right=args.subplots_adjust_right,
+                                   subplots_adjust_top=args.subplots_adjust_top,
+                                   show_track_label=not args.hide_track_label,
+                                   show_trackgroup_label=True,
+                                   close_figure=True,
+                                   subplot_scale=False,
+                                   track_group_scale=False,
+                                   track_group_distance=5,
+                                   xmax_multiplier=1.3, ymax_multiplier=1.00
+                                   )
 
 for species in bed_col_dict:
     bed_col_dict[species].records.to_csv("{0}.{1}.to.{2}.tsv".format(args.output_prefix, species, reference), sep="\t",

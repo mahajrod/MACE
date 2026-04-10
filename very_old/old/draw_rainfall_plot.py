@@ -48,15 +48,15 @@ parser.add_argument("-m", "--masked_regions", action="store", dest="masked_regio
 parser.add_argument("-u", "--logbase", action="store", dest="logbase", default=2, type=int,
                     help="Logbase of y axis")
 
-parser.add_argument("-a", "--scaffold_white_list", action="store", dest="scaffold_white_list", default=[],
+parser.add_argument("-a", "--scaffold_whitelist", action="store", dest="scaffold_whitelist", default=[],
                     type=lambda s: s.split(","),
                     help="Comma-separated list of the only scaffolds to draw. Default: all")
-parser.add_argument("-b", "--scaffold_black_list", action="store", dest="scaffold_black_list", default=[],
+parser.add_argument("-b", "--scaffold_blacklist", action="store", dest="scaffold_blacklist", default=[],
                     type=lambda s: s.split(","),
                     help="Comma-separated list of scaffolds to skip at drawing. Default: not set")
 parser.add_argument("-y", "--sort_scaffolds", action="store_true", dest="sort_scaffolds", default=False,
                     help="Order  scaffolds according to their names. Default: False")
-parser.add_argument("-z", "--scaffold_ordered_list", action="store", dest="scaffold_ordered_list", default=[],
+parser.add_argument("-z", "--scaffold_orderlist", action="store", dest="scaffold_orderlist", default=[],
                     type=lambda s: s.split(","),
                     help="Comma-separated list of scaffolds to draw first and exactly in same order. "
                          "Scaffolds absent in this list are drawn last and in order according to vcf file . "
@@ -85,6 +85,6 @@ mutations.rainfall_plot(args.output_prefix, single_fig=True, dpi=args.dpi, figsi
                         draw_gaps=args.draw_gaps, suptitle=args.suptitle,
                         gaps_color="#777777", masked_regions_color="#aaaaaa", logbase=args.logbase,
                         extension_list=args.output_formats,
-                        scaffold_black_list=args.scaffold_black_list, scaffold_white_list=args.scaffold_white_list,
-                        scaffold_ordered_list=args.scaffold_ordered_list, sort_scaffolds=args.sort_scaffolds,
+                        scaffold_blacklist=args.scaffold_blacklist, scaffold_whitelist=args.scaffold_whitelist,
+                        scaffold_orderlist=args.scaffold_orderlist, sort_scaffolds=args.sort_scaffolds,
                         )

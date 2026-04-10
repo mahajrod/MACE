@@ -92,7 +92,7 @@ class Subplot(OrderedDict):
                 self.legend.x_start = self.x_end
 
                 if legend_height:
-                    self.legend.y_start = (self.y_end - legend_height) / 2
+                    self.legend.y_start = self.y_start + self.legend.element_size #(self.y_end - legend_height) / 2
                 else:
                     self.legend.y_start = self.y_end/2
                 self.legend.x_size = self.x_end / self.legend.style.x_size_denominator
