@@ -19,7 +19,7 @@ requirements:
     - pyparsing
     - xmltodict
     - venn
-    - 'routoolpa>=0.127'
+    - 'routoolpa>=0.128'
   run:
     - 'python'
     - 'scipy'

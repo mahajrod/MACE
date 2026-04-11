@@ -79,8 +79,6 @@ parser.add_argument("-z", "--scaffold_orderlist", action="store", dest="scaffold
                     help="Comma-separated list of scaffolds to draw first and exactly in same order. "
                          "Scaffolds absent in this list are drawn last and in order according to vcf file . "
                          "Default: not set")
-#parser.add_argument("-y", "--sort_scaffolds", action="store_true", dest="sort_scaffolds", default=False,
-#                    help="Order scaffolds according to their names. Default: False")
 
 parser.add_argument("--scaffold_syn_file", action="store", dest="scaffold_syn_file",
                     help="File with scaffold id synonyms")

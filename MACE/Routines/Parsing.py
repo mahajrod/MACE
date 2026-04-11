@@ -73,8 +73,12 @@ class ParsingRoutines:
                                   vert_track_group_file=None,
                                   hor_track_group_file=None,
                                   hor_track_subgroup_file=None,
-                                  masking_file=None, max_masking_threshold=0.33,
-                                  coverage_file=None, min_coverage_threshold=0.33, max_coverage_threshold=2.5,
+                                  masking_file=None, masking_bedgraph=None,
+                                  max_masking_threshold=0.33,
+                                  coverage_file=None,
+                                  mean_coverage_file=None,
+                                  median_coverage_file=None,
+                                  min_coverage_threshold=0.33, max_coverage_threshold=2.5,
                                   median_coverage=None, mean_coverage=None):
         auxiliary_dict = OrderedDict()
 
@@ -121,7 +125,7 @@ class ParsingRoutines:
         if legend_file is not None:
             if os.path.exists(legend_file):
                 try:  # legend_file might be empty
-                    auxiliary_dict["legend_df"] = pd.read_csv(legend_file, header=None, index_col=0, sep="\t")
+                    auxiliary_dict["legend_df"] = pd.read_csv(legend_file, header=None, index_col=0, usecols=[0, 1], sep="\t", comment=None)
                     #len_df.index = pd.Index(list(map(str, len_df.index)))
                 except pd.errors.EmptyDataError:
                     auxiliary_dict["legend_df"] = None
@@ -133,7 +137,8 @@ class ParsingRoutines:
         if highlight_bed is not None: # TODO: reconsider the concept of the highlighting - maybe do it via special type of the track, and refactor the code
             if os.path.exists(highlight_bed):
                 try:  # highlight_bed might be empty
-                    auxiliary_dict["highlight_df"] = pd.read_csv(highlight_bed, header=None, index_col=0, sep="\t")
+                    auxiliary_dict["highlight_df"] = CollectionBED(in_file=highlight_bed, parsing_mode="complete",
+                                                                   format="bed_colored").records #pd.read_csv(highlight_bed, header=None, index_col=0, usecols=[0, 1, 2, 3], sep="\t", comment=None)
                     #len_df.index = pd.Index(list(map(str, len_df.index)))
                 except pd.errors.EmptyDataError:
                     auxiliary_dict["highlight_df"] = None
@@ -177,8 +182,9 @@ class ParsingRoutines:
 
         if masking_file is not None:
             if os.path.exists(masking_file):
-                try:  # hor_track_group_file might be empty
-                    auxiliary_dict["masking_df"] = None  # TODO Select format  and implement parsing
+                try:  # masking_file might be empty
+                    auxiliary_dict["masking_df"] = CollectionBED(in_file=masking_file, parsing_mode="coordinates_only",
+                                                                 format="bed").records
                 except pd.errors.EmptyDataError:
                     auxiliary_dict["masking_df"] = None
             else:
@@ -186,14 +192,51 @@ class ParsingRoutines:
         else:
             auxiliary_dict["masking_df"] = None
 
+        if masking_bedgraph is not None:
+            if os.path.exists(masking_bedgraph):
+                try:  # masking_file might be empty
+                    auxiliary_dict["masking_bedgraph_df"] = CollectionBED(in_file=masking_bedgraph, parsing_mode="complete",
+                                                                          format="bedgraph").records
+                except pd.errors.EmptyDataError:
+                    auxiliary_dict["masking_bedgraph_df"] = None
+            else:
+                raise FileNotFoundError(f"ERROR!!! Masking bedgraph {masking_bedgraph} doesn't exist!")
+        else:
+            auxiliary_dict["masking_bedgraph_df"] = None
+
         if coverage_file is not None:
             if os.path.exists(coverage_file):
                 try:  # hor_track_group_file might be empty
-                    auxiliary_dict["coverage_df"] = None  # TODO Select format  and implement parsing
+                    auxiliary_dict["coverage_df"] = CollectionBED(in_file=coverage_file, parsing_mode="complete",
+                                                                  format="bedgraph").records
                 except pd.errors.EmptyDataError:
                     auxiliary_dict["coverage_df"] = None
             else:
                 raise FileNotFoundError(f"ERROR!!! Coverage file {coverage_file} doesn't exist!")
+        else:
+            auxiliary_dict["coverage_df"] = None
+
+        if mean_coverage_file is not None:
+            if os.path.exists(mean_coverage_file):
+                try:  # mean_coverage_file) might be empty
+                    auxiliary_dict["mean_coverage_df"] = CollectionBED(in_file=mean_coverage_file, parsing_mode="complete",
+                                                                       format="bedgraph").records
+                except pd.errors.EmptyDataError:
+                    auxiliary_dict["mean_coverage_df"] = None
+            else:
+                raise FileNotFoundError(f"ERROR!!! Mean coverage file {mean_coverage_file} doesn't exist!")
+        else:
+            auxiliary_dict["mean_coverage_df"] = None
+
+        if median_coverage_file is not None:
+            if os.path.exists(median_coverage_file):
+                try:  # median_coverage_filee might be empty
+                    auxiliary_dict["median_coverage_df"] = CollectionBED(in_file=median_coverage_file, parsing_mode="complete",
+                                                                         format="bedgraph").records
+                except pd.errors.EmptyDataError:
+                    auxiliary_dict["median_coverage_df"] = None
+            else:
+                raise FileNotFoundError(f"ERROR!!! Median coverage file {median_coverage_file} doesn't exist!")
         else:
             auxiliary_dict["coverage_df"] = None
 
