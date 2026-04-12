@@ -36,6 +36,7 @@ class SyntenyRoutines:
         return temp
 
     def filter_isolated_short_blocks(self, bed_df, min_block_len=1000000, max_dist_between_short_blocks=3000000):
+        # returns df with both scaffold and query as a multi level  index.
         tmp_df = bed_df.reset_index(drop=False).set_index(["scaffold", "query"]).sort_values(by=["scaffold",
                                                                                                  "start",
                                                                                                  "end",
@@ -54,7 +55,7 @@ class SyntenyRoutines:
                                                                                                              "query_start",
                                                                                                              "query_end"],
                                                                                                          axis=0)  # .reset_index(level=(0,1), drop=True)
-        tmp_df["embedded"].fillna(False, inplace=True)
+        tmp_df["embedded"] = tmp_df["embedded"].fillna(False)
         # recalculate distances after removal of embedded blocks
         tmp_df = tmp_df[tmp_df["embedded"] <= 0]
         tmp_df = tmp_df.groupby(["scaffold",

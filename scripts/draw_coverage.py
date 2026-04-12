@@ -200,7 +200,7 @@ elif args.input_type == "bedgraph":
 else:
     raise ValueError(f"ERROR!!! Unrecognized input type ({args.input_type}). ")
 
-track_df = Parsing.resolve_mace_single_genome_input(coverage_df.records, auxiliary_dict)
+track_df = Parsing.resolve_mace_single_genome_input(auxiliary_dict, records_df=coverage_df.records)
 
 args.coverage_thresholds = (0.0, 0.125, 0.25, 0.375, 0.5, 0.625, 0.75,
                             0.875, 1.0, 1.125, 1.25, 1.375, 1.5, 1.625,

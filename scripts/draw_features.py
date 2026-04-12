@@ -281,7 +281,7 @@ auxiliary_dict = Parsing.read_mace_auxiliary_input(len_file=args.scaffold_length
                                                    hor_track_group_file=None,
                                                    hor_track_subgroup_file=None)
 
-records_df = Parsing.resolve_mace_single_genome_input(feature_df.records, auxiliary_dict)
+records_df = Parsing.resolve_mace_single_genome_input(auxiliary_dict, records_df=feature_df.records)
 
 Visualization.draw_features({"features": records_df}, auxiliary_dict["len_df"],
                             auxiliary_dict["orderlist_series"],

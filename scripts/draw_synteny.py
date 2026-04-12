@@ -258,7 +258,7 @@ parser.add_argument("--figure_header_height", action="store", dest="figure_heade
 parser.add_argument("--figure_height_per_scaffold", action="store", dest="figure_height_per_scaffold",
                     type=float, default=0.5,
                     help="Height of figure per chromosome track. Default: 0.5")
-parser.add_argument("--figure_width", action="store", dest="figure_width", type=float, default=10,
+parser.add_argument("--figure_width", action="store", dest="figure_width", type=float, default=15,
                     help="Width of figure in inches. Default: 15")
 # ---- End of Common options ----
 
@@ -279,16 +279,9 @@ genome_list = query_list + [reference]
 syn_file_key_column, syn_file_value_column = args.syn_file_key_column, args.syn_file_value_column
 
 synteny_format = args.synteny_format
-
-# read files
-#print(data_dir_path)
-#print(genome_list)
-# whitelist is obligatory
-for genome in genome_list:
-    print(data_dir_path / genome)
-    #print(get_filenames_for_extension(data_dir_path / genome, extension_list=["whitelist"]))
-#print(data_dir_path / genome)
-#print(get_filenames_for_extension(data_dir_path / genome, extension_list=["whitelist"]))
+if args.verbose:
+    for genome in genome_list:
+        print(data_dir_path / genome)
 
 genome_auxiliary_dict = {genome: Parsing.read_mace_auxiliary_input(
                                               len_file=Parsing.get_filenames_for_extension(data_dir_path / genome, extension_list=[".len", ".fasta", ".fai"]),
@@ -304,12 +297,6 @@ genome_auxiliary_dict = {genome: Parsing.read_mace_auxiliary_input(
                                               vert_track_group_file=None,
                                               hor_track_group_file=None,
                                               hor_track_subgroup_file=None) for genome in genome_list}
-# whitelist, lenlist - required
-# orderlist, invertlist, syn - optional
-
-for genome in genome_list:
-    if genome_auxiliary_dict[genome]["syn_dict"]:
-        genome_auxiliary_dict[genome]["len_df"] = genome_auxiliary_dict[genome]["len_df"].rename(index=genome_auxiliary_dict[genome]["syn_dict"])
 
 if not args.use_original_colors:
     color_number = max([len(genome_auxiliary_dict[query]["orderlist_series"]) for query in query_list])
@@ -353,7 +340,7 @@ if args.synteny_format == "psl":
         bed_col_dict[species].records.set_index("scaffold", inplace=True)
 
         bed_col_dict[species].records["color"] = bed_col_dict[species].records["query"].replace(genome_auxiliary_dict[species]["scaffold_color_df"]["color"])
-        bed_col_dict[species].records.sort_values(by=["scaffold", "start", "end", ], inplace=True)
+        bed_col_dict[species].records = bed_col_dict[species].records.sort_values(by=["scaffold", "start", "end", ])
 
 elif args.synteny_format in ["bed", "bed_with_color"]: # TODO: REWRITE!!!!!!!!!!!!!!
     bed_file_dict = {query: Parsing.expand_path(bed, skip=not args.expand_paths) for query, bed in zip(query_list, args.input)}
@@ -365,18 +352,19 @@ elif args.synteny_format in ["bed", "bed_with_color"]: # TODO: REWRITE!!!!!!!!!!
                                               scaffold_syn_dict=genome_auxiliary_dict[reference]["syn_dict"],
                                               rename_dict={"query": genome_auxiliary_dict[species]["syn_dict"]} if genome_auxiliary_dict[species]["syn_dict"] is not None else None)
 
-        bed_col_dict[species].records.sort_values(by=["scaffold", "start", "end", ], inplace=True)
+        bed_col_dict[species].records = bed_col_dict[species].records.sort_values(by=["scaffold", "start", "end", ])
         if args.synteny_format != "bed_with_color":
             bed_col_dict[species].records["color"] = bed_col_dict[species].records["query"].replace(genome_auxiliary_dict[species]["scaffold_color_df"]["color"])
 else:
     raise ValueError("ERROR!!! Unrecognized format of the input file(s)!")
 
+for genome in genome_list:
+    Parsing.resolve_mace_single_genome_input(genome_auxiliary_dict[genome])
+
 query_scaffold_id_column_name = "query"
 query_start_column_name = "query_start"
 query_end_column_name = "query_end"
 strand_column_name = "strand"
-inverted_scaffold_label = "'"
-
 
 for species in query_list:
     print("Inverting (if necessary) {0} scaffolds...".format(species))
@@ -384,26 +372,15 @@ for species in query_list:
 
     bed_col_dict[species].records = Synteny.invert_coordinates_in_synteny_table(bed_col_dict[species].records,
                                                                                 genome_auxiliary_dict[species]["invertlist_series"],
-                                                                                genome_auxiliary_dict[species]["len_df"],
+                                                                                genome_auxiliary_dict[species]["preinvert_len_df"],
                                                                                 query_scaffold_id_column_name,
                                                                                 query_start_column_name,
                                                                                 query_end_column_name,
                                                                                 strand_column_name,
-                                                                                inverted_scaffold_label)
-
-    genome_auxiliary_dict[species]["len_df"] = genome_auxiliary_dict[species]["len_df"].rename(index=dict(zip(genome_auxiliary_dict[species]["invertlist_series"],
-                                                                                                              [scaf + inverted_scaffold_label for scaf in genome_auxiliary_dict[species]["invertlist_series"]])))
-
-    genome_auxiliary_dict[species]["orderlist_series"] = genome_auxiliary_dict[species]["orderlist_series"].replace(dict(zip(genome_auxiliary_dict[species]["invertlist_series"],
-                                                                                                                             [scaf + inverted_scaffold_label for scaf in genome_auxiliary_dict[species]["invertlist_series"]])))
-    genome_auxiliary_dict[species]["scaffold_color_df"] = genome_auxiliary_dict[species]["scaffold_color_df"].rename(index=dict(zip(genome_auxiliary_dict[species]["invertlist_series"],
-                                                                                                                                    [scaf + inverted_scaffold_label for scaf in genome_auxiliary_dict[species]["invertlist_series"]])))
+                                                                                genome_auxiliary_dict[species]["inverted_scaffold_label"])
 #--------------------------------------------------------------------------------------
 
 query_species_color_df_dict = {sp: genome_auxiliary_dict[sp]["scaffold_color_df"] for sp in query_list}
-
-#print("Lengths of reference chromosomes:")
-#print(genome_auxiliary_dict[reference]["len_df"])
 
 common_visualization_options_dict = {"legend": None if args.hide_legend else Visualization.chromosome_legend(query_species_color_df_dict,
                                                                                                              genome_auxiliary_dict[reference]["orderlist_series"]),

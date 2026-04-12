@@ -270,7 +270,7 @@ elif args.input_type in ["bedgraph"]:  # Bed format without track lines. All col
     # if args.scaffold_syn_file:
     #     track_df.rename(index=chr_syn_dict, inplace=True)
 
-track_df = Parsing.resolve_mace_single_genome_input(track_df, auxiliary_dict)
+track_df = Parsing.resolve_mace_single_genome_input(auxiliary_dict, records_df=track_df)
 #print(track_df)
 if track_df.index.nlevels > 1:
     #drop second level of index if it was added by groupby
