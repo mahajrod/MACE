@@ -234,7 +234,7 @@ auxiliary_dict = Parsing.read_mace_auxiliary_input(len_file=args.scaffold_length
                                                    syn_file_value_column=args.syn_file_value_column,
                                                    centromere_bed=args.centromere_bed,
                                                    highlight_bed=args.highlight_file,
-                                                   legend_file=args.highlight_file,
+                                                   legend_file=None,
                                                    vert_track_group_file=None,
                                                    hor_track_group_file=None,
                                                    hor_track_subgroup_file=None)

@@ -181,7 +181,6 @@ auxiliary_dict = Parsing.read_mace_auxiliary_input(len_file=args.scaffold_length
                                                    hor_track_group_file=None,
                                                    hor_track_subgroup_file=None)
 
-
 if args.window_step is None:
     args.window_step = args.window_size
 
@@ -193,9 +192,11 @@ if args.input_type == "table":
                                 end_column_name=args.end_column_name,
                                 additional_column_converter_dict={column: float for column in args.coverage_column_name_list}
                                 )
+
 elif args.input_type == "bedgraph":
     coverage_df = CollectionBED(in_file=args.input, parsing_mode="all", format="bedgraph")
     args.coverage_column_name_list = ["value"]
+
 else:
     raise ValueError(f"ERROR!!! Unrecognized input type ({args.input_type}). ")
 

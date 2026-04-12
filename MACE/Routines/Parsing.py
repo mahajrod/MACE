@@ -1,8 +1,11 @@
 import os
+import glob
 import argparse
 import textwrap
-from collections import OrderedDict
+
 from copy import deepcopy
+from pathlib import Path
+from collections import OrderedDict
 
 import pandas as pd
 
@@ -79,7 +82,8 @@ class ParsingRoutines:
                                   mean_coverage_file=None,
                                   median_coverage_file=None,
                                   min_coverage_threshold=0.33, max_coverage_threshold=2.5,
-                                  median_coverage=None, mean_coverage=None):
+                                  median_coverage=None, mean_coverage=None,
+                                  scaffold_color_file=None):
         auxiliary_dict = OrderedDict()
 
         auxiliary_dict["syn_dict"] = SynDict(filename=syn_file,
@@ -125,7 +129,9 @@ class ParsingRoutines:
         if legend_file is not None:
             if os.path.exists(legend_file):
                 try:  # legend_file might be empty
-                    auxiliary_dict["legend_df"] = pd.read_csv(legend_file, header=None, index_col=0, usecols=[0, 1], sep="\t", comment=None)
+                    auxiliary_dict["legend_df"] = pd.read_csv(legend_file, header=None, index_col=0, usecols=[0, 1],
+                                                              names=["entry", "color"],
+                                                              sep="\t", comment=None)
                     #len_df.index = pd.Index(list(map(str, len_df.index)))
                 except pd.errors.EmptyDataError:
                     auxiliary_dict["legend_df"] = None
@@ -133,6 +139,19 @@ class ParsingRoutines:
                 raise FileNotFoundError(f"ERROR!!! Legend file {legend_file} doesn't exist!")
         else:
             auxiliary_dict["legend_df"] = None
+
+        if scaffold_color_file is not None:
+            if os.path.exists(scaffold_color_file):
+                try:  # legend_file might be empty
+                    auxiliary_dict["scaffold_color_df"] = pd.read_csv(scaffold_color_file, header=None, index_col=0, usecols=[0, 1],
+                                                                      names=["scaffold", "color"], sep="\t", comment=None)
+                    #len_df.index = pd.Index(list(map(str, len_df.index)))
+                except pd.errors.EmptyDataError:
+                    auxiliary_dict["scaffold_color_df"] = None
+            else:
+                raise FileNotFoundError(f"ERROR!!! Scaffold color file {scaffold_color_file} doesn't exist!")
+        else:
+            auxiliary_dict["scaffold_color_df"] = None
 
         if highlight_bed is not None: # TODO: reconsider the concept of the highlighting - maybe do it via special type of the track, and refactor the code
             if os.path.exists(highlight_bed):
@@ -285,6 +304,41 @@ class ParsingRoutines:
         auxiliary_dict["orderlist_series"] = auxiliary_dict["orderlist_series"][::-1]
         return tmp_df
 
+    @staticmethod
+    def expand_path(path_template: str, skip=False):
+        if (path_template[0] == "/") or skip:
+            print("Skipping expanding path {0} as it is global path or expanding was turned off ...".format(
+                path_template))
+            # avoid expanding global paths
+            return path_template
+
+        path_list = list(Path("./").glob(path_template))
+        if len(path_list) > 1:
+            raise ValueError(
+                "ERROR!!! There is more than one file corresponding to the template {0} ...".format(path_template))
+        elif len(path_list) == 0:
+            raise ValueError("ERROR!!! There are no files corresponding to the template {0} ...".format(path_template))
+        else:
+            return str(path_list[0])
+
+    @staticmethod
+    def get_filenames_for_extension(dir_path, extension_list, force_uniq=True):
+        filelist = []
+        for extension in extension_list:
+            filelist += list(glob.glob(str(dir_path) + "/*{0}".format(extension)))
+            # print(extension, filelist)
+        if not filelist:
+            return None
+        print(filelist)
+        if force_uniq:
+            if len(filelist) > 1:
+                raise ValueError("Found more than one file with extensions: {0} in directory {1}".format(
+                    ",".join(extension_list, str(dir_path))))
+            else:
+                return filelist[0]
+
+        return filelist
+
 
 class NewlinePreservingArgParserHelpFormatter(argparse.HelpFormatter):
     def _fill_text(self, text, width, indent):
@@ -301,3 +355,4 @@ class NewlinePreservingArgParserHelpFormatter(argparse.HelpFormatter):
             if not line:
                 wrapped_lines.append("")
         return wrapped_lines + [""]
+
