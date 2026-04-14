@@ -44,8 +44,10 @@ git clone https://github.com/mahajrod/MACE
 **Option 2** makes MACE scripts available locally from MACE/scripts folder.
 
 # Important MACE scripts
-The documentation is under development, please, read help of scripts carefully. Most options have a good descriptions.
-In case of uncertainty or problems, open an issue in the MACE repository.
+The [MACE Wiki](https://github.com/mahajrod/MACE/wiki) with documentation is under development, 
+but it already contains examples of typical usage for the main MACE scripts. 
+To get an overview of a full functionality, please, read help message of scripts carefully. Most options have a good descriptions.
+In case of any uncertainty or problem, open an issue in the MACE repository.
 
 1. **draw_features.py** - visualizes  precomputed tracks in various formats on chromosomes
 <p align="center">
