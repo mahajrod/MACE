@@ -45,7 +45,7 @@ git clone https://github.com/mahajrod/MACE
 
 # Important MACE scripts
 The [MACE Wiki](https://github.com/mahajrod/MACE/wiki) with documentation is under development, 
-but it already contains examples of typical usage of the main MACE scripts. 
+but it already contains examples of typical usage for the main MACE scripts. 
 To get an overview of a full functionality, please, read help message of scripts carefully. Most options have a good descriptions.
 In case of any uncertainty or problem, open an issue in the MACE repository.
 
