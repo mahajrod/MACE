@@ -131,7 +131,7 @@ class ParsingRoutines:
             if os.path.exists(legend_file):
                 try:  # legend_file might be empty
                     auxiliary_dict["legend_df"] = pd.read_csv(legend_file, header=None, index_col=0, usecols=[0, 1],
-                                                              names=["entry", "color"],
+                                                              names=["entry", "color"], dtype={"entry": str, "color": str},
                                                               sep="\t", comment=None)
                     #len_df.index = pd.Index(list(map(str, len_df.index)))
                 except pd.errors.EmptyDataError:
@@ -145,7 +145,9 @@ class ParsingRoutines:
             if os.path.exists(scaffold_color_file):
                 try:  # legend_file might be empty
                     auxiliary_dict["scaffold_color_df"] = pd.read_csv(scaffold_color_file, header=None, index_col=0, usecols=[0, 1],
-                                                                      names=["scaffold", "color"], sep="\t", comment=None)
+                                                                      names=["scaffold", "color"],
+                                                                      dtype={"scaffold": str, "color": str},
+                                                                      sep="\t", comment=None)
                     #len_df.index = pd.Index(list(map(str, len_df.index)))
                 except pd.errors.EmptyDataError:
                     auxiliary_dict["scaffold_color_df"] = None
