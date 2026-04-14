@@ -172,8 +172,8 @@ parser.add_argument("--empty_color", action="store", dest="empty_color", default
 # -------- End of Chromosome track options --------
 
 # -------- Title options --------
-parser.add_argument("-l", "--title", action="store", dest="title", default="Coverage",
-                    help="Suptitle of figure. Default: 'Coverage'")
+parser.add_argument("-l", "--title", action="store", dest="title", default="Variant densities",
+                    help="Suptitle of figure. Default: 'Variant densities'")
 parser.add_argument("--title_fontsize", action="store", dest="title_fontsize", default=20, type=int,
                     help="Fontsize of the figure. Default: 20")
 # -------- End of Title options --------
