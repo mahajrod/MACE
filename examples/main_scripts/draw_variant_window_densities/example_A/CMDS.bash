@@ -13,4 +13,4 @@ draw_variant_window_densities.py -i input/mustela_putorius.10x.musnig.bwa.gatk4.
                                  --syn_file_value_column 0 \
                                  --density_thresholds 0,0.1,0.5,0.75,1.0,1.25,1.5,2.0,2.5 \
                                  --hide_track_label \
-                                 --rounded
+                                 --rounded 

@@ -278,7 +278,7 @@ class ParsingRoutines:
         if records_df is None:
             tmp_df = records_df
         else:
-            if auxiliary_dict["whitelist_series"].empty:
+            if (auxiliary_dict["whitelist_series"] is not None) and auxiliary_dict["whitelist_series"].empty:
                 if auxiliary_dict["orderlist_series"].empty: # Take up to auxiliary_dict["max_scaffolds"] longest scaffolds from records
                     record_scaffold_len_df = auxiliary_dict["len_df"].loc[records_df.index.unique()].sort_values(by="length", ascending=False)
                     auxiliary_dict["whitelist_series"] = pd.Series(record_scaffold_len_df.iloc[0:auxiliary_dict["max_scaffolds"]].index.unique())
@@ -291,9 +291,9 @@ class ParsingRoutines:
             else:
                 tmp_df = records_df.loc[records_df.index.isin(auxiliary_dict["whitelist_series"])].rename(index=auxiliary_dict["syn_dict"])
 
-        if not auxiliary_dict["whitelist_series"].empty:
+        if (auxiliary_dict["whitelist_series"] is not None) and (not auxiliary_dict["whitelist_series"].empty):
             # remove from orderlist scaffolds which are absent in the whitelist
-            if auxiliary_dict["orderlist_series"].empty:
+            if (auxiliary_dict["orderlist_series"] is not None) and auxiliary_dict["orderlist_series"].empty:
                 auxiliary_dict["orderlist_series"] = auxiliary_dict["whitelist_series"].replace(auxiliary_dict["syn_dict"])
             else:
                 renamed_whitelist_series = auxiliary_dict["whitelist_series"].replace(auxiliary_dict["syn_dict"])
@@ -303,10 +303,10 @@ class ParsingRoutines:
                 unordered_whitelist_series = renamed_whitelist_series[~renamed_whitelist_series.isin(auxiliary_dict["orderlist_series"])]
                 # add them to orderlist
                 auxiliary_dict["orderlist_series"] = pd.concat([auxiliary_dict["orderlist_series"], unordered_whitelist_series], axis="index", ignore_index=True)
+        if auxiliary_dict["orderlist_series"] is not None:
+            auxiliary_dict["orderlist_series"] = auxiliary_dict["orderlist_series"][::-1]
 
-        auxiliary_dict["orderlist_series"] = auxiliary_dict["orderlist_series"][::-1]
-
-        if not auxiliary_dict["scaffold_color_df"].empty:
+        if (auxiliary_dict["scaffold_color_df"] is not None) and (not auxiliary_dict["scaffold_color_df"].empty):
             reordered_color_df_list = []
             color_in_orderlist_df = auxiliary_dict["scaffold_color_df"].loc[auxiliary_dict["orderlist_series"]]
             color_not_in_orderlist_df = auxiliary_dict["scaffold_color_df"].loc[~auxiliary_dict["scaffold_color_df"].index.isin(auxiliary_dict["orderlist_series"])]
@@ -323,13 +323,16 @@ class ParsingRoutines:
         auxiliary_dict["preinvert_len_df"] = deepcopy(auxiliary_dict["len_df"])
         
         if auxiliary_dict["invertlist_series"] is not None:
-            auxiliary_dict["len_df"] = auxiliary_dict["len_df"].rename(index=dict(zip(auxiliary_dict["invertlist_series"],
-                                                                                      [scaf + auxiliary_dict["inverted_scaffold_label"] for scaf in auxiliary_dict["invertlist_series"]])))
+            if auxiliary_dict["len_df"] is not None:
+                auxiliary_dict["len_df"] = auxiliary_dict["len_df"].rename(index=dict(zip(auxiliary_dict["invertlist_series"],
+                                                                                          [scaf + auxiliary_dict["inverted_scaffold_label"] for scaf in auxiliary_dict["invertlist_series"]])))
 
-            auxiliary_dict["orderlist_series"] = auxiliary_dict["orderlist_series"].replace(dict(zip(auxiliary_dict["invertlist_series"],
+            if auxiliary_dict["orderlist_series"] is not None:
+                auxiliary_dict["orderlist_series"] = auxiliary_dict["orderlist_series"].replace(dict(zip(auxiliary_dict["invertlist_series"],
                                                                                                      [scaf + auxiliary_dict["inverted_scaffold_label"] for scaf in auxiliary_dict["invertlist_series"]])))
-            auxiliary_dict["scaffold_color_df"] = auxiliary_dict["scaffold_color_df"].rename(index=dict(zip(auxiliary_dict["invertlist_series"],
-                                                                                                            [scaf + auxiliary_dict["inverted_scaffold_label"] for scaf in auxiliary_dict["invertlist_series"]])))
+            if auxiliary_dict["scaffold_color_df"] is not None:
+                auxiliary_dict["scaffold_color_df"] = auxiliary_dict["scaffold_color_df"].rename(index=dict(zip(auxiliary_dict["invertlist_series"],
+                                                                                                                [scaf + auxiliary_dict["inverted_scaffold_label"] for scaf in auxiliary_dict["invertlist_series"]])))
         
         return tmp_df
 
