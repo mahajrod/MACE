@@ -358,12 +358,12 @@ for genome in genome_orderlist:
             syn_df_dict[genome] = pd.DataFrame(columns=["syn"])
 
     # scaffold.centromere.bed might be empty or absent
-    if get_filenames_for_extension(data_dir_path / genome, extension_list=["scaffold.centromere.bed"]) is None:
+    if get_filenames_for_extension(data_dir_path / genome, extension_list=[".centromere.bed"]) is None:
         centromere_df_dict[genome] = pd.DataFrame(columns=["scaffold_id", "start", "end"])
         centromere_df_dict[genome].set_index("scaffold_id", inplace=True)
     else:
         try:
-            centromere_df_dict[genome] = pd.read_csv(get_filenames_for_extension(data_dir_path / genome, extension_list=["scaffold.centromere.bed"]),
+            centromere_df_dict[genome] = pd.read_csv(get_filenames_for_extension(data_dir_path / genome, extension_list=[".centromere.bed"]),
                                                      usecols=(0, 1, 2),
                                                      index_col=0,
                                                      header=None,
@@ -1000,7 +1000,7 @@ for index, genome in zip(range(0, len(genome_orderlist) - 1), genome_orderlist[:
     # Adjust default format
     sheet_name = "{0}.to.{1}".format(genome, target_genome).replace("'", "") # ' is not allowed in the sheetname
     if len(sheet_name) > 31:
-        print(f"WARNING!!! Excel has a hardlimit of 31 char for sheetname. '{sheet_name}' is longer.Cutting to 31 chars...")
+        print(f"WARNING!!! Excel has a hardlimit of 31 char for sheetname. '{sheet_name}' is longer. Cutting to 31 chars...")
         sheet_name = sheet_name[:31]
 
     green_hex = "#00FF00"
@@ -1238,18 +1238,19 @@ for genome, genome_index in zip(genome_orderlist[:-1], range(0, len(genome_order
         connector_collection_dict[genome] = {}
         for zorder in sorted(synteny_dict[genome]["connector_zorder"].unique()):
             #print(lenlist_df_dict[genome])
-            connector_collection_dict[genome][zorder] = PatchCollection(synteny_dict[genome][synteny_dict[genome]["connector_zorder"] == zorder].apply(partial(connector_function,
-                                                                                                                                                                       length_df_dict=lenlist_df_dict,
-                                                                                                                                                                       top_species=genome_orderlist[genome_index+1],
-                                                                                                                                                                       connector_color_idx=connector_color_idx,
-                                                                                                                                                                       bottom_species=genome,
-                                                                                                                                                                       top_scaffold_idx=target_scaffold_idx,
-                                                                                                                                                                       top_start_idx=target_start_idx,
-                                                                                                                                                                       top_end_idx=target_end_idx,
-                                                                                                                                                                       bottom_scaffold_idx=query_scaffold_idx,
-                                                                                                                                                                       bottom_start_idx=query_start_idx,
-                                                                                                                                                                       bottom_end_idx=query_end_idx,
-                                                                                                                                                                       strand_idx=strand_idx), axis=1),
+            connector_collection_dict[genome][zorder] = \
+                PatchCollection(synteny_dict[genome][synteny_dict[genome]["connector_zorder"] == zorder].apply(partial(connector_function,
+                                                                                                                       length_df_dict=lenlist_df_dict,
+                                                                                                                       top_species=genome_orderlist[genome_index+1],
+                                                                                                                       connector_color_idx=connector_color_idx,
+                                                                                                                       bottom_species=genome,
+                                                                                                                       top_scaffold_idx=target_scaffold_idx,
+                                                                                                                       top_start_idx=target_start_idx,
+                                                                                                                       top_end_idx=target_end_idx,
+                                                                                                                       bottom_scaffold_idx=query_scaffold_idx,
+                                                                                                                       bottom_start_idx=query_start_idx,
+                                                                                                                       bottom_end_idx=query_end_idx,
+                                                                                                                       strand_idx=strand_idx), axis=1),
                                                                             match_original=True,
                                                                             antialiased=False,
                                                                             zorder=zorder)

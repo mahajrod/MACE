@@ -1,6 +1,6 @@
 package:
   name: "mace"
-  version: '1.1.40'
+  version: '1.1.42'
 about:
   summary: "MACE"
 source:
@@ -19,7 +19,7 @@ requirements:
     - pyparsing
     - xmltodict
     - venn
-    - 'routoolpa>=0.126'
+    - 'routoolpa>=0.128'
   run:
     - 'python'
     - 'scipy'
@@ -32,6 +32,6 @@ requirements:
     - 'biopython'
     - 'venn'
     - 'xlsxwriter'
-    - 'routoolpa>=0.126'
+    - 'routoolpa>=0.128'
 build:
   script: python setup.py install

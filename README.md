@@ -16,7 +16,7 @@ For specific requests or collaboration (projects on Mustelidae genomics are very
 
 
 # Installation
-_As of 06 April 2026, the latest version of MACE was **1.1.38**._
+_As of 10 April 2026, the latest version of MACE was **1.1.40**._
 
 There are two recommended ways to install MACE.
 
@@ -32,7 +32,7 @@ mamba install -c mahajrod routoolpa mace
 
 ```shell
 # Step1: install MACE and RouToolPa dependencies
-mamba install 'python>=3.9' 'pandas' 'scipy' 'numpy>=1.26' 'matplotlib' 'biopython' \
+mamba install 'python>=3.9' 'pandas' 'scipy' 'numpy>=1.26' 'matplotlib' 'biopython' 'distinctipy' \
               'bcbio-gff' 'ete3' 'statsmodels' 'pyparsing' 'xmltodict' 'venn' 'xlsxwriter'
 
 # Step2: clone RouToolPa and MACE repositories from github

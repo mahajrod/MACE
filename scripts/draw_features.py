@@ -79,8 +79,6 @@ parser.add_argument("-z", "--scaffold_orderlist", action="store", dest="scaffold
                     help="Comma-separated list of scaffolds to draw first and exactly in same order. "
                          "Scaffolds absent in this list are drawn last and in order according to vcf file . "
                          "Default: not set")
-#parser.add_argument("-y", "--sort_scaffolds", action="store_true", dest="sort_scaffolds", default=False,
-#                    help="Order scaffolds according to their names. Default: False")
 
 parser.add_argument("--scaffold_syn_file", action="store", dest="scaffold_syn_file",
                     help="File with scaffold id synonyms")
@@ -278,12 +276,12 @@ auxiliary_dict = Parsing.read_mace_auxiliary_input(len_file=args.scaffold_length
                                                    syn_file_value_column=args.syn_file_value_column,
                                                    centromere_bed=args.centromere_bed,
                                                    highlight_bed=args.highlight_file,
-                                                   legend_file=args.highlight_file,
+                                                   legend_file=args.legend,
                                                    vert_track_group_file=None,
                                                    hor_track_group_file=None,
                                                    hor_track_subgroup_file=None)
 
-records_df = Parsing.resolve_mace_single_genome_input(feature_df.records, auxiliary_dict)
+records_df = Parsing.resolve_mace_single_genome_input(auxiliary_dict, records_df=feature_df.records)
 
 Visualization.draw_features({"features": records_df}, auxiliary_dict["len_df"],
                             auxiliary_dict["orderlist_series"],

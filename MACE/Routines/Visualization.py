@@ -519,7 +519,7 @@ class VisualizationRoutines(DrawingRoutines):
         #print(scaffold_order_list)
         scaffolds = scaffold_order_list.to_list() if isinstance(scaffold_order_list, (pd.Series, pd.Index)) else scaffold_order_list  # scaffold_order_list[::-1] if scaffold_order_list else collection_gff.records.index.get_level_values(level=0).unique().to_list()
         scaffold_number = len(scaffolds)
-
+        #print(bed_collection_dict["MZIB"].records)
         synteny_feature_track_style = TrackStyle(height=10, colormap=None, background="white",
                                                  masked="grey", fill_empty=fill_empty_tracks, empty_color=empty_color,
                                                  stranded=stranded_tracks,
@@ -580,13 +580,15 @@ class VisualizationRoutines(DrawingRoutines):
                 #print("AAAAa")
                 #print(species)
                 records = bed_collection_dict[species].records if hasattr(bed_collection_dict[species], "records") else bed_collection_dict[species]
+                #print(records)
                 # print(species)
                 #print(scaffold_length_df)
                 #print(scaffold_length_df)
                 #print(scaffold_length_df.loc[chr])
                 #print(scaffold_length_df.loc[chr][0])
                 track_group_dict[chr][species] = FeatureTrack(
-                    records.loc[[chr]] if chr in records.index else None, x_end=scaffold_length_df.loc[chr].iloc[0],
+                    records.loc[[chr]] if chr in records.index else None,
+                    x_end=scaffold_length_df.loc[chr].iloc[0],
                     label=species if show_track_label else None, #colormap=colormap, thresholds=thresholds,
                     style=synteny_feature_track_style,
                     #colors=colors, background=background,
@@ -622,13 +624,13 @@ class VisualizationRoutines(DrawingRoutines):
                                      figure_x_y_ratio=figure_width / max(1, int(track_number * figure_height_per_scaffold + figure_header_height)),
                                      xmax_multiplier=xmax_multiplier, ymax_multiplier=ymax_multiplier)
 
-
         # calculate ratio of legend height to track height * track_number
-        if legend:
-            legend_height = (len(legend.thresholds) + 3) * legend.element_size
-            legend_track_ratio = legend_height / feature_height / track_number
-        else:
-            legend_track_ratio = 0
+        legend_track_ratio = 0
+        if legend: # TODO: Add a special parameter to legend object to indicate number of vertical elements
+            if hasattr(legend, "thresholds"):  # check if legend is DensityLegend
+                legend_height = (len(legend.thresholds) + 3) * legend.element_size
+                legend_track_ratio = legend_height / feature_height / track_number
+
         #print((figure_width,
         #                       max(1, int(scaffold_number * figure_height_per_scaffold + figure_header_height))))
         #print((scaffold_number, figure_height_per_scaffold, figure_header_height))

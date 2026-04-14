@@ -29,7 +29,7 @@ parser.add_argument("-i", "--input", action="store", dest="input", required=True
 parser.add_argument("-t", "--input_type", action="store", dest="input_type", default="vcf",
                     help="Type of input. Allowed: 'vcf'(default), 'bedgraph'\n"
                          "\t'vcf': standard vcf format.\n"
-                         "\t'bedgraph': four column bed-like format is ignored. The fourth column must contain precomputed density. Files with more columns are allowed too, but redundant columns are ignored.")
+                         "\t'bedgraph': four column bed-like format. The fourth column must contain precomputed density. Files with more columns are allowed too, but redundant columns are ignored.")
 
 parser.add_argument("-n", "--scaffold_length_file", action="store", dest="scaffold_length_file", default=None,
                     help="File with lengths of scaffolds. Required, if input is not a VCF file.")
@@ -87,8 +87,9 @@ parser.add_argument("-q", "--min_coverage_threshold", action="store", dest="min_
 
 # -------- Masking Input options --------
 parser.add_argument("--masking_track", action="store", dest="masking_track", default=None,
-                    help="Track file with masked regions. It is 4-column bed file, the 4th column can contain any color recognized by Matplotlib or 'masked' keyword."
-                          "In case of 3-column bed file, --masking_color is used to set the masking color")
+                    help="Track file with masked regions. It is 4-column bed file, the 4th column can contain "
+                         "any color recognized by Matplotlib or 'masked' keyword."
+                         "In case of 3-column bed file, --masking_color is used to set the masking color")
 parser.add_argument("--masking_color", action="store", dest="masking_color", default='grey',
                     help="Color to use for masked windows. Default: 'grey'")
 
@@ -109,54 +110,14 @@ parser.add_argument("-e", "--output_formats", action="store", dest="output_forma
 # -------- End of Output options -------
 # ---- End of Input/Output options ----
 
-# ---- Drawing options ----
-parser.add_argument("--only_count", action="store_true", dest="only_count", default=False,
-                    help="Only count variants, do not draw them. Default: False")
-# -------- Chromosome track options --------
-parser.add_argument("--stranded", action="store_true", dest="stranded", default=False,
-                    help="Stranded features and tracks. Default: False")
-parser.add_argument("--rounded", action="store_true", dest="rounded", default=False,
-                    help="Rounded tracks. Default: False")
-parser.add_argument("--middle_break", action="store_true", dest="middle_break", default=False,
-                    help="Add middle break to the track. Default: False")
-parser.add_argument("--stranded_end", action="store_true", dest="stranded_end", default=False,
-                    help="Stranded ends for tracks. Works only if --stranded is set. Default: False")
-parser.add_argument("--feature_name", action="store", dest="feature_name", default="SNPs",
-                    help="Feature name to use in legend. Default: 'SNPs'")
-
-"""
-parser.add_argument("--fill_empty_tracks", action="store_true", dest="fill_empty_tracks", default=False,
-                    help="Fill empty tracks (without features) with color set by --empty_color. Default: False")
-parser.add_argument("--empty_color", action="store", dest="empty_color", default="lightgrey",
-                    help="Color used to fill empty tracks. Ignored if --fill_empty_tracks is not set. "
-                         "Default: 'lightgrey'")
-"""
-# -------- Title options --------
-parser.add_argument("-l", "--title", action="store", dest="title", default="Coverage",
-                    help="Suptitle of figure. Default: 'Coverage'")
-parser.add_argument("--title_fontsize", action="store", dest="title_fontsize", default=20, type=int,
-                    help="Fontsize of the figure. Default: 20")
-# -------- End of Title options --------
-
-# -------- End of Chromosome track options --------
-# ---- End of Drawing options ----
-
-# ---- Density Track Calculation options ----
-
+# ---- Density Track options ----
 parser.add_argument("-w", "--window_size", action="store", dest="window_size", default=100000, type=int,
                     help="Size of the windows Default: 100000")
 parser.add_argument("-s", "--window_step", action="store", dest="window_step", default=None, type=int,
                     help="Step of the sliding windows. Default: window size, i.e windows are staking")
 parser.add_argument("--density_multiplier", action="store", dest="density_multiplier", default=1000, type=int,
                     help="Multiplier of density. Ignored if '--prescaled_density' is set. Default: 1000, i.e. densities will be calculated per kbp")
-parser.add_argument("--colormap", action="store", dest="colormap", default='jet',
-                    help="Matplotlib colormap to use for SNP densities. Default: jet")
-parser.add_argument("--custom_color_list", action="store", dest="custom_color_list", default=None,
-                    type=lambda s: s.split(","),
-                    help="Comma-separated list of colors to use instead of predefined colormap. "
-                         "Color names must be recognizable by matplotlib or a hex numbers preceded by #. "
-                         "Number of colors in list should be equal to number of the thresholds. "
-                         "If set --colormap option will be ignored. Default: not set")
+
 parser.add_argument("--density_thresholds", action="store", dest="density_thresholds",
                     default=(0.0, 0.1, 0.5, 0.75, 1.0, 1.25, 1.5, 2.0, 2.5),
                     type=lambda s: list(map(float, s.split(","))),
@@ -172,9 +133,52 @@ parser.add_argument("--skip_top_interval", action="store_true", dest="skip_top_i
 parser.add_argument("--skip_bottom_interval", action="store_true", dest="skip_bottom_interval", default=False,
                     help="Skip (don't include in legend) top interval (higher than last threshold). "
                          "In such case first threshold and below values will be included in the first interval. Default: False ")
+# ---- End of Density Track  options ----
+
+# ---- Drawing options ----
+
+# -------- Color options --------
+parser.add_argument("--only_count", action="store_true", dest="only_count", default=False,
+                    help="Only count variants, do not draw them. Default: False")
+
+parser.add_argument("--colormap", action="store", dest="colormap", default='jet',
+                    help="Matplotlib colormap to use for SNP densities. Default: jet")
+parser.add_argument("--custom_color_list", action="store", dest="custom_color_list", default=None,
+                    type=lambda s: s.split(","),
+                    help="Comma-separated list of colors to use instead of predefined colormap. "
+                         "Color names must be recognizable by matplotlib or a hex numbers preceded by #. "
+                         "Number of colors in list should be equal to number of the thresholds. "
+                         "If set --colormap option will be ignored. Default: not set")
 parser.add_argument("--test_colormaps", action="store_true", dest="test_colormaps",
                     help="Test colormaps. If set --colormap option will be ignored")
-# ---- End of Density Track Calculation options ----
+# -------- End of Color options --------
+
+# -------- Chromosome track options --------
+parser.add_argument("--stranded", action="store_true", dest="stranded", default=False,
+                    help="Stranded features and tracks. Default: False")
+parser.add_argument("--rounded", action="store_true", dest="rounded", default=False,
+                    help="Rounded tracks. Default: False")
+parser.add_argument("--middle_break", action="store_true", dest="middle_break", default=False,
+                    help="Add middle break to the track. Default: False")
+parser.add_argument("--stranded_end", action="store_true", dest="stranded_end", default=False,
+                    help="Stranded ends for tracks. Works only if --stranded is set. Default: False")
+parser.add_argument("--feature_name", action="store", dest="feature_name", default="SNPs",
+                    help="Feature name to use in legend. Default: 'SNPs'")
+parser.add_argument("--fill_empty_tracks", action="store_true", dest="fill_empty_tracks", default=False,
+                    help="Fill empty tracks (without features) with color set by --empty_color. Default: False")
+parser.add_argument("--empty_color", action="store", dest="empty_color", default="lightgrey",
+                    help="Color used to fill empty tracks. Ignored if --fill_empty_tracks is not set. "
+                         "Default: 'lightgrey'")
+# -------- End of Chromosome track options --------
+
+# -------- Title options --------
+parser.add_argument("-l", "--title", action="store", dest="title", default="Coverage",
+                    help="Suptitle of figure. Default: 'Coverage'")
+parser.add_argument("--title_fontsize", action="store", dest="title_fontsize", default=20, type=int,
+                    help="Fontsize of the figure. Default: 20")
+# -------- End of Title options --------
+
+# ---- End of Drawing options ----
 
 # -------- Label and Tick options --------
 parser.add_argument("--hide_track_label", action="store_true", dest="hide_track_label", default=False,
@@ -230,7 +234,7 @@ auxiliary_dict = Parsing.read_mace_auxiliary_input(len_file=args.scaffold_length
                                                    syn_file_value_column=args.syn_file_value_column,
                                                    centromere_bed=args.centromere_bed,
                                                    highlight_bed=args.highlight_file,
-                                                   legend_file=args.highlight_file,
+                                                   legend_file=None,
                                                    vert_track_group_file=None,
                                                    hor_track_group_file=None,
                                                    hor_track_subgroup_file=None)
@@ -266,7 +270,7 @@ elif args.input_type in ["bedgraph"]:  # Bed format without track lines. All col
     # if args.scaffold_syn_file:
     #     track_df.rename(index=chr_syn_dict, inplace=True)
 
-track_df = Parsing.resolve_mace_single_genome_input(track_df, auxiliary_dict)
+track_df = Parsing.resolve_mace_single_genome_input(auxiliary_dict, records_df=track_df)
 #print(track_df)
 if track_df.index.nlevels > 1:
     #drop second level of index if it was added by groupby
@@ -348,4 +352,6 @@ for colormap in cmap_list:
                                 subplot_title_fontweight='bold',
                                 x_tick_type=args.x_tick_type,
                                 autoscale_figure=False if args.manual_figure_adjustment else True,
+                                fill_empty_tracks=args.fill_empty_tracks,
+                                empty_color=args.empty_color,
                                 )
