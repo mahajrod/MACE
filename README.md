@@ -78,7 +78,20 @@ In case of uncertainty or problems, open an issue in the MACE repository.
 </p>
 
 # Documentation
-_Wiki for scripts is under development_
+## MACE Wiki
+
+- [Home](https://github.com/mahajrod/MACE/wiki)
+  - [Input formats](https://github.com/mahajrod/MACE/wiki/Input-formats)
+  - [Usage](https://github.com/mahajrod/MACE/wiki/Usage)
+    - [draw_features.py](https://github.com/mahajrod/MACE/wiki/draw_features.py)
+    - [draw_variant_window_densities.py](https://github.com/mahajrod/MACE/wiki/draw_variant_window_densities.py)
+    - [draw_coverage.py](https://github.com/mahajrod/MACE/wiki/draw_coverage.py)
+    - [draw_synteny.py](https://github.com/mahajrod/MACE/wiki/draw_synteny.py)
+    - [draw_macrosynteny.py](https://github.com/mahajrod/MACE/wiki/draw_macrosynteny.py)
+  - [Related pipelines](https://github.com/mahajrod/MACE/wiki/Related-pipelines)
+    - [Synteny](https://github.com/mahajrod/MACE/wiki/Synteny)
+  - [Articles that used MACE](https://github.com/mahajrod/MACE/wiki/Articles-that-used-MACE)
+  - [How to cite MACE](https://github.com/mahajrod/MACE/wiki/How-to-cite-MACE)
 
 # API
 MACE is mostly developed according to _library + wrapping scripts_ scheme. 
