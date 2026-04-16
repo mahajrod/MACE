@@ -43,9 +43,9 @@ def bed_dict_to_xlsx(bed_dict, genome_auxiliary_dict, output_prefix):
     #print(bed_dict)
     for species in bed_dict:
         species_format_dict[species] = {}
-        for scaffold in genome_auxiliary_dict[species]["scaffold_color_df"].index:
+        for scaffold in genome_auxiliary_dict["genomes"][species]["scaffold_color_df"].index:
             species_format_dict[species][scaffold] = workbook.add_format(
-                {'bg_color': genome_auxiliary_dict[species]["scaffold_color_df"].loc[scaffold, "color"]})
+                {'bg_color': genome_auxiliary_dict["genomes"][species]["scaffold_color_df"].loc[scaffold, "color"]})
 
     column_start = 0
 
@@ -283,7 +283,10 @@ if args.verbose:
     for genome in genome_list:
         print(data_dir_path / genome)
 
-genome_auxiliary_dict = {genome: Parsing.read_mace_auxiliary_input(
+genome_auxiliary_dict = {"genomes": OrderedDict(),
+                         "genome_colors": OrderedDict()}
+
+genome_auxiliary_dict["genomes"] = {genome: Parsing.read_mace_auxiliary_input(
                                               len_file=Parsing.get_filenames_for_extension(data_dir_path / genome, extension_list=[".len", ".fasta", ".fai"]),
                                               whitelist_file=Parsing.get_filenames_for_extension(data_dir_path / genome, extension_list=[".whitelist"]),
                                               orderlist_file=Parsing.get_filenames_for_extension(data_dir_path / genome, extension_list=[".orderlist"]),
@@ -299,17 +302,17 @@ genome_auxiliary_dict = {genome: Parsing.read_mace_auxiliary_input(
                                               hor_track_subgroup_file=None) for genome in genome_list}
 
 if not args.use_original_colors:
-    color_number = max([len(genome_auxiliary_dict[query]["orderlist_series"]) for query in query_list])
+    color_number = max([len(genome_auxiliary_dict["genomes"][query]["orderlist_series"]) for query in query_list])
     colors = distinctipy.get_colors(color_number)
     color_list = list(map(Visualization.rgb_tuple_to_hex, colors))
 
     for species in query_list:
-        genome_auxiliary_dict[species]["scaffold_color_df"] = pd.DataFrame()
+        genome_auxiliary_dict["genomes"][species]["scaffold_color_df"] = pd.DataFrame()
 
-        genome_auxiliary_dict[species]["scaffold_color_df"]["scaffold"] = genome_auxiliary_dict[species]["orderlist_series"]
-        genome_auxiliary_dict[species]["scaffold_color_df"]["color"] = color_list[:len(genome_auxiliary_dict[species]["orderlist_series"])]
-        genome_auxiliary_dict[species]["scaffold_color_df"].set_index("scaffold", inplace=True)
-        genome_auxiliary_dict[species]["scaffold_color_df"].to_csv("{}.{}.chr_colors.tsv".format(args.output_prefix, species), sep="\t", header=True, index=True)
+        genome_auxiliary_dict["genomes"][species]["scaffold_color_df"]["scaffold"] = genome_auxiliary_dict["genomes"][species]["orderlist_series"]
+        genome_auxiliary_dict["genomes"][species]["scaffold_color_df"]["color"] = color_list[:len(genome_auxiliary_dict["genomes"][species]["orderlist_series"])]
+        genome_auxiliary_dict["genomes"][species]["scaffold_color_df"].set_index("scaffold", inplace=True)
+        genome_auxiliary_dict["genomes"][species]["scaffold_color_df"].to_csv("{}.{}.chr_colors.tsv".format(args.output_prefix, species), sep="\t", header=True, index=True)
 
 bed_col_dict = OrderedDict()
 
@@ -321,15 +324,15 @@ if args.synteny_format == "psl":
                                          parsing_mode="coordinates_only",
                                          #target_syn_dict=syn_df_dict[reference].to_dict(),
                                          target_black_list=None,
-                                         target_white_list=genome_auxiliary_dict[reference]["whitelist_series"],
+                                         target_white_list=genome_auxiliary_dict["genomes"][reference]["whitelist_series"],
                                          #query_syn_dict=syn_df_dict[query].to_dict(),
                                          query_black_list=None,
-                                         query_white_list=genome_auxiliary_dict[query]["whitelist_series"],
+                                         query_white_list=genome_auxiliary_dict["genomes"][query]["whitelist_series"],
                                          invert_coordinates_for_target_negative_strand=args.invert_coordinates_for_target_negative_strand
                                          ) for query in query_list}
     for query in query_list:
-        psl_col_dict[query].records["tName"] = psl_col_dict[query].records["tName"].replace(genome_auxiliary_dict[reference]["syn_dict"])
-        psl_col_dict[query].records["qName"] = psl_col_dict[query].records["qName"].replace(genome_auxiliary_dict[query]["syn_dict"])
+        psl_col_dict[query].records["tName"] = psl_col_dict[query].records["tName"].replace(genome_auxiliary_dict["genomes"][reference]["syn_dict"])
+        psl_col_dict[query].records["qName"] = psl_col_dict[query].records["qName"].replace(genome_auxiliary_dict["genomes"][query]["syn_dict"])
 
     for species in query_list:
         bed_col_dict[species] = CollectionBED(
@@ -339,7 +342,7 @@ if args.synteny_format == "psl":
             parsing_mode="all")
         bed_col_dict[species].records.set_index("scaffold", inplace=True)
 
-        bed_col_dict[species].records["color"] = bed_col_dict[species].records["query"].replace(genome_auxiliary_dict[species]["scaffold_color_df"]["color"])
+        bed_col_dict[species].records["color"] = bed_col_dict[species].records["query"].replace(genome_auxiliary_dict["genomes"][species]["scaffold_color_df"]["color"])
         bed_col_dict[species].records = bed_col_dict[species].records.sort_values(by=["scaffold", "start", "end", ])
 
 elif args.synteny_format in ["bed", "bed_with_color"]: # TODO: REWRITE!!!!!!!!!!!!!!
@@ -349,17 +352,17 @@ elif args.synteny_format in ["bed", "bed_with_color"]: # TODO: REWRITE!!!!!!!!!!
         bed_col_dict[species] = CollectionBED(in_file=Parsing.get_filenames_for_extension(data_dir_path / species,
                                                                                           extension_list=["bed", "bed.gz"]), header_in_file=True,
                                               format="bed_synteny_track", parsing_mode="all",
-                                              scaffold_syn_dict=genome_auxiliary_dict[reference]["syn_dict"],
-                                              rename_dict={"query": genome_auxiliary_dict[species]["syn_dict"]} if genome_auxiliary_dict[species]["syn_dict"] is not None else None)
+                                              scaffold_syn_dict=genome_auxiliary_dict["genomes"][reference]["syn_dict"],
+                                              rename_dict={"query": genome_auxiliary_dict["genomes"][species]["syn_dict"]} if genome_auxiliary_dict["genomes"][species]["syn_dict"] is not None else None)
 
         bed_col_dict[species].records = bed_col_dict[species].records.sort_values(by=["scaffold", "start", "end", ])
         if args.synteny_format != "bed_with_color":
-            bed_col_dict[species].records["color"] = bed_col_dict[species].records["query"].replace(genome_auxiliary_dict[species]["scaffold_color_df"]["color"])
+            bed_col_dict[species].records["color"] = bed_col_dict[species].records["query"].replace(genome_auxiliary_dict["genomes"][species]["scaffold_color_df"]["color"])
 else:
     raise ValueError("ERROR!!! Unrecognized format of the input file(s)!")
 
 for genome in genome_list:
-    Parsing.resolve_mace_single_genome_input(genome_auxiliary_dict[genome])
+    Parsing.resolve_mace_single_genome_input(genome_auxiliary_dict["genomes"][genome])
 
 query_scaffold_id_column_name = "query"
 query_start_column_name = "query_start"
@@ -371,21 +374,21 @@ for species in query_list:
     print("Inverting query coordinates in synteny file...")
 
     bed_col_dict[species].records = Synteny.invert_coordinates_in_synteny_table(bed_col_dict[species].records,
-                                                                                genome_auxiliary_dict[species]["invertlist_series"],
-                                                                                genome_auxiliary_dict[species]["preinvert_len_df"],
+                                                                                genome_auxiliary_dict["genomes"][species]["invertlist_series"],
+                                                                                genome_auxiliary_dict["genomes"][species]["preinvert_len_df"],
                                                                                 query_scaffold_id_column_name,
                                                                                 query_start_column_name,
                                                                                 query_end_column_name,
                                                                                 strand_column_name,
-                                                                                genome_auxiliary_dict[species]["inverted_scaffold_label"])
+                                                                                genome_auxiliary_dict["genomes"][species]["inverted_scaffold_label"])
 #--------------------------------------------------------------------------------------
 
-query_species_color_df_dict = {sp: genome_auxiliary_dict[sp]["scaffold_color_df"] for sp in query_list}
+query_species_color_df_dict = {sp: genome_auxiliary_dict["genomes"][sp]["scaffold_color_df"] for sp in query_list}
 
 common_visualization_options_dict = {"legend": None if args.hide_legend else Visualization.chromosome_legend(query_species_color_df_dict,
-                                                                                                             genome_auxiliary_dict[reference]["orderlist_series"]),
-                                     "centromere_df": genome_auxiliary_dict[reference]["centromere_df"],
-                                     "highlight_df": genome_auxiliary_dict[reference]["highlight_df"],
+                                                                                                             genome_auxiliary_dict["genomes"][reference]["orderlist_series"]),
+                                     "centromere_df": genome_auxiliary_dict["genomes"][reference]["centromere_df"],
+                                     "highlight_df": genome_auxiliary_dict["genomes"][reference]["highlight_df"],
                                      "figure_width": args.figure_width,
                                      "figure_height_per_scaffold": args.figure_height_per_scaffold,
                                      "dpi": 300,
@@ -437,8 +440,8 @@ for min_block_length in args.initial_min_block_len_list:
         # -----
 
     Visualization.draw_features(prefiltered_bed_col_dict,
-                                genome_auxiliary_dict[reference]["len_df"],  #reference_scaffold_length_df,
-                                genome_auxiliary_dict[reference]["orderlist_series"],
+                                genome_auxiliary_dict["genomes"][reference]["len_df"],  #reference_scaffold_length_df,
+                                genome_auxiliary_dict["genomes"][reference]["orderlist_series"],
                                 "{0}.initial_min_block_len_{1}".format(args.output_prefix, min_block_length),
                                 stranded_tracks=args.stranded,
                                 stranded_end_tracks=args.stranded_end,
@@ -471,8 +474,8 @@ for min_block_length in args.initial_min_block_len_list:
                 # -----
 
             Visualization.draw_features(filtered_bed_col_dict,
-                                        genome_auxiliary_dict[reference]["len_df"],
-                                        genome_auxiliary_dict[reference]["orderlist_series"],
+                                        genome_auxiliary_dict["genomes"][reference]["len_df"],
+                                        genome_auxiliary_dict["genomes"][reference]["orderlist_series"],
                                         "{0}.{1}".format(args.output_prefix, second_stage_output_suffix),
                                         stranded_tracks=args.stranded,
                                         stranded_end_tracks=args.stranded_end,
@@ -501,8 +504,8 @@ for min_block_length in args.initial_min_block_len_list:
                     # -----
 
                 Visualization.draw_features(filtered_bed_col_dict,
-                                            genome_auxiliary_dict[reference]["len_df"],
-                                            genome_auxiliary_dict[reference]["orderlist_series"],
+                                            genome_auxiliary_dict["genomes"][reference]["len_df"],
+                                            genome_auxiliary_dict["genomes"][reference]["orderlist_series"],
                                             "{0}.{1}.{2}".format(args.output_prefix,
                                                                  second_stage_output_suffix,
                                                                  third_stage_output_suffix),
@@ -533,8 +536,8 @@ for min_block_length in args.initial_min_block_len_list:
                         # -----
 
                     Visualization.draw_features(filtered_bed_col_dict,
-                                                genome_auxiliary_dict[reference]["len_df"],
-                                                genome_auxiliary_dict[reference]["orderlist_series"],
+                                                genome_auxiliary_dict["genomes"][reference]["len_df"],
+                                                genome_auxiliary_dict["genomes"][reference]["orderlist_series"],
                                                 "{0}.{1}.{2}.{3}".format(args.output_prefix,
                                                                          second_stage_output_suffix,
                                                                          third_stage_output_suffix,

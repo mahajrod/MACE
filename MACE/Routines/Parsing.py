@@ -62,6 +62,57 @@ class ParsingRoutines:
         else:
             return pd.Series(s.split(","))
 
+    @staticmethod
+    def get_filenames_for_extension(dir_path, extension_list, force_uniq=True):
+        filelist = []
+        for extension in extension_list:
+            filelist += list(glob.glob(str(dir_path) + "/*{0}".format(extension)))
+        if not filelist:
+            return None
+        # print(filelist)
+        if force_uniq:
+            if len(filelist) > 1:
+                raise ValueError("Found more than one file with extensions: {0} in directory {1}".format(",".join(extension_list),
+                                                                                                         str(dir_path)))
+            else:
+                return filelist[0]
+
+        return filelist
+
+    # ---------- Methods for parsing config file for draw_macrosynteny.py -------------
+    @staticmethod
+    def check_for_inversion_and_strand_switch_request(scaffold_id, strand_switch_symbol, inversion_symbol, ):
+        request_dict = {"inversion": False,
+                        "query_switch_strand": False,
+                        "target_switch_strand": False}
+        processed_scaffold_id = scaffold_id
+        if scaffold_id[-1] == inversion_symbol:
+            request_dict["inversion"] = True
+            processed_scaffold_id = scaffold_id[:-1]
+        if processed_scaffold_id[-3:] == strand_switch_symbol * 3:
+            request_dict["query_switch_strand"] = True
+            request_dict["target_switch_strand"] = True
+            processed_scaffold_id = processed_scaffold_id[:-3]
+        elif processed_scaffold_id[-2:] == strand_switch_symbol * 2:
+            request_dict["target_switch_strand"] = True
+            processed_scaffold_id = processed_scaffold_id[:-2]
+        elif processed_scaffold_id[-1:] == strand_switch_symbol * 1:
+            request_dict["query_switch_strand"] = True
+            processed_scaffold_id = processed_scaffold_id[:-1]
+
+        if len(processed_scaffold_id) == 0:
+            raise ValueError(f"ERROR!!! No symbols were left after processing of the scaffold id {scaffold_id}!")
+
+        return processed_scaffold_id, request_dict
+
+    @staticmethod
+    def get_original_scaffold_id(syn_df, scaffold_id):
+        if scaffold_id not in list(syn_df["syn"]):
+            # print(syn_df["syn"])
+            return scaffold_id
+        return syn_df.index[list(syn_df["syn"]).index(scaffold_id)]
+    # ---------- End of Methods for parsing config file for draw_macrosynteny.py -------------
+
     def read_mace_auxiliary_input(self,
                                   len_file=None,
                                   whitelist_file=None, max_scaffolds=50,
@@ -83,7 +134,8 @@ class ParsingRoutines:
                                   median_coverage_file=None,
                                   min_coverage_threshold=0.33, max_coverage_threshold=2.5,
                                   median_coverage=None, mean_coverage=None,
-                                  scaffold_color_file=None):
+                                  scaffold_color_file=None,
+                                  ):
         auxiliary_dict = OrderedDict()
 
         auxiliary_dict["syn_dict"] = SynDict(filename=syn_file,
@@ -270,10 +322,61 @@ class ParsingRoutines:
 
         auxiliary_dict["max_scaffolds"] = max_scaffolds
         auxiliary_dict["inverted_scaffold_label"] = inverted_scaffold_label
+
         return auxiliary_dict
 
-    @staticmethod
-    def resolve_mace_single_genome_input(auxiliary_dict, records_df=None):
+    def update_genome_dict_from_genome_config(self, genome_auxiliary_dict, genome_config,
+                                              strand_switch_label="*", inverted_scaffold_label="'",):
+        # genome_auxiliary_dict has following definition
+        # genome_auxiliary_dict = {"genomes": OrderedDict(),
+        #                          "genome_colors": OrderedDict()}
+        #genome_auxiliary_dict["genome_color_df"] = {"genome_id": [],
+        #                                            "color": []}
+        if genome_config is not None:
+            genome_config_tmp_dict = OrderedDict()
+            # read genome colors first
+            genome_auxiliary_dict["genome_color_df"] = pd.read_csv(genome_config, sep="\t", usecols=[0, 1], na_values=".",
+                                                                   names=["genome", "color"], index_col=["genome"])
+
+            # read scaffold_settings
+            with open(genome_config, "r") as in_fd:
+                for line in in_fd:
+                    if line == "\n":
+                        continue
+                    line_list = line.strip().split("\t", 2)
+                    #genome_auxiliary_dict["genome_color_df"]["genome_id"].append(line_list[0])
+                    #genome_auxiliary_dict["genome_color_df"]["color"].append(line_list[1] if line_list[1] != "." else None)  # read_colors
+                    genome_config_tmp_dict[line_list[0]] = list(map(lambda s: s.split(","), line_list[2].split("\t")))
+            #genome_auxiliary_dict["genome_color_df"] = pd.DataFrame.from_dict(genome_auxiliary_dict["genome_color_df"]).set_index("genome_id")
+
+            for genome in genome_auxiliary_dict["genomes"]:
+                for series_entry in "invertlist_series", "orderlist_series", "queryswitchstrandlist_series", "targetswitchstrandlist_series":
+                    genome_auxiliary_dict["genomes"][genome][series_entry] = []
+
+                for entry in genome_config_tmp_dict[genome]:
+                    for scaffold_id in entry:
+                        processed_scaffold_id, request_dict = self.check_for_inversion_and_strand_switch_request(scaffold_id,
+                                                                                                                 strand_switch_label,
+                                                                                                                 inverted_scaffold_label)
+                        genome_auxiliary_dict["genomes"][genome]["orderlist_series"].append(processed_scaffold_id)
+                        if request_dict["inversion"]:
+                            genome_auxiliary_dict["genomes"][genome]["invertlist_series"].append(processed_scaffold_id)
+
+                        if request_dict["query_switch_strand"]:
+                            genome_auxiliary_dict["genomes"][genome]["queryswitchstrandlist_series"].append(self.get_original_scaffold_id(genome_auxiliary_dict["genomes"][genome]["syn_dict"],
+                                                                                                            processed_scaffold_id))
+                        if request_dict["target_switch_strand"]:
+                            genome_auxiliary_dict["genomes"][genome]["targetswitchstrandlist_series"].append(self.get_original_scaffold_id(genome_auxiliary_dict["genomes"][genome]["syn_dict"],
+                                                                                                             processed_scaffold_id))
+
+                genome_auxiliary_dict["genomes"][genome]["invertlist_series"] = pd.Series(genome_auxiliary_dict["genomes"][genome]["invertlist_series"], dtype='str')
+                genome_auxiliary_dict["genomes"][genome]["orderlist_series"] = pd.Series(genome_auxiliary_dict["genomes"][genome]["orderlist_series"], dtype='str')
+                genome_auxiliary_dict["genomes"][genome]["queryswitchstrandlist_series"] = pd.Series(genome_auxiliary_dict["genomes"][genome]["queryswitchstrandlist_series"],
+                                                                                                     dtype='str')
+                genome_auxiliary_dict["genomes"][genome]["targetswitchstrandlist_series"] = pd.Series(genome_auxiliary_dict["genomes"][genome]["targetswitchstrandlist_series"],
+                                                                                                      dtype='str')
+
+    def resolve_mace_single_genome_input(self, auxiliary_dict, records_df=None):
         if auxiliary_dict["len_df"] is None:
             raise ValueError("ERROR!!! Length dataframe was not parsed!!!")
 
@@ -335,8 +438,94 @@ class ParsingRoutines:
             if auxiliary_dict["scaffold_color_df"] is not None:
                 auxiliary_dict["scaffold_color_df"] = auxiliary_dict["scaffold_color_df"].rename(index=dict(zip(auxiliary_dict["invertlist_series"],
                                                                                                                 [scaf + auxiliary_dict["inverted_scaffold_label"] for scaf in auxiliary_dict["invertlist_series"]])))
+            if auxiliary_dict["centromere_df"] is not None:
+                auxiliary_dict["centromere_df"] = self.invert_coordinates_in_region_table(auxiliary_dict["centromere_df"],
+                                                                                          auxiliary_dict["invertlist_series"],
+                                                                                          auxiliary_dict["len_df"],
+                                                                                          "scaffold_id", "start", "end",
+                                                                                          inverted_scaffolds_label=auxiliary_dict["inverted_scaffold_label"])
         
         return tmp_df
+
+    @staticmethod
+    def invert_coordinates_in_synteny_table(df, scaffold_list, length_df, scaffold_column, start_column, end_column,
+                                            strand_column, inverted_scaffolds_label="'"):
+        temp_df = deepcopy(df)
+        columns_list = list(temp_df.columns)
+        temp_df["length_column"] = 0
+        original_index_name = temp_df.index.name
+
+        temp_df.reset_index(drop=False, inplace=True)
+        temp_df.set_index(scaffold_column, inplace=True)
+        # temp_df.to_csv("tmp", sep="\t", index=True, header=True)
+        for scaffold in temp_df.index.unique():
+            temp_df.loc[scaffold, "length_column"] = length_df.loc[scaffold, "length"]
+
+        (temp_df.loc[temp_df.index.isin(scaffold_list), start_column],
+         temp_df.loc[temp_df.index.isin(scaffold_list), end_column]) = temp_df.loc[temp_df.index.isin(scaffold_list), "length_column"] - temp_df.loc[temp_df.index.isin(scaffold_list), end_column], \
+                                                                       temp_df.loc[temp_df.index.isin(scaffold_list), "length_column"] - temp_df.loc[temp_df.index.isin(scaffold_list), start_column]
+
+        plus_indexes, minus_indexes = (temp_df[strand_column] == "+") & temp_df.index.isin(scaffold_list), (
+                    temp_df[strand_column] == "-") & temp_df.index.isin(scaffold_list)
+        temp_df.loc[plus_indexes, strand_column], temp_df.loc[minus_indexes, strand_column] = "-", "+"
+        temp_df.reset_index(drop=False, inplace=True)
+        if inverted_scaffolds_label is not None:
+            for scaffold in scaffold_list:
+                temp_df.loc[temp_df[scaffold_column] == scaffold, scaffold_column] = scaffold + inverted_scaffolds_label
+        if (original_index_name is not None) and original_index_name in temp_df.columns:
+            temp_df.set_index(original_index_name, inplace=True)
+
+        return temp_df[columns_list]  # remove added length column and restore column order
+
+    """# function from draw_synteny.py, slightly differs from above method 
+    def invert_coordinates_in_synteny_table(df, scaffold_list, length_df, scaffold_column, start_column, end_column, strand_column, inverted_scaffolds_label="'"):
+        temp_df = deepcopy(df)
+        columns_list = list(temp_df.columns)
+        temp_df["length_column"] = 0
+        temp_df.set_index(scaffold_column, inplace=True)
+
+        for scaffold in temp_df.index.unique():
+            temp_df.loc[scaffold, "length_column"] = length_df.loc[scaffold, "length"]
+
+        temp_df.loc[temp_df.index.isin(scaffold_list), start_column], temp_df.loc[temp_df.index.isin(scaffold_list), end_column] = temp_df.loc[temp_df.index.isin(scaffold_list), "length_column"] - temp_df.loc[temp_df.index.isin(scaffold_list), end_column], \
+                   temp_df.loc[temp_df.index.isin(scaffold_list), "length_column"] - temp_df.loc[temp_df.index.isin(scaffold_list), start_column]
+
+        plus_indexes, minus_indexes = (temp_df[strand_column] == "+") & temp_df.index.isin(scaffold_list), (temp_df[strand_column] == "-") & temp_df.index.isin(scaffold_list)
+        temp_df.loc[plus_indexes, strand_column], temp_df.loc[minus_indexes, strand_column] = "-", "+"
+        temp_df.reset_index(drop=False, inplace=True)
+        if inverted_scaffolds_label is not None:
+            for scaffold in scaffold_list:
+                temp_df.loc[temp_df[scaffold_column] == scaffold, scaffold_column] = scaffold + inverted_scaffolds_label
+        return temp_df[columns_list]  # remove added length column and restore column order
+    """
+
+    @staticmethod
+    def invert_coordinates_in_region_table(df, scaffold_list, length_df, scaffold_column, start_column, end_column,
+                                           inverted_scaffolds_label="'"):
+        if df.empty:
+            return df
+        temp_df = deepcopy(df)
+
+        if temp_df.index.name != scaffold_column:
+            temp_df.reset_index(inplace=True, drop=False)
+            temp_df.set_index(scaffold_column, inplace=True)
+
+        columns_list = list(temp_df.columns)
+        for scaffold in temp_df.index.unique():
+            if scaffold in length_df.index:
+                temp_df.loc[scaffold, "length_column"] = length_df.loc[scaffold, "length"]
+
+        temp_df.loc[temp_df.index.isin(scaffold_list), start_column], temp_df.loc[
+            temp_df.index.isin(scaffold_list), end_column] = temp_df.loc[temp_df.index.isin(scaffold_list), "length_column"] - temp_df.loc[temp_df.index.isin(scaffold_list), end_column], \
+                                                             temp_df.loc[temp_df.index.isin(scaffold_list), "length_column"] - temp_df.loc[temp_df.index.isin(scaffold_list), start_column]
+
+        temp_df.reset_index(drop=False, inplace=True)
+        if inverted_scaffolds_label is not None:
+            for scaffold in scaffold_list:
+                temp_df.loc[temp_df[scaffold_column] == scaffold, scaffold_column] = scaffold + inverted_scaffolds_label
+
+        temp_df.set_index(scaffold_column, inplace=True)
+        return temp_df[columns_list]  # remove added length column and restore column order
 
     @staticmethod
     def expand_path(path_template: str, skip=False):
@@ -354,24 +543,6 @@ class ParsingRoutines:
             raise ValueError("ERROR!!! There are no files corresponding to the template {0} ...".format(path_template))
         else:
             return str(path_list[0])
-
-    @staticmethod
-    def get_filenames_for_extension(dir_path, extension_list, force_uniq=True):
-        filelist = []
-        for extension in extension_list:
-            filelist += list(glob.glob(str(dir_path) + "/*{0}".format(extension)))
-            # print(extension, filelist)
-        if not filelist:
-            return None
-        print(filelist)
-        if force_uniq:
-            if len(filelist) > 1:
-                raise ValueError("Found more than one file with extensions: {0} in directory {1}".format(",".join(extension_list,),
-                                                                                                         str(dir_path)))
-            else:
-                return filelist[0]
-
-        return filelist
 
 
 class NewlinePreservingArgParserHelpFormatter(argparse.HelpFormatter):

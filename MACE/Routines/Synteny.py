@@ -2,7 +2,7 @@ import os
 import glob
 import argparse
 import textwrap
-
+import numpy as np
 from copy import deepcopy
 from pathlib import Path
 from collections import OrderedDict
@@ -91,29 +91,143 @@ class SyntenyRoutines:
         return df
 
     @staticmethod
-    def invert_coordinates_in_synteny_table(df, scaffold_list, length_df, scaffold_column, start_column, end_column, strand_column, inverted_scaffolds_label="'"):
-        temp_df = deepcopy(df)
-        temp_df["length_column"] = 0
-        original_index_name = temp_df.index.name
-        columns_list = list(temp_df.columns)
-        temp_df.reset_index(drop=False, inplace=True)
-        temp_df.set_index(scaffold_column, inplace=True)
-        #temp_df.to_csv("tmp", sep="\t", index=True, header=True)
-        for scaffold in temp_df.index.unique():
-            temp_df.loc[scaffold, "length_column"] = length_df.loc[scaffold, "length"]
+    def detect_overlapping_blocks(df,
+                                  query_overlapping_block_column_name,
+                                  query_overlapping_fraction_column_name,
+                                  query_reverse_overlapping_fraction_column_name,
+                                  query_start_column_name, query_end_column_name,
+                                  target_overlapping_block_column_name,
+                                  target_overlapping_fraction_column_name,
+                                  target_reverse_overlapping_fraction_column_name,
+                                  target_start_column_name, target_end_column_name):
+        output_df = deepcopy(df)
+        for column_name in query_overlapping_block_column_name, target_overlapping_block_column_name:
+            output_df[column_name] = pd.NA
+        for column_name in query_overlapping_fraction_column_name, \
+                query_reverse_overlapping_fraction_column_name, \
+                target_overlapping_fraction_column_name, \
+                target_reverse_overlapping_fraction_column_name:
+            output_df[column_name] = np.nan
 
-        temp_df.loc[temp_df.index.isin(scaffold_list), start_column], temp_df.loc[temp_df.index.isin(scaffold_list), end_column] = temp_df.loc[temp_df.index.isin(scaffold_list), "length_column"] - temp_df.loc[temp_df.index.isin(scaffold_list), end_column], \
-                   temp_df.loc[temp_df.index.isin(scaffold_list), "length_column"] - temp_df.loc[temp_df.index.isin(scaffold_list), start_column]
+        # print(output_df)
+        for row_index in range(0, len(output_df)):
+            output_df["query.t_e - x_s"] = output_df[query_end_column_name].iloc[row_index] - output_df[query_start_column_name]
 
-        plus_indexes, minus_indexes = (temp_df[strand_column] == "+") & temp_df.index.isin(scaffold_list), (temp_df[strand_column] == "-") & temp_df.index.isin(scaffold_list)
-        temp_df.loc[plus_indexes, strand_column], temp_df.loc[minus_indexes, strand_column] = "-", "+"
-        temp_df.reset_index(drop=False, inplace=True)
-        if inverted_scaffolds_label is not None:
-            for scaffold in scaffold_list:
-                temp_df.loc[temp_df[scaffold_column] == scaffold, scaffold_column] = scaffold + inverted_scaffolds_label
-        if (original_index_name is not None) and original_index_name in temp_df.columns:
-            temp_df.set_index(original_index_name, inplace=True)
+            output_df["query.t_e - x_s"] = output_df[query_end_column_name].iloc[row_index] - output_df[query_start_column_name]
 
-        return temp_df[columns_list]  # remove added length column and restore column order
+            output_df["query.t_e - x_s"] = output_df[query_end_column_name].iloc[row_index] - output_df[query_start_column_name]
 
-    # ---- end of methods transferred from draw_synteny.py ----
+            output_df["query.t_e - x_s"] = output_df[query_end_column_name].iloc[row_index] - output_df[query_start_column_name]
+
+        return output_df
+
+    @staticmethod
+    def detect_same_coords_blocks(df,
+                                  query_same_coords_in_block_column_name,
+                                  query_scaffold_id_column_name,
+                                  query_start_column_name, query_end_column_name,
+                                  target_same_coords_in_block_column_name,
+                                  target_scaffold_id_column_name,
+                                  target_start_column_name, target_end_column_name):
+        output_df = deepcopy(df)
+        for column_name in query_same_coords_in_block_column_name, target_same_coords_in_block_column_name:
+            output_df[column_name] = pd.NA
+        # print(output_df)
+        for row_index in range(0, len(output_df)):
+            query_same_coords_set = set(output_df[(output_df[query_scaffold_id_column_name] ==
+                                                   output_df.iloc[row_index][query_scaffold_id_column_name]) & \
+                                                  (output_df[query_start_column_name] == output_df.iloc[row_index][
+                                                      query_start_column_name]) & \
+                                                  (output_df[query_end_column_name] == output_df.iloc[row_index][
+                                                      query_end_column_name])]['synteny_block_id'])
+            query_same_coords_set.remove(output_df.iloc[row_index]['synteny_block_id'])
+
+            if query_same_coords_set:
+                output_df[query_same_coords_in_block_column_name].iloc[row_index] = ",".join(query_same_coords_set)
+
+            target_same_coords_set = set(output_df[(output_df[target_scaffold_id_column_name] ==
+                                                    output_df.iloc[row_index][target_scaffold_id_column_name]) & \
+                                                   (output_df[target_start_column_name] == output_df.iloc[row_index][
+                                                       target_start_column_name]) & \
+                                                   (output_df[target_end_column_name] == output_df.iloc[row_index][
+                                                       target_end_column_name])]['synteny_block_id'])
+            target_same_coords_set.remove(output_df.iloc[row_index]['synteny_block_id'])
+
+            if target_same_coords_set:
+                output_df[target_same_coords_in_block_column_name].iloc[row_index] = ",".join(target_same_coords_set)
+
+        return output_df
+
+    @staticmethod
+    def detect_nested_blocks(df,
+                             nested_in_block_column_name,
+                             # query_same_cooords_in_block_column_name,
+                             query_nested_in_block_column_name,
+                             query_scaffold_id_column_name,
+                             query_start_column_name, query_end_column_name,
+                             # target_same_cooords_in_block_column_name,
+                             target_nested_in_block_column_name,
+                             target_scaffold_id_column_name,
+                             target_start_column_name, target_end_column_name):
+        sorted_df = df.sort_values(by=[query_scaffold_id_column_name, query_start_column_name, query_end_column_name])
+        for column_name in query_nested_in_block_column_name, target_nested_in_block_column_name:  # , query_same_cooords_in_block_column_name, target_same_cooords_in_block_column_name:
+            sorted_df[column_name] = pd.NA
+        # sorted_df[query_nested_in_block_column_name] = pd.NA
+        # sorted_df[target_nested_in_block_column_name] = pd.NA
+        query_nested_in_block_column_name_idx = sorted_df.columns.get_loc(query_nested_in_block_column_name)
+        for row_index in range(0, len(sorted_df)):
+            block_start = sorted_df.iloc[row_index][query_start_column_name]
+            block_end = sorted_df.iloc[row_index][query_end_column_name]
+            # check_df = sorted_df.iloc[:row_index]
+            # print(sorted_df.iloc[row_index])
+            # print(check_df)
+            nested_in_block_set = set(
+                sorted_df.iloc[:row_index][sorted_df.iloc[:row_index][query_end_column_name] >= block_end][
+                    'synteny_block_id'])
+            nested_in_block_set |= set(sorted_df.iloc[row_index + 1:][
+                                           (sorted_df.iloc[row_index + 1:][query_start_column_name] == block_start) & (
+                                                       sorted_df.iloc[row_index + 1:][
+                                                           query_end_column_name] >= block_end)]['synteny_block_id'])
+
+            # print(nested_in_block_set)
+            if nested_in_block_set:
+                # sorted_df[query_nested_in_block_column_name].iloc[row_index] = ",".join(nested_in_block_set)
+                sorted_df.iloc[row_index, query_nested_in_block_column_name_idx] = ",".join(nested_in_block_set)
+            # same_coords_set = set(sorted_df[(sorted_df[query_start_column_name] == block_start) & (sorted_df[query_end_column_name] == block_end)]['synteny_block_id'])
+            # same_coords_set.remove(sorted_df.iloc[row_index]['synteny_block_id'])
+
+            # if same_coords_set:
+            #    sorted_df[query_same_cooords_in_block_column_name].iloc[row_index] = ",".join(same_coords_set)
+
+        sorted_df = sorted_df.sort_values(
+            by=[target_scaffold_id_column_name, target_start_column_name, target_end_column_name])
+        target_nested_in_block_column_name_idx = sorted_df.columns.get_loc(target_nested_in_block_column_name)
+        for row_index in range(0, len(sorted_df)):
+            block_start = sorted_df.iloc[row_index][target_start_column_name]
+            block_end = sorted_df.iloc[row_index][target_end_column_name]
+            # check_df = sorted_df.iloc[:row_index]
+            nested_in_block_set = set(
+                sorted_df.iloc[:row_index][sorted_df.iloc[:row_index][target_end_column_name] >= block_end][
+                    'synteny_block_id'])
+            nested_in_block_set |= set(sorted_df.iloc[row_index + 1:][
+                                           (sorted_df.iloc[row_index + 1:][target_start_column_name] == block_start) & (
+                                                       sorted_df.iloc[row_index + 1:][
+                                                           target_end_column_name] >= block_end)]['synteny_block_id'])
+
+            if nested_in_block_set:
+                sorted_df.iloc[row_index, target_nested_in_block_column_name_idx] = ",".join(nested_in_block_set)
+
+            # same_coords_set = set(sorted_df[(sorted_df[target_start_column_name] == block_start) & (sorted_df[target_end_column_name] == block_end)]['synteny_block_id'])
+            # same_coords_set.remove(sorted_df.iloc[row_index]['synteny_block_id'])
+            # if same_coords_set:
+            #    sorted_df[target_same_cooords_in_block_column_name].iloc[row_index] = ",".join(same_coords_set)
+
+        def get_nested(row):
+            if row.hasnans:
+                return pd.NA
+            else:
+                return ",".join(set(row.iloc[0].split(",")) & set(row.iloc[1].split(",")))
+
+        sorted_df[nested_in_block_column_name] = sorted_df[[query_nested_in_block_column_name, target_nested_in_block_column_name]].apply(get_nested, axis=1)
+        # print(sorted_df)
+        return sorted_df
