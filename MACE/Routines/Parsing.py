@@ -442,7 +442,7 @@ class ParsingRoutines:
                 auxiliary_dict["centromere_df"] = self.invert_coordinates_in_region_table(auxiliary_dict["centromere_df"],
                                                                                           auxiliary_dict["invertlist_series"],
                                                                                           auxiliary_dict["len_df"],
-                                                                                          "scaffold_id", "start", "end",
+                                                                                          "scaffold", "start", "end",
                                                                                           inverted_scaffolds_label=auxiliary_dict["inverted_scaffold_label"])
         
         return tmp_df

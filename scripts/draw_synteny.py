@@ -373,7 +373,7 @@ for species in query_list:
     print("Inverting (if necessary) {0} scaffolds...".format(species))
     print("Inverting query coordinates in synteny file...")
 
-    bed_col_dict[species].records = Synteny.invert_coordinates_in_synteny_table(bed_col_dict[species].records,
+    bed_col_dict[species].records = Parsing.invert_coordinates_in_synteny_table(bed_col_dict[species].records,
                                                                                 genome_auxiliary_dict["genomes"][species]["invertlist_series"],
                                                                                 genome_auxiliary_dict["genomes"][species]["preinvert_len_df"],
                                                                                 query_scaffold_id_column_name,
