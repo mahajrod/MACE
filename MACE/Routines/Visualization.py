@@ -59,6 +59,8 @@ class VisualizationRoutines(DrawingRoutines):
 
     @staticmethod
     def rgb_tuple_to_hex(rgb_tuple):
+        if isinstance(rgb_tuple, str):
+            return rgb_tuple
         color_code = "#"
         for i in [0, 1, 2]:
             color_code += "{:02X}".format(int(255 * rgb_tuple[i]))

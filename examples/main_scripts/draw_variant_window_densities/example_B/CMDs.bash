@@ -66,3 +66,15 @@ draw_variant_window_densities.py -i input/common.data.track.bed \
     --hide_track_label --rounded \
     -o example_B7 \
     --output_formats png
+
+echo -e "\nExample_B8. Additional height for the plot ...\n"
+draw_variant_window_densities.py -i input/common.data.track.bed \
+    -t bedgraph -l 'SNP Densities' --colormap jet  \
+    --centromere_bed input/common.scaffold.centromere.bed \
+    --scaffold_syn_file input/common.scaffold.syn --syn_file_key_column 0 --syn_file_value_column 1 \
+    -n input/common.scaffold.len --scaffold_whitelist input/example_B8.scaffold.whitelist \
+    --scaffold_orderlist input/example_B8.scaffold.orderlist \
+    --hide_track_label --rounded \
+    -o example_B8 \
+    --output_formats png \
+    --figure_header_height 2
